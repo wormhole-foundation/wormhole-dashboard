@@ -140,7 +140,7 @@ function App() {
       </Box>
       <Grid container>
         {Object.keys(chainIdsToHeartbeats).map((chainId) => (
-          <Grid item xs={6}>
+          <Grid item xs={12} lg={6}>
             <Box key={chainId} p={2}>
               <Card>
                 <Box p={2}>

@@ -12,7 +12,12 @@ function NetworkSelector() {
     [setCurrentNetwork]
   );
   return (
-    <Select onChange={handleChange} value={currentNetwork} margin="dense">
+    <Select
+      onChange={handleChange}
+      value={currentNetwork}
+      margin="dense"
+      size="small"
+    >
       <MenuItem value="mainnet">Mainnet</MenuItem>
       <MenuItem value="testnet">Testnet</MenuItem>
       <MenuItem value="devnet">Devnet</MenuItem>

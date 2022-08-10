@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.6.0",
-    "@certusone/wormhole-sdk-proto-web": "^0.0.1",
+    "@certusone/wormhole-sdk-proto-web": "^0.0.3",
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
     "@mui/material": "^5.9.3",

@@ -22,6 +22,7 @@ function Guardians({
             <TableRow>
               <TableCell>Guardian</TableCell>
               <TableCell>Version</TableCell>
+              <TableCell>Features</TableCell>
               <TableCell>Counter</TableCell>
               <TableCell>Boot</TableCell>
               <TableCell>Timestamp</TableCell>
@@ -32,6 +33,9 @@ function Guardians({
               <TableRow key={heartbeat.p2pNodeAddr}>
                 <TableCell>{heartbeat.rawHeartbeat?.nodeName}</TableCell>
                 <TableCell>{heartbeat.rawHeartbeat?.version}</TableCell>
+                <TableCell>
+                  {heartbeat.rawHeartbeat?.features.join(", ") || "None"}
+                </TableCell>
                 <TableCell>{heartbeat.rawHeartbeat?.counter}</TableCell>
                 <TableCell>
                   {heartbeat.rawHeartbeat?.bootTimestamp

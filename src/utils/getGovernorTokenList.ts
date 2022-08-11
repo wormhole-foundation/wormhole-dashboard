@@ -3,14 +3,7 @@ import { Network } from "../contexts/NetworkContext";
 const { GrpcWebImpl, PublicRPCServiceClientImpl } = publicrpc;
 
 export async function getGovernorTokenList(network: Network) {
-  const rpc = new GrpcWebImpl(
-    network === "devnet"
-      ? "http://localhost:7071"
-      : network === "testnet"
-      ? "https://wormhole-v2-testnet-api.certus.one"
-      : "https://wormhole-v2-mainnet-api.certus.one",
-    {}
-  );
+  const rpc = new GrpcWebImpl(network.endpoint, {});
   const api = new PublicRPCServiceClientImpl(rpc);
   return await api.GovernorGetTokenList({});
 }

@@ -8,49 +8,112 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
+import { grey } from "@mui/material/colors";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { useState } from "react";
+
+const columnHelper = createColumnHelper<GetLastHeartbeatsResponse_Entry>();
+
+const columns = [
+  columnHelper.accessor("rawHeartbeat.nodeName", {
+    header: () => "Guardian",
+    sortingFn: `text`,
+  }),
+  columnHelper.accessor("rawHeartbeat.version", {
+    header: () => "Version",
+  }),
+  columnHelper.accessor("rawHeartbeat.features", {
+    header: () => "Features",
+    cell: (info) =>
+      info.getValue().length > 0 ? info.getValue().join(", ") : "none",
+  }),
+  columnHelper.accessor("rawHeartbeat.counter", {
+    header: () => "Counter",
+  }),
+  columnHelper.accessor("rawHeartbeat.bootTimestamp", {
+    header: () => "Boot",
+    cell: (info) =>
+      info.getValue()
+        ? new Date(Number(info.getValue()) / 1000000).toLocaleString()
+        : null,
+  }),
+  columnHelper.accessor("rawHeartbeat.timestamp", {
+    header: () => "Timestamp",
+    cell: (info) =>
+      info.getValue()
+        ? new Date(Number(info.getValue()) / 1000000).toLocaleString()
+        : null,
+  }),
+];
 
 function Guardians({
   heartbeats,
 }: {
   heartbeats: GetLastHeartbeatsResponse_Entry[];
 }) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const table = useReactTable({
+    columns,
+    data: heartbeats,
+    state: {
+      sorting,
+    },
+    getRowId: (heartbeat) => heartbeat.p2pNodeAddr,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+  });
   return (
     <Card>
       <TableContainer>
         <Table size="small">
           <TableHead>
-            <TableRow>
-              <TableCell>Guardian</TableCell>
-              <TableCell>Version</TableCell>
-              <TableCell>Features</TableCell>
-              <TableCell>Counter</TableCell>
-              <TableCell>Boot</TableCell>
-              <TableCell>Timestamp</TableCell>
-            </TableRow>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableCell
+                    key={header.id}
+                    sx={
+                      header.column.getCanSort()
+                        ? {
+                            cursor: "pointer",
+                            userSelect: "select-none",
+                            ":hover": { background: grey[800] },
+                          }
+                        : {}
+                    }
+                    onClick={header.column.getToggleSortingHandler()}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                    {{
+                      asc: " 🔼",
+                      desc: " 🔽",
+                    }[header.column.getIsSorted() as string] ?? null}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
           </TableHead>
           <TableBody>
-            {heartbeats.map((heartbeat) => (
-              <TableRow key={heartbeat.p2pNodeAddr}>
-                <TableCell>{heartbeat.rawHeartbeat?.nodeName}</TableCell>
-                <TableCell>{heartbeat.rawHeartbeat?.version}</TableCell>
-                <TableCell>
-                  {heartbeat.rawHeartbeat?.features.join(", ") || "None"}
-                </TableCell>
-                <TableCell>{heartbeat.rawHeartbeat?.counter}</TableCell>
-                <TableCell>
-                  {heartbeat.rawHeartbeat?.bootTimestamp
-                    ? new Date(
-                        Number(heartbeat.rawHeartbeat.bootTimestamp) / 1000000
-                      ).toLocaleString()
-                    : null}
-                </TableCell>
-                <TableCell>
-                  {heartbeat.rawHeartbeat?.timestamp
-                    ? new Date(
-                        Number(heartbeat.rawHeartbeat.timestamp) / 1000000
-                      ).toLocaleString()
-                    : null}
-                </TableCell>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
             ))}
           </TableBody>

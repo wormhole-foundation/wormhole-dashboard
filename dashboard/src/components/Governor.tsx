@@ -1,3 +1,4 @@
+import { GovernorGetAvailableNotionalByChainResponse_Entry } from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
 import { ExpandMore } from "@mui/icons-material";
 import {
   Accordion,
@@ -12,6 +13,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import useGovernorInfo from "../hooks/useGovernorInfo";
@@ -24,6 +26,35 @@ const calculatePercent = (remaining: string, limit: string): number => {
     return 0;
   }
 };
+
+function NotionalRow({
+  notional,
+}: {
+  notional: GovernorGetAvailableNotionalByChainResponse_Entry;
+}) {
+  const percent = calculatePercent(
+    notional.remainingAvailableNotional,
+    notional.notionalLimit
+  );
+  return (
+    <TableRow>
+      <TableCell>{chainIdToName(notional.chainId)}</TableCell>
+      <TableCell>{notional.notionalLimit}</TableCell>
+      <TableCell>{notional.remainingAvailableNotional}</TableCell>
+      <Tooltip title={percent} arrow>
+        <TableCell>
+          <LinearProgress
+            variant="determinate"
+            value={percent}
+            color={
+              percent > 80 ? "error" : percent > 50 ? "warning" : "success"
+            }
+          />
+        </TableCell>
+      </Tooltip>
+    </TableRow>
+  );
+}
 
 function Governor() {
   const governorInfo = useGovernorInfo();
@@ -43,33 +74,7 @@ function Governor() {
               </TableHead>
               <TableBody>
                 {governorInfo.notionals.map((notional) => (
-                  <TableRow key={notional.chainId}>
-                    <TableCell>{chainIdToName(notional.chainId)}</TableCell>
-                    <TableCell>{notional.notionalLimit}</TableCell>
-                    <TableCell>{notional.remainingAvailableNotional}</TableCell>
-                    <TableCell>
-                      <LinearProgress
-                        variant="determinate"
-                        value={calculatePercent(
-                          notional.remainingAvailableNotional,
-                          notional.notionalLimit
-                        )}
-                        color={
-                          calculatePercent(
-                            notional.remainingAvailableNotional,
-                            notional.notionalLimit
-                          ) > 80
-                            ? "error"
-                            : calculatePercent(
-                                notional.remainingAvailableNotional,
-                                notional.notionalLimit
-                              ) > 50
-                            ? "warning"
-                            : "success"
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
+                  <NotionalRow notional={notional} key={notional.chainId} />
                 ))}
               </TableBody>
             </Table>

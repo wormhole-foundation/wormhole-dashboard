@@ -2,6 +2,7 @@
   "name": "wormhole-dashboard",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.6.0",
     "@certusone/wormhole-sdk-proto-web": "^0.0.3",

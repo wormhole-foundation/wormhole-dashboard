@@ -1,17 +1,82 @@
+import { Box, Card, Grid, Typography } from "@mui/material";
 import {
-  Box,
-  Card,
-  Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from "@mui/material";
-import { ChainIdToHeartbeats } from "../hooks/useChainHeartbeats";
+  createColumnHelper,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { useState } from "react";
+import {
+  ChainIdToHeartbeats,
+  HeartbeatInfo,
+} from "../hooks/useChainHeartbeats";
 import chainIdToName from "../utils/chainIdToName";
+import Table from "./Table";
+
+const columnHelper = createColumnHelper<HeartbeatInfo>();
+
+const columns = [
+  columnHelper.accessor("name", {
+    header: () => "Guardian",
+    cell: (info) => (
+      <Typography variant="body2" noWrap>
+        {info.getValue()}
+      </Typography>
+    ),
+    sortingFn: `text`,
+  }),
+  columnHelper.accessor("network.height", {
+    header: () => "Height",
+  }),
+  columnHelper.accessor("network.contractAddress", {
+    header: () => "Contract",
+  }),
+];
+
+const conditionalRowStyle = (heartbeat: HeartbeatInfo) =>
+  heartbeat.network.height === "0"
+    ? { backgroundColor: "rgba(100,0,0,.2)" }
+    : {};
+
+function Chain({
+  chainId,
+  heartbeats,
+}: {
+  chainId: string;
+  heartbeats: HeartbeatInfo[];
+}) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const table = useReactTable({
+    columns,
+    data: heartbeats,
+    state: {
+      sorting,
+    },
+    getRowId: (heartbeat) => heartbeat.guardian,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+  });
+  return (
+    <Grid key={chainId} item xs={12} lg={6}>
+      <Box p={2}>
+        <Card>
+          <Box p={2}>
+            <Typography variant="h5" gutterBottom>
+              {chainIdToName(Number(chainId))} ({chainId})
+            </Typography>
+            <Typography>Guardians Listed: {heartbeats.length}</Typography>
+          </Box>
+          <Table<HeartbeatInfo>
+            table={table}
+            conditionalRowStyle={conditionalRowStyle}
+          />
+        </Card>
+      </Box>
+    </Grid>
+  );
+}
 
 function Chains({
   chainIdsToHeartbeats,
@@ -21,52 +86,11 @@ function Chains({
   return (
     <Grid container>
       {Object.keys(chainIdsToHeartbeats).map((chainId) => (
-        <Grid key={chainId} item xs={12} lg={6}>
-          <Box p={2}>
-            <Card>
-              <Box p={2}>
-                <Typography variant="h5" gutterBottom>
-                  {chainIdToName(Number(chainId))} ({chainId})
-                </Typography>
-                <Typography>
-                  Guardians Listed:{" "}
-                  {chainIdsToHeartbeats[Number(chainId)].length}
-                </Typography>
-              </Box>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Guardian</TableCell>
-                      <TableCell>Contract</TableCell>
-                      <TableCell>Height</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {chainIdsToHeartbeats[Number(chainId)].map((info) => (
-                      <TableRow
-                        key={info.guardian}
-                        style={
-                          info.network.height === "0"
-                            ? { backgroundColor: "rgba(100,0,0,.2)" }
-                            : {}
-                        }
-                      >
-                        <TableCell>
-                          <Typography noWrap variant="body2">
-                            {info.name}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>{info.network.contractAddress}</TableCell>
-                        <TableCell>{info.network.height}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Card>
-          </Box>
-        </Grid>
+        <Chain
+          key={chainId}
+          chainId={chainId}
+          heartbeats={chainIdsToHeartbeats[Number(chainId)]}
+        />
       ))}
     </Grid>
   );

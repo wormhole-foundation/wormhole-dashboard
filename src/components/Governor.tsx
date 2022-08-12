@@ -1,4 +1,8 @@
-import { GovernorGetAvailableNotionalByChainResponse_Entry } from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
+import {
+  GovernorGetAvailableNotionalByChainResponse_Entry,
+  GovernorGetEnqueuedVAAsResponse_Entry,
+  GovernorGetTokenListResponse_Entry,
+} from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
 import { ExpandMore } from "@mui/icons-material";
 import {
   Accordion,
@@ -7,149 +11,171 @@ import {
   Box,
   Card,
   LinearProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   Typography,
 } from "@mui/material";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { useState } from "react";
 import useGovernorInfo from "../hooks/useGovernorInfo";
 import chainIdToName from "../utils/chainIdToName";
+import Table from "./Table";
 
-const calculatePercent = (remaining: string, limit: string): number => {
+const calculatePercent = (
+  notional: GovernorGetAvailableNotionalByChainResponse_Entry
+): number => {
   try {
-    return ((Number(limit) - Number(remaining)) / Number(limit)) * 100;
+    return (
+      ((Number(notional.notionalLimit) -
+        Number(notional.remainingAvailableNotional)) /
+        Number(notional.notionalLimit)) *
+      100
+    );
   } catch (e) {
     return 0;
   }
 };
 
-function NotionalRow({
-  notional,
-}: {
-  notional: GovernorGetAvailableNotionalByChainResponse_Entry;
-}) {
-  const percent = calculatePercent(
-    notional.remainingAvailableNotional,
-    notional.notionalLimit
-  );
-  return (
-    <TableRow>
-      <TableCell>{chainIdToName(notional.chainId)}</TableCell>
-      <TableCell>{notional.notionalLimit}</TableCell>
-      <TableCell>{notional.remainingAvailableNotional}</TableCell>
-      <Tooltip title={percent} arrow>
-        <TableCell>
-          <LinearProgress
-            variant="determinate"
-            value={percent}
-            color={
-              percent > 80 ? "error" : percent > 50 ? "warning" : "success"
-            }
-          />
-        </TableCell>
+const notionalColumnHelper =
+  createColumnHelper<GovernorGetAvailableNotionalByChainResponse_Entry>();
+
+const notionalColumns = [
+  notionalColumnHelper.accessor("chainId", {
+    header: () => "Chain",
+    cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
+    sortingFn: `text`,
+  }),
+  notionalColumnHelper.accessor("notionalLimit", {
+    header: () => "Limit",
+  }),
+  notionalColumnHelper.accessor("remainingAvailableNotional", {
+    header: () => "Remaining",
+  }),
+  notionalColumnHelper.accessor(calculatePercent, {
+    id: "progress",
+    header: () => "Progress",
+    cell: (info) => (
+      <Tooltip title={info.getValue()} arrow>
+        <LinearProgress
+          variant="determinate"
+          value={info.getValue()}
+          color={
+            info.getValue() > 80
+              ? "error"
+              : info.getValue() > 50
+              ? "warning"
+              : "success"
+          }
+        />
       </Tooltip>
-    </TableRow>
-  );
-}
+    ),
+  }),
+];
+
+const enqueuedColumnHelper =
+  createColumnHelper<GovernorGetEnqueuedVAAsResponse_Entry>();
+
+const enqueuedColumns = [
+  enqueuedColumnHelper.accessor("emitterChain", {
+    header: () => "Chain",
+    cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
+    sortingFn: `text`,
+  }),
+  enqueuedColumnHelper.accessor("emitterAddress", {
+    header: () => "Emitter",
+  }),
+  enqueuedColumnHelper.accessor("sequence", {
+    header: () => "Sequence",
+  }),
+];
+
+const tokenColumnHelper =
+  createColumnHelper<GovernorGetTokenListResponse_Entry>();
+
+const tokenColumns = [
+  tokenColumnHelper.accessor("originChainId", {
+    header: () => "Chain",
+    cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
+    sortingFn: `text`,
+  }),
+  tokenColumnHelper.accessor("originAddress", {
+    header: () => "Token",
+  }),
+  tokenColumnHelper.accessor("price", {
+    header: () => "Price",
+  }),
+];
 
 function Governor() {
   const governorInfo = useGovernorInfo();
+  const [notionalSorting, setNotionalSorting] = useState<SortingState>([]);
+  const notionalTable = useReactTable({
+    columns: notionalColumns,
+    data: governorInfo.notionals,
+    state: {
+      sorting: notionalSorting,
+    },
+    getRowId: (notional) => notional.chainId.toString(),
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setNotionalSorting,
+  });
+  const [enqueuedSorting, setEnqueuedSorting] = useState<SortingState>([]);
+  const enqueuedTable = useReactTable({
+    columns: enqueuedColumns,
+    data: governorInfo.enqueued,
+    state: {
+      sorting: enqueuedSorting,
+    },
+    getRowId: (vaa) => JSON.stringify(vaa),
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setEnqueuedSorting,
+  });
+  const [tokenSorting, setTokenSorting] = useState<SortingState>([]);
+  const tokenTable = useReactTable({
+    columns: tokenColumns,
+    data: governorInfo.tokens,
+    state: {
+      sorting: tokenSorting,
+    },
+    getRowId: (token) => `${token.originChainId}_${token.originAddress}`,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setTokenSorting,
+  });
   return (
     <>
       <Box p={2}>
         <Card>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Chain</TableCell>
-                  <TableCell>Limit</TableCell>
-                  <TableCell>Remaining</TableCell>
-                  <TableCell width="50%">Progress</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {governorInfo.notionals.map((notional) => (
-                  <NotionalRow notional={notional} key={notional.chainId} />
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <Table<GovernorGetAvailableNotionalByChainResponse_Entry>
+            table={notionalTable}
+          />
         </Card>
       </Box>
       <Box p={2}>
         <Card>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Chain</TableCell>
-                  <TableCell>Emitter</TableCell>
-                  <TableCell>Sequence</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {governorInfo.enqueued.map((vaa) => (
-                  <TableRow key={JSON.stringify(vaa)}>
-                    <TableCell>
-                      {chainIdToName(vaa.emitterChain)} ({vaa.emitterChain})
-                    </TableCell>
-                    <TableCell>{vaa.emitterAddress}</TableCell>
-                    <TableCell>{vaa.sequence}</TableCell>
-                  </TableRow>
-                ))}
-                {governorInfo.enqueued.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} sx={{ textAlign: "center" }}>
-                      No enqueued VAAs
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <Table<GovernorGetEnqueuedVAAsResponse_Entry> table={enqueuedTable} />
+          {governorInfo.enqueued.length === 0 ? (
+            <Typography variant="body2" sx={{ py: 1, textAlign: "center" }}>
+              No enqueued VAAs
+            </Typography>
+          ) : null}
         </Card>
       </Box>
       <Box p={2}>
         <Card>
           <Accordion>
-            <AccordionSummary
-              expandIcon={<ExpandMore />}
-              aria-controls="panel1a-content"
-              id="panel1a-header"
-            >
-              <Typography>Tokens</Typography>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography>Tokens ({governorInfo.tokens.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Chain</TableCell>
-                      <TableCell>Token</TableCell>
-                      <TableCell>Price</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {governorInfo.tokens.map((token) => (
-                      <TableRow
-                        key={`${token.originChainId}_${token.originAddress}`}
-                      >
-                        <TableCell>
-                          {chainIdToName(token.originChainId)} (
-                          {token.originChainId})
-                        </TableCell>
-                        <TableCell>{token.originAddress}</TableCell>
-                        <TableCell>{token.price}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Table<GovernorGetTokenListResponse_Entry> table={tokenTable} />
             </AccordionDetails>
           </Accordion>
         </Card>

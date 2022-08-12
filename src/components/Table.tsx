@@ -1,4 +1,6 @@
+import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
 import {
+  Box,
   SxProps,
   Table as MuiTable,
   TableBody,
@@ -38,16 +40,23 @@ function Table<T>({
                   }
                   onClick={header.column.getToggleSortingHandler()}
                 >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                  {{
-                    asc: " 🔼",
-                    desc: " 🔽",
-                  }[header.column.getIsSorted() as string] ?? null}
+                  <Box display="flex" alignContent="center">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                    <Box flexGrow={1} />
+                    <Box display="flex" alignItems="center">
+                      {{
+                        asc: <ArrowUpward fontSize="small" sx={{ ml: 0.5 }} />,
+                        desc: (
+                          <ArrowDownward fontSize="small" sx={{ ml: 0.5 }} />
+                        ),
+                      }[header.column.getIsSorted() as string] ?? null}
+                    </Box>
+                  </Box>
                 </TableCell>
               ))}
             </TableRow>

@@ -151,14 +151,14 @@ function Governor() {
   });
   return (
     <>
-      <Box p={2}>
+      <Box mb={2}>
         <Card>
           <Table<GovernorGetAvailableNotionalByChainResponse_Entry>
             table={notionalTable}
           />
         </Card>
       </Box>
-      <Box p={2}>
+      <Box my={2}>
         <Card>
           <Table<GovernorGetEnqueuedVAAsResponse_Entry> table={enqueuedTable} />
           {governorInfo.enqueued.length === 0 ? (
@@ -168,7 +168,7 @@ function Governor() {
           ) : null}
         </Card>
       </Box>
-      <Box p={2}>
+      <Box mt={2}>
         <Card>
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMore />}>

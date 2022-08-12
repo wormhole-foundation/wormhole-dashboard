@@ -14,6 +14,13 @@ type AlertEntry = {
   text: string;
 };
 
+const alertSeverityOrder: AlertColor[] = [
+  "error",
+  "warning",
+  "success",
+  "info",
+];
+
 function Alerts({
   chainIdsToHeartbeats,
 }: {
@@ -40,7 +47,15 @@ function Alerts({
         } down on ${chainIdToName(Number(chainId))} (${chainId})!`,
       });
     });
-    return alerts;
+    return alerts.sort((a, b) =>
+      alertSeverityOrder.indexOf(a.severity) <
+      alertSeverityOrder.indexOf(b.severity)
+        ? -1
+        : alertSeverityOrder.indexOf(a.severity) >
+          alertSeverityOrder.indexOf(b.severity)
+        ? 1
+        : 0
+    );
   }, [chainIdsToHeartbeats]);
   const numErrors = useMemo(
     () => alerts.filter((alert) => alert.severity === "error").length,

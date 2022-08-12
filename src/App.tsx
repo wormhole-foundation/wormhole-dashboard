@@ -12,6 +12,7 @@ import { grey } from "@mui/material/colors";
 import Main from "./components/Main";
 import NetworkSelector from "./components/NetworkSelector";
 import { NetworkContextProvider } from "./contexts/NetworkContext";
+import WormholeStatsIcon from "./icons/WormholeStatsIcon";
 
 const theme = responsiveFontSizes(
   createTheme({
@@ -54,7 +55,10 @@ function App() {
       <NetworkContextProvider>
         <AppBar position="static">
           <Toolbar variant="dense">
-            <Typography variant="h6">Wormhole Dashboard</Typography>
+            <Box pr={1} display="flex" alignItems="center">
+              <WormholeStatsIcon />
+            </Box>
+            <Typography variant="h6">Dashboard</Typography>
             <Box flexGrow={1} />
             <NetworkSelector />
           </Toolbar>

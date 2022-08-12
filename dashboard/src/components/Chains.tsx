@@ -60,20 +60,18 @@ function Chain({
   });
   return (
     <Grid key={chainId} item xs={12} lg={6}>
-      <Box p={2}>
-        <Card>
-          <Box p={2}>
-            <Typography variant="h5" gutterBottom>
-              {chainIdToName(Number(chainId))} ({chainId})
-            </Typography>
-            <Typography>Guardians Listed: {heartbeats.length}</Typography>
-          </Box>
-          <Table<HeartbeatInfo>
-            table={table}
-            conditionalRowStyle={conditionalRowStyle}
-          />
-        </Card>
-      </Box>
+      <Card>
+        <Box p={2}>
+          <Typography variant="h5" gutterBottom>
+            {chainIdToName(Number(chainId))} ({chainId})
+          </Typography>
+          <Typography>Guardians Listed: {heartbeats.length}</Typography>
+        </Box>
+        <Table<HeartbeatInfo>
+          table={table}
+          conditionalRowStyle={conditionalRowStyle}
+        />
+      </Card>
     </Grid>
   );
 }
@@ -84,7 +82,7 @@ function Chains({
   chainIdsToHeartbeats: ChainIdToHeartbeats;
 }) {
   return (
-    <Grid container>
+    <Grid container spacing={2}>
       {Object.keys(chainIdsToHeartbeats).map((chainId) => (
         <Chain
           key={chainId}

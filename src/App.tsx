@@ -3,6 +3,7 @@ import {
   Box,
   createTheme,
   CssBaseline,
+  responsiveFontSizes,
   ThemeProvider,
   Toolbar,
   Typography,
@@ -12,37 +13,39 @@ import Main from "./components/Main";
 import NetworkSelector from "./components/NetworkSelector";
 import { NetworkContextProvider } from "./contexts/NetworkContext";
 
-const theme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-  components: {
-    MuiCssBaseline: {
-      styleOverrides: {
-        body: {
-          overflowY: "scroll",
-        },
-        "*": {
-          scrollbarWidth: "thin",
-          scrollbarColor: `${grey[700]} ${grey[900]}`,
-        },
-        "*::-webkit-scrollbar": {
-          width: "8px",
-          height: "8px",
-          backgroundColor: grey[900],
-        },
-        "*::-webkit-scrollbar-thumb": {
-          backgroundColor: grey[700],
-          borderRadius: "4px",
-        },
-        "*::-webkit-scrollbar-corner": {
-          // this hides an annoying white box which appears when both scrollbars are present
-          backgroundColor: "transparent",
+const theme = responsiveFontSizes(
+  createTheme({
+    palette: {
+      mode: "dark",
+    },
+    components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          body: {
+            overflowY: "scroll",
+          },
+          "*": {
+            scrollbarWidth: "thin",
+            scrollbarColor: `${grey[700]} ${grey[900]}`,
+          },
+          "*::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+            backgroundColor: grey[900],
+          },
+          "*::-webkit-scrollbar-thumb": {
+            backgroundColor: grey[700],
+            borderRadius: "4px",
+          },
+          "*::-webkit-scrollbar-corner": {
+            // this hides an annoying white box which appears when both scrollbars are present
+            backgroundColor: "transparent",
+          },
         },
       },
     },
-  },
-});
+  })
+);
 
 function App() {
   return (

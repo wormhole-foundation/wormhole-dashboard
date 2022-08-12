@@ -22,7 +22,7 @@ function NetworkSelector() {
       }}
     >
       {networkOptions.map((network, idx) => (
-        <MenuItem value={idx}>
+        <MenuItem key={network.endpoint} value={idx}>
           {network.logo !== "" ? (
             <img
               src={network.logo}

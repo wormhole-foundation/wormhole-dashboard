@@ -1,22 +1,13 @@
 import {
   ErrorOutline,
-  ExpandMore,
   InfoOutlined,
   WarningAmberOutlined,
 } from "@mui/icons-material";
-import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
-  Alert,
-  AlertColor,
-  Box,
-  Card,
-  Typography,
-} from "@mui/material";
+import { Alert, AlertColor, Box, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { ChainIdToHeartbeats } from "../hooks/useChainHeartbeats";
 import chainIdToName from "../utils/chainIdToName";
+import CollapsibleSection from "./CollapsibleSection";
 
 type AlertEntry = {
   severity: AlertColor;
@@ -68,63 +59,58 @@ function Alerts({
     [alerts]
   );
   return (
-    <Card>
-      <Accordion>
-        <AccordionSummary expandIcon={<ExpandMore />}>
-          <Typography
-            variant="h6"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              width: "100%",
-              paddingRight: 1,
-            }}
-          >
-            Alerts
-            <Box flexGrow={1} />
-            {numInfos > 0 ? (
-              <>
-                <InfoOutlined color="info" sx={{ ml: 2 }} />
-                <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                  {numInfos}
-                </Typography>
-              </>
-            ) : null}
-            {numSuccess > 0 ? (
-              <>
-                <InfoOutlined color="success" sx={{ ml: 2 }} />
-                <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                  {numSuccess}
-                </Typography>
-              </>
-            ) : null}
-            {numWarnings > 0 ? (
-              <>
-                <WarningAmberOutlined color="warning" sx={{ ml: 2 }} />
-                <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                  {numWarnings}
-                </Typography>
-              </>
-            ) : null}
-            {numErrors > 0 ? (
-              <>
-                <ErrorOutline color="error" sx={{ ml: 2 }} />
-                <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                  {numErrors}
-                </Typography>
-              </>
-            ) : null}
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          {alerts.map((alert) => (
-            <Alert key={alert.text} severity={alert.severity}>
-              {alert.text}
-            </Alert>
-          ))}
-        </AccordionDetails>
-      </Accordion>
-    </Card>
+    <CollapsibleSection
+      header={
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            paddingRight: 1,
+          }}
+        >
+          Alerts
+          <Box flexGrow={1} />
+          {numInfos > 0 ? (
+            <>
+              <InfoOutlined color="info" sx={{ ml: 2 }} />
+              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                {numInfos}
+              </Typography>
+            </>
+          ) : null}
+          {numSuccess > 0 ? (
+            <>
+              <InfoOutlined color="success" sx={{ ml: 2 }} />
+              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                {numSuccess}
+              </Typography>
+            </>
+          ) : null}
+          {numWarnings > 0 ? (
+            <>
+              <WarningAmberOutlined color="warning" sx={{ ml: 2 }} />
+              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                {numWarnings}
+              </Typography>
+            </>
+          ) : null}
+          {numErrors > 0 ? (
+            <>
+              <ErrorOutline color="error" sx={{ ml: 2 }} />
+              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                {numErrors}
+              </Typography>
+            </>
+          ) : null}
+        </Box>
+      }
+    >
+      {alerts.map((alert) => (
+        <Alert key={alert.text} severity={alert.severity}>
+          {alert.text}
+        </Alert>
+      ))}
+    </CollapsibleSection>
   );
 }
 export default Alerts;

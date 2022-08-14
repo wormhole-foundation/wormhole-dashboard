@@ -25,6 +25,7 @@ import { useState } from "react";
 import useGovernorInfo from "../hooks/useGovernorInfo";
 import chainIdToName from "../utils/chainIdToName";
 import Table from "./Table";
+import numeral from "numeral";
 
 const calculatePercent = (
   notional: GovernorGetAvailableNotionalByChainResponse_Entry
@@ -51,10 +52,16 @@ const notionalColumns = [
     sortingFn: `text`,
   }),
   notionalColumnHelper.accessor("notionalLimit", {
-    header: () => "Limit",
+    header: () => <Box order="1">Limit</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
+    ),
   }),
   notionalColumnHelper.accessor("remainingAvailableNotional", {
-    header: () => "Remaining",
+    header: () => <Box order="1">Remaining</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
+    ),
   }),
   notionalColumnHelper.accessor(calculatePercent, {
     id: "progress",
@@ -107,7 +114,12 @@ const tokenColumns = [
     header: () => "Token",
   }),
   tokenColumnHelper.accessor("price", {
-    header: () => "Price",
+    header: () => <Box order="1">Price</Box>,
+    cell: (info) => (
+      <Box textAlign="right">
+        ${numeral(info.getValue()).format("0,0.0000")}
+      </Box>
+    ),
   }),
 ];
 

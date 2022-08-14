@@ -65,7 +65,9 @@ function Alerts({
     Object.entries(downChains).forEach(([chainId, names]) => {
       alerts.push({
         severity: names.length >= 7 ? "error" : "warning",
-        text: `${names.join(", ")} ${
+        text: `${names.length} guardian${
+          names.length > 1 ? "s" : ""
+        } [${names.join(", ")}] ${
           names.length > 1 ? "are" : "is"
         } down on ${chainIdToName(Number(chainId))} (${chainId})!`,
       });

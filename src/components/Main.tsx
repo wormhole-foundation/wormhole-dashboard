@@ -12,7 +12,10 @@ function Main() {
   const chainIdsToHeartbeats = useChainHeartbeats(heartbeats);
   return (
     <>
-      <Alerts chainIdsToHeartbeats={chainIdsToHeartbeats} />
+      <Alerts
+        heartbeats={heartbeats}
+        chainIdsToHeartbeats={chainIdsToHeartbeats}
+      />
       <Divider />
       <CollapsibleSection header="Guardians">
         <Guardians heartbeats={heartbeats} />

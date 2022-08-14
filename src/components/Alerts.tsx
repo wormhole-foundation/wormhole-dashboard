@@ -1,3 +1,4 @@
+import { GetLastHeartbeatsResponse_Entry } from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
 import {
   ErrorOutline,
   InfoOutlined,
@@ -22,23 +23,45 @@ const alertSeverityOrder: AlertColor[] = [
 ];
 
 function Alerts({
+  heartbeats,
   chainIdsToHeartbeats,
 }: {
+  heartbeats: GetLastHeartbeatsResponse_Entry[];
   chainIdsToHeartbeats: ChainIdToHeartbeats;
 }) {
   const alerts = useMemo(() => {
     const alerts: AlertEntry[] = [];
     const downChains: { [chainId: string]: string[] } = {};
-    Object.entries(chainIdsToHeartbeats).forEach(([chainId, heartbeats]) => {
-      heartbeats.forEach((heartbeat) => {
-        if (heartbeat.network.height === "0") {
+    Object.entries(chainIdsToHeartbeats).forEach(
+      ([chainId, chainHeartbeats]) => {
+        // Search for known guardians without heartbeats
+        const missingGuardians = heartbeats.filter(
+          (guardianHeartbeat) =>
+            chainHeartbeats.findIndex(
+              (chainHeartbeat) =>
+                chainHeartbeat.guardian === guardianHeartbeat.p2pNodeAddr
+            ) === -1
+        );
+        missingGuardians.forEach((guardianHeartbeat) => {
           if (!downChains[chainId]) {
             downChains[chainId] = [];
           }
-          downChains[chainId].push(heartbeat.name);
-        }
-      });
-    });
+          downChains[chainId].push(
+            guardianHeartbeat.rawHeartbeat?.nodeName || ""
+          );
+        });
+        // Search for guardians with heartbeats but who are not picking up a height
+        // Could be disconnected or erroring post initial checks
+        chainHeartbeats.forEach((chainHeartbeat) => {
+          if (chainHeartbeat.network.height === "0") {
+            if (!downChains[chainId]) {
+              downChains[chainId] = [];
+            }
+            downChains[chainId].push(chainHeartbeat.name);
+          }
+        });
+      }
+    );
     Object.entries(downChains).forEach(([chainId, names]) => {
       alerts.push({
         severity: names.length >= 7 ? "error" : "warning",
@@ -56,7 +79,7 @@ function Alerts({
         ? 1
         : 0
     );
-  }, [chainIdsToHeartbeats]);
+  }, [heartbeats, chainIdsToHeartbeats]);
   const numErrors = useMemo(
     () => alerts.filter((alert) => alert.severity === "error").length,
     [alerts]

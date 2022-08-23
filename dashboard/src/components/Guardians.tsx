@@ -42,6 +42,9 @@ const columns = [
         ? new Date(Number(info.getValue()) / 1000000).toLocaleString()
         : null,
   }),
+  columnHelper.accessor("rawHeartbeat.guardianAddr", {
+    header: () => "Address",
+  }),
 ];
 
 function Guardians({

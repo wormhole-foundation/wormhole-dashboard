@@ -4,7 +4,17 @@ import {
   InfoOutlined,
   WarningAmberOutlined,
 } from "@mui/icons-material";
-import { Alert, AlertColor, Box, Typography } from "@mui/material";
+import {
+  Alert,
+  AlertColor,
+  Box,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useMemo } from "react";
 import { ChainIdToHeartbeats } from "../hooks/useChainHeartbeats";
 import chainIdToName from "../utils/chainIdToName";
@@ -108,7 +118,45 @@ function Alerts({
             paddingRight: 1,
           }}
         >
-          Alerts
+          <Tooltip
+            title={
+              <>
+                <Typography variant="body1">
+                  This section shows alerts for the following conditions:
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemIcon>
+                      <ErrorOutline color="error" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Chains with a quorum of guardians down"
+                      secondary="A guardian is considered down if it is
+                      reporting a height of 0 or missing from the list of
+                      heartbeats"
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon>
+                      <WarningAmberOutlined color="warning" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Chains with one or more guardians down"
+                      secondary="A guardian is considered down if it is
+                      reporting a height of 0 or missing from the list of
+                      heartbeats"
+                    />
+                  </ListItem>
+                </List>
+              </>
+            }
+            componentsProps={{ tooltip: { sx: { maxWidth: "100%" } } }}
+          >
+            <Box>
+              Alerts
+              <InfoOutlined sx={{ fontSize: ".8em", ml: 0.5 }} />
+            </Box>
+          </Tooltip>
           <Box flexGrow={1} />
           {numInfos > 0 ? (
             <>

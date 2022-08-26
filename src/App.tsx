@@ -1,8 +1,10 @@
+import { GitHub } from "@mui/icons-material";
 import {
   AppBar,
   Box,
   createTheme,
   CssBaseline,
+  IconButton,
   responsiveFontSizes,
   ThemeProvider,
   Toolbar,
@@ -61,6 +63,14 @@ function App() {
             <Typography variant="h6">Dashboard</Typography>
             <Box flexGrow={1} />
             <NetworkSelector />
+            <IconButton
+              sx={{ ml: 1 }}
+              href="https://github.com/wormhole-foundation/wormhole-dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <GitHub />
+            </IconButton>
           </Toolbar>
         </AppBar>
         <Main />

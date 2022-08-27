@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import { useMemo } from "react";
 import { ChainIdToHeartbeats } from "../hooks/useChainHeartbeats";
+import useLatestRelease from "../hooks/useLatestRelease";
 import chainIdToName from "../utils/chainIdToName";
 import CollapsibleSection from "./CollapsibleSection";
 
@@ -32,6 +33,60 @@ const alertSeverityOrder: AlertColor[] = [
   "info",
 ];
 
+function chainDownAlerts(
+  heartbeats: GetLastHeartbeatsResponse_Entry[],
+  chainIdsToHeartbeats: ChainIdToHeartbeats
+): AlertEntry[] {
+  const downChains: { [chainId: string]: string[] } = {};
+  Object.entries(chainIdsToHeartbeats).forEach(([chainId, chainHeartbeats]) => {
+    // Search for known guardians without heartbeats
+    const missingGuardians = heartbeats.filter(
+      (guardianHeartbeat) =>
+        chainHeartbeats.findIndex(
+          (chainHeartbeat) =>
+            chainHeartbeat.guardian === guardianHeartbeat.p2pNodeAddr
+        ) === -1
+    );
+    missingGuardians.forEach((guardianHeartbeat) => {
+      if (!downChains[chainId]) {
+        downChains[chainId] = [];
+      }
+      downChains[chainId].push(guardianHeartbeat.rawHeartbeat?.nodeName || "");
+    });
+    // Search for guardians with heartbeats but who are not picking up a height
+    // Could be disconnected or erroring post initial checks
+    chainHeartbeats.forEach((chainHeartbeat) => {
+      if (chainHeartbeat.network.height === "0") {
+        if (!downChains[chainId]) {
+          downChains[chainId] = [];
+        }
+        downChains[chainId].push(chainHeartbeat.name);
+      }
+    });
+  });
+  return Object.entries(downChains).map(([chainId, names]) => ({
+    severity: names.length >= 7 ? "error" : "warning",
+    text: `${names.length} guardian${names.length > 1 ? "s" : ""} [${names.join(
+      ", "
+    )}] ${names.length > 1 ? "are" : "is"} down on ${chainIdToName(
+      Number(chainId)
+    )} (${chainId})!`,
+  }));
+}
+
+const releaseChecker = (
+  release: string | null,
+  heartbeats: GetLastHeartbeatsResponse_Entry[]
+): AlertEntry[] =>
+  release === null
+    ? []
+    : heartbeats
+        .filter((heartbeat) => heartbeat.rawHeartbeat?.version !== release)
+        .map((heartbeat) => ({
+          severity: "info",
+          text: `${heartbeat.rawHeartbeat?.nodeName} is not running the latest release (${heartbeat.rawHeartbeat?.version} !== ${release})`,
+        }));
+
 function Alerts({
   heartbeats,
   chainIdsToHeartbeats,
@@ -39,49 +94,12 @@ function Alerts({
   heartbeats: GetLastHeartbeatsResponse_Entry[];
   chainIdsToHeartbeats: ChainIdToHeartbeats;
 }) {
+  const latestRelease = useLatestRelease();
   const alerts = useMemo(() => {
-    const alerts: AlertEntry[] = [];
-    const downChains: { [chainId: string]: string[] } = {};
-    Object.entries(chainIdsToHeartbeats).forEach(
-      ([chainId, chainHeartbeats]) => {
-        // Search for known guardians without heartbeats
-        const missingGuardians = heartbeats.filter(
-          (guardianHeartbeat) =>
-            chainHeartbeats.findIndex(
-              (chainHeartbeat) =>
-                chainHeartbeat.guardian === guardianHeartbeat.p2pNodeAddr
-            ) === -1
-        );
-        missingGuardians.forEach((guardianHeartbeat) => {
-          if (!downChains[chainId]) {
-            downChains[chainId] = [];
-          }
-          downChains[chainId].push(
-            guardianHeartbeat.rawHeartbeat?.nodeName || ""
-          );
-        });
-        // Search for guardians with heartbeats but who are not picking up a height
-        // Could be disconnected or erroring post initial checks
-        chainHeartbeats.forEach((chainHeartbeat) => {
-          if (chainHeartbeat.network.height === "0") {
-            if (!downChains[chainId]) {
-              downChains[chainId] = [];
-            }
-            downChains[chainId].push(chainHeartbeat.name);
-          }
-        });
-      }
-    );
-    Object.entries(downChains).forEach(([chainId, names]) => {
-      alerts.push({
-        severity: names.length >= 7 ? "error" : "warning",
-        text: `${names.length} guardian${
-          names.length > 1 ? "s" : ""
-        } [${names.join(", ")}] ${
-          names.length > 1 ? "are" : "is"
-        } down on ${chainIdToName(Number(chainId))} (${chainId})!`,
-      });
-    });
+    const alerts: AlertEntry[] = [
+      ...chainDownAlerts(heartbeats, chainIdsToHeartbeats),
+      ...releaseChecker(latestRelease, heartbeats),
+    ];
     return alerts.sort((a, b) =>
       alertSeverityOrder.indexOf(a.severity) <
       alertSeverityOrder.indexOf(b.severity)
@@ -91,7 +109,7 @@ function Alerts({
         ? 1
         : 0
     );
-  }, [heartbeats, chainIdsToHeartbeats]);
+  }, [latestRelease, heartbeats, chainIdsToHeartbeats]);
   const numErrors = useMemo(
     () => alerts.filter((alert) => alert.severity === "error").length,
     [alerts]

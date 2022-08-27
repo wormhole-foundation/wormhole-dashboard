@@ -8,6 +8,7 @@ import {
   Alert,
   AlertColor,
   Box,
+  Link,
   List,
   ListItem,
   ListItemIcon,
@@ -182,6 +183,27 @@ function Alerts({
                       secondary="A guardian is considered down if it is
                       reporting a height of 0, more than 1000 behind the highest height, or missing from the list of
                       heartbeats"
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon>
+                      <InfoOutlined color="info" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Guardians not running the latest release"
+                      secondary={
+                        <>
+                          The guardian version is compared to the latest release
+                          from{" "}
+                          <Link
+                            href="https://github.com/wormhole-foundation/wormhole/releases"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            https://github.com/wormhole-foundation/wormhole/releases
+                          </Link>
+                        </>
+                      }
                     />
                   </ListItem>
                 </List>

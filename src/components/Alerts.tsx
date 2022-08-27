@@ -55,12 +55,31 @@ function chainDownAlerts(
     });
     // Search for guardians with heartbeats but who are not picking up a height
     // Could be disconnected or erroring post initial checks
+    // Track highest height to check for lagging guardians
+    let highest = BigInt(0);
     chainHeartbeats.forEach((chainHeartbeat) => {
+      const height = BigInt(chainHeartbeat.network.height);
+      if (height > highest) {
+        highest = height;
+      }
       if (chainHeartbeat.network.height === "0") {
         if (!downChains[chainId]) {
           downChains[chainId] = [];
         }
         downChains[chainId].push(chainHeartbeat.name);
+      }
+    });
+    // Search for guardians which are lagging significantly behind
+    chainHeartbeats.forEach((chainHeartbeat) => {
+      if (chainHeartbeat.network.height !== "0") {
+        const height = BigInt(chainHeartbeat.network.height);
+        const diff = highest - height;
+        if (diff > 1000) {
+          if (!downChains[chainId]) {
+            downChains[chainId] = [];
+          }
+          downChains[chainId].push(chainHeartbeat.name);
+        }
       }
     });
   });
@@ -150,7 +169,7 @@ function Alerts({
                     <ListItemText
                       primary="Chains with a quorum of guardians down"
                       secondary="A guardian is considered down if it is
-                      reporting a height of 0 or missing from the list of
+                      reporting a height of 0, more than 1000 behind the highest height, or missing from the list of
                       heartbeats"
                     />
                   </ListItem>
@@ -161,7 +180,7 @@ function Alerts({
                     <ListItemText
                       primary="Chains with one or more guardians down"
                       secondary="A guardian is considered down if it is
-                      reporting a height of 0 or missing from the list of
+                      reporting a height of 0, more than 1000 behind the highest height, or missing from the list of
                       heartbeats"
                     />
                   </ListItem>

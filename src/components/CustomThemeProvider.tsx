@@ -50,15 +50,19 @@ function CustomThemeProvider({ children }: { children: ReactNode }) {
                 },
                 "*": {
                   scrollbarWidth: "thin",
-                  scrollbarColor: `${grey[700]} ${grey[900]}`,
+                  scrollbarColor:
+                    mode === "dark"
+                      ? `${grey[700]} ${grey[900]}`
+                      : `${grey[400]} rgb(255,255,255)`,
                 },
                 "*::-webkit-scrollbar": {
                   width: "8px",
                   height: "8px",
-                  backgroundColor: grey[900],
+                  backgroundColor:
+                    mode === "dark" ? grey[900] : "rgb(255,255,255)",
                 },
                 "*::-webkit-scrollbar-thumb": {
-                  backgroundColor: grey[700],
+                  backgroundColor: mode === "dark" ? grey[700] : grey[400],
                   borderRadius: "4px",
                 },
                 "*::-webkit-scrollbar-corner": {

@@ -1,4 +1,11 @@
-import React, { ReactNode, useContext, useMemo, useState } from "react";
+import React, {
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { useSettingsContext } from "./SettingsContext";
 
 export type Environment = "mainnet" | "testnet" | "devnet";
 export type Network = {
@@ -78,7 +85,17 @@ export const NetworkContextProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const [currentNetwork, setCurrentNetwork] = useState<Network>(defaultNetwork);
+  const {
+    settings: { defaultEndpoint },
+    updateDefaultEndpoint,
+  } = useSettingsContext();
+  const [currentNetwork, setCurrentNetwork] = useState<Network>(
+    networkOptions.find((option) => option.endpoint === defaultEndpoint) ||
+      defaultNetwork
+  );
+  useEffect(() => {
+    updateDefaultEndpoint(currentNetwork.endpoint);
+  }, [currentNetwork, updateDefaultEndpoint]);
   const value = useMemo(
     () => ({ currentNetwork, setCurrentNetwork }),
     [currentNetwork, setCurrentNetwork]

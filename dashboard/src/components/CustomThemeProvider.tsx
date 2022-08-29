@@ -1,4 +1,9 @@
-import { createTheme, responsiveFontSizes, ThemeProvider } from "@mui/material";
+import {
+  Box,
+  createTheme,
+  responsiveFontSizes,
+  ThemeProvider,
+} from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useSettingsContext } from "../contexts/SettingsContext";
@@ -8,7 +13,7 @@ const mediaQueryList =
 
 function CustomThemeProvider({ children }: { children: ReactNode }) {
   const {
-    settings: { theme: themePreference },
+    settings: { theme: themePreference, backgroundOpacity, backgroundUrl },
   } = useSettingsContext();
   const [userPrefersDark, setUserPrefersDark] = useState<boolean>(
     mediaQueryList && mediaQueryList.matches ? true : false
@@ -76,7 +81,27 @@ function CustomThemeProvider({ children }: { children: ReactNode }) {
       ),
     [mode]
   );
-  return <ThemeProvider theme={theme}>{children}</ThemeProvider>;
+  return (
+    <ThemeProvider theme={theme}>
+      {children}
+      {backgroundUrl && (
+        <Box
+          sx={{
+            backgroundImage: `url(${backgroundUrl})`,
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+            opacity: backgroundOpacity || 0.1,
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: -1,
+          }}
+        />
+      )}
+    </ThemeProvider>
+  );
 }
 
 export default CustomThemeProvider;

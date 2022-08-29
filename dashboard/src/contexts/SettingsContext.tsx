@@ -12,12 +12,16 @@ const STORAGE_KEY = "settings";
 export type Theme = "light" | "dark" | "auto";
 
 type Settings = {
+  backgroundUrl?: string;
+  backgroundOpacity?: number;
   defaultEndpoint?: string;
   theme: Theme;
 };
 
 type SettingsContextValue = {
   settings: Settings;
+  updateBackgroundOpacity(value: number): void;
+  updateBackgroundUrl(value: string): void;
   updateDefaultEndpoint(value: string): void;
   updateTheme(value: Theme): void;
 };
@@ -51,6 +55,8 @@ const saveSettings = (settings: Settings) => {
 
 const SettingsContext = React.createContext<SettingsContextValue>({
   settings: initialSettings,
+  updateBackgroundOpacity: (value: number) => {},
+  updateBackgroundUrl: (value: string) => {},
   updateDefaultEndpoint: (value: string) => {},
   updateTheme: (value: Theme) => {},
 });
@@ -61,6 +67,12 @@ export const SettingsContextProvider = ({
   children: ReactNode;
 }) => {
   const [settings, setSettings] = useState<Settings>(initialSettings);
+  const updateBackgroundOpacity = useCallback((value: number) => {
+    setSettings((settings) => ({ ...settings, backgroundOpacity: value }));
+  }, []);
+  const updateBackgroundUrl = useCallback((value: string) => {
+    setSettings((settings) => ({ ...settings, backgroundUrl: value }));
+  }, []);
   const updateDefaultEndpoint = useCallback((value: string) => {
     setSettings((settings) => ({ ...settings, defaultEndpoint: value }));
   }, []);
@@ -72,8 +84,20 @@ export const SettingsContextProvider = ({
     saveSettings(settings);
   }, [settings]);
   const value = useMemo(
-    () => ({ settings, updateDefaultEndpoint, updateTheme }),
-    [settings, updateDefaultEndpoint, updateTheme]
+    () => ({
+      settings,
+      updateBackgroundOpacity,
+      updateBackgroundUrl,
+      updateDefaultEndpoint,
+      updateTheme,
+    }),
+    [
+      settings,
+      updateBackgroundOpacity,
+      updateBackgroundUrl,
+      updateDefaultEndpoint,
+      updateTheme,
+    ]
   );
   return (
     <SettingsContext.Provider value={value}>

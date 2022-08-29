@@ -9,6 +9,7 @@ import {
   TableHead,
   TableRow,
   Theme,
+  useTheme,
 } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { flexRender, Table as TanTable } from "@tanstack/react-table";
@@ -20,6 +21,7 @@ function Table<T>({
   table: TanTable<T>;
   conditionalRowStyle?: (a: T) => SxProps<Theme> | undefined;
 }) {
+  const theme = useTheme();
   return (
     <TableContainer>
       <MuiTable size="small">
@@ -34,7 +36,12 @@ function Table<T>({
                       ? {
                           cursor: "pointer",
                           userSelect: "select-none",
-                          ":hover": { background: grey[800] },
+                          ":hover": {
+                            background:
+                              theme.palette.mode === "dark"
+                                ? grey[800]
+                                : grey[100],
+                          },
                         }
                       : {}
                   }

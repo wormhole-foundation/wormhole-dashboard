@@ -22,6 +22,8 @@ import useLatestRelease from "../hooks/useLatestRelease";
 import chainIdToName from "../utils/chainIdToName";
 import CollapsibleSection from "./CollapsibleSection";
 
+export const BEHIND_DIFF = 1000;
+
 type AlertEntry = {
   severity: AlertColor;
   text: string;
@@ -75,7 +77,7 @@ function chainDownAlerts(
       if (chainHeartbeat.network.height !== "0") {
         const height = BigInt(chainHeartbeat.network.height);
         const diff = highest - height;
-        if (diff > 1000) {
+        if (diff > BEHIND_DIFF) {
           if (!downChains[chainId]) {
             downChains[chainId] = [];
           }
@@ -169,9 +171,9 @@ function Alerts({
                     </ListItemIcon>
                     <ListItemText
                       primary="Chains with a quorum of guardians down"
-                      secondary="A guardian is considered down if it is
-                      reporting a height of 0, more than 1000 behind the highest height, or missing from the list of
-                      heartbeats"
+                      secondary={`A guardian is considered down if it is
+                      reporting a height of 0, more than ${BEHIND_DIFF} behind the highest height, or missing from the list of
+                      heartbeats`}
                     />
                   </ListItem>
                   <ListItem>
@@ -180,9 +182,9 @@ function Alerts({
                     </ListItemIcon>
                     <ListItemText
                       primary="Chains with one or more guardians down"
-                      secondary="A guardian is considered down if it is
-                      reporting a height of 0, more than 1000 behind the highest height, or missing from the list of
-                      heartbeats"
+                      secondary={`A guardian is considered down if it is
+                      reporting a height of 0, more than ${BEHIND_DIFF} behind the highest height, or missing from the list of
+                      heartbeats`}
                     />
                   </ListItem>
                   <ListItem>

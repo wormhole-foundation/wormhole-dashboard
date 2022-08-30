@@ -6,12 +6,13 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ChainIdToHeartbeats,
   HeartbeatInfo,
 } from "../hooks/useChainHeartbeats";
 import chainIdToName from "../utils/chainIdToName";
+import { BEHIND_DIFF } from "./Alerts";
 import Table from "./Table";
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
@@ -34,11 +35,6 @@ const columns = [
   }),
 ];
 
-const conditionalRowStyle = (heartbeat: HeartbeatInfo) =>
-  heartbeat.network.height === "0"
-    ? { backgroundColor: "rgba(100,0,0,.2)" }
-    : {};
-
 function Chain({
   chainId,
   heartbeats,
@@ -58,6 +54,24 @@ function Chain({
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
   });
+  const highest = useMemo(() => {
+    let highest = BigInt(0);
+    heartbeats.forEach((heartbeat) => {
+      const height = BigInt(heartbeat.network.height);
+      if (height > highest) {
+        highest = height;
+      }
+    });
+    return highest;
+  }, [heartbeats]);
+  const conditionalRowStyle = useCallback(
+    (heartbeat: HeartbeatInfo) =>
+      heartbeat.network.height === "0" ||
+      highest - BigInt(heartbeat.network.height) > BEHIND_DIFF
+        ? { backgroundColor: "rgba(100,0,0,.2)" }
+        : {},
+    [highest]
+  );
   return (
     <Grid key={chainId} item xs={12} lg={6}>
       <Card>

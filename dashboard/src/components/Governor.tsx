@@ -11,6 +11,7 @@ import {
   Box,
   Card,
   LinearProgress,
+  Link,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -26,6 +27,7 @@ import useGovernorInfo from "../hooks/useGovernorInfo";
 import chainIdToName from "../utils/chainIdToName";
 import Table from "./Table";
 import numeral from "numeral";
+import EnqueuedVAAChecker from "./EnqueuedVAAChecker";
 
 const calculatePercent = (
   notional: GovernorGetAvailableNotionalByChainResponse_Entry
@@ -98,6 +100,33 @@ const enqueuedColumns = [
   }),
   enqueuedColumnHelper.accessor("sequence", {
     header: () => "Sequence",
+    cell: (info) => (
+      <Link
+        href={`https://wormhole-v2-mainnet-api.certus.one/v1/signed_vaa/${info.row.original.emitterChain}/${info.row.original.emitterAddress}/${info.row.original.sequence}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {info.getValue()}
+      </Link>
+    ),
+  }),
+  enqueuedColumnHelper.display({
+    id: "hasQuorum",
+    header: () => "Has Quorum?",
+    cell: (info) => <EnqueuedVAAChecker vaa={info.row.original} />,
+  }),
+  enqueuedColumnHelper.accessor("txHash", {
+    header: () => "Transaction Hash",
+  }),
+  enqueuedColumnHelper.accessor("releaseTime", {
+    header: () => "Release Time",
+    cell: (info) => new Date(info.getValue() * 1000).toLocaleString(),
+  }),
+  enqueuedColumnHelper.accessor("notionalValue", {
+    header: () => <Box order="1">Notional Value</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
+    ),
   }),
 ];
 

@@ -45,6 +45,9 @@ const columns = [
   columnHelper.accessor("rawHeartbeat.guardianAddr", {
     header: () => "Address",
   }),
+  columnHelper.accessor("p2pNodeAddr", {
+    header: () => "P2P Address",
+  }),
 ];
 
 function Guardians({

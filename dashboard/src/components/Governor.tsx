@@ -59,6 +59,12 @@ const notionalColumns = [
       <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
     ),
   }),
+  notionalColumnHelper.accessor("bigTransactionSize", {
+    header: () => <Box order="1">Big Transaction</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
+    ),
+  }),
   notionalColumnHelper.accessor("remainingAvailableNotional", {
     header: () => <Box order="1">Remaining</Box>,
     cell: (info) => (

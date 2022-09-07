@@ -28,6 +28,17 @@ import chainIdToName from "../utils/chainIdToName";
 import Table from "./Table";
 import numeral from "numeral";
 import EnqueuedVAAChecker from "./EnqueuedVAAChecker";
+import { CHAIN_INFO_MAP } from "../utils/consts";
+import {
+  ChainId,
+  CHAIN_ID_ALGORAND,
+  CHAIN_ID_NEAR,
+  CHAIN_ID_TERRA2,
+  isEVMChain,
+  tryHexToNativeAssetString,
+  tryHexToNativeString,
+} from "@certusone/wormhole-sdk";
+import useSymbolInfo from "../hooks/useSymbolInfo";
 
 const calculatePercent = (
   notional: GovernorGetAvailableNotionalByChainResponse_Entry
@@ -117,6 +128,26 @@ const enqueuedColumns = [
   }),
   enqueuedColumnHelper.accessor("txHash", {
     header: () => "Transaction Hash",
+    cell: (info) => {
+      const chain = info.row.original.emitterChain;
+      const chainInfo = CHAIN_INFO_MAP[chain];
+      var txHash: string = "";
+      if (!isEVMChain(chainInfo.chainId)) {
+        txHash = tryHexToNativeString(
+          info.getValue().slice(2),
+          CHAIN_INFO_MAP[chain].chainId
+        );
+      } else {
+        txHash = info.getValue();
+      }
+      const explorerString = chainInfo.explorerStem;
+      const url = `${explorerString}/tx/${txHash}`;
+      return (
+        <Link href={url} target="_blank" rel="noopener noreferrer">
+          {txHash}
+        </Link>
+      );
+    },
   }),
   enqueuedColumnHelper.accessor("releaseTime", {
     header: () => "Release Time",
@@ -130,8 +161,13 @@ const enqueuedColumns = [
   }),
 ];
 
+interface GovernorGetTokenListResponse_Entry_ext
+  extends GovernorGetTokenListResponse_Entry {
+  symbol: string;
+}
+
 const tokenColumnHelper =
-  createColumnHelper<GovernorGetTokenListResponse_Entry>();
+  createColumnHelper<GovernorGetTokenListResponse_Entry_ext>();
 
 const tokenColumns = [
   tokenColumnHelper.accessor("originChainId", {
@@ -141,6 +177,41 @@ const tokenColumns = [
   }),
   tokenColumnHelper.accessor("originAddress", {
     header: () => "Token",
+    cell: (info) => {
+      const chain = info.row.original.originChainId;
+      const chainInfo = CHAIN_INFO_MAP[chain];
+      const chainId: ChainId = chainInfo.chainId;
+      var tokenAddress: string = "";
+      if (
+        chainId === CHAIN_ID_ALGORAND ||
+        chainId === CHAIN_ID_NEAR ||
+        chainId === CHAIN_ID_TERRA2
+      ) {
+        return info.getValue();
+      }
+      try {
+        tokenAddress = tryHexToNativeAssetString(
+          info.getValue().slice(2),
+          CHAIN_INFO_MAP[chain]?.chainId
+        );
+      } catch (e) {
+        console.log(e);
+        tokenAddress = info.getValue();
+      }
+
+      const explorerString = chainInfo?.explorerStem;
+      const url = `${explorerString}/address/${tokenAddress}`;
+      return (
+        <Link href={url} target="_blank" rel="noopener noreferrer">
+          {tokenAddress}
+        </Link>
+      );
+    },
+  }),
+  tokenColumnHelper.display({
+    id: "Symbol",
+    header: () => "Symbol",
+    cell: (info) => `${info.row.original?.symbol}`,
   }),
   tokenColumnHelper.accessor("price", {
     header: () => <Box order="1">Price</Box>,
@@ -154,6 +225,7 @@ const tokenColumns = [
 
 function Governor() {
   const governorInfo = useGovernorInfo();
+  const tokenSymbols = useSymbolInfo();
   const [notionalSorting, setNotionalSorting] = useState<SortingState>([]);
   const notionalTable = useReactTable({
     columns: notionalColumns,
@@ -181,7 +253,12 @@ function Governor() {
   const [tokenSorting, setTokenSorting] = useState<SortingState>([]);
   const tokenTable = useReactTable({
     columns: tokenColumns,
-    data: governorInfo.tokens,
+    data: governorInfo.tokens.map((tk) => ({
+      ...tk,
+      symbol:
+        tokenSymbols.get([tk.originChainId, tk.originAddress].join("_"))
+          ?.symbol || "",
+    })),
     state: {
       sorting: tokenSorting,
     },
@@ -216,7 +293,9 @@ function Governor() {
               <Typography>Tokens ({governorInfo.tokens.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table<GovernorGetTokenListResponse_Entry> table={tokenTable} />
+              <Table<GovernorGetTokenListResponse_Entry_ext>
+                table={tokenTable}
+              />
             </AccordionDetails>
           </Accordion>
         </Card>

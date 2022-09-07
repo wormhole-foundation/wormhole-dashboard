@@ -51,6 +51,7 @@ function useGovernorInfo(): GovernorInfo {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // TODO: only update GovernorInfo with changes to token list, but that will cause displaySymbols to break
       while (!cancelled) {
         const response = await getGovernorTokenList(currentNetwork);
         if (!cancelled) {

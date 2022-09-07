@@ -49,8 +49,7 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     name: "eth",
     evm: true,
     chainId: CHAIN_ID_ETH,
-    endpointUrl:
-      process.env.REACT_APP_ETH_RPC || "https://main-rpc.linkpool.io",
+    endpointUrl: process.env.REACT_APP_ETH_RPC || "https://rpc.ankr.com/eth",
     apiKey: "",
     urlStem: `https://api.etherscan.io`,
     platform: "ethereum",

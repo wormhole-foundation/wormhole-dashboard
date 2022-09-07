@@ -11,10 +11,8 @@ import { GovernorGetTokenListResponse_Entry } from "@certusone/wormhole-sdk-prot
 import { LCDClient } from "@terra-money/terra.js";
 import axios from "axios";
 import { ethers } from "ethers";
-import { useEffect } from "react";
-import { useNetworkContext } from "../contexts/NetworkContext";
+import { useEffect, useMemo } from "react";
 import { CHAIN_INFO_MAP } from "../utils/consts";
-import { getGovernorTokenList } from "../utils/getGovernorTokenList";
 
 require("dotenv").config();
 
@@ -72,7 +70,6 @@ async function getEvmTokenMetaData(
           !TOKEN_CACHE.get([chain, g.originAddress].join("_"))
       )
       .map((tk) => tk.originAddress);
-
     tokenListByChain.forEach((tk) => {
       const tk_ = tryHexToNativeAssetString(tk.slice(2), chainInfo.chainId);
       formattedTokens.push(tk_);
@@ -89,7 +86,6 @@ async function getEvmTokenMetaData(
         getTokenContract(tokenAddress, provider)
       )
     );
-
     const tokenInfos = await Promise.all(
       tokenContracts.map((tokenContract) =>
         Promise.all([
@@ -403,15 +399,19 @@ async function getTokenMetaData(
 
 const TIMEOUT = 60 * 1000;
 
-function useSymbolInfo() {
-  const { currentNetwork } = useNetworkContext();
+function useSymbolInfo(tokens: GovernorGetTokenListResponse_Entry[]) {
+  // TODO: GovernorInfo gets fetched repeatedly, but we don't need to refresh the list
+  // So using string'd version of token list as a hack around when to update the token list
+  const memoizedTokens = useMemo(() => JSON.stringify(tokens), [tokens]);
+
   useEffect(() => {
+    const tokens = JSON.parse(memoizedTokens);
     (async () => {
-      const response = await getGovernorTokenList(currentNetwork);
-      await getTokenMetaData(response.entries);
+      // TODO: use a state setter to update instead of relying on TOKEN_CACHE.
+      await getTokenMetaData(tokens);
       await new Promise((resolve) => setTimeout(resolve, TIMEOUT));
     })();
-  }, [currentNetwork]);
+  }, [memoizedTokens]);
   return TOKEN_CACHE;
 }
 

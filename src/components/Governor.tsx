@@ -22,7 +22,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import useGovernorInfo from "../hooks/useGovernorInfo";
 import chainIdToName from "../utils/chainIdToName";
 import Table from "./Table";
@@ -231,7 +231,20 @@ const tokenColumns = [
 
 function Governor() {
   const governorInfo = useGovernorInfo();
-  const tokenSymbols = useSymbolInfo();
+  const tokenSymbols = useSymbolInfo(governorInfo.tokens);
+  // TODO: governorInfo.tokens triggers updates to displayTokens, not tokenSymbols
+  // Should fix this
+  const displayTokens = useMemo(
+    () =>
+      governorInfo.tokens.map((tk) => ({
+        ...tk,
+        symbol:
+          tokenSymbols.get([tk.originChainId, tk.originAddress].join("_"))
+            ?.symbol || "",
+      })),
+    [governorInfo.tokens, tokenSymbols]
+  );
+
   const [notionalSorting, setNotionalSorting] = useState<SortingState>([]);
   const notionalTable = useReactTable({
     columns: notionalColumns,
@@ -259,12 +272,7 @@ function Governor() {
   const [tokenSorting, setTokenSorting] = useState<SortingState>([]);
   const tokenTable = useReactTable({
     columns: tokenColumns,
-    data: governorInfo.tokens.map((tk) => ({
-      ...tk,
-      symbol:
-        tokenSymbols.get([tk.originChainId, tk.originAddress].join("_"))
-          ?.symbol || "",
-    })),
+    data: displayTokens,
     state: {
       sorting: tokenSorting,
     },

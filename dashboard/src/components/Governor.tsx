@@ -1,4 +1,13 @@
 import {
+  ChainId,
+  CHAIN_ID_ALGORAND,
+  CHAIN_ID_NEAR,
+  CHAIN_ID_TERRA2,
+  isEVMChain,
+  tryHexToNativeAssetString,
+  tryHexToNativeString,
+} from "@certusone/wormhole-sdk";
+import {
   GovernorGetAvailableNotionalByChainResponse_Entry,
   GovernorGetEnqueuedVAAsResponse_Entry,
   GovernorGetTokenListResponse_Entry,
@@ -22,23 +31,14 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
+import numeral from "numeral";
 import { useMemo, useState } from "react";
 import useGovernorInfo from "../hooks/useGovernorInfo";
-import chainIdToName from "../utils/chainIdToName";
-import Table from "./Table";
-import numeral from "numeral";
-import EnqueuedVAAChecker from "./EnqueuedVAAChecker";
-import { CHAIN_INFO_MAP } from "../utils/consts";
-import {
-  ChainId,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_NEAR,
-  CHAIN_ID_TERRA2,
-  isEVMChain,
-  tryHexToNativeAssetString,
-  tryHexToNativeString,
-} from "@certusone/wormhole-sdk";
 import useSymbolInfo from "../hooks/useSymbolInfo";
+import chainIdToName from "../utils/chainIdToName";
+import { CHAIN_INFO_MAP } from "../utils/consts";
+import EnqueuedVAAChecker from "./EnqueuedVAAChecker";
+import Table from "./Table";
 
 const calculatePercent = (
   notional: GovernorGetAvailableNotionalByChainResponse_Entry
@@ -140,10 +140,14 @@ const enqueuedColumns = [
       if (!chainInfo) return info.getValue();
       var txHash: string = "";
       if (!isEVMChain(chainInfo.chainId)) {
-        txHash = tryHexToNativeString(
-          info.getValue().slice(2),
-          CHAIN_INFO_MAP[chain].chainId
-        );
+        try {
+          txHash = tryHexToNativeString(
+            info.getValue().slice(2),
+            CHAIN_INFO_MAP[chain].chainId
+          );
+        } catch (e) {
+          return info.getValue();
+        }
       } else {
         txHash = info.getValue();
       }

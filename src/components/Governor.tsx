@@ -137,6 +137,7 @@ const enqueuedColumns = [
     cell: (info) => {
       const chain = info.row.original.emitterChain;
       const chainInfo = CHAIN_INFO_MAP[chain];
+      if (!chainInfo) return info.getValue();
       var txHash: string = "";
       if (!isEVMChain(chainInfo.chainId)) {
         txHash = tryHexToNativeString(
@@ -186,6 +187,7 @@ const tokenColumns = [
     cell: (info) => {
       const chain = info.row.original.originChainId;
       const chainInfo = CHAIN_INFO_MAP[chain];
+      if (!chainInfo) return info.getValue();
       const chainId: ChainId = chainInfo.chainId;
       var tokenAddress: string = "";
       if (

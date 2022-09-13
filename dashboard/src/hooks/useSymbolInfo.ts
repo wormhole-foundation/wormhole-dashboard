@@ -370,6 +370,7 @@ async function getTokenMetaData(
     const chain = chains[i];
 
     const chainInfo = CHAIN_INFO_MAP[chain];
+    if (!chainInfo) continue;
     const chainId = chainInfo.chainId;
     try {
       //grab token info

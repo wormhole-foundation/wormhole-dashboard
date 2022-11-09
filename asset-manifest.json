@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.79790793.js",
+    "main.js": "/wormhole-dashboard/static/js/main.fca46040.js",
     "static/js/893.189462d0.chunk.js": "/wormhole-dashboard/static/js/893.189462d0.chunk.js",
     "static/js/535.94d0f955.chunk.js": "/wormhole-dashboard/static/js/535.94d0f955.chunk.js",
     "static/js/546.5516a1a9.chunk.js": "/wormhole-dashboard/static/js/546.5516a1a9.chunk.js",
@@ -10,11 +10,10 @@
     "static/js/388.bb801b10.chunk.js": "/wormhole-dashboard/static/js/388.bb801b10.chunk.js",
     "static/js/427.4ad78793.chunk.js": "/wormhole-dashboard/static/js/427.4ad78793.chunk.js",
     "static/js/725.e40c3711.chunk.js": "/wormhole-dashboard/static/js/725.e40c3711.chunk.js",
-    "static/js/498.fb7adeeb.chunk.js": "/wormhole-dashboard/static/js/498.fb7adeeb.chunk.js",
     "static/js/29.7e5c0937.chunk.js": "/wormhole-dashboard/static/js/29.7e5c0937.chunk.js",
     "module.wasm": "/wormhole-dashboard/8012062eba287dca761b.module.wasm",
     "index.html": "/wormhole-dashboard/index.html",
-    "main.79790793.js.map": "/wormhole-dashboard/static/js/main.79790793.js.map",
+    "main.fca46040.js.map": "/wormhole-dashboard/static/js/main.fca46040.js.map",
     "893.189462d0.chunk.js.map": "/wormhole-dashboard/static/js/893.189462d0.chunk.js.map",
     "535.94d0f955.chunk.js.map": "/wormhole-dashboard/static/js/535.94d0f955.chunk.js.map",
     "546.5516a1a9.chunk.js.map": "/wormhole-dashboard/static/js/546.5516a1a9.chunk.js.map",
@@ -23,10 +22,9 @@
     "509.1ac19fdf.chunk.js.map": "/wormhole-dashboard/static/js/509.1ac19fdf.chunk.js.map",
     "388.bb801b10.chunk.js.map": "/wormhole-dashboard/static/js/388.bb801b10.chunk.js.map",
     "725.e40c3711.chunk.js.map": "/wormhole-dashboard/static/js/725.e40c3711.chunk.js.map",
-    "498.fb7adeeb.chunk.js.map": "/wormhole-dashboard/static/js/498.fb7adeeb.chunk.js.map",
     "29.7e5c0937.chunk.js.map": "/wormhole-dashboard/static/js/29.7e5c0937.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.79790793.js"
+    "static/js/main.fca46040.js"
   ]
 }

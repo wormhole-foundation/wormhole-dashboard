@@ -11,4 +11,4 @@ jobs:
           node-version: 16
           cache: "npm"
       - run: npm ci
-      - run: npm run build
+      - run: NODE_OPTIONS=--max-old-space-size=4096 npm run build

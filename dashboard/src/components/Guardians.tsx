@@ -1,4 +1,3 @@
-import { GetLastHeartbeatsResponse_Entry } from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
 import { Card } from "@mui/material";
 import {
   createColumnHelper,
@@ -8,53 +7,50 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useState } from "react";
+import { Heartbeat } from "../utils/getLastHeartbeats";
 import Table from "./Table";
 
-const columnHelper = createColumnHelper<GetLastHeartbeatsResponse_Entry>();
+const columnHelper = createColumnHelper<Heartbeat>();
 
 const columns = [
-  columnHelper.accessor("rawHeartbeat.nodeName", {
+  columnHelper.accessor("nodeName", {
     header: () => "Guardian",
     sortingFn: `text`,
   }),
-  columnHelper.accessor("rawHeartbeat.version", {
+  columnHelper.accessor("version", {
     header: () => "Version",
   }),
-  columnHelper.accessor("rawHeartbeat.features", {
+  columnHelper.accessor("features", {
     header: () => "Features",
     cell: (info) =>
       info.getValue().length > 0 ? info.getValue().join(", ") : "none",
   }),
-  columnHelper.accessor("rawHeartbeat.counter", {
+  columnHelper.accessor("counter", {
     header: () => "Counter",
   }),
-  columnHelper.accessor("rawHeartbeat.bootTimestamp", {
+  columnHelper.accessor("bootTimestamp", {
     header: () => "Boot",
     cell: (info) =>
       info.getValue()
         ? new Date(Number(info.getValue()) / 1000000).toLocaleString()
         : null,
   }),
-  columnHelper.accessor("rawHeartbeat.timestamp", {
+  columnHelper.accessor("timestamp", {
     header: () => "Timestamp",
     cell: (info) =>
       info.getValue()
         ? new Date(Number(info.getValue()) / 1000000).toLocaleString()
         : null,
   }),
-  columnHelper.accessor("rawHeartbeat.guardianAddr", {
+  columnHelper.accessor("guardianAddr", {
     header: () => "Address",
   }),
-  columnHelper.accessor("p2pNodeAddr", {
-    header: () => "P2P Address",
-  }),
+  //columnHelper.accessor("p2pNodeAddr", {
+  //  header: () => "P2P Address",
+  //}),
 ];
 
-function Guardians({
-  heartbeats,
-}: {
-  heartbeats: GetLastHeartbeatsResponse_Entry[];
-}) {
+function Guardians({ heartbeats }: { heartbeats: Heartbeat[] }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
     columns,
@@ -62,14 +58,14 @@ function Guardians({
     state: {
       sorting,
     },
-    getRowId: (heartbeat) => heartbeat.p2pNodeAddr,
+    getRowId: (heartbeat) => heartbeat.guardianAddr,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
   });
   return (
     <Card>
-      <Table<GetLastHeartbeatsResponse_Entry> table={table} />
+      <Table<Heartbeat> table={table} />
     </Card>
   );
 }

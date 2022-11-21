@@ -34,7 +34,7 @@ function useGovernorInfo(): GovernorInfo {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      while (!cancelled) {
+      while (!cancelled && currentNetwork.type === "guardian") {
         const response = await getGovernorAvailableNotionalByChain(
           currentNetwork
         );
@@ -52,7 +52,7 @@ function useGovernorInfo(): GovernorInfo {
     let cancelled = false;
     (async () => {
       // TODO: only update GovernorInfo with changes to token list, but that will cause displaySymbols to break
-      while (!cancelled) {
+      while (!cancelled && currentNetwork.type === "guardian") {
         const response = await getGovernorTokenList(currentNetwork);
         if (!cancelled) {
           setGovernorInfo((info) => ({ ...info, tokens: response.entries }));
@@ -67,7 +67,7 @@ function useGovernorInfo(): GovernorInfo {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      while (!cancelled) {
+      while (!cancelled && currentNetwork.type === "guardian") {
         const response = await getGovernorEnqueuedVAAs(currentNetwork);
         if (!cancelled) {
           setGovernorInfo((info) => ({ ...info, enqueued: response.entries }));

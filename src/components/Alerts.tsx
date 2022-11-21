@@ -1,4 +1,3 @@
-import { GetLastHeartbeatsResponse_Entry } from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
 import {
   ErrorOutline,
   InfoOutlined,
@@ -20,6 +19,7 @@ import { useMemo } from "react";
 import { ChainIdToHeartbeats } from "../hooks/useChainHeartbeats";
 import useLatestRelease from "../hooks/useLatestRelease";
 import chainIdToName from "../utils/chainIdToName";
+import { Heartbeat } from "../utils/getLastHeartbeats";
 import CollapsibleSection from "./CollapsibleSection";
 
 export const BEHIND_DIFF = 1000;
@@ -37,7 +37,7 @@ const alertSeverityOrder: AlertColor[] = [
 ];
 
 function chainDownAlerts(
-  heartbeats: GetLastHeartbeatsResponse_Entry[],
+  heartbeats: Heartbeat[],
   chainIdsToHeartbeats: ChainIdToHeartbeats
 ): AlertEntry[] {
   const downChains: { [chainId: string]: string[] } = {};
@@ -47,14 +47,14 @@ function chainDownAlerts(
       (guardianHeartbeat) =>
         chainHeartbeats.findIndex(
           (chainHeartbeat) =>
-            chainHeartbeat.guardian === guardianHeartbeat.p2pNodeAddr
+            chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
         ) === -1
     );
     missingGuardians.forEach((guardianHeartbeat) => {
       if (!downChains[chainId]) {
         downChains[chainId] = [];
       }
-      downChains[chainId].push(guardianHeartbeat.rawHeartbeat?.nodeName || "");
+      downChains[chainId].push(guardianHeartbeat.nodeName);
     });
     // Search for guardians with heartbeats but who are not picking up a height
     // Could be disconnected or erroring post initial checks
@@ -98,22 +98,22 @@ function chainDownAlerts(
 
 const releaseChecker = (
   release: string | null,
-  heartbeats: GetLastHeartbeatsResponse_Entry[]
+  heartbeats: Heartbeat[]
 ): AlertEntry[] =>
   release === null
     ? []
     : heartbeats
-        .filter((heartbeat) => heartbeat.rawHeartbeat?.version !== release)
+        .filter((heartbeat) => heartbeat.version !== release)
         .map((heartbeat) => ({
           severity: "info",
-          text: `${heartbeat.rawHeartbeat?.nodeName} is not running the latest release (${heartbeat.rawHeartbeat?.version} !== ${release})`,
+          text: `${heartbeat.nodeName} is not running the latest release (${heartbeat.version} !== ${release})`,
         }));
 
 function Alerts({
   heartbeats,
   chainIdsToHeartbeats,
 }: {
-  heartbeats: GetLastHeartbeatsResponse_Entry[];
+  heartbeats: Heartbeat[];
   chainIdsToHeartbeats: ChainIdToHeartbeats;
 }) {
   const latestRelease = useLatestRelease();

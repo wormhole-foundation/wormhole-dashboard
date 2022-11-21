@@ -1,13 +1,10 @@
-import { GetLastHeartbeatsResponse_Entry } from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
 import { useEffect, useState } from "react";
 import { useNetworkContext } from "../contexts/NetworkContext";
-import { getLastHeartbeats } from "../utils/getLastHeartbeats";
+import { getLastHeartbeats, Heartbeat } from "../utils/getLastHeartbeats";
 
-function useHeartbeats(): GetLastHeartbeatsResponse_Entry[] {
+function useHeartbeats(): Heartbeat[] {
   const { currentNetwork } = useNetworkContext();
-  const [heartbeats, setHeartbeats] = useState<
-    GetLastHeartbeatsResponse_Entry[]
-  >([]);
+  const [heartbeats, setHeartbeats] = useState<Heartbeat[]>([]);
   useEffect(() => {
     setHeartbeats([]);
   }, [currentNetwork]);
@@ -15,17 +12,17 @@ function useHeartbeats(): GetLastHeartbeatsResponse_Entry[] {
     let cancelled = false;
     (async () => {
       while (!cancelled) {
-        const response = await getLastHeartbeats(currentNetwork);
+        const heartbeats = await getLastHeartbeats(currentNetwork);
         if (!cancelled) {
           setHeartbeats(
-            response.entries.sort(
-              (a, b) =>
-                a.rawHeartbeat?.nodeName.localeCompare(
-                  b.rawHeartbeat?.nodeName || ""
-                ) || -1
+            heartbeats.sort((a, b) => a.nodeName.localeCompare(b.nodeName))
+          );
+          await new Promise((resolve) =>
+            setTimeout(
+              resolve,
+              currentNetwork.type === "guardian" ? 1000 : 10000
             )
           );
-          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     })();

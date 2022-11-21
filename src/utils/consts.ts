@@ -213,3 +213,5 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     explorerStem: `https://finder.terra.money/mainnet`,
   },
 };
+
+export const JUMP_GUARDIAN_ADDRESS = "58cc3ae5c097b213ce3c81979e1b9f9570746aa5";

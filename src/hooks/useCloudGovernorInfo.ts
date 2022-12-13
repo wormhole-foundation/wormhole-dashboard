@@ -152,7 +152,7 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
         enqueuedVAAs.push({
           ...vaa,
           emitterChain: chain.chainId,
-          emitterAddress: emitter.emitterAddress,
+          emitterAddress: emitter.emitterAddress.slice(2),
         });
       });
     });

@@ -23,7 +23,7 @@ const columns = [
   columnHelper.accessor("features", {
     header: () => "Features",
     cell: (info) =>
-      info.getValue().length > 0 ? info.getValue().join(", ") : "none",
+      info.getValue()?.length > 0 ? info.getValue().join(", ") : "none",
   }),
   columnHelper.accessor("counter", {
     header: () => "Counter",

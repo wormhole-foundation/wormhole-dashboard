@@ -4,9 +4,14 @@ import {
   ethers_contracts,
 } from "@certusone/wormhole-sdk";
 import { ethers } from "ethers";
-import { EVM_RPCS_BY_CHAIN } from "./consts";
-import { getLastBlockByChain, storeVaasByBlock, VaasByBlock } from "./db";
-import makeVaaKey from "./makeVaaKey";
+import { EVM_RPCS_BY_CHAIN, INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from "./consts";
+import {
+  getLastBlockByChain,
+  makeBlockKey,
+  makeVaaKey,
+  storeVaasByBlock,
+  VaasByBlock,
+} from "./db";
 
 const TIMEOUT = 5 * 1000;
 const MAX_RANGE = 100;
@@ -37,16 +42,19 @@ export async function watch(
   const provider = new ethers.providers.JsonRpcProvider(
     EVM_RPCS_BY_CHAIN[chain]
   );
-  let toBlock = await getFinalizedBlockNumber(provider, finalizedBlockTag);
-  const lastReadBlock =
-    chain === "ethereum"
-      ? 16200570
-      : chain === "avalanche"
-      ? 23732050
-      : getLastBlockByChain(chain);
-  let fromBlock = lastReadBlock !== null ? lastReadBlock : toBlock;
+  let toBlock: number | null = await getFinalizedBlockNumber(
+    provider,
+    finalizedBlockTag
+  );
+  const lastReadBlock: string | null =
+    getLastBlockByChain(chain) ||
+    INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] ||
+    null;
+  let fromBlock: number | null =
+    lastReadBlock !== null ? Number(lastReadBlock) : toBlock;
   while (true) {
     if (fromBlock && toBlock && fromBlock <= toBlock) {
+      // fetch logs for the block range
       toBlock = Math.min(fromBlock + MAX_RANGE, toBlock); // fix for "block range is too wide"
       console.log("fetching", chain, "logs from", fromBlock, "to", toBlock);
       // TODO: fix avax "requested to block 23734227 after last accepted block 23734226"
@@ -58,9 +66,20 @@ export async function watch(
           "0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2",
         ],
       });
+      const timestampsByBlock: { [block: number]: string } = {};
+      // fetch timestamps for each block
       const vaasByBlock: VaasByBlock = {};
       for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
-        vaasByBlock[blockNumber] = [];
+        await sleep(100);
+        console.log("fetching info for", chain, "block", blockNumber);
+        const block = await provider.getBlock(blockNumber);
+        // TODO: fix "Cannot read properties of null (reading 'timestamp')" (fantom)
+        if (!block) {
+          console.error("bad block", blockNumber, "from", chain);
+        }
+        const timestamp = new Date(block.timestamp * 1000).toISOString();
+        timestampsByBlock[blockNumber] = timestamp;
+        vaasByBlock[makeBlockKey(blockNumber.toString(), timestamp)] = [];
       }
       console.log("processing", logs.length, chain, "logs");
       for (const log of logs) {
@@ -69,13 +88,17 @@ export async function watch(
         const {
           args: { sequence },
         } = wormholeInterface.parseLog(log);
-        const key = makeVaaKey(
+        const vaaKey = makeVaaKey(
           log.transactionHash,
           chain,
           emitter,
           sequence.toString()
         );
-        vaasByBlock[blockNumber] = [...(vaasByBlock[blockNumber] || []), key];
+        const blockKey = makeBlockKey(
+          blockNumber.toString(),
+          timestampsByBlock[blockNumber]
+        );
+        vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
       }
       storeVaasByBlock(chain, vaasByBlock);
       fromBlock = toBlock + 1;

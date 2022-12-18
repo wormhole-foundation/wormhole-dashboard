@@ -6,6 +6,7 @@ import { Launch } from "@mui/icons-material";
 import {
   Box,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   FormGroup,
   IconButton,
@@ -129,7 +130,22 @@ function DetailBlocks({
 }
 
 function App() {
-  const [db, setDb] = useState<DB>({});
+  const [dbWrapper, setDbWrapper] = useState<{
+    lastFetched: string;
+    nextFetch: number;
+    isFetching: boolean;
+    error: string;
+    db: DB;
+  }>({
+    lastFetched: "",
+    isFetching: true,
+    nextFetch: Date.now(),
+    error: "",
+    db: {},
+  });
+  const [nextFetchPercent, setNextFetchPercent] = useState<number>(0);
+  const db = dbWrapper.db;
+  const nextFetch = dbWrapper.nextFetch;
   const [showNumbers, setShowNumbers] = useState<boolean>(false);
   const handleToggleNumbers = useCallback(() => {
     setShowNumbers((v) => !v);
@@ -142,13 +158,25 @@ function App() {
     let cancelled = false;
     const fetchDb = async () => {
       if (cancelled) return;
+      setDbWrapper((r) => ({ ...r, isFetching: true, error: "" }));
       try {
         const response = await axios.get<DB>("/api/db");
         if (response.data && !cancelled) {
-          setDb(response.data);
+          setDbWrapper({
+            lastFetched: new Date().toLocaleString(),
+            nextFetch: Date.now() + TIMEOUT,
+            isFetching: false,
+            error: "",
+            db: response.data,
+          });
         }
-      } catch (e) {
-        console.error(e);
+      } catch (e: any) {
+        setDbWrapper((r) => ({
+          ...r,
+          nextFetch: Date.now() + TIMEOUT,
+          isFetching: false,
+          error: e?.message || "An error occurred while fetching the database",
+        }));
       }
     };
     (async () => {
@@ -164,6 +192,22 @@ function App() {
       cancelled = true;
     };
   }, [autoRefresh]);
+  useEffect(() => {
+    if (autoRefresh) {
+      setNextFetchPercent(0);
+      let cancelled = false;
+      const interval = setInterval(() => {
+        const now = Date.now();
+        if (nextFetch > now && !cancelled) {
+          setNextFetchPercent((1 - (nextFetch - now) / TIMEOUT) * 100);
+        }
+      }, TIMEOUT / 20);
+      return () => {
+        cancelled = true;
+        clearInterval(interval);
+      };
+    }
+  }, [autoRefresh, nextFetch]);
   const countsByChain = useMemo(() => {
     const countsByChain: {
       [chain: string]: {
@@ -198,9 +242,35 @@ function App() {
           control={
             <Checkbox value={autoRefresh} onChange={handleToggleAutoRefresh} />
           }
-          label={`Auto-Refresh (${TIMEOUT / 1000}s)`}
+          label={
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              Auto-Refresh ({TIMEOUT / 1000}s)
+              {autoRefresh || dbWrapper.isFetching ? (
+                <CircularProgress
+                  size={20}
+                  variant={
+                    dbWrapper.isFetching ? "indeterminate" : "determinate"
+                  }
+                  value={dbWrapper.isFetching ? undefined : nextFetchPercent}
+                  sx={{ ml: 1 }}
+                />
+              ) : null}
+            </Box>
+          }
         />
       </FormGroup>
+      {dbWrapper.lastFetched ? (
+        <Typography variant="body2">
+          Last retrieved at {dbWrapper.lastFetched}{" "}
+          {dbWrapper.error ? (
+            <Typography component="span" color="error" variant="body2">
+              {dbWrapper.error}
+            </Typography>
+          ) : null}
+        </Typography>
+      ) : (
+        <Typography variant="body2">Loading db...</Typography>
+      )}
       {Object.entries(db).map(([chain, vaasByBlock]) => (
         <CollapsibleSection
           key={chain}

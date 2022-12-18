@@ -28,6 +28,9 @@ export const EVM_RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   arbitrum: "https://arb1.arbitrum.io/rpc",
 };
 
+export const getMaximumBatchSize = (chain: ChainName): number =>
+  chain === "acala" || chain === "karura" ? 50 : 100;
+
 export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   [key in ChainName]?: string;
 } = {

@@ -6,10 +6,7 @@ import { CheckBox, CheckBoxOutlineBlank, Launch } from "@mui/icons-material";
 import {
   Box,
   Button,
-  Checkbox,
   CircularProgress,
-  FormControlLabel,
-  FormGroup,
   IconButton,
   SxProps,
   Theme,
@@ -170,10 +167,10 @@ function CircularProgressCountdown({
   isFetching: boolean;
 }) {
   const [nextFetchPercent, setNextFetchPercent] = useState<number>(0);
-  // clear the state on toggle
+  // clear the state on toggle and refresh
   useEffect(() => {
     setNextFetchPercent(0);
-  }, [autoRefresh]);
+  }, [autoRefresh, isFetching]);
   useEffect(() => {
     if (autoRefresh) {
       let cancelled = false;

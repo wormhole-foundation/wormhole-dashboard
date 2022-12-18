@@ -11,8 +11,8 @@ watch("bsc");
 watch("avalanche");
 watch("oasis");
 watch("fantom");
-// watch("karura"); // TODO: requires safe mode or finalized
-// watch("acala"); // TODO: equires safe mode or finalized
+watch("karura");
+watch("acala");
 // watch("klaytn"); // TODO: doesn't support batch provider and need to sleep between block queries
 watch("celo");
 watch("moonbeam");

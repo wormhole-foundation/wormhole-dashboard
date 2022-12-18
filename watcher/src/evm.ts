@@ -6,7 +6,11 @@ import {
 } from "@certusone/wormhole-sdk";
 import axios from "axios";
 import { ethers } from "ethers";
-import { EVM_RPCS_BY_CHAIN, INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from "./consts";
+import {
+  EVM_RPCS_BY_CHAIN,
+  getMaximumBatchSize,
+  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+} from "./consts";
 import {
   getLastBlockByChain,
   makeBlockKey,
@@ -16,7 +20,6 @@ import {
 } from "./db";
 
 const TIMEOUT = 0.5 * 1000;
-const MAX_RANGE = 100;
 
 async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
@@ -30,9 +33,11 @@ async function getFinalizedBlockNumber(
     | CeloProvider,
   chain: ChainName
 ): Promise<number | null> {
-  // Only Ethereum supports the "finalized" tag (maybe Acala and Karura soon?)
+  // Only Ethereum, Acala, and Karura support the "finalized" tag
   const finalizedBlockTag: ethers.providers.BlockTag =
-    chain === "ethereum" ? "finalized" : "latest";
+    chain === "ethereum" || chain === "karura" || chain === "acala"
+      ? "finalized"
+      : "latest";
   try {
     console.log("fetching", finalizedBlockTag, "block from", chain);
     const block = await provider.getBlock(finalizedBlockTag);
@@ -98,7 +103,7 @@ export async function watch(chain: ChainName) {
   while (true) {
     if (fromBlock && toBlock && fromBlock <= toBlock) {
       // fetch logs for the block range
-      toBlock = Math.min(fromBlock + MAX_RANGE, toBlock); // fix for "block range is too wide"
+      toBlock = Math.min(fromBlock + getMaximumBatchSize(chain) - 1, toBlock); // fix for "block range is too wide" or "maximum batch size is 50, but received 101"
       console.log("fetching", chain, "logs from", fromBlock, "to", toBlock);
       // TODO: fix avax "requested to block 23734227 after last accepted block 23734226"
       const logs = await provider.getLogs({

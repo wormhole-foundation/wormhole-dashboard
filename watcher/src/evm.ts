@@ -1,3 +1,4 @@
+import { CeloProvider } from "@celo-tools/celo-ethers-wrapper";
 import {
   ChainName,
   CONTRACTS,
@@ -13,23 +14,30 @@ import {
   VaasByBlock,
 } from "./db";
 
-const TIMEOUT = 5 * 1000;
+const TIMEOUT = 0.5 * 1000;
 const MAX_RANGE = 100;
 
 async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
 }
 
+// TODO: Refactor into object with explicit functions build per chain
 async function getFinalizedBlockNumber(
   provider:
     | ethers.providers.JsonRpcProvider
-    | ethers.providers.JsonRpcBatchProvider,
-  finalizedBlockTag: ethers.providers.BlockTag,
+    | ethers.providers.JsonRpcBatchProvider
+    | CeloProvider,
   chain: ChainName
 ): Promise<number | null> {
+  // Only Ethereum supports the "finalized" tag (maybe Acala and Karura soon?)
+  const finalizedBlockTag: ethers.providers.BlockTag =
+    chain === "ethereum" ? "finalized" : "latest";
   try {
     console.log("fetching", finalizedBlockTag, "block from", chain);
     const block = await provider.getBlock(finalizedBlockTag);
+    if (chain === "bsc") {
+      return block.number - 15;
+    }
     return block.number;
   } catch (e) {
     console.error(e);
@@ -37,20 +45,21 @@ async function getFinalizedBlockNumber(
   }
 }
 
-export async function watch(
-  chain: ChainName,
-  finalizedBlockTag: ethers.providers.BlockTag
-) {
+export async function watch(chain: ChainName) {
   const wormholeInterface =
     ethers_contracts.Implementation__factory.createInterface();
-  const provider = new ethers.providers.JsonRpcBatchProvider(
-    EVM_RPCS_BY_CHAIN[chain]
-  );
-  let toBlock: number | null = await getFinalizedBlockNumber(
-    provider,
-    finalizedBlockTag,
-    chain
-  );
+  let provider:
+    | ethers.providers.JsonRpcProvider
+    | ethers.providers.JsonRpcBatchProvider
+    | CeloProvider;
+  if (chain === "celo") {
+    provider = new CeloProvider(EVM_RPCS_BY_CHAIN[chain]);
+  } else {
+    provider = new ethers.providers.JsonRpcBatchProvider(
+      EVM_RPCS_BY_CHAIN[chain]
+    );
+  }
+  let toBlock: number | null = await getFinalizedBlockNumber(provider, chain);
   const lastReadBlock: string | null =
     getLastBlockByChain(chain) ||
     INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] ||
@@ -119,6 +128,6 @@ export async function watch(
       fromBlock = toBlock + 1;
     }
     await sleep(TIMEOUT);
-    toBlock = await getFinalizedBlockNumber(provider, finalizedBlockTag, chain);
+    toBlock = await getFinalizedBlockNumber(provider, chain);
   }
 }

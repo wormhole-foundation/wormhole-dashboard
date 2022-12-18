@@ -23,7 +23,7 @@ import { explorerBlock, explorerTx, explorerVaa } from "./utils";
 type VaasByBlock = { [block: number]: string[] };
 type DB = { [chain in ChainId]?: VaasByBlock };
 
-const TIMEOUT = 60 * 1000;
+const TIMEOUT = 10 * 1000;
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: "1em",
   padding: 0,

@@ -6,6 +6,7 @@
     "dev": "ts-node src/index.ts"
   },
   "dependencies": {
+    "@celo-tools/celo-ethers-wrapper": "^0.3.0",
     "@certusone/wormhole-sdk": "^0.9.6",
     "dotenv": "^16.0.3"
   },

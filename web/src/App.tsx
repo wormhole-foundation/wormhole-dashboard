@@ -61,70 +61,76 @@ function DetailBlocks({
 }) {
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", mb: 2 }}>
-      {Object.entries(vaasByBlock).map(([block, vaas]) => (
-        <Tooltip
-          key={block}
-          arrow
-          title={
-            <Box>
-              <Typography>
-                Block {block.split("/")[0]}{" "}
-                <IconButton
-                  href={explorerBlock(
-                    Number(chain) as ChainId,
-                    block.split("/")[0]
-                  )}
-                  target="_blank"
-                  size="small"
-                  sx={inlineIconButtonSx}
-                >
-                  <Launch fontSize="inherit" />
-                </IconButton>
-              </Typography>
-              <Typography variant="body2">
-                {new Date(block.split("/")[1]).toLocaleString()}
-              </Typography>
-              <Typography>VAAs</Typography>
-              {vaas.map((vaa) => (
-                <Box key={vaa}>
-                  <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-                    {vaa.split(":")[0]}{" "}
-                    <IconButton
-                      href={explorerTx(
-                        Number(chain) as ChainId,
-                        vaa.split(":")[0]
-                      )}
-                      target="_blank"
-                      size="small"
-                      sx={inlineIconButtonSx}
-                    >
-                      <Launch fontSize="inherit" />
-                    </IconButton>
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontFamily: "monospace", ml: 1 }}
+      {Object.entries(vaasByBlock)
+        // TODO: this is a hack to not grind the render to a halt
+        .slice(Math.max(Object.keys(vaasByBlock).length, 1000) - 1000)
+        .map(([block, vaas]) => (
+          <Tooltip
+            key={block}
+            arrow
+            title={
+              <Box>
+                <Typography>
+                  Block {block.split("/")[0]}{" "}
+                  <IconButton
+                    href={explorerBlock(
+                      Number(chain) as ChainId,
+                      block.split("/")[0]
+                    )}
+                    target="_blank"
+                    size="small"
+                    sx={inlineIconButtonSx}
                   >
-                    {vaa.split(":")[1]}{" "}
-                    <IconButton
-                      href={explorerVaa(vaa.split(":")[1])}
-                      target="_blank"
-                      size="small"
-                      sx={inlineIconButtonSx}
+                    <Launch fontSize="inherit" />
+                  </IconButton>
+                </Typography>
+                <Typography variant="body2">
+                  {new Date(block.split("/")[1]).toLocaleString()}
+                </Typography>
+                <Typography>VAAs</Typography>
+                {vaas.map((vaa) => (
+                  <Box key={vaa}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontFamily: "monospace" }}
                     >
-                      <Launch fontSize="inherit" />
-                    </IconButton>
-                  </Typography>
-                </Box>
-              ))}
+                      {vaa.split(":")[0]}{" "}
+                      <IconButton
+                        href={explorerTx(
+                          Number(chain) as ChainId,
+                          vaa.split(":")[0]
+                        )}
+                        target="_blank"
+                        size="small"
+                        sx={inlineIconButtonSx}
+                      >
+                        <Launch fontSize="inherit" />
+                      </IconButton>
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontFamily: "monospace", ml: 1 }}
+                    >
+                      {vaa.split(":")[1]}{" "}
+                      <IconButton
+                        href={explorerVaa(vaa.split(":")[1])}
+                        target="_blank"
+                        size="small"
+                        sx={inlineIconButtonSx}
+                      >
+                        <Launch fontSize="inherit" />
+                      </IconButton>
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            }
+          >
+            <Box sx={vaas.length ? doneBlockSx : emptyBlockSx}>
+              {showNumbers ? vaas.length : null}
             </Box>
-          }
-        >
-          <Box sx={vaas.length ? doneBlockSx : emptyBlockSx}>
-            {showNumbers ? vaas.length : null}
-          </Box>
-        </Tooltip>
-      ))}
+          </Tooltip>
+        ))}
     </Box>
   );
 }
@@ -294,7 +300,13 @@ function App() {
                 &nbsp;= {countsByChain[chain].done}
               </Typography>
               <Typography variant="body2">
-                Last Indexed Block{" "}
+                Last Indexed Block -{" "}
+                {
+                  Object.keys(vaasByBlock)[
+                    Object.keys(vaasByBlock).length - 1
+                  ].split("/")[0]
+                }
+                {" - "}
                 {new Date(
                   Object.keys(vaasByBlock)[
                     Object.keys(vaasByBlock).length - 1

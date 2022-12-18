@@ -27,6 +27,8 @@ npm ci
 npm run dev
 ```
 
+There is also a `start.sh` script to auto-restart on crashes.
+
 # Server
 
 Express server that serves up the db file. Eventually there should be, like, a real db and stuff.

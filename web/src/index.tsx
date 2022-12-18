@@ -11,6 +11,22 @@ root.render(
         palette: {
           mode: "dark",
         },
+        components: {
+          MuiButton: {
+            styleOverrides: {
+              root: {
+                textTransform: "none",
+              },
+            },
+          },
+          MuiTooltip: {
+            styleOverrides: {
+              tooltip: {
+                maxWidth: "none",
+              },
+            },
+          },
+        },
       })}
     >
       <CssBaseline />

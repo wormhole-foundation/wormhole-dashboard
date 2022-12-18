@@ -2,9 +2,10 @@ import {
   ChainId,
   coalesceChainName,
 } from "@certusone/wormhole-sdk/lib/esm/utils/consts";
-import { Launch } from "@mui/icons-material";
+import { CheckBox, CheckBoxOutlineBlank, Launch } from "@mui/icons-material";
 import {
   Box,
+  Button,
   Checkbox,
   CircularProgress,
   FormControlLabel,
@@ -16,7 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import CollapsibleSection from "./CollapsibleSection";
 import { explorerBlock, explorerTx, explorerVaa } from "./utils";
 
@@ -50,84 +51,108 @@ async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
 }
 
+function BlockDetail({
+  chain,
+  block,
+  vaas,
+}: {
+  chain: string;
+  block: string;
+  vaas: string[];
+}) {
+  const [blockNumber, timestamp] = block.split("/");
+  return (
+    <Box>
+      <Typography gutterBottom>
+        Block {blockNumber}{" "}
+        <IconButton
+          href={explorerBlock(Number(chain) as ChainId, blockNumber)}
+          target="_blank"
+          size="small"
+          sx={inlineIconButtonSx}
+        >
+          <Launch fontSize="inherit" />
+        </IconButton>
+      </Typography>
+      <Typography variant="body2" gutterBottom>
+        {new Date(timestamp).toLocaleString()}
+      </Typography>
+      <Typography sx={{ mt: 2 }} gutterBottom>
+        VAAs
+      </Typography>
+      {vaas.length === 0
+        ? "None"
+        : vaas.map((vaa) => (
+            <Box key={vaa} sx={{ mb: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{ fontFamily: "monospace" }}
+                gutterBottom
+              >
+                {vaa.split(":")[0]}{" "}
+                <IconButton
+                  href={explorerTx(Number(chain) as ChainId, vaa.split(":")[0])}
+                  target="_blank"
+                  size="small"
+                  sx={inlineIconButtonSx}
+                >
+                  <Launch fontSize="inherit" />
+                </IconButton>
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ fontFamily: "monospace", ml: 1 }}
+                gutterBottom
+              >
+                {vaa.split(":")[1]}{" "}
+                <IconButton
+                  href={explorerVaa(vaa.split(":")[1])}
+                  target="_blank"
+                  size="small"
+                  sx={inlineIconButtonSx}
+                >
+                  <Launch fontSize="inherit" />
+                </IconButton>
+              </Typography>
+            </Box>
+          ))}
+    </Box>
+  );
+}
+
 function DetailBlocks({
   chain,
   vaasByBlock,
-  showNumbers,
+  showEmptyBlocks,
+  showCounts,
 }: {
   chain: string;
   vaasByBlock: VaasByBlock;
-  showNumbers: boolean;
+  showEmptyBlocks: boolean;
+  showCounts: boolean;
 }) {
+  let filteredEntries = Object.entries(vaasByBlock);
+  if (!showEmptyBlocks) {
+    filteredEntries = filteredEntries.filter(
+      ([block, vaas]) => showEmptyBlocks || vaas.length > 0
+    );
+  }
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", mb: 2 }}>
-      {Object.entries(vaasByBlock)
+      {filteredEntries
         // TODO: this is a hack to not grind the render to a halt
-        .slice(Math.max(Object.keys(vaasByBlock).length, 1000) - 1000)
+        .slice(Math.max(filteredEntries.length, 100) - 100)
         .map(([block, vaas]) => (
           <Tooltip
             key={block}
             arrow
-            title={
-              <Box>
-                <Typography>
-                  Block {block.split("/")[0]}{" "}
-                  <IconButton
-                    href={explorerBlock(
-                      Number(chain) as ChainId,
-                      block.split("/")[0]
-                    )}
-                    target="_blank"
-                    size="small"
-                    sx={inlineIconButtonSx}
-                  >
-                    <Launch fontSize="inherit" />
-                  </IconButton>
-                </Typography>
-                <Typography variant="body2">
-                  {new Date(block.split("/")[1]).toLocaleString()}
-                </Typography>
-                <Typography>VAAs</Typography>
-                {vaas.map((vaa) => (
-                  <Box key={vaa}>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontFamily: "monospace" }}
-                    >
-                      {vaa.split(":")[0]}{" "}
-                      <IconButton
-                        href={explorerTx(
-                          Number(chain) as ChainId,
-                          vaa.split(":")[0]
-                        )}
-                        target="_blank"
-                        size="small"
-                        sx={inlineIconButtonSx}
-                      >
-                        <Launch fontSize="inherit" />
-                      </IconButton>
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontFamily: "monospace", ml: 1 }}
-                    >
-                      {vaa.split(":")[1]}{" "}
-                      <IconButton
-                        href={explorerVaa(vaa.split(":")[1])}
-                        target="_blank"
-                        size="small"
-                        sx={inlineIconButtonSx}
-                      >
-                        <Launch fontSize="inherit" />
-                      </IconButton>
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            }
+            enterDelay={500}
+            enterNextDelay={100}
+            TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
+            title={<BlockDetail chain={chain} block={block} vaas={vaas} />}
           >
-            <Box sx={vaas.length ? doneBlockSx : emptyBlockSx}>
-              {showNumbers ? vaas.length : null}
+            <Box key={block} sx={vaas.length ? doneBlockSx : emptyBlockSx}>
+              {showCounts ? vaas.length : null}
             </Box>
           </Tooltip>
         ))}
@@ -145,9 +170,12 @@ function CircularProgressCountdown({
   isFetching: boolean;
 }) {
   const [nextFetchPercent, setNextFetchPercent] = useState<number>(0);
+  // clear the state on toggle
+  useEffect(() => {
+    setNextFetchPercent(0);
+  }, [autoRefresh]);
   useEffect(() => {
     if (autoRefresh) {
-      setNextFetchPercent(0);
       let cancelled = false;
       const interval = setInterval(() => {
         const now = Date.now();
@@ -171,6 +199,27 @@ function CircularProgressCountdown({
   );
 }
 
+function ToggleButton({
+  value,
+  onClick,
+  children,
+}: {
+  value: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      variant="outlined"
+      onClick={onClick}
+      startIcon={value ? <CheckBox /> : <CheckBoxOutlineBlank />}
+      sx={{ mr: 1, mb: 1 }}
+    >
+      {children}
+    </Button>
+  );
+}
+
 function App() {
   const [dbWrapper, setDbWrapper] = useState<{
     lastFetched: string;
@@ -186,13 +235,17 @@ function App() {
     db: {},
   });
   const db = dbWrapper.db;
-  const [showNumbers, setShowNumbers] = useState<boolean>(false);
-  const handleToggleNumbers = useCallback(() => {
-    setShowNumbers((v) => !v);
-  }, []);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const handleToggleAutoRefresh = useCallback(() => {
     setAutoRefresh((v) => !v);
+  }, []);
+  const [showEmptyBlocks, setShowEmptyBlocks] = useState<boolean>(false);
+  const handleToggleEmptyBlocks = useCallback(() => {
+    setShowEmptyBlocks((v) => !v);
+  }, []);
+  const [showCounts, setShowCounts] = useState<boolean>(false);
+  const handleToggleCounts = useCallback(() => {
+    setShowCounts((v) => !v);
   }, []);
   useEffect(() => {
     let cancelled = false;
@@ -232,54 +285,56 @@ function App() {
       cancelled = true;
     };
   }, [autoRefresh]);
-  const countsByChain = useMemo(() => {
-    const countsByChain: {
+  const metaByChain = useMemo(() => {
+    const metaByChain: {
       [chain: string]: {
-        empty: number;
-        pending: number;
-        missed: number;
-        done: number;
+        lastIndexedBlockNumber: string;
+        lastIndexedBlockTime: string;
+        counts: {
+          empty: number;
+          pending: number;
+          missed: number;
+          done: number;
+        };
       };
     } = {};
     Object.entries(db).forEach(([chain, vaasByBlock]) => {
-      countsByChain[chain] = { empty: 0, pending: 0, missed: 0, done: 0 };
-      Object.entries(vaasByBlock).forEach(([block, vaas]) => {
+      const entries = Object.entries(vaasByBlock);
+      const [lastIndexedBlockNumber, lastIndexedBlockTime] =
+        entries[entries.length - 1][0].split("/");
+      metaByChain[chain] = {
+        lastIndexedBlockNumber,
+        lastIndexedBlockTime,
+        counts: { empty: 0, pending: 0, missed: 0, done: 0 },
+      };
+      entries.forEach(([block, vaas]) => {
         if (vaas.length === 0) {
-          countsByChain[chain].empty++;
+          metaByChain[chain].counts.empty++;
         } else {
-          countsByChain[chain].done++;
+          metaByChain[chain].counts.done++;
         }
       });
     });
-    return countsByChain;
+    return metaByChain;
   }, [db]);
   return (
     <Box sx={{ m: { xs: 1, md: 2 } }}>
-      <FormGroup>
-        <FormControlLabel
-          control={
-            <Checkbox value={showNumbers} onChange={handleToggleNumbers} />
-          }
-          label="Show Numbers"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox value={autoRefresh} onChange={handleToggleAutoRefresh} />
-          }
-          label={
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              Auto-Refresh ({TIMEOUT / 1000}s)
-              {autoRefresh || dbWrapper.isFetching ? (
-                <CircularProgressCountdown
-                  autoRefresh={autoRefresh}
-                  nextFetch={dbWrapper.nextFetch}
-                  isFetching={dbWrapper.isFetching}
-                />
-              ) : null}
-            </Box>
-          }
-        />
-      </FormGroup>
+      <ToggleButton value={autoRefresh} onClick={handleToggleAutoRefresh}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          Auto-Refresh ({TIMEOUT / 1000}s)
+          <CircularProgressCountdown
+            autoRefresh={autoRefresh}
+            nextFetch={dbWrapper.nextFetch}
+            isFetching={dbWrapper.isFetching}
+          />
+        </Box>
+      </ToggleButton>
+      <ToggleButton value={showEmptyBlocks} onClick={handleToggleEmptyBlocks}>
+        Show Empty Blocks
+      </ToggleButton>
+      <ToggleButton value={showCounts} onClick={handleToggleCounts}>
+        Show Counts
+      </ToggleButton>
       {dbWrapper.lastFetched ? (
         <Typography variant="body2">
           Last retrieved at {dbWrapper.lastFetched}{" "}
@@ -309,23 +364,16 @@ function App() {
                 gutterBottom
               >
                 <Box sx={emptyBlockSx} />
-                &nbsp;= {countsByChain[chain].empty}
+                &nbsp;= {metaByChain[chain].counts.empty}
                 &nbsp;&nbsp;
                 <Box sx={doneBlockSx} />
-                &nbsp;= {countsByChain[chain].done}
+                &nbsp;= {metaByChain[chain].counts.done}
               </Typography>
               <Typography variant="body2">
-                Last Indexed Block -{" "}
-                {
-                  Object.keys(vaasByBlock)[
-                    Object.keys(vaasByBlock).length - 1
-                  ].split("/")[0]
-                }
+                Last Indexed Block - {metaByChain[chain].lastIndexedBlockNumber}
                 {" - "}
                 {new Date(
-                  Object.keys(vaasByBlock)[
-                    Object.keys(vaasByBlock).length - 1
-                  ].split("/")[1]
+                  metaByChain[chain].lastIndexedBlockTime
                 ).toLocaleString()}
               </Typography>
             </div>
@@ -334,7 +382,8 @@ function App() {
           <DetailBlocks
             chain={chain}
             vaasByBlock={vaasByBlock}
-            showNumbers={showNumbers}
+            showEmptyBlocks={showEmptyBlocks}
+            showCounts={showCounts}
           />
         </CollapsibleSection>
       ))}

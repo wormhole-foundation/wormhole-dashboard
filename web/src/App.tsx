@@ -135,6 +135,42 @@ function DetailBlocks({
   );
 }
 
+function CircularProgressCountdown({
+  autoRefresh,
+  nextFetch,
+  isFetching,
+}: {
+  autoRefresh: boolean;
+  nextFetch: number;
+  isFetching: boolean;
+}) {
+  const [nextFetchPercent, setNextFetchPercent] = useState<number>(0);
+  useEffect(() => {
+    if (autoRefresh) {
+      setNextFetchPercent(0);
+      let cancelled = false;
+      const interval = setInterval(() => {
+        const now = Date.now();
+        if (nextFetch > now && !cancelled) {
+          setNextFetchPercent((1 - (nextFetch - now) / TIMEOUT) * 100);
+        }
+      }, TIMEOUT / 20);
+      return () => {
+        cancelled = true;
+        clearInterval(interval);
+      };
+    }
+  }, [autoRefresh, nextFetch]);
+  return (
+    <CircularProgress
+      size={20}
+      variant={isFetching ? "indeterminate" : "determinate"}
+      value={isFetching ? undefined : nextFetchPercent}
+      sx={{ ml: 1 }}
+    />
+  );
+}
+
 function App() {
   const [dbWrapper, setDbWrapper] = useState<{
     lastFetched: string;
@@ -149,9 +185,7 @@ function App() {
     error: "",
     db: {},
   });
-  const [nextFetchPercent, setNextFetchPercent] = useState<number>(0);
   const db = dbWrapper.db;
-  const nextFetch = dbWrapper.nextFetch;
   const [showNumbers, setShowNumbers] = useState<boolean>(false);
   const handleToggleNumbers = useCallback(() => {
     setShowNumbers((v) => !v);
@@ -198,22 +232,6 @@ function App() {
       cancelled = true;
     };
   }, [autoRefresh]);
-  useEffect(() => {
-    if (autoRefresh) {
-      setNextFetchPercent(0);
-      let cancelled = false;
-      const interval = setInterval(() => {
-        const now = Date.now();
-        if (nextFetch > now && !cancelled) {
-          setNextFetchPercent((1 - (nextFetch - now) / TIMEOUT) * 100);
-        }
-      }, TIMEOUT / 20);
-      return () => {
-        cancelled = true;
-        clearInterval(interval);
-      };
-    }
-  }, [autoRefresh, nextFetch]);
   const countsByChain = useMemo(() => {
     const countsByChain: {
       [chain: string]: {
@@ -252,13 +270,10 @@ function App() {
             <Box sx={{ display: "flex", alignItems: "center" }}>
               Auto-Refresh ({TIMEOUT / 1000}s)
               {autoRefresh || dbWrapper.isFetching ? (
-                <CircularProgress
-                  size={20}
-                  variant={
-                    dbWrapper.isFetching ? "indeterminate" : "determinate"
-                  }
-                  value={dbWrapper.isFetching ? undefined : nextFetchPercent}
-                  sx={{ ml: 1 }}
+                <CircularProgressCountdown
+                  autoRefresh={autoRefresh}
+                  nextFetch={dbWrapper.nextFetch}
+                  isFetching={dbWrapper.isFetching}
                 />
               ) : null}
             </Box>

@@ -4,6 +4,7 @@ import {
   CONTRACTS,
   ethers_contracts,
 } from "@certusone/wormhole-sdk";
+import axios from "axios";
 import { ethers } from "ethers";
 import { EVM_RPCS_BY_CHAIN, INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from "./consts";
 import {
@@ -37,6 +38,34 @@ async function getFinalizedBlockNumber(
     const block = await provider.getBlock(finalizedBlockTag);
     if (chain === "bsc") {
       return block.number - 15;
+    } else if (chain === "moonbeam") {
+      let isBlockFinalized = false;
+      while (!isBlockFinalized) {
+        if (!EVM_RPCS_BY_CHAIN.moonbeam) {
+          throw new Error("Moonbeam RPC is not defined!");
+        }
+        await sleep(100);
+        // refetch the block by number to get an up-to-date hash
+        try {
+          const blockFromNumber = await provider.getBlock(block.number);
+          isBlockFinalized =
+            (
+              await axios.post(EVM_RPCS_BY_CHAIN.moonbeam, [
+                {
+                  jsonrpc: "2.0",
+                  id: "1",
+                  method: "moon_isBlockFinalized",
+                  params: [blockFromNumber.hash],
+                },
+              ])
+            )?.data?.[0]?.result || false;
+        } catch (e) {
+          console.error(
+            "Error while trying to check for finality of Moonbeam block",
+            block.number
+          );
+        }
+      }
     }
     return block.number;
   } catch (e) {

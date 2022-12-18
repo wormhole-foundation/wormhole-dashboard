@@ -293,6 +293,14 @@ function App() {
                 <Box sx={doneBlockSx} />
                 &nbsp;= {countsByChain[chain].done}
               </Typography>
+              <Typography variant="body2">
+                Last Indexed Block{" "}
+                {new Date(
+                  Object.keys(vaasByBlock)[
+                    Object.keys(vaasByBlock).length - 1
+                  ].split("/")[1]
+                ).toLocaleString()}
+              </Typography>
             </div>
           }
         >

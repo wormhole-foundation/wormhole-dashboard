@@ -21,10 +21,14 @@ async function sleep(timeout: number) {
 }
 
 async function getFinalizedBlockNumber(
-  provider: ethers.providers.JsonRpcProvider,
-  finalizedBlockTag: ethers.providers.BlockTag
+  provider:
+    | ethers.providers.JsonRpcProvider
+    | ethers.providers.JsonRpcBatchProvider,
+  finalizedBlockTag: ethers.providers.BlockTag,
+  chain: ChainName
 ): Promise<number | null> {
   try {
+    console.log("fetching", finalizedBlockTag, "block from", chain);
     const block = await provider.getBlock(finalizedBlockTag);
     return block.number;
   } catch (e) {
@@ -39,12 +43,13 @@ export async function watch(
 ) {
   const wormholeInterface =
     ethers_contracts.Implementation__factory.createInterface();
-  const provider = new ethers.providers.JsonRpcProvider(
+  const provider = new ethers.providers.JsonRpcBatchProvider(
     EVM_RPCS_BY_CHAIN[chain]
   );
   let toBlock: number | null = await getFinalizedBlockNumber(
     provider,
-    finalizedBlockTag
+    finalizedBlockTag,
+    chain
   );
   const lastReadBlock: string | null =
     getLastBlockByChain(chain) ||
@@ -69,17 +74,27 @@ export async function watch(
       const timestampsByBlock: { [block: number]: string } = {};
       // fetch timestamps for each block
       const vaasByBlock: VaasByBlock = {};
+      const blockPromises = [];
+      console.log(
+        "fetching info for",
+        chain,
+        "blocks",
+        fromBlock,
+        "to",
+        toBlock
+      );
       for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
-        await sleep(100);
-        console.log("fetching info for", chain, "block", blockNumber);
-        const block = await provider.getBlock(blockNumber);
+        blockPromises.push(provider.getBlock(blockNumber));
+      }
+      const blocks = await Promise.all(blockPromises);
+      for (const block of blocks) {
         // TODO: fix "Cannot read properties of null (reading 'timestamp')" (fantom)
         if (!block) {
-          console.error("bad block", blockNumber, "from", chain);
+          console.error("bad block from", chain);
         }
         const timestamp = new Date(block.timestamp * 1000).toISOString();
-        timestampsByBlock[blockNumber] = timestamp;
-        vaasByBlock[makeBlockKey(blockNumber.toString(), timestamp)] = [];
+        timestampsByBlock[block.number] = timestamp;
+        vaasByBlock[makeBlockKey(block.number.toString(), timestamp)] = [];
       }
       console.log("processing", logs.length, chain, "logs");
       for (const log of logs) {
@@ -104,6 +119,6 @@ export async function watch(
       fromBlock = toBlock + 1;
     }
     await sleep(TIMEOUT);
-    toBlock = await getFinalizedBlockNumber(provider, finalizedBlockTag);
+    toBlock = await getFinalizedBlockNumber(provider, finalizedBlockTag, chain);
   }
 }

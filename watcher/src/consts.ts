@@ -1,6 +1,8 @@
 import { ChainName } from "@certusone/wormhole-sdk";
 require("dotenv").config();
 
+export const TIMEOUT = 0.5 * 1000;
+
 // Notes about RPCs
 // Ethereum
 //   ethereum: "https://rpc.ankr.com/eth", // "finalized" does not work on Ankr as of 2022-12-16

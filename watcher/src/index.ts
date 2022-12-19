@@ -7,7 +7,7 @@ import { watch } from "./evm";
 loadDb();
 // watch("ethereum");
 watch("bsc");
-// watch("polygon"); // TODO: requires waiting for l1 finality
+watch("polygon");
 watch("avalanche");
 watch("oasis");
 watch("fantom");

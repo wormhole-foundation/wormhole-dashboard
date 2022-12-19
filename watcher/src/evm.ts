@@ -10,6 +10,8 @@ import {
   EVM_RPCS_BY_CHAIN,
   getMaximumBatchSize,
   INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+  POLYGON_ROOT_CHAIN_ADDRESS,
+  POLYGON_ROOT_CHAIN_RPC,
 } from "./consts";
 import {
   getLastBlockByChain,
@@ -33,6 +35,36 @@ async function getFinalizedBlockNumber(
     | CeloProvider,
   chain: ChainName
 ): Promise<number | null> {
+  if (chain === "polygon") {
+    console.log("fetching Polygon last child block from Ethereum");
+    const rootChain = new ethers.utils.Interface([
+      `function getLastChildBlock() external view returns (uint256)`,
+    ]);
+    const callData = rootChain.encodeFunctionData("getLastChildBlock");
+    try {
+      const callResult = (
+        await axios.post(POLYGON_ROOT_CHAIN_RPC, [
+          {
+            jsonrpc: "2.0",
+            id: "1",
+            method: "eth_call",
+            params: [
+              { to: POLYGON_ROOT_CHAIN_ADDRESS, data: callData },
+              "latest", // does the guardian use latest?
+            ],
+          },
+        ])
+      )?.data?.[0]?.result;
+      const block = rootChain
+        .decodeFunctionResult("getLastChildBlock", callResult)[0]
+        .toNumber();
+      console.log("rooted child block", block);
+      return block;
+    } catch (e) {
+      console.error("error fetching last child block");
+      return null;
+    }
+  }
   // Only Ethereum, Acala, and Karura support the "finalized" tag
   const finalizedBlockTag: ethers.providers.BlockTag =
     chain === "ethereum" || chain === "karura" || chain === "acala"

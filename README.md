@@ -2,6 +2,12 @@
 
 The goal of this repo is to detect misses by the Wormhole network and provide a visualization of Wormhole messages and misses.
 
+The approach of this code is to crawl for Wormhole transactions on-chain and query if the corresponding VAA is available. This differs fundamentally from wormhole-explorer, in that the explorer provides what _did_ happen in the network, while this code can capture what _didn't_.
+
+1. Detection - discover messages from the source chain, check if they have VAAs
+1. Alerting - send alerts when VAAs are missing for some period of time
+1. Recovery - automatically request that a guardian trigger re-observation on the missed VAA, developing an SLA
+
 # Caveats
 
 - Currently dumps to a flat file in the server directory.

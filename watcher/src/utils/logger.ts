@@ -7,7 +7,27 @@ let logger: WormholeLogger | undefined = undefined;
 
 export type WormholeLogger = Logger & { labels: string[] };
 
-// TODO: add support for custom log levels for scoped loggers
+/**
+ * Get a logger that is scoped to the given labels. If a parent logger is
+ * provided, the parent's labels will be prepended to the given labels.
+ * TODO: add support for custom log levels for scoped loggers
+ *
+ * Assuming `LOG_LEVEL=info`, the loggers below will output the following logs.
+ * ```
+ * getLogger().info(1); // base logger
+ * const foo = getLogger('foo'); // implicitly uses base logger
+ * foo.error(2)
+ * getLogger('bar', foo).debug(3); // not logged because LOG_LEVEL=info
+ * getLogger('bar', foo).warn(4);
+ *
+ * [2022-12-20 05:04:34.168 +0000] [info] [main] 1
+ * [2022-12-20 05:04:34.170 +0000] [error] [foo] 2
+ * [2022-12-20 05:04:34.170 +0000] [warn] [foo | bar] 4
+ * ```
+ * @param labels
+ * @param parent
+ * @returns
+ */
 export const getLogger = (
   labels: string | string[] = [],
   parent?: WormholeLogger

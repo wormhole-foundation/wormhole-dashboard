@@ -1,5 +1,5 @@
 import { ChainName } from '@certusone/wormhole-sdk';
-import { VaasByBlock } from '../db';
+import { VaasByBlock } from '../databases/types';
 import { getLogger, WormholeLogger } from '../utils/logger';
 
 export class Watcher {

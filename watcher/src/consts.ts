@@ -1,5 +1,4 @@
 import { ChainName } from '@certusone/wormhole-sdk';
-require('dotenv').config();
 
 export const TIMEOUT = 0.5 * 1000;
 
@@ -52,3 +51,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   moonbeam: '1486591',
   arbitrum: '18128584',
 };
+
+export const DB_SOURCE = process.env.DB_SOURCE || 'local';
+export const DB_FILE = process.env.DB_FILE || '../server/db.json';

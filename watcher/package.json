@@ -10,6 +10,7 @@
     "@certusone/wormhole-sdk": "^0.9.6",
     "axios": "^1.2.1",
     "dotenv": "^16.0.3",
+    "firebase-admin": "^11.4.0",
     "winston": "^3.8.2"
   },
   "devDependencies": {

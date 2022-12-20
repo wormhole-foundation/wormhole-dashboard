@@ -1,6 +1,3 @@
-import { config } from 'dotenv';
-
-config();
 let loggingEnv: LoggingEnvironment | undefined = undefined;
 
 export type LoggingEnvironment = {
@@ -21,7 +18,7 @@ export const getEnvironment = () => {
   }
 };
 
-const assertEnvironmentVariable = (varName: string) => {
+export const assertEnvironmentVariable = (varName: string) => {
   if (varName in process.env) return process.env[varName]!;
   throw new Error(`Missing required environment variable: ${varName}`);
 };

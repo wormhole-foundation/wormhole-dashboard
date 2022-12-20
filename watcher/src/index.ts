@@ -1,4 +1,6 @@
-import { loadDb } from './db';
+import * as dotenv from 'dotenv';
+dotenv.config();
+import { loadDb } from './databases/utils';
 import { watch } from './watch';
 
 // TODO: use winston for logging

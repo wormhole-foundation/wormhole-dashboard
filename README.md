@@ -35,6 +35,14 @@ npm run dev
 
 There is also a `start.sh` script to auto-restart on crashes.
 
+# Database
+
+Currently two options to load data:
+
+1. local .json file: set env variable DB_SOURCE="local" (default) and optionally set DB_FILE path
+2. google firestore: set DB_SOURCE="firestore" and set FIRESTORE_ACCOUNT_KEY=/path/of/service/account/key.json
+   In addition, set FIRESTORE_COLLECTION to name of your table where you intend to store the data.
+
 # Server
 
 Express server that serves up the db file. Eventually there should be, like, a real db and stuff.

@@ -2,7 +2,8 @@ import { CeloProvider } from '@celo-tools/celo-ethers-wrapper';
 import { CONTRACTS, ethers_contracts, EVMChainName } from '@certusone/wormhole-sdk';
 import { ethers } from 'ethers';
 import { EVM_RPCS_BY_CHAIN } from '../consts';
-import { makeBlockKey, makeVaaKey, VaasByBlock } from '../db';
+import { VaasByBlock } from '../databases/types';
+import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 
 export type EVMProvider =

@@ -1,6 +1,6 @@
 import { ChainName } from '@certusone/wormhole-sdk';
 import { getMaximumBatchSize, INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN, TIMEOUT } from './consts';
-import { getLastBlockByChain, storeVaasByBlock } from './db';
+import { getLastBlockByChain, storeVaasByBlock } from './databases/utils';
 import { sleep } from './utils';
 import { BSCWatcher } from './watchers/BSCWatcher';
 import { EVMWatcher } from './watchers/EVMWatcher';
@@ -47,7 +47,7 @@ export async function watch(chain: ChainName) {
   const watcher = createWatcherByChain[chain]();
   let toBlock: number | null = await watcher.getFinalizedBlockNumber();
   const lastReadBlock: string | null =
-    getLastBlockByChain(chain) || INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] || null;
+    (await getLastBlockByChain(chain)) || INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] || null;
   let fromBlock: number | null = lastReadBlock !== null ? Number(lastReadBlock) : toBlock;
   while (true) {
     if (fromBlock && toBlock && fromBlock <= toBlock) {
@@ -55,7 +55,7 @@ export async function watch(chain: ChainName) {
       toBlock = Math.min(fromBlock + getMaximumBatchSize(chain) - 1, toBlock); // fix for "block range is too wide" or "maximum batch size is 50, but received 101"
       watcher.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
       const vaasByBlock = await watcher.getMessagesForBlocks(fromBlock, toBlock);
-      storeVaasByBlock(chain, vaasByBlock);
+      await storeVaasByBlock(chain, vaasByBlock);
       fromBlock = toBlock + 1;
     }
     await sleep(TIMEOUT);

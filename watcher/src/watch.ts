@@ -1,134 +1,121 @@
+import { ChainName, EVMChainName, isEVMChain } from "@certusone/wormhole-sdk";
+import { createGetFinalizedBlockNumberForBSC } from "./chains/bsc";
 import {
-  ChainName,
-  CONTRACTS,
-  ethers_contracts,
-  EVMChainName,
-  isEVMChain,
-} from "@certusone/wormhole-sdk";
+  createGetBlockByTagForEVM,
+  EVMProvider,
+  getMessagesForBlocksEVM,
+} from "./chains/evm";
+import { createGetFinalizedBlockNumberForMoonbeam } from "./chains/moonbeam";
+import { getFinalizedBlockNumberForPolygon } from "./chains/polygon";
 import {
   getMaximumBatchSize,
   INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
   TIMEOUT,
 } from "./consts";
-import {
-  getLastBlockByChain,
-  makeBlockKey,
-  makeVaaKey,
-  storeVaasByBlock,
-  VaasByBlock,
-} from "./db";
-import {
-  createGetBlockByTagForEVM,
-  createGetFinalizedBlockNumberForBSC,
-  createGetFinalizedBlockNumberForMoonbeam,
-  EVMProvider,
-  getEVMProvider,
-  getFinalizedBlockNumberForPolygon,
-  getMessagesForBlocksEVM,
-} from "./evm";
+import { getLastBlockByChain, storeVaasByBlock, VaasByBlock } from "./db";
 import { sleep } from "./utils";
 
 export type GetFinalizedBlockNumberResult = Promise<number | null>;
 export type GetFinalizedBlockNumber = () => GetFinalizedBlockNumberResult;
-export type CreateGetFinalizedBlockNumber =
-  () => () => GetFinalizedBlockNumberResult;
 // The extra level of function call allows the creates to initialize providers lazily
 // TODO: avoid ethers and their providers and we can avoid being lazy ;)
-const notImplemented: CreateGetFinalizedBlockNumber = () => () => {
-  throw new Error("Not Implemented");
-};
-
-const createGetFinalizedBlockNumberByChain: {
-  [chain in ChainName]: CreateGetFinalizedBlockNumber;
-} = {
-  unset: notImplemented,
-  solana: notImplemented,
-  ethereum: () => createGetBlockByTagForEVM("ethereum", "finalized"),
-  terra: notImplemented,
-  bsc: () => createGetFinalizedBlockNumberForBSC(),
-  polygon: () => getFinalizedBlockNumberForPolygon,
-  avalanche: () => createGetBlockByTagForEVM("avalanche"),
-  oasis: () => createGetBlockByTagForEVM("oasis"),
-  algorand: notImplemented,
-  aurora: notImplemented,
-  fantom: () => createGetBlockByTagForEVM("fantom"),
-  karura: () => createGetBlockByTagForEVM("karura", "finalized"),
-  acala: () => createGetBlockByTagForEVM("acala", "finalized"),
-  klaytn: () => createGetBlockByTagForEVM("klaytn"),
-  celo: () => createGetBlockByTagForEVM("celo"),
-  near: notImplemented,
-  moonbeam: () => createGetFinalizedBlockNumberForMoonbeam(),
-  neon: notImplemented,
-  terra2: notImplemented,
-  injective: notImplemented,
-  osmosis: notImplemented,
-  sui: notImplemented,
-  aptos: notImplemented,
-  arbitrum: notImplemented,
-  optimism: notImplemented,
-  gnosis: notImplemented,
-  pythnet: notImplemented,
-  xpla: notImplemented,
-  btc: notImplemented,
-  wormchain: notImplemented,
-};
-
-const notImplementedMessagesForBlocks = (
-  chain: ChainName,
+export type CreateGetFinalizedBlockNumber =
+  () => () => GetFinalizedBlockNumberResult;
+export type GetMessagesForBlocksResult = Promise<VaasByBlock>;
+export type GetMessagesForBlocks = (
+  chain: EVMChainName,
   fromBlock: number,
-  toBlock: number,
-  provider: EVMProvider
-) => {
-  throw new Error("Not Implemented");
+  toBlock: number
+) => GetMessagesForBlocksResult;
+
+export type Watcher = {
+  getFinalizedBlockNumber: GetFinalizedBlockNumber;
+  getMessagesForBlocks: GetMessagesForBlocks;
 };
 
-const getMessagesForBlocks: {
-  [chain in ChainName]: (
-    chain: EVMChainName,
-    fromBlock: number,
-    toBlock: number,
-    provider: EVMProvider
-  ) => Promise<VaasByBlock>;
+const createUnimplementedWatcher = (): Watcher => ({
+  getFinalizedBlockNumber: () => {
+    throw new Error("Not Implemented");
+  },
+  getMessagesForBlocks: () => {
+    throw new Error("Not Implemented");
+  },
+});
+
+const createWatcherByChain: {
+  [chain in ChainName]: () => Watcher;
 } = {
-  unset: notImplementedMessagesForBlocks,
-  solana: notImplementedMessagesForBlocks,
-  ethereum: getMessagesForBlocksEVM,
-  terra: notImplementedMessagesForBlocks,
-  bsc: getMessagesForBlocksEVM,
-  polygon: getMessagesForBlocksEVM,
-  avalanche: getMessagesForBlocksEVM,
-  oasis: getMessagesForBlocksEVM,
-  algorand: notImplementedMessagesForBlocks,
-  aurora: notImplementedMessagesForBlocks,
-  fantom: getMessagesForBlocksEVM,
-  karura: getMessagesForBlocksEVM,
-  acala: getMessagesForBlocksEVM,
-  klaytn: getMessagesForBlocksEVM,
-  celo: getMessagesForBlocksEVM,
-  near: notImplementedMessagesForBlocks,
-  moonbeam: getMessagesForBlocksEVM,
-  neon: notImplementedMessagesForBlocks,
-  terra2: notImplementedMessagesForBlocks,
-  injective: notImplementedMessagesForBlocks,
-  osmosis: notImplementedMessagesForBlocks,
-  sui: notImplementedMessagesForBlocks,
-  aptos: notImplementedMessagesForBlocks,
-  arbitrum: notImplementedMessagesForBlocks,
-  optimism: notImplementedMessagesForBlocks,
-  gnosis: notImplementedMessagesForBlocks,
-  pythnet: notImplementedMessagesForBlocks,
-  xpla: notImplementedMessagesForBlocks,
-  btc: notImplementedMessagesForBlocks,
-  wormchain: notImplementedMessagesForBlocks,
+  unset: createUnimplementedWatcher,
+  solana: createUnimplementedWatcher,
+  ethereum: () => ({
+    getFinalizedBlockNumber: createGetBlockByTagForEVM("ethereum", "finalized"),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  terra: createUnimplementedWatcher,
+  bsc: () => ({
+    getFinalizedBlockNumber: createGetFinalizedBlockNumberForBSC(),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  polygon: () => ({
+    getFinalizedBlockNumber: getFinalizedBlockNumberForPolygon,
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  avalanche: () => ({
+    getFinalizedBlockNumber: createGetBlockByTagForEVM("avalanche"),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  oasis: () => ({
+    getFinalizedBlockNumber: createGetBlockByTagForEVM("oasis"),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  algorand: createUnimplementedWatcher,
+  aurora: createUnimplementedWatcher,
+  fantom: () => ({
+    getFinalizedBlockNumber: createGetBlockByTagForEVM("fantom"),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  karura: () => ({
+    getFinalizedBlockNumber: createGetBlockByTagForEVM("karura", "finalized"),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  acala: () => ({
+    getFinalizedBlockNumber: createGetBlockByTagForEVM("acala", "finalized"),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  klaytn: () => ({
+    getFinalizedBlockNumber: createGetBlockByTagForEVM("klaytn"),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  celo: () => ({
+    getFinalizedBlockNumber: createGetBlockByTagForEVM("celo"),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  near: createUnimplementedWatcher,
+  moonbeam: () => ({
+    getFinalizedBlockNumber: createGetFinalizedBlockNumberForMoonbeam(),
+    getMessagesForBlocks: getMessagesForBlocksEVM,
+  }),
+  neon: createUnimplementedWatcher,
+  terra2: createUnimplementedWatcher,
+  injective: createUnimplementedWatcher,
+  osmosis: createUnimplementedWatcher,
+  sui: createUnimplementedWatcher,
+  aptos: createUnimplementedWatcher,
+  arbitrum: createUnimplementedWatcher,
+  optimism: createUnimplementedWatcher,
+  gnosis: createUnimplementedWatcher,
+  pythnet: createUnimplementedWatcher,
+  xpla: createUnimplementedWatcher,
+  btc: createUnimplementedWatcher,
+  wormchain: createUnimplementedWatcher,
 };
 
 export async function watch(chain: ChainName) {
   if (!isEVMChain(chain)) {
     throw new Error(`Unsupported chain ${chain}`);
   }
-  const provider = getEVMProvider(chain);
-  const getFinalizedBlockNumber = createGetFinalizedBlockNumberByChain[chain]();
-  let toBlock: number | null = await getFinalizedBlockNumber();
+  const watcher = createWatcherByChain[chain]();
+  let toBlock: number | null = await watcher.getFinalizedBlockNumber();
   const lastReadBlock: string | null =
     getLastBlockByChain(chain) ||
     INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] ||
@@ -140,16 +127,15 @@ export async function watch(chain: ChainName) {
       // fetch logs for the block range
       toBlock = Math.min(fromBlock + getMaximumBatchSize(chain) - 1, toBlock); // fix for "block range is too wide" or "maximum batch size is 50, but received 101"
       console.log("fetching", chain, "messages from", fromBlock, "to", toBlock);
-      const vaasByBlock = await getMessagesForBlocks[chain](
+      const vaasByBlock = await watcher.getMessagesForBlocks(
         chain,
         fromBlock,
-        toBlock,
-        provider
+        toBlock
       );
       storeVaasByBlock(chain, vaasByBlock);
       fromBlock = toBlock + 1;
     }
     await sleep(TIMEOUT);
-    toBlock = await getFinalizedBlockNumber();
+    toBlock = await watcher.getFinalizedBlockNumber();
   }
 }

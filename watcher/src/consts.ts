@@ -1,4 +1,4 @@
-import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { ChainName, CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 
 export const TIMEOUT = 0.5 * 1000;
 
@@ -23,6 +23,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   polygon: 'https://rpc.ankr.com/polygon',
   avalanche: 'https://rpc.ankr.com/avalanche',
   oasis: 'https://emerald.oasis.dev',
+  algorand: 'https://mainnet-api.algonode.cloud',
   fantom: 'https://rpc.ankr.com/fantom',
   karura: 'https://eth-rpc-karura.aca-api.network',
   acala: 'https://eth-rpc-acala.aca-api.network',
@@ -36,6 +37,16 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
 // Separating for now so if we max out infura we can keep Polygon going
 export const POLYGON_ROOT_CHAIN_RPC = 'https://rpc.ankr.com/eth';
 export const POLYGON_ROOT_CHAIN_ADDRESS = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287';
+
+export const ALGORAND_INFO = {
+  appid: Number(CONTRACTS.MAINNET.algorand.core),
+  algodToken: '',
+  algodServer: RPCS_BY_CHAIN.algorand,
+  algodPort: 443,
+  server: 'https://mainnet-idx.algonode.cloud',
+  port: 443,
+  token: '',
+};
 
 export const DB_SOURCE = process.env.DB_SOURCE || 'local';
 export const JSON_DB_FILE = process.env.JSON_DB_FILE || '../server/db.json';

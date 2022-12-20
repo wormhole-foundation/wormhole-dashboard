@@ -9,7 +9,8 @@
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",
     "@certusone/wormhole-sdk": "^0.9.6",
     "axios": "^1.2.1",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "prettier": "2.8.1",

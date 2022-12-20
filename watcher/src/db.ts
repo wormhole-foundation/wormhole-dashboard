@@ -1,5 +1,6 @@
 import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk';
 import { readFileSync, writeFileSync } from 'fs';
+import { getLogger } from './utils/logger';
 
 export type VaasByBlock = { [blockInfo: string]: string[] };
 export type DB = { [chain in ChainId]?: VaasByBlock };
@@ -8,12 +9,14 @@ const DB_FILE = '../server/db.json';
 const ENCODING = 'utf8';
 let db: DB = {};
 
+const logger = getLogger('db');
+
 export const loadDb = (): void => {
   try {
     const raw = readFileSync(DB_FILE, ENCODING);
     db = JSON.parse(raw);
   } catch (e) {
-    console.error('Failed to load DB, initiating a fresh one.');
+    logger.error('Failed to load DB, initiating a fresh one.');
   }
 };
 

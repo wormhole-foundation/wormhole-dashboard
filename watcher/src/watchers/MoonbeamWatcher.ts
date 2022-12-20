@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { EVM_RPCS_BY_CHAIN } from '../consts';
 import { sleep } from '../utils';
-import { EVMWatcher } from './evm';
+import { EVMWatcher } from './EVMWatcher';
 
 export class MoonbeamWatcher extends EVMWatcher {
   constructor() {
@@ -31,7 +31,7 @@ export class MoonbeamWatcher extends EVMWatcher {
               ])
             )?.data?.[0]?.result || false;
         } catch (e) {
-          console.error('Error while trying to check for finality of Moonbeam block', latestBlock);
+          this.logger.error(`error while trying to check for finality of block ${latestBlock}`);
         }
       }
     }

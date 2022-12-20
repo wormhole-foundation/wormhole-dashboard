@@ -3,7 +3,7 @@ import { CONTRACTS, ethers_contracts, EVMChainName } from '@certusone/wormhole-s
 import { ethers } from 'ethers';
 import { EVM_RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey, makeVaaKey, VaasByBlock } from '../db';
-import { Watcher } from '../watch';
+import { Watcher } from './Watcher';
 
 export type EVMProvider =
   | ethers.providers.JsonRpcProvider
@@ -14,12 +14,11 @@ const wormholeInterface = ethers_contracts.Implementation__factory.createInterfa
 
 export type BlockTag = 'finalized' | 'safe' | 'latest';
 
-export class EVMWatcher implements Watcher {
-  chain: EVMChainName;
+export class EVMWatcher extends Watcher {
   finalizedBlockTag: BlockTag;
   provider: EVMProvider;
   constructor(chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
-    this.chain = chain;
+    super(chain);
     this.finalizedBlockTag = finalizedBlockTag;
     if (chain === 'celo') {
       this.provider = new CeloProvider(EVM_RPCS_BY_CHAIN[chain]);
@@ -29,11 +28,11 @@ export class EVMWatcher implements Watcher {
   }
   async getFinalizedBlockNumber(): Promise<number | null> {
     try {
-      console.log('fetching block', this.finalizedBlockTag, 'from', this.chain);
+      this.logger.info(`fetching block ${this.finalizedBlockTag}`);
       const block = await this.provider.getBlock(this.finalizedBlockTag);
       return block.number;
     } catch (e) {
-      console.error(e);
+      this.logger.error(e);
       return null;
     }
   }
@@ -49,7 +48,7 @@ export class EVMWatcher implements Watcher {
     // fetch timestamps for each block
     const vaasByBlock: VaasByBlock = {};
     const blockPromises = [];
-    console.log('fetching info for', this.chain, 'blocks', fromBlock, 'to', toBlock);
+    this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
     for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
       blockPromises.push(this.provider.getBlock(blockNumber));
     }
@@ -57,13 +56,13 @@ export class EVMWatcher implements Watcher {
     for (const block of blocks) {
       // TODO: fix "Cannot read properties of null (reading 'timestamp')" (fantom)
       if (!block) {
-        console.error('bad block from', this.chain);
+        this.logger.error(`bad block`);
       }
       const timestamp = new Date(block.timestamp * 1000).toISOString();
       timestampsByBlock[block.number] = timestamp;
       vaasByBlock[makeBlockKey(block.number.toString(), timestamp)] = [];
     }
-    console.log('processing', logs.length, this.chain, 'logs');
+    this.logger.info(`processing ${logs.length} logs`);
     for (const log of logs) {
       const blockNumber = log.blockNumber;
       const emitter = log.topics[1].slice(2);

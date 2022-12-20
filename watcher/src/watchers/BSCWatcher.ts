@@ -1,4 +1,4 @@
-import { EVMWatcher } from './evm';
+import { EVMWatcher } from './EVMWatcher';
 
 export class BSCWatcher extends EVMWatcher {
   constructor() {

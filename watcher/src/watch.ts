@@ -1,24 +1,12 @@
 import { ChainName } from '@certusone/wormhole-sdk';
-import { BSCWatcher } from './chains/bsc';
-import { EVMWatcher } from './chains/evm';
-import { MoonbeamWatcher } from './chains/moonbeam';
-import { PolygonWatcher } from './chains/polygon';
 import { getMaximumBatchSize, INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN, TIMEOUT } from './consts';
-import { getLastBlockByChain, storeVaasByBlock, VaasByBlock } from './db';
+import { getLastBlockByChain, storeVaasByBlock } from './db';
 import { sleep } from './utils';
-
-export class Watcher {
-  chain: ChainName;
-  constructor(chain: ChainName) {
-    this.chain = chain;
-  }
-  async getFinalizedBlockNumber(): Promise<number | null> {
-    throw new Error('Not Implemented');
-  }
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    throw new Error('Not Implemented');
-  }
-}
+import { BSCWatcher } from './watchers/BSCWatcher';
+import { EVMWatcher } from './watchers/EVMWatcher';
+import { MoonbeamWatcher } from './watchers/MoonbeamWatcher';
+import { PolygonWatcher } from './watchers/PolygonWatcher';
+import { Watcher } from './watchers/Watcher';
 
 const createWatcherByChain: {
   [chain in ChainName]: () => Watcher;
@@ -65,7 +53,7 @@ export async function watch(chain: ChainName) {
     if (fromBlock && toBlock && fromBlock <= toBlock) {
       // fetch logs for the block range
       toBlock = Math.min(fromBlock + getMaximumBatchSize(chain) - 1, toBlock); // fix for "block range is too wide" or "maximum batch size is 50, but received 101"
-      console.log('fetching', chain, 'messages from', fromBlock, 'to', toBlock);
+      watcher.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
       const vaasByBlock = await watcher.getMessagesForBlocks(fromBlock, toBlock);
       storeVaasByBlock(chain, vaasByBlock);
       fromBlock = toBlock + 1;

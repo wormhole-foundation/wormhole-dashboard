@@ -1,14 +1,14 @@
 import axios from 'axios';
 import { ethers } from 'ethers';
 import { POLYGON_ROOT_CHAIN_ADDRESS, POLYGON_ROOT_CHAIN_RPC } from '../consts';
-import { EVMWatcher } from './evm';
+import { EVMWatcher } from './EVMWatcher';
 
 export class PolygonWatcher extends EVMWatcher {
   constructor() {
     super('polygon');
   }
   async getFinalizedBlockNumber(): Promise<number | null> {
-    console.log('fetching Polygon last child block from Ethereum');
+    this.logger.info('fetching last child block from Ethereum');
     const rootChain = new ethers.utils.Interface([
       `function getLastChildBlock() external view returns (uint256)`,
     ]);
@@ -28,10 +28,10 @@ export class PolygonWatcher extends EVMWatcher {
         ])
       )?.data?.[0]?.result;
       const block = rootChain.decodeFunctionResult('getLastChildBlock', callResult)[0].toNumber();
-      console.log('rooted child block', block);
+      this.logger.info(`rooted child block ${block}`);
       return block;
     } catch (e) {
-      console.error('error fetching last child block');
+      this.logger.error('error fetching last child block');
       return null;
     }
   }

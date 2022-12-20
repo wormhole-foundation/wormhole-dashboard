@@ -21,7 +21,7 @@ import {
   CHAIN_ID_TERRA,
   CHAIN_ID_TERRA2,
   CHAIN_ID_XPLA,
-} from "@certusone/wormhole-sdk/lib/esm/utils/consts";
+} from '@certusone/wormhole-sdk/lib/esm/utils/consts';
 
 export const explorerBlock = (chainId: ChainId, block: string) =>
   chainId === CHAIN_ID_ETH
@@ -66,7 +66,7 @@ export const explorerBlock = (chainId: ChainId, block: string) =>
     ? `https://arbiscan.io/block/${block}`
     : chainId === CHAIN_ID_INJECTIVE
     ? `https://explorer.injective.network/block/${block}`
-    : "";
+    : '';
 
 export const explorerTx = (chainId: ChainId, tx: string) =>
   chainId === CHAIN_ID_ETH
@@ -111,9 +111,9 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     ? `https://arbiscan.io/tx/${tx}`
     : chainId === CHAIN_ID_INJECTIVE
     ? `https://explorer.injective.network/tx/${tx}`
-    : "";
+    : '';
 
 export const explorerVaa = (key: string) =>
-  `https://wormhole.com/explorer/?emitterChain=${
-    key.split("/")[0]
-  }&emitterAddress=${key.split("/")[1]}&sequence=${key.split("/")[2]}`;
+  `https://wormhole.com/explorer/?emitterChain=${key.split('/')[0]}&emitterAddress=${key.split('/')[1]}&sequence=${
+    key.split('/')[2]
+  }`;

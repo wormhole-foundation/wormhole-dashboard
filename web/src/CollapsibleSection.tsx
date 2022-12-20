@@ -1,14 +1,8 @@
-import { ExpandMore } from "@mui/icons-material";
-import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
-import { ReactNode } from "react";
+import { ExpandMore } from '@mui/icons-material';
+import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
+import { ReactNode } from 'react';
 
-function CollapsibleSection({
-  header,
-  children,
-}: {
-  header: ReactNode;
-  children: ReactNode;
-}) {
+function CollapsibleSection({ header, children }: { header: ReactNode; children: ReactNode }) {
   return (
     <Accordion
       disableGutters
@@ -16,14 +10,14 @@ function CollapsibleSection({
       sx={{
         // background: "transparent",
         my: 0.5,
-        "&.Mui-expanded:first-of-type": {
+        '&.Mui-expanded:first-of-type': {
           marginTop: 0.5,
         },
-        "&:not(:last-child)": {
+        '&:not(:last-child)': {
           borderBottom: 0,
         },
-        "&:before": {
-          display: "none",
+        '&:before': {
+          display: 'none',
         },
       }}
     >

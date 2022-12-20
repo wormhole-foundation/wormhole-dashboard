@@ -1,67 +1,47 @@
-import {
-  ChainId,
-  coalesceChainName,
-} from "@certusone/wormhole-sdk/lib/esm/utils/consts";
-import { CheckBox, CheckBoxOutlineBlank, Launch } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  SxProps,
-  Theme,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import axios from "axios";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import CollapsibleSection from "./CollapsibleSection";
-import { explorerBlock, explorerTx, explorerVaa } from "./utils";
+import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
+import { CheckBox, CheckBoxOutlineBlank, Launch } from '@mui/icons-material';
+import { Box, Button, CircularProgress, IconButton, SxProps, Theme, Tooltip, Typography } from '@mui/material';
+import axios from 'axios';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import CollapsibleSection from './CollapsibleSection';
+import { explorerBlock, explorerTx, explorerVaa } from './utils';
 
 type VaasByBlock = { [block: number]: string[] };
 type DB = { [chain in ChainId]?: VaasByBlock };
 
 const TIMEOUT = 60 * 1000;
 const inlineIconButtonSx: SxProps<Theme> = {
-  fontSize: "1em",
+  fontSize: '1em',
   padding: 0,
   mt: -0.5,
 };
 const baseBlockSx: SxProps<Theme> = {
   height: 16,
   width: 16,
-  border: "1px solid black",
-  fontSize: "10px",
-  textAlign: "center",
-  verticalAlign: "middle",
+  border: '1px solid black',
+  fontSize: '10px',
+  textAlign: 'center',
+  verticalAlign: 'middle',
 };
 const emptyBlockSx: SxProps<Theme> = {
   ...baseBlockSx,
-  backgroundColor: "#333",
+  backgroundColor: '#333',
 };
 const doneBlockSx: SxProps<Theme> = {
   ...baseBlockSx,
-  backgroundColor: "green",
+  backgroundColor: 'green',
 };
 
 async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
 }
 
-function BlockDetail({
-  chain,
-  block,
-  vaas,
-}: {
-  chain: string;
-  block: string;
-  vaas: string[];
-}) {
-  const [blockNumber, timestamp] = block.split("/");
+function BlockDetail({ chain, block, vaas }: { chain: string; block: string; vaas: string[] }) {
+  const [blockNumber, timestamp] = block.split('/');
   return (
     <Box>
       <Typography gutterBottom>
-        Block {blockNumber}{" "}
+        Block {blockNumber}{' '}
         <IconButton
           href={explorerBlock(Number(chain) as ChainId, blockNumber)}
           target="_blank"
@@ -78,17 +58,13 @@ function BlockDetail({
         VAAs
       </Typography>
       {vaas.length === 0
-        ? "None"
+        ? 'None'
         : vaas.map((vaa) => (
             <Box key={vaa} sx={{ mb: 1 }}>
-              <Typography
-                variant="body2"
-                sx={{ fontFamily: "monospace" }}
-                gutterBottom
-              >
-                {vaa.split(":")[0]}{" "}
+              <Typography variant="body2" sx={{ fontFamily: 'monospace' }} gutterBottom>
+                {vaa.split(':')[0]}{' '}
                 <IconButton
-                  href={explorerTx(Number(chain) as ChainId, vaa.split(":")[0])}
+                  href={explorerTx(Number(chain) as ChainId, vaa.split(':')[0])}
                   target="_blank"
                   size="small"
                   sx={inlineIconButtonSx}
@@ -96,18 +72,9 @@ function BlockDetail({
                   <Launch fontSize="inherit" />
                 </IconButton>
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{ fontFamily: "monospace", ml: 1 }}
-                gutterBottom
-              >
-                {vaa.split(":")[1]}{" "}
-                <IconButton
-                  href={explorerVaa(vaa.split(":")[1])}
-                  target="_blank"
-                  size="small"
-                  sx={inlineIconButtonSx}
-                >
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', ml: 1 }} gutterBottom>
+                {vaa.split(':')[1]}{' '}
+                <IconButton href={explorerVaa(vaa.split(':')[1])} target="_blank" size="small" sx={inlineIconButtonSx}>
                   <Launch fontSize="inherit" />
                 </IconButton>
               </Typography>
@@ -130,12 +97,10 @@ function DetailBlocks({
 }) {
   let filteredEntries = Object.entries(vaasByBlock);
   if (!showEmptyBlocks) {
-    filteredEntries = filteredEntries.filter(
-      ([block, vaas]) => showEmptyBlocks || vaas.length > 0
-    );
+    filteredEntries = filteredEntries.filter(([block, vaas]) => showEmptyBlocks || vaas.length > 0);
   }
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", mb: 2 }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', mb: 2 }}>
       {filteredEntries
         // TODO: this is a hack to not grind the render to a halt
         .slice(Math.max(filteredEntries.length, 100) - 100)
@@ -189,7 +154,7 @@ function CircularProgressCountdown({
   return (
     <CircularProgress
       size={20}
-      variant={isFetching ? "indeterminate" : "determinate"}
+      variant={isFetching ? 'indeterminate' : 'determinate'}
       value={isFetching ? undefined : nextFetchPercent}
       sx={{ ml: 1 }}
     />
@@ -225,10 +190,10 @@ function App() {
     error: string;
     db: DB;
   }>({
-    lastFetched: "",
+    lastFetched: '',
     isFetching: true,
     nextFetch: Date.now(),
-    error: "",
+    error: '',
     db: {},
   });
   const db = dbWrapper.db;
@@ -248,15 +213,15 @@ function App() {
     let cancelled = false;
     const fetchDb = async () => {
       if (cancelled) return;
-      setDbWrapper((r) => ({ ...r, isFetching: true, error: "" }));
+      setDbWrapper((r) => ({ ...r, isFetching: true, error: '' }));
       try {
-        const response = await axios.get<DB>("/api/db");
+        const response = await axios.get<DB>('/api/db');
         if (response.data && !cancelled) {
           setDbWrapper({
             lastFetched: new Date().toLocaleString(),
             nextFetch: Date.now() + TIMEOUT,
             isFetching: false,
-            error: "",
+            error: '',
             db: response.data,
           });
         }
@@ -265,7 +230,7 @@ function App() {
           ...r,
           nextFetch: Date.now() + TIMEOUT,
           isFetching: false,
-          error: e?.message || "An error occurred while fetching the database",
+          error: e?.message || 'An error occurred while fetching the database',
         }));
       }
     };
@@ -297,8 +262,7 @@ function App() {
     } = {};
     Object.entries(db).forEach(([chain, vaasByBlock]) => {
       const entries = Object.entries(vaasByBlock);
-      const [lastIndexedBlockNumber, lastIndexedBlockTime] =
-        entries[entries.length - 1][0].split("/");
+      const [lastIndexedBlockNumber, lastIndexedBlockTime] = entries[entries.length - 1][0].split('/');
       metaByChain[chain] = {
         lastIndexedBlockNumber,
         lastIndexedBlockTime,
@@ -317,7 +281,7 @@ function App() {
   return (
     <Box sx={{ m: { xs: 1, md: 2 } }}>
       <ToggleButton value={autoRefresh} onClick={handleToggleAutoRefresh}>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           Auto-Refresh ({TIMEOUT / 1000}s)
           <CircularProgressCountdown
             autoRefresh={autoRefresh}
@@ -334,7 +298,7 @@ function App() {
       </ToggleButton>
       {dbWrapper.lastFetched ? (
         <Typography variant="body2">
-          Last retrieved at {dbWrapper.lastFetched}{" "}
+          Last retrieved at {dbWrapper.lastFetched}{' '}
           {dbWrapper.error ? (
             <Typography component="span" color="error" variant="body2">
               {dbWrapper.error}
@@ -355,8 +319,8 @@ function App() {
               <Typography
                 component="div"
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
                 gutterBottom
               >
@@ -368,10 +332,8 @@ function App() {
               </Typography>
               <Typography variant="body2">
                 Last Indexed Block - {metaByChain[chain].lastIndexedBlockNumber}
-                {" - "}
-                {new Date(
-                  metaByChain[chain].lastIndexedBlockTime
-                ).toLocaleString()}
+                {' - '}
+                {new Date(metaByChain[chain].lastIndexedBlockTime).toLocaleString()}
               </Typography>
             </div>
           }

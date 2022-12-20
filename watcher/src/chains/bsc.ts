@@ -1,8 +1,8 @@
-import { GetFinalizedBlockNumberResult } from "../watch";
-import { createGetBlockByTagForEVM } from "./evm";
+import { GetFinalizedBlockNumberResult } from '../watch';
+import { createGetBlockByTagForEVM } from './evm';
 
 export function createGetFinalizedBlockNumberForBSC() {
-  const getLatestBlock = createGetBlockByTagForEVM("bsc");
+  const getLatestBlock = createGetBlockByTagForEVM('bsc');
   return async (): GetFinalizedBlockNumberResult => {
     const latestBlock = await getLatestBlock();
     if (latestBlock !== null) {

@@ -1,5 +1,5 @@
-import { ChainName } from "@certusone/wormhole-sdk";
-require("dotenv").config();
+import { ChainName } from '@certusone/wormhole-sdk';
+require('dotenv').config();
 
 export const TIMEOUT = 0.5 * 1000;
 
@@ -17,39 +17,37 @@ export const TIMEOUT = 0.5 * 1000;
 
 export const EVM_RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   ethereum: process.env.ETH_RPC,
-  bsc: "https://rpc.ankr.com/bsc",
-  polygon: "https://rpc.ankr.com/polygon",
-  avalanche: "https://rpc.ankr.com/avalanche",
-  oasis: "https://emerald.oasis.dev",
-  fantom: "https://rpc.ankr.com/fantom",
-  karura: "https://eth-rpc-karura.aca-api.network",
-  acala: "https://eth-rpc-acala.aca-api.network",
-  klaytn: "https://public-node-api.klaytnapi.com/v1/cypress",
-  celo: "https://forno.celo.org",
-  moonbeam: "https://rpc.ankr.com/moonbeam",
-  arbitrum: "https://arb1.arbitrum.io/rpc",
+  bsc: 'https://rpc.ankr.com/bsc',
+  polygon: 'https://rpc.ankr.com/polygon',
+  avalanche: 'https://rpc.ankr.com/avalanche',
+  oasis: 'https://emerald.oasis.dev',
+  fantom: 'https://rpc.ankr.com/fantom',
+  karura: 'https://eth-rpc-karura.aca-api.network',
+  acala: 'https://eth-rpc-acala.aca-api.network',
+  klaytn: 'https://public-node-api.klaytnapi.com/v1/cypress',
+  celo: 'https://forno.celo.org',
+  moonbeam: 'https://rpc.ankr.com/moonbeam',
+  arbitrum: 'https://arb1.arbitrum.io/rpc',
 };
 
 // Separating for now so if we max out infura we can keep Polygon going
-export const POLYGON_ROOT_CHAIN_RPC = "https://rpc.ankr.com/eth";
-export const POLYGON_ROOT_CHAIN_ADDRESS =
-  "0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287";
+export const POLYGON_ROOT_CHAIN_RPC = 'https://rpc.ankr.com/eth';
+export const POLYGON_ROOT_CHAIN_ADDRESS = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287';
 
-export const getMaximumBatchSize = (chain: ChainName): number =>
-  chain === "acala" || chain === "karura" ? 50 : 100;
+export const getMaximumBatchSize = (chain: ChainName): number => (chain === 'acala' || chain === 'karura' ? 50 : 100);
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   [key in ChainName]?: string;
 } = {
-  ethereum: "12959638",
-  bsc: "9745450",
-  avalanche: "8237163",
-  oasis: "1757",
-  fantom: "31817467",
-  karura: "1824665",
-  acala: "1144161",
-  klaytn: "90563824",
-  celo: "12947144",
-  moonbeam: "1486591",
-  arbitrum: "18128584",
+  ethereum: '12959638',
+  bsc: '9745450',
+  avalanche: '8237163',
+  oasis: '1757',
+  fantom: '31817467',
+  karura: '1824665',
+  acala: '1144161',
+  klaytn: '90563824',
+  celo: '12947144',
+  moonbeam: '1486591',
+  arbitrum: '18128584',
 };

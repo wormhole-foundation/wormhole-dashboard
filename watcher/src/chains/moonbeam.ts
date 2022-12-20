@@ -1,13 +1,14 @@
 import axios from 'axios';
 import { EVM_RPCS_BY_CHAIN } from '../consts';
 import { sleep } from '../utils';
-import { GetFinalizedBlockNumberResult } from '../watch';
-import { getEVMProvider, safeGetBlockByTag } from './evm';
+import { EVMWatcher } from './evm';
 
-export function createGetFinalizedBlockNumberForMoonbeam() {
-  const provider = getEVMProvider('moonbeam');
-  return async (): GetFinalizedBlockNumberResult => {
-    const latestBlock = await safeGetBlockByTag('moonbeam', 'latest', provider);
+export class MoonbeamWatcher extends EVMWatcher {
+  constructor() {
+    super('moonbeam');
+  }
+  async getFinalizedBlockNumber(): Promise<number | null> {
+    const latestBlock = await super.getFinalizedBlockNumber();
     if (latestBlock !== null) {
       let isBlockFinalized = false;
       while (!isBlockFinalized) {
@@ -17,7 +18,7 @@ export function createGetFinalizedBlockNumberForMoonbeam() {
         await sleep(100);
         // refetch the block by number to get an up-to-date hash
         try {
-          const blockFromNumber = await provider.getBlock(latestBlock);
+          const blockFromNumber = await this.provider.getBlock(latestBlock);
           isBlockFinalized =
             (
               await axios.post(EVM_RPCS_BY_CHAIN.moonbeam, [
@@ -35,5 +36,5 @@ export function createGetFinalizedBlockNumberForMoonbeam() {
       }
     }
     return null;
-  };
+  }
 }

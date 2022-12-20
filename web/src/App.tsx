@@ -1,6 +1,15 @@
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
 import { CheckBox, CheckBoxOutlineBlank, Launch } from '@mui/icons-material';
-import { Box, Button, CircularProgress, IconButton, SxProps, Theme, Tooltip, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  IconButton,
+  SxProps,
+  Theme,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import axios from 'axios';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CollapsibleSection from './CollapsibleSection';
@@ -74,7 +83,12 @@ function BlockDetail({ chain, block, vaas }: { chain: string; block: string; vaa
               </Typography>
               <Typography variant="body2" sx={{ fontFamily: 'monospace', ml: 1 }} gutterBottom>
                 {vaa.split(':')[1]}{' '}
-                <IconButton href={explorerVaa(vaa.split(':')[1])} target="_blank" size="small" sx={inlineIconButtonSx}>
+                <IconButton
+                  href={explorerVaa(vaa.split(':')[1])}
+                  target="_blank"
+                  size="small"
+                  sx={inlineIconButtonSx}
+                >
                   <Launch fontSize="inherit" />
                 </IconButton>
               </Typography>
@@ -262,7 +276,8 @@ function App() {
     } = {};
     Object.entries(db).forEach(([chain, vaasByBlock]) => {
       const entries = Object.entries(vaasByBlock);
-      const [lastIndexedBlockNumber, lastIndexedBlockTime] = entries[entries.length - 1][0].split('/');
+      const [lastIndexedBlockNumber, lastIndexedBlockTime] =
+        entries[entries.length - 1][0].split('/');
       metaByChain[chain] = {
         lastIndexedBlockNumber,
         lastIndexedBlockTime,

@@ -114,6 +114,6 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     : '';
 
 export const explorerVaa = (key: string) =>
-  `https://wormhole.com/explorer/?emitterChain=${key.split('/')[0]}&emitterAddress=${key.split('/')[1]}&sequence=${
-    key.split('/')[2]
-  }`;
+  `https://wormhole.com/explorer/?emitterChain=${key.split('/')[0]}&emitterAddress=${
+    key.split('/')[1]
+  }&sequence=${key.split('/')[2]}`;

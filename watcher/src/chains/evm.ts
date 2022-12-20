@@ -5,7 +5,10 @@ import { EVM_RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey, makeVaaKey, VaasByBlock } from '../db';
 import { Watcher } from '../watch';
 
-export type EVMProvider = ethers.providers.JsonRpcProvider | ethers.providers.JsonRpcBatchProvider | CeloProvider;
+export type EVMProvider =
+  | ethers.providers.JsonRpcProvider
+  | ethers.providers.JsonRpcBatchProvider
+  | CeloProvider;
 
 const wormholeInterface = ethers_contracts.Implementation__factory.createInterface();
 

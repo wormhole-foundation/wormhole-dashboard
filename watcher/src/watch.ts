@@ -58,7 +58,8 @@ const createWatcherByChain: {
 export async function watch(chain: ChainName) {
   const watcher = createWatcherByChain[chain]();
   let toBlock: number | null = await watcher.getFinalizedBlockNumber();
-  const lastReadBlock: string | null = getLastBlockByChain(chain) || INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] || null;
+  const lastReadBlock: string | null =
+    getLastBlockByChain(chain) || INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] || null;
   let fromBlock: number | null = lastReadBlock !== null ? Number(lastReadBlock) : toBlock;
   while (true) {
     if (fromBlock && toBlock && fromBlock <= toBlock) {

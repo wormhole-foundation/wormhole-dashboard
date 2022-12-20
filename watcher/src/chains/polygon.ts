@@ -9,7 +9,9 @@ export class PolygonWatcher extends EVMWatcher {
   }
   async getFinalizedBlockNumber(): Promise<number | null> {
     console.log('fetching Polygon last child block from Ethereum');
-    const rootChain = new ethers.utils.Interface([`function getLastChildBlock() external view returns (uint256)`]);
+    const rootChain = new ethers.utils.Interface([
+      `function getLastChildBlock() external view returns (uint256)`,
+    ]);
     const callData = rootChain.encodeFunctionData('getLastChildBlock');
     try {
       const callResult = (

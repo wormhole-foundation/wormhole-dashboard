@@ -20,8 +20,12 @@ export const loadDb = (): void => {
 // TODO: should this be a composite key or should the value become more complex
 export const makeBlockKey = (block: string, timestamp: string): string => `${block}/${timestamp}`;
 
-export const makeVaaKey = (transactionHash: string, chain: ChainId | ChainName, emitter: string, seq: string): string =>
-  `${transactionHash}:${coalesceChainId(chain)}/${emitter}/${seq}`;
+export const makeVaaKey = (
+  transactionHash: string,
+  chain: ChainId | ChainName,
+  emitter: string,
+  seq: string
+): string => `${transactionHash}:${coalesceChainId(chain)}/${emitter}/${seq}`;
 
 export const storeVaasByBlock = (chain: ChainName, vaasByBlock: VaasByBlock): void => {
   const chainId = coalesceChainId(chain);

@@ -34,7 +34,8 @@ export const EVM_RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
 export const POLYGON_ROOT_CHAIN_RPC = 'https://rpc.ankr.com/eth';
 export const POLYGON_ROOT_CHAIN_ADDRESS = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287';
 
-export const getMaximumBatchSize = (chain: ChainName): number => (chain === 'acala' || chain === 'karura' ? 50 : 100);
+export const getMaximumBatchSize = (chain: ChainName): number =>
+  chain === 'acala' || chain === 'karura' ? 50 : 100;
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   [key in ChainName]?: string;

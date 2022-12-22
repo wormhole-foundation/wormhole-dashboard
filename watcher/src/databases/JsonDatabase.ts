@@ -1,6 +1,6 @@
 import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { readFileSync, writeFileSync } from 'fs';
-import { DB_FILE, DB_LAST_BLOCK_FILE } from '../consts';
+import { JSON_DB_FILE, DB_LAST_BLOCK_FILE } from '../consts';
 import { Database } from './Database';
 import { DB, LastBlockByChain, VaasByBlock } from './types';
 
@@ -14,13 +14,13 @@ export class JsonDatabase extends Database {
     super();
     this.db = {};
     this.lastBlockByChain = {};
-    if (!process.env.DB_FILE) {
-      this.logger.info(`no db file set, using default path=${DB_FILE}`);
+    if (!process.env.JSON_DB_FILE) {
+      this.logger.info(`no db file set, using default path=${JSON_DB_FILE}`);
     }
     if (!process.env.DB_LAST_BLOCK_FILE) {
       this.logger.info(`no db file set, using default path=${DB_LAST_BLOCK_FILE}`);
     }
-    this.dbFile = DB_FILE;
+    this.dbFile = JSON_DB_FILE;
     this.dbLastBlockFile = DB_LAST_BLOCK_FILE;
   }
   async loadDb(): Promise<DB> {

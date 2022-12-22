@@ -4,7 +4,7 @@ import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import fs from 'fs';
 import {
-  DB_FILE,
+  JSON_DB_FILE,
   DB_LAST_BLOCK_FILE,
   DB_SOURCE,
   FIRESTORE_ACCOUNT_KEY_PATH,
@@ -51,7 +51,7 @@ app.get('/api/db', async (req, res) => {
   let db;
   let lastBlockByChain = {};
   if (DB_SOURCE === 'local') {
-    db = JSON.parse(fs.readFileSync(DB_FILE, ENCODING));
+    db = JSON.parse(fs.readFileSync(JSON_DB_FILE, ENCODING));
     lastBlockByChain = JSON.parse(fs.readFileSync(DB_LAST_BLOCK_FILE, ENCODING));
   } else {
     db = await loadFirestoreDb();

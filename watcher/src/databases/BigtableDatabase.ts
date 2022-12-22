@@ -86,22 +86,22 @@ export class BigtableDatabase extends Database {
       this.logger.info(
         `for chain=${chain}, found most recent firestore block=${vaasByBlock?.lastBlock}`
       );
-      return vaasByBlock?.lastBlock;
+      return vaasByBlock?.lastBlock.split('/')[0];
     }
     return null;
   }
 
-  async storeLatestBlock(chain: ChainName, lastBlock: string): Promise<void> {
+  async storeLatestBlock(chain: ChainName, lastBlockKey: string): Promise<void> {
     if (this.firestoreDb === undefined) {
       this.logger.error('no firestore db set');
       return;
     }
     const chainId = coalesceChainId(chain);
-    this.logger.info(`storing last block=${lastBlock} for chain=${chainId}`);
+    this.logger.info(`storing last block=${lastBlockKey} for chain=${chainId}`);
     const lastOservedBlock = this.firestoreDb
       .collection(this.latestCollectionName)
       .doc(`${chainId.toString()}`);
-    await lastOservedBlock.set({ lastBlock } || {});
+    await lastOservedBlock.set({ lastBlockKey } || {});
   }
 
   async storeVaasByBlock(chain: ChainName, vaasByBlock: VaasByBlock): Promise<void> {
@@ -126,16 +126,11 @@ export class BigtableDatabase extends Database {
     await table.insert(rowsToInsert);
 
     // store latest vaasByBlock to firestore
-    let lastBlock = undefined;
-    if (vaasByBlock) {
-      const blockInfos = Object.keys(vaasByBlock);
-      if (blockInfos.length) {
-        lastBlock = blockInfos[blockInfos.length - 1].split('/')[0];
-        this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlock}`);
-      }
-    }
-    if (lastBlock !== undefined) {
-      await this.storeLatestBlock(chain, lastBlock);
+    const blockInfos = Object.keys(vaasByBlock);
+    if (blockInfos.length) {
+      const lastBlockKey = blockInfos[blockInfos.length - 1];
+      this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlockKey}`);
+      await this.storeLatestBlock(chain, lastBlockKey);
     }
   }
 }

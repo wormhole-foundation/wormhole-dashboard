@@ -37,7 +37,7 @@ npm run dev
 
 Currently three options to load and save data:
 
-1. local .json file: set env variable DB_SOURCE="local" (default) and optionally set DB_FILE path
+1. local .json file: set env variable DB_SOURCE="local" (default) and optionally set JSON_DB_FILE path
 2. google firestore: set DB_SOURCE="firestore" and set FIRESTORE_ACCOUNT_KEY=/path/of/service/account/key.json
    In addition, set FIRESTORE_COLLECTION to name of your table where you intend to store the data.
 3. google bigtable with firestore:

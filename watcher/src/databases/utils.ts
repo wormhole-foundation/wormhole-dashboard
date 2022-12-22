@@ -2,7 +2,6 @@ import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib
 import { DB_SOURCE } from '../consts';
 import { DB, VaasByBlock } from './types';
 import { BigtableDatabase } from './BigtableDatabase';
-import { FirestoreDatabase } from './FirestoreDatabase';
 import { JsonDatabase } from './JsonDatabase';
 import { Database } from './Database';
 // // TODO: should this be a composite key or should the value become more complex
@@ -16,12 +15,7 @@ export const makeVaaKey = (
 let db: DB = {};
 let database: Database = new Database();
 export const loadDb = async (): Promise<void> => {
-  database =
-    DB_SOURCE === 'firestore'
-      ? new FirestoreDatabase()
-      : DB_SOURCE === 'bigtable'
-      ? new BigtableDatabase()
-      : new JsonDatabase();
+  database = DB_SOURCE === 'bigtable' ? new BigtableDatabase() : new JsonDatabase();
   try {
     db = await database.loadDb();
   } catch (e) {

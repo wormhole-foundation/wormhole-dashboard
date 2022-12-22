@@ -1,4 +1,9 @@
-import { ChainId, ChainName, coalesceChainId, CHAINS } from '@certusone/wormhole-sdk';
+import {
+  ChainId,
+  ChainName,
+  coalesceChainId,
+  CHAINS,
+} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 // need firestore for reading last blocks
 import { assertEnvironmentVariable } from '../utils/environment';
 import { Database } from './Database';

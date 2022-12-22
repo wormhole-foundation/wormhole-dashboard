@@ -81,12 +81,11 @@ export class BigtableDatabase extends Database {
       .collection(this.latestCollectionName)
       .doc(chainId.toString());
     const lastObservedBlockByChain = await lastObservedBlock.get();
-    const vaasByBlock = lastObservedBlockByChain.data() || {};
-    if (vaasByBlock) {
-      this.logger.info(
-        `for chain=${chain}, found most recent firestore block=${vaasByBlock?.lastBlock}`
-      );
-      return vaasByBlock?.lastBlock.split('/')[0];
+    const blockKeyData = lastObservedBlockByChain.data();
+    const lastBlockKey = blockKeyData?.lastBlockKey;
+    if (lastBlockKey) {
+      this.logger.info(`for chain=${chain}, found most recent firestore block=${lastBlockKey}`);
+      return lastBlockKey.split('/')[0];
     }
     return null;
   }
@@ -98,10 +97,10 @@ export class BigtableDatabase extends Database {
     }
     const chainId = coalesceChainId(chain);
     this.logger.info(`storing last block=${lastBlockKey} for chain=${chainId}`);
-    const lastOservedBlock = this.firestoreDb
+    const lastObservedBlock = this.firestoreDb
       .collection(this.latestCollectionName)
       .doc(`${chainId.toString()}`);
-    await lastOservedBlock.set({ lastBlockKey } || {});
+    await lastObservedBlock.set({ lastBlockKey });
   }
 
   async storeVaasByBlock(chain: ChainName, vaasByBlock: VaasByBlock): Promise<void> {

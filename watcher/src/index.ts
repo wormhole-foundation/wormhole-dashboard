@@ -1,9 +1,9 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { loadDb } from './databases/utils';
+import { initDb } from './databases/utils';
 import { watch } from './watch';
 
-loadDb();
+initDb();
 // watch('ethereum');
 watch('bsc');
 watch('polygon');

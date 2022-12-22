@@ -1,6 +1,6 @@
 import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { DB_SOURCE } from '../consts';
-import { DB, VaasByBlock } from './types';
+import { VaasByBlock } from './types';
 import { BigtableDatabase } from './BigtableDatabase';
 import { JsonDatabase } from './JsonDatabase';
 import { Database } from './Database';
@@ -12,15 +12,9 @@ export const makeVaaKey = (
   emitter: string,
   seq: string
 ): string => `${transactionHash}:${coalesceChainId(chain)}/${emitter}/${seq}`;
-let db: DB = {};
 let database: Database = new Database();
-export const loadDb = async (): Promise<void> => {
+export const initDb = async (): Promise<void> => {
   database = DB_SOURCE === 'bigtable' ? new BigtableDatabase() : new JsonDatabase();
-  try {
-    db = await database.loadDb();
-  } catch (e) {
-    db = {};
-  }
 };
 export const getLastBlockByChain = async (chain: ChainName): Promise<string | null> => {
   return database.getLastBlockByChain(chain);

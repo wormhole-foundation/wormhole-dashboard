@@ -1,6 +1,6 @@
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { getLogger, WormholeLogger } from '../utils/logger';
-import { DB, VaasByBlock } from './types';
+import { VaasByBlock } from './types';
 
 export class Database {
   logger: WormholeLogger;
@@ -13,9 +13,6 @@ export class Database {
       if (vaas.length > 0) filteredVaasByBlock[block] = [...vaas];
     }
     return filteredVaasByBlock;
-  }
-  async loadDb(): Promise<DB> {
-    throw new Error('Not Implemented');
   }
   async getLastBlockByChain(chain: ChainName): Promise<string | null> {
     throw new Error('Not Implemented');

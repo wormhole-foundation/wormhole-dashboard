@@ -22,8 +22,7 @@ export class JsonDatabase extends Database {
     }
     this.dbFile = JSON_DB_FILE;
     this.dbLastBlockFile = DB_LAST_BLOCK_FILE;
-  }
-  async loadDb(): Promise<DB> {
+
     try {
       const rawDb = readFileSync(this.dbFile, ENCODING);
       this.db = JSON.parse(rawDb);
@@ -33,8 +32,8 @@ export class JsonDatabase extends Database {
       this.logger.warn('Failed to load DB, initiating a fresh one.');
       this.db = {};
     }
-    return this.db;
   }
+
   async getLastBlockByChain(chain: ChainName): Promise<string | null> {
     const chainId = coalesceChainId(chain);
     const blockInfo = this.lastBlockByChain[chainId];

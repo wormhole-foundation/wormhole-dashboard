@@ -1,6 +1,7 @@
 import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { DB_SOURCE } from '../consts';
 import { DB, VaasByBlock } from './types';
+import { BigtableDatabase } from './BigtableDatabase';
 import { FirestoreDatabase } from './FirestoreDatabase';
 import { JsonDatabase } from './JsonDatabase';
 import { Database } from './Database';
@@ -15,7 +16,12 @@ export const makeVaaKey = (
 let db: DB = {};
 let database: Database = new Database();
 export const loadDb = async (): Promise<void> => {
-  database = DB_SOURCE === 'firestore' ? new FirestoreDatabase() : new JsonDatabase();
+  database =
+    DB_SOURCE === 'firestore'
+      ? new FirestoreDatabase()
+      : DB_SOURCE === 'bigtable'
+      ? new BigtableDatabase()
+      : new JsonDatabase();
   try {
     db = await database.loadDb();
   } catch (e) {
@@ -31,3 +37,22 @@ export const storeVaasByBlock = async (
 ): Promise<void> => {
   return database.storeVaasByBlock(chain, vaasByBlock);
 };
+
+export function printRow(rowkey: string, rowData: { [x: string]: any }) {
+  console.log(`Reading data for ${rowkey}:`);
+
+  for (const columnFamily of Object.keys(rowData)) {
+    const columnFamilyData = rowData[columnFamily];
+    console.log(`Column Family ${columnFamily}`);
+
+    for (const columnQualifier of Object.keys(columnFamilyData)) {
+      const col = columnFamilyData[columnQualifier];
+
+      for (const cell of col) {
+        const labels = cell.labels.length ? ` [${cell.labels.join(',')}]` : '';
+        console.log(`\t${columnQualifier}: ${cell.value} @${cell.timestamp}${labels}`);
+      }
+    }
+  }
+  console.log();
+}

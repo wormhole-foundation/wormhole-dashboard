@@ -35,11 +35,16 @@ npm run dev
 
 # Database
 
-Currently two options to load data:
+Currently three options to load and save data:
 
 1. local .json file: set env variable DB_SOURCE="local" (default) and optionally set DB_FILE path
 2. google firestore: set DB_SOURCE="firestore" and set FIRESTORE_ACCOUNT_KEY=/path/of/service/account/key.json
    In addition, set FIRESTORE_COLLECTION to name of your table where you intend to store the data.
+3. google bigtable with firestore:
+   > you will need to set up your credentials: https://cloud.google.com/docs/authentication/provide-credentials-adc and set GOOGLE_APPLICATION_CREDENTIALS to the path of your credentials
+   > set up the instance and table: https://cloud.google.com/bigtable/docs/creating-instance
+   > set DB_SOURCE="bigtable", BIGTABLE_INSTANCE_ID, and BIGTABLE_TABLE_ID
+   > The current implementation of bigtable uses firestore to read/write the latest processed blocks by chain (incl empty blocks). Set FIRESTORE_LATEST_COLLECTION to the firestore table that will store these values
 
 # Server
 

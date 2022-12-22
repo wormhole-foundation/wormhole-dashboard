@@ -41,40 +41,68 @@ export class FirestoreDatabase extends Database {
     }
     return this.db;
   }
-  async getLastBlockByChain(chain: ChainName): Promise<string | null> {
-    if (!this.collectionName) {
-      console.log('no firestore collection set');
-      return null;
-    }
+
+  async storeLatestBlock(chain: ChainName, lastBlock: string): Promise<void> {
     if (this.firestoreDb === undefined) {
-      return null;
+      this.logger.error('no firestore db set');
+      return;
     }
     const chainId = coalesceChainId(chain);
-    const observedBlocks = this.firestoreDb.collection(this.collectionName).doc(chainId.toString());
-    const observedBlocksByChain = await observedBlocks.get();
-    const vaasByBlock = observedBlocksByChain.data() || {};
-    if (vaasByBlock) {
-      const blockInfos = Object.keys(vaasByBlock);
-      if (blockInfos.length) {
-        console.log(
-          `for chain=${chain}, found most recent firestore block=${
-            blockInfos[blockInfos.length - 1].split('/')[0]
-          }`
-        );
-        return blockInfos[blockInfos.length - 1].split('/')[0];
-      }
-    }
-    return null;
+    const lastestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
+    this.logger.info(`storing last block=${lastBlock} for chain=${chainId}`);
+    const lastOservedBlock = this.firestoreDb
+      .collection(lastestCollectionName)
+      .doc(`${chainId.toString()}`);
+    await lastOservedBlock.set({ lastBlock } || {});
   }
+
   async storeVaasByBlock(chain: ChainName, vaasByBlock: VaasByBlock): Promise<void> {
     if (!this.collectionName) {
-      console.log('no firestore collection set');
+      this.logger.warn('no firestore collection set');
+      return;
+    }
+    if (this.firestoreDb === undefined) {
+      this.logger.warn('no firestore db set');
       return;
     }
     const chainId = coalesceChainId(chain);
     this.db[chainId] = { ...(this.db[chainId] || {}), ...vaasByBlock };
-    const dbFirestore = getFirestore();
-    const observedBlock = dbFirestore.collection(this.collectionName).doc(`${chainId.toString()}`);
+    const observedBlock = this.firestoreDb
+      .collection(this.collectionName)
+      .doc(`${chainId.toString()}`);
     await observedBlock.set(this.db[chainId] || {});
+
+    let lastBlock = undefined;
+    if (vaasByBlock) {
+      const blockInfos = Object.keys(vaasByBlock);
+      if (blockInfos.length) {
+        lastBlock = blockInfos[blockInfos.length - 1].split('/')[0];
+      }
+    }
+    if (lastBlock !== undefined) {
+      await this.storeLatestBlock(chain, lastBlock);
+    }
+  }
+
+  async getLastBlockByChain(chain: ChainName): Promise<string | null> {
+    if (this.firestoreDb === undefined) {
+      this.logger.warn('no firestore db set');
+      return null;
+    }
+    const lastestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
+
+    const chainId = coalesceChainId(chain);
+    const lastObservedBlock = this.firestoreDb
+      .collection(lastestCollectionName)
+      .doc(chainId.toString());
+    const lastObservedBlockByChain = await lastObservedBlock.get();
+    const vaasByBlock = lastObservedBlockByChain.data() || {};
+    if (vaasByBlock) {
+      this.logger.info(
+        `for chain=${chain}, found most recent firestore block=${vaasByBlock?.lastBlock}`
+      );
+      return vaasByBlock?.lastBlock;
+    }
+    return null;
   }
 }

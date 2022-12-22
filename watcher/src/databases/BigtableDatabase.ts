@@ -7,6 +7,7 @@ import { VaasByBlock } from './types';
 import { Bigtable } from '@google-cloud/bigtable';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { padUint16, padUint64 } from '../utils';
 
 export class BigtableDatabase extends Database {
   tableId: string;
@@ -77,7 +78,15 @@ export class BigtableDatabase extends Database {
     const table = instance.table(this.tableId);
     const rowsToInsert: {
       key: string;
-      data: { timestamp: string; txHash: string; hasSignedVaa: boolean };
+      data: {
+        // column family
+        info: {
+          // columns
+          timestamp: { value: string; timestamp: string };
+          txHash: { value: string; timestamp: string };
+          hasSignedVaa: { value: number; timestamp: string };
+        };
+      };
     }[] = [];
     Object.keys(filteredBlocks).forEach((blockKey) => {
       const [block, timestamp] = blockKey.split('/');
@@ -85,11 +94,26 @@ export class BigtableDatabase extends Database {
         const [txHash, vaaKey] = msgKey.split(':');
         const [, emitter, seq] = vaaKey.split('/');
         rowsToInsert.push({
-          key: `${chainId}/${block}/${emitter}/${seq}`,
+          key: `${padUint16(chainId.toString())}/${padUint64(block)}/${emitter}/${padUint64(seq)}`,
           data: {
-            timestamp,
-            txHash,
-            hasSignedVaa: false,
+            // column family
+            info: {
+              // columns
+              timestamp: {
+                value: timestamp,
+                // write 0 timestamp to only keep 1 cell each
+                // https://cloud.google.com/bigtable/docs/gc-latest-value
+                timestamp: '0',
+              },
+              txHash: {
+                value: txHash,
+                timestamp: '0',
+              },
+              hasSignedVaa: {
+                value: 0,
+                timestamp: '0',
+              },
+            },
           },
         });
       });

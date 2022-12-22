@@ -4,7 +4,9 @@
     "build": "tsc",
     "start": "node lib/index.js",
     "dev": "ts-node src/index.ts",
-    "test": "jest"
+    "test": "jest",
+    "backfill": "ts-node scripts/backfill.ts",
+    "read-bigtable": "ts-node scripts/readBigtable.ts"
   },
   "dependencies": {
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",

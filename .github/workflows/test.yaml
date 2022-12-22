@@ -23,6 +23,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: watcher/package-lock.json
       - run: npm ci --prefix watcher
+      - run: npm test --prefix watcher -- --ci
       - run: npm run build --prefix watcher
   build-web:
     runs-on: ubuntu-latest

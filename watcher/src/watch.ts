@@ -1,4 +1,4 @@
-import { ChainName } from '@certusone/wormhole-sdk';
+import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { getMaximumBatchSize, INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN, TIMEOUT } from './consts';
 import { getLastBlockByChain, storeVaasByBlock } from './databases/utils';
 import { sleep } from './utils';

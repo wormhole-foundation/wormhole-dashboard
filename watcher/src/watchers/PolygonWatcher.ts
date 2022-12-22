@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ethers } from 'ethers';
 import { POLYGON_ROOT_CHAIN_ADDRESS, POLYGON_ROOT_CHAIN_RPC } from '../consts';
-import { EVMWatcher } from './EVMWatcher';
+import { EVMWatcher, EVM_AXIOS_CONFIG } from './EVMWatcher';
 
 export class PolygonWatcher extends EVMWatcher {
   constructor() {
@@ -15,17 +15,21 @@ export class PolygonWatcher extends EVMWatcher {
     const callData = rootChain.encodeFunctionData('getLastChildBlock');
     try {
       const callResult = (
-        await axios.post(POLYGON_ROOT_CHAIN_RPC, [
-          {
-            jsonrpc: '2.0',
-            id: '1',
-            method: 'eth_call',
-            params: [
-              { to: POLYGON_ROOT_CHAIN_ADDRESS, data: callData },
-              'latest', // does the guardian use latest?
-            ],
-          },
-        ])
+        await axios.post(
+          POLYGON_ROOT_CHAIN_RPC,
+          [
+            {
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'eth_call',
+              params: [
+                { to: POLYGON_ROOT_CHAIN_ADDRESS, data: callData },
+                'latest', // does the guardian use latest?
+              ],
+            },
+          ],
+          EVM_AXIOS_CONFIG
+        )
       )?.data?.[0]?.result;
       const block = rootChain.decodeFunctionResult('getLastChildBlock', callResult)[0].toNumber();
       this.logger.info(`rooted child block ${block}`);

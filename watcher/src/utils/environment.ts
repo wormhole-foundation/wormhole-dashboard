@@ -10,10 +10,9 @@ export const getEnvironment = () => {
     return loggingEnv;
   } else {
     loggingEnv = {
-      logLevel: assertEnvironmentVariable('LOG_LEVEL'),
+      logLevel: process.env.LOG_LEVEL || 'info',
+      logDir: process.env.LOG_DIR,
     };
-    // optional environment variables
-    if (process.env.LOG_DIR) loggingEnv.logDir = process.env.LOG_DIR;
     return loggingEnv;
   }
 };

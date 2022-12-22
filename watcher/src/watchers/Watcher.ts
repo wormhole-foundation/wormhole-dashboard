@@ -1,4 +1,4 @@
-import { ChainName } from '@certusone/wormhole-sdk';
+import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { VaasByBlock } from '../databases/types';
 import { getLogger, WormholeLogger } from '../utils/logger';
 

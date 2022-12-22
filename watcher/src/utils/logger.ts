@@ -48,8 +48,7 @@ export const getLogger = (
 };
 
 const createBaseLogger = (): WormholeLogger => {
-  let { logLevel, logDir } = getEnvironment();
-  logLevel = logLevel ?? 'debug';
+  const { logLevel, logDir } = getEnvironment();
   const logPath = !!logDir ? `${logDir}/watcher.${new Date().toISOString()}.log` : null;
   console.log(`watcher is logging to ${logPath ?? 'the console'} at level ${logLevel}`);
 

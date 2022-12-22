@@ -1,4 +1,4 @@
-import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk';
+import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { readFileSync, writeFileSync } from 'fs';
 import { DB_FILE, DB_LAST_BLOCK_FILE } from '../consts';
 import { Database } from './Database';

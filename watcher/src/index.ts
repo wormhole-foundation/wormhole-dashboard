@@ -16,6 +16,6 @@ watch('fantom');
 watch('karura');
 watch('acala');
 // watch('klaytn'); // TODO: doesn't support batch provider and need to sleep between block queries
-// watch('celo');
+watch('celo');
 watch('moonbeam');
 // watch('arbitrum'); // TODO: requires waiting for l1 finality

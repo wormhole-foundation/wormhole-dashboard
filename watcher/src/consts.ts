@@ -1,4 +1,4 @@
-import { ChainName } from '@certusone/wormhole-sdk';
+import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 
 export const TIMEOUT = 0.5 * 1000;
 

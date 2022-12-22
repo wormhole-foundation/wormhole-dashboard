@@ -1,4 +1,4 @@
-import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk';
+import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 // set up firestore
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';

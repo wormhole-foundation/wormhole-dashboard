@@ -9,7 +9,7 @@ export class Watcher {
     this.chain = chain;
     this.logger = getLogger(chain);
   }
-  async getFinalizedBlockNumber(): Promise<number | null> {
+  async getFinalizedBlockNumber(): Promise<number> {
     throw new Error('Not Implemented');
   }
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {

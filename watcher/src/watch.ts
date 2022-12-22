@@ -45,20 +45,37 @@ const createWatcherByChain: {
 
 export async function watch(chain: ChainName) {
   const watcher = createWatcherByChain[chain]();
-  let toBlock: number | null = await watcher.getFinalizedBlockNumber();
+  let toBlock: number | null = null;
   const lastReadBlock: string | null =
     (await getLastBlockByChain(chain)) || INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] || null;
   let fromBlock: number | null = lastReadBlock !== null ? Number(lastReadBlock) : toBlock;
+  let retry = 0;
   while (true) {
-    if (fromBlock && toBlock && fromBlock <= toBlock) {
-      // fetch logs for the block range
-      toBlock = Math.min(fromBlock + getMaximumBatchSize(chain) - 1, toBlock); // fix for "block range is too wide" or "maximum batch size is 50, but received 101"
-      watcher.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
-      const vaasByBlock = await watcher.getMessagesForBlocks(fromBlock, toBlock);
-      await storeVaasByBlock(chain, vaasByBlock);
-      fromBlock = toBlock + 1;
+    try {
+      if (fromBlock && toBlock && fromBlock <= toBlock) {
+        // fetch logs for the block range
+        toBlock = Math.min(fromBlock + getMaximumBatchSize(chain) - 1, toBlock); // fix for "block range is too wide" or "maximum batch size is 50, but received 101"
+        watcher.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
+        const vaasByBlock = await watcher.getMessagesForBlocks(fromBlock, toBlock);
+        await storeVaasByBlock(chain, vaasByBlock);
+        fromBlock = toBlock + 1;
+        await sleep(TIMEOUT);
+      }
+      try {
+        watcher.logger.info('fetching finalized block');
+        toBlock = await watcher.getFinalizedBlockNumber();
+        retry = 0;
+      } catch (e) {
+        toBlock = null;
+        watcher.logger.error(`error fetching finalized block`);
+        throw e;
+      }
+    } catch (e) {
+      retry++;
+      watcher.logger.error(e);
+      const expoBacko = TIMEOUT * 2 ** retry;
+      watcher.logger.warn(`backing off for ${expoBacko}ms`);
+      await sleep(expoBacko);
     }
-    await sleep(TIMEOUT);
-    toBlock = await watcher.getFinalizedBlockNumber();
   }
 }

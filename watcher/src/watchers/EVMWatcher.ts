@@ -8,6 +8,8 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 
+// This is the hash for topic[0] of the core contract event LogMessagePublished
+// https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/contracts/Implementation.sol#L12
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
   '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
 
@@ -146,24 +148,18 @@ export class EVMWatcher extends Watcher {
         logIndex: BigNumber.from(l.logIndex).toNumber(),
       }));
     }
-    throw new Error(`Unable to parse result of eth_getBlockByNumber for ${result} on ${rpc}`);
+    throw new Error(`Unable to parse result of eth_getLogs for ${fromBlock}-${toBlock} on ${rpc}`);
   }
-  async getFinalizedBlockNumber(): Promise<number | null> {
-    try {
-      this.logger.info(`fetching block ${this.finalizedBlockTag}`);
-      const block = await this.getBlock(this.finalizedBlockTag);
-      return block.number;
-    } catch (e) {
-      this.logger.error(e);
-      return null;
-    }
+  async getFinalizedBlockNumber(): Promise<number> {
+    this.logger.info(`fetching block ${this.finalizedBlockTag}`);
+    const block = await this.getBlock(this.finalizedBlockTag);
+    return block.number;
   }
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
     const address = CONTRACTS.MAINNET[this.chain].core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }
-    // TODO: fix avax "requested to block 23734227 after last accepted block 23734226"
     const logs = await this.getLogs(fromBlock, toBlock, address, [LOG_MESSAGE_PUBLISHED_TOPIC]);
     const timestampsByBlock: { [block: number]: string } = {};
     // fetch timestamps for each block
@@ -171,10 +167,6 @@ export class EVMWatcher extends Watcher {
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
     const blocks = await this.getBlocks(fromBlock, toBlock);
     for (const block of blocks) {
-      // TODO: fix "Cannot read properties of null (reading 'timestamp')" (fantom)
-      if (!block) {
-        this.logger.error(`bad block`);
-      }
       const timestamp = new Date(block.timestamp * 1000).toISOString();
       timestampsByBlock[block.number] = timestamp;
       vaasByBlock[makeBlockKey(block.number.toString(), timestamp)] = [];

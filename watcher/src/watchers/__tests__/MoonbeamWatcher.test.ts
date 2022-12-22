@@ -1,6 +1,8 @@
-import { expect, test } from '@jest/globals';
+import { expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '../../consts';
 import { MoonbeamWatcher } from '../MoonbeamWatcher';
+
+jest.setTimeout(60000);
 
 const initialMoonbeamBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.moonbeam);
 

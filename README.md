@@ -33,8 +33,6 @@ npm ci
 npm run dev
 ```
 
-There is also a `start.sh` script to auto-restart on crashes.
-
 # Database
 
 Currently two options to load data:

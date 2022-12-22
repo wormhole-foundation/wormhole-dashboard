@@ -13,6 +13,9 @@ export const TIMEOUT = 0.5 * 1000;
 //   avalanche: "https://api.avax.network/ext/bc/C/rpc", // 500 error on batch request
 // Fantom
 //   fantom: "https://rpc.ftm.tools", // Cannot read properties of null (reading 'timestamp')"
+// Klaytn
+// this one immediately 429s
+// klaytn: 'https://public-node-api.klaytnapi.com/v1/cypress',
 
 export const EVM_RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   ethereum: process.env.ETH_RPC,
@@ -23,7 +26,7 @@ export const EVM_RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   fantom: 'https://rpc.ankr.com/fantom',
   karura: 'https://eth-rpc-karura.aca-api.network',
   acala: 'https://eth-rpc-acala.aca-api.network',
-  klaytn: 'https://public-node-api.klaytnapi.com/v1/cypress',
+  klaytn: 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
   celo: 'https://forno.celo.org',
   moonbeam: 'https://rpc.ankr.com/moonbeam',
   arbitrum: 'https://arb1.arbitrum.io/rpc',

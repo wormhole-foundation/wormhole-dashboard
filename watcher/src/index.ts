@@ -3,9 +3,6 @@ dotenv.config();
 import { loadDb } from './databases/utils';
 import { watch } from './watch';
 
-// TODO: use winston for logging
-// TODO: different processes per chain (or don't use ethers, so the whole process doesn't throw on one RPC error)
-
 loadDb();
 // watch('ethereum');
 watch('bsc');
@@ -15,7 +12,7 @@ watch('oasis');
 watch('fantom');
 watch('karura');
 watch('acala');
-// watch('klaytn'); // TODO: doesn't support batch provider and need to sleep between block queries
+watch('klaytn');
 watch('celo');
 watch('moonbeam');
 // watch('arbitrum'); // TODO: requires waiting for l1 finality

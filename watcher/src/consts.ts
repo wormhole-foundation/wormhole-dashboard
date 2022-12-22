@@ -41,6 +41,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
 } = {
   ethereum: '12959638',
   bsc: '9745450',
+  polygon: '20629146',
   avalanche: '8237163',
   oasis: '1757',
   fantom: '31817467',

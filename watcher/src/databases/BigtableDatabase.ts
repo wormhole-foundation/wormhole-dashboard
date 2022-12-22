@@ -75,13 +75,23 @@ export class BigtableDatabase extends Database {
     const filteredBlocks = BigtableDatabase.filterEmptyBlocks(vaasByBlock);
     const instance = this.bigtable.instance(this.instanceId);
     const table = instance.table(this.tableId);
-    const rowsToInsert: { key: string; data: { vaas: string[] } }[] = [];
-    Object.keys(filteredBlocks).forEach((vaaKey) => {
-      rowsToInsert.push({
-        key: `${chainId}/${vaaKey}`,
-        data: {
-          vaas: filteredBlocks[vaaKey],
-        },
+    const rowsToInsert: {
+      key: string;
+      data: { timestamp: string; txHash: string; hasSignedVaa: boolean };
+    }[] = [];
+    Object.keys(filteredBlocks).forEach((blockKey) => {
+      const [block, timestamp] = blockKey.split('/');
+      filteredBlocks[blockKey].forEach((msgKey) => {
+        const [txHash, vaaKey] = msgKey.split(':');
+        const [, emitter, seq] = vaaKey.split('/');
+        rowsToInsert.push({
+          key: `${chainId}/${block}/${emitter}/${seq}`,
+          data: {
+            timestamp,
+            txHash,
+            hasSignedVaa: false,
+          },
+        });
       });
     });
     await table.insert(rowsToInsert);

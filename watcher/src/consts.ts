@@ -54,3 +54,5 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
 
 export const DB_SOURCE = process.env.DB_SOURCE || 'local';
 export const DB_FILE = process.env.DB_FILE || '../server/db.json';
+export const DB_LAST_BLOCK_FILE =
+  process.env.DB_LAST_BLOCK_FILE || '../server/lastBlockByChain.json';

@@ -1,4 +1,5 @@
 node_modules/
 db.json
+lastBlockByChain.json
 .env
 serviceAccountKey.json

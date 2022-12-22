@@ -7,6 +7,13 @@ export class Database {
   constructor() {
     this.logger = getLogger('db');
   }
+  static filterEmptyBlocks(vaasByBlock: VaasByBlock): VaasByBlock {
+    const filteredVaasByBlock: VaasByBlock = {};
+    for (const [block, vaas] of Object.entries(vaasByBlock)) {
+      if (vaas.length > 0) filteredVaasByBlock[block] = [...vaas];
+    }
+    return filteredVaasByBlock;
+  }
   async loadDb(): Promise<DB> {
     throw new Error('Not Implemented');
   }

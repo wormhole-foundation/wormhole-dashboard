@@ -3,12 +3,16 @@ import express from 'express';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import fs from 'fs';
-import { FIRESTORE_ACCOUNT_KEY_PATH, FIRESTORE_COLLECTION } from './consts';
+import {
+  DB_FILE,
+  DB_LAST_BLOCK_FILE,
+  DB_SOURCE,
+  FIRESTORE_ACCOUNT_KEY_PATH,
+  FIRESTORE_COLLECTION,
+} from './consts';
 
 const app = express();
 const port = 4000;
-const DB_SOURCE = process.env.DB_SOURCE || 'local';
-const DB_FILE = process.env.DB_FILE || './db.json';
 const ENCODING = 'utf8';
 
 export type VaasByBlock = { [blockInfo: string]: string[] };
@@ -45,12 +49,14 @@ export const loadFirestoreDb = async (): Promise<DB> => {
 
 app.get('/api/db', async (req, res) => {
   let db;
+  let lastBlockByChain = {};
   if (DB_SOURCE === 'local') {
-    db = fs.readFileSync(DB_FILE, ENCODING);
+    db = JSON.parse(fs.readFileSync(DB_FILE, ENCODING));
+    lastBlockByChain = JSON.parse(fs.readFileSync(DB_LAST_BLOCK_FILE, ENCODING));
   } else {
     db = await loadFirestoreDb();
   }
-  res.send(db);
+  res.send({ db, lastBlockByChain });
 });
 
 app.listen(port, () => {

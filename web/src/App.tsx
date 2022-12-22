@@ -17,8 +17,10 @@ import { explorerBlock, explorerTx, explorerVaa } from './utils';
 
 type VaasByBlock = { [block: number]: string[] };
 type DB = { [chain in ChainId]?: VaasByBlock };
+type LastBlockByChain = { [chain in ChainId]?: string };
+type QueryResult = { db: DB; lastBlockByChain: LastBlockByChain };
 
-const TIMEOUT = 60 * 1000;
+const TIMEOUT = 10 * 1000;
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',
   padding: 0,
@@ -101,23 +103,18 @@ function BlockDetail({ chain, block, vaas }: { chain: string; block: string; vaa
 function DetailBlocks({
   chain,
   vaasByBlock,
-  showEmptyBlocks,
   showCounts,
 }: {
   chain: string;
   vaasByBlock: VaasByBlock;
-  showEmptyBlocks: boolean;
   showCounts: boolean;
 }) {
-  let filteredEntries = Object.entries(vaasByBlock);
-  if (!showEmptyBlocks) {
-    filteredEntries = filteredEntries.filter(([block, vaas]) => showEmptyBlocks || vaas.length > 0);
-  }
+  const entries = Object.entries(vaasByBlock);
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', mb: 2 }}>
-      {filteredEntries
+      {entries
         // TODO: this is a hack to not grind the render to a halt
-        .slice(Math.max(filteredEntries.length, 100) - 100)
+        .slice(Math.max(entries.length, 100) - 100)
         .map(([block, vaas]) => (
           <Tooltip
             key={block}
@@ -127,7 +124,7 @@ function DetailBlocks({
             TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
             title={<BlockDetail chain={chain} block={block} vaas={vaas} />}
           >
-            <Box key={block} sx={vaas.length ? doneBlockSx : emptyBlockSx}>
+            <Box sx={vaas.length ? doneBlockSx : emptyBlockSx}>
               {showCounts ? vaas.length : null}
             </Box>
           </Tooltip>
@@ -202,22 +199,19 @@ function App() {
     nextFetch: number;
     isFetching: boolean;
     error: string;
-    db: DB;
+    result: QueryResult;
   }>({
     lastFetched: '',
     isFetching: true,
     nextFetch: Date.now(),
     error: '',
-    db: {},
+    result: { db: {}, lastBlockByChain: {} },
   });
-  const db = dbWrapper.db;
+  const db = dbWrapper.result.db;
+  const lastBlockByChain = dbWrapper.result.lastBlockByChain;
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const handleToggleAutoRefresh = useCallback(() => {
     setAutoRefresh((v) => !v);
-  }, []);
-  const [showEmptyBlocks, setShowEmptyBlocks] = useState<boolean>(false);
-  const handleToggleEmptyBlocks = useCallback(() => {
-    setShowEmptyBlocks((v) => !v);
   }, []);
   const [showCounts, setShowCounts] = useState<boolean>(false);
   const handleToggleCounts = useCallback(() => {
@@ -229,14 +223,14 @@ function App() {
       if (cancelled) return;
       setDbWrapper((r) => ({ ...r, isFetching: true, error: '' }));
       try {
-        const response = await axios.get<DB>('/api/db');
+        const response = await axios.get<QueryResult>('/api/db');
         if (response.data && !cancelled) {
           setDbWrapper({
             lastFetched: new Date().toLocaleString(),
             nextFetch: Date.now() + TIMEOUT,
             isFetching: false,
             error: '',
-            db: response.data,
+            result: response.data,
           });
         }
       } catch (e: any) {
@@ -276,8 +270,9 @@ function App() {
     } = {};
     Object.entries(db).forEach(([chain, vaasByBlock]) => {
       const entries = Object.entries(vaasByBlock);
-      const [lastIndexedBlockNumber, lastIndexedBlockTime] =
-        entries[entries.length - 1][0].split('/');
+      const [lastIndexedBlockNumber, lastIndexedBlockTime] = (
+        lastBlockByChain[Number(chain) as ChainId] || entries[entries.length - 1][0]
+      ).split('/');
       metaByChain[chain] = {
         lastIndexedBlockNumber,
         lastIndexedBlockTime,
@@ -292,7 +287,7 @@ function App() {
       });
     });
     return metaByChain;
-  }, [db]);
+  }, [db, lastBlockByChain]);
   return (
     <Box sx={{ m: { xs: 1, md: 2 } }}>
       <ToggleButton value={autoRefresh} onClick={handleToggleAutoRefresh}>
@@ -304,9 +299,6 @@ function App() {
             isFetching={dbWrapper.isFetching}
           />
         </Box>
-      </ToggleButton>
-      <ToggleButton value={showEmptyBlocks} onClick={handleToggleEmptyBlocks}>
-        Show Empty Blocks
       </ToggleButton>
       <ToggleButton value={showCounts} onClick={handleToggleCounts}>
         Show Counts
@@ -353,12 +345,7 @@ function App() {
             </div>
           }
         >
-          <DetailBlocks
-            chain={chain}
-            vaasByBlock={vaasByBlock}
-            showEmptyBlocks={showEmptyBlocks}
-            showCounts={showCounts}
-          />
+          <DetailBlocks chain={chain} vaasByBlock={vaasByBlock} showCounts={showCounts} />
         </CollapsibleSection>
       ))}
     </Box>

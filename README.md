@@ -52,7 +52,7 @@ Express server that serves up the db file. Eventually there should be, like, a r
 ```bash
 cd server
 npm ci
-node app.js
+npm run dev
 ```
 
 # Web

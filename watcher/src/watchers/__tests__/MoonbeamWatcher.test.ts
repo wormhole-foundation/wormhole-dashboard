@@ -1,5 +1,5 @@
 import { expect, jest, test } from '@jest/globals';
-import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '../../consts';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { MoonbeamWatcher } from '../MoonbeamWatcher';
 
 jest.setTimeout(60000);

@@ -39,23 +39,6 @@ export const POLYGON_ROOT_CHAIN_ADDRESS = '0x86E4Dc95c7FBdBf52e33D563BbDB0082389
 export const getMaximumBatchSize = (chain: ChainName): number =>
   chain === 'acala' || chain === 'karura' ? 50 : 100;
 
-export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
-  [key in ChainName]?: string;
-} = {
-  ethereum: '12959638',
-  bsc: '9745450',
-  polygon: '20629146',
-  avalanche: '8237163',
-  oasis: '1757',
-  fantom: '31817467',
-  karura: '1824665',
-  acala: '1144161',
-  klaytn: '90563824',
-  celo: '12947144',
-  moonbeam: '1486591',
-  arbitrum: '18128584',
-};
-
 export const DB_SOURCE = process.env.DB_SOURCE || 'local';
 export const JSON_DB_FILE = process.env.JSON_DB_FILE || '../server/db.json';
 export const DB_LAST_BLOCK_FILE =

@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 import { CHAINS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { padUint16 } from '@wormhole-foundation/wormhole-monitor-common';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
-import { padUint16 } from '../src/utils';
 
 (async () => {
   const bt = new BigtableDatabase();
@@ -24,14 +24,14 @@ import { padUint16 } from '../src/utils';
       // }
       console.log(chainName.padEnd(12), observedMessages[0].length.toString().padStart(6));
       if (observedMessages[0][0]) {
-        console.log('id           ', observedMessages[0][0]?.id);
-        console.log('chain        ', parseInt(observedMessages[0][0]?.id.split('/')[0]));
-        console.log('block        ', parseInt(observedMessages[0][0]?.id.split('/')[1]));
-        console.log('emitter      ', observedMessages[0][0]?.id.split('/')[2]);
-        console.log('seq          ', parseInt(observedMessages[0][0]?.id.split('/')[3]));
-        console.log('timestamp    ', observedMessages[0][0]?.data.info.timestamp[0].value);
-        console.log('txHash       ', observedMessages[0][0]?.data.info.txHash[0].value);
-        console.log('hasSignedVaa ', observedMessages[0][0]?.data.info.hasSignedVaa[0].value);
+        console.log('   id           ', observedMessages[0][0]?.id);
+        console.log('   chain        ', parseInt(observedMessages[0][0]?.id.split('/')[0]));
+        console.log('   block        ', parseInt(observedMessages[0][0]?.id.split('/')[1]));
+        console.log('   emitter      ', observedMessages[0][0]?.id.split('/')[2]);
+        console.log('   seq          ', parseInt(observedMessages[0][0]?.id.split('/')[3]));
+        console.log('   timestamp    ', observedMessages[0][0]?.data.info.timestamp[0].value);
+        console.log('   txHash       ', observedMessages[0][0]?.data.info.txHash[0].value);
+        console.log('   hasSignedVaa ', observedMessages[0][0]?.data.info.hasSignedVaa[0].value);
       }
     }
   } catch (e) {

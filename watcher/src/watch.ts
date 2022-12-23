@@ -1,7 +1,10 @@
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { getMaximumBatchSize, INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN, TIMEOUT } from './consts';
+import {
+  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+  sleep,
+} from '@wormhole-foundation/wormhole-monitor-common';
+import { getMaximumBatchSize, TIMEOUT } from './consts';
 import { getLastBlockByChain, storeVaasByBlock } from './databases/utils';
-import { sleep } from './utils';
 import { BSCWatcher } from './watchers/BSCWatcher';
 import { EVMWatcher } from './watchers/EVMWatcher';
 import { MoonbeamWatcher } from './watchers/MoonbeamWatcher';

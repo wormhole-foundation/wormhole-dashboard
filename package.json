@@ -1,0 +1,23 @@
+{
+  "name": "@wormhole-foundation/wormhole-monitor",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "tsc -b -i",
+    "check": "tsc --noEmit",
+    "clean": "tsc -b --clean",
+    "watch": "tsc -b -w -i"
+  },
+  "workspaces": [
+    "common",
+    "server",
+    "watcher",
+    "web"
+  ],
+  "dependencies": {
+    "@certusone/wormhole-sdk": "^0.9.8"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.4"
+  }
+}

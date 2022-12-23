@@ -1,13 +1,11 @@
 import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-// need firestore for reading last blocks
 import { assertEnvironmentVariable } from '../utils/environment';
 import { Database } from './Database';
-// set up bigtable
-import { VaasByBlock } from './types';
 import { Bigtable } from '@google-cloud/bigtable';
-import { initializeApp, cert } from 'firebase-admin/app';
+import { padUint16, padUint64 } from '@wormhole-foundation/wormhole-monitor-common';
+import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { padUint16, padUint64 } from '../utils';
+import { VaasByBlock } from './types';
 
 export class BigtableDatabase extends Database {
   tableId: string;

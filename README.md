@@ -8,10 +8,13 @@ The approach of this code is to crawl for Wormhole transactions on-chain and que
 1. Alerting - send alerts when VAAs are missing for some period of time
 1. Recovery - automatically request that a guardian trigger re-observation on the missed VAA, developing an SLA
 
-# Caveats
+# Prerequisite
 
-- Currently dumps to a flat file in the server directory.
-- The entire process dies if one of the ethers calls fails, because that's how ethers do.
+> Note: this repo uses [npm workspaces](https://docs.npmjs.com/cli/v9/using-npm/workspaces)
+
+```bash
+npm ci
+```
 
 # Watcher
 
@@ -28,9 +31,7 @@ Compare the most recent "finalized" block to the most recent fetched block (or t
 You'll need a `.env` with an infura URL, or something that supports "finalized" block calls on Eth.
 
 ```bash
-cd watcher
-npm ci
-npm run dev
+npm run dev -w watcher
 ```
 
 # Database
@@ -53,9 +54,7 @@ Express server that serves up the db file. Eventually there should be, like, a r
 ## Run
 
 ```bash
-cd server
-npm ci
-npm run dev
+npm run dev -w server
 ```
 
 # Web
@@ -65,7 +64,5 @@ Displays a visualization of the database.
 ## Run
 
 ```bash
-cd web
-npm ci
-npm start
+npm start -w web
 ```

@@ -1,6 +1,7 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { expect, test } from '@jest/globals';
-import { getMaximumBatchSize, INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '../../consts';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
+import { getMaximumBatchSize } from '../../consts';
 import { EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 
 const initialAvalancheBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.avalanche);

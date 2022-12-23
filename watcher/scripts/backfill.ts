@@ -1,10 +1,10 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { JsonDatabase } from '../src/databases/JsonDatabase';
 import { VaasByBlock } from '../src/databases/types';
-import { sleep } from '../src/utils';
 
 function chunkArray(arr: Array<any>, size: number) {
   const chunks = [];

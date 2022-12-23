@@ -1,5 +1,9 @@
 node_modules/
+lib/
+dist/
+*.log
 db.json
 lastBlockByChain.json
 .env
 serviceAccountKey.json
+tsconfig.tsbuildinfo

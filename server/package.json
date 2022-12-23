@@ -1,8 +1,11 @@
 {
-  "main": "lib/app.js",
+  "name": "@wormhole-foundation/wormhole-monitor-server",
+  "version": "0.0.1",
+  "private": true,
+  "main": "dist/app.js",
   "scripts": {
     "build": "tsc",
-    "start": "node lib/app.js",
+    "start": "node dist/app.js",
     "dev": "ts-node src/app.ts"
   },
   "dependencies": {

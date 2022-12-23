@@ -1,6 +1,6 @@
+import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 import { EVM_RPCS_BY_CHAIN } from '../consts';
-import { sleep } from '../utils';
 import { EVMWatcher, EVM_AXIOS_CONFIG } from './EVMWatcher';
 
 export class MoonbeamWatcher extends EVMWatcher {

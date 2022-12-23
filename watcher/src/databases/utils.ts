@@ -1,9 +1,10 @@
 import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { DB_SOURCE } from '../consts';
-import { VaasByBlock } from './types';
 import { BigtableDatabase } from './BigtableDatabase';
-import { JsonDatabase } from './JsonDatabase';
 import { Database } from './Database';
+import { JsonDatabase } from './JsonDatabase';
+import { VaasByBlock } from './types';
 // // TODO: should this be a composite key or should the value become more complex
 export const makeBlockKey = (block: string, timestamp: string): string => `${block}/${timestamp}`;
 export const makeVaaKey = (
@@ -13,11 +14,14 @@ export const makeVaaKey = (
   seq: string
 ): string => `${transactionHash}:${coalesceChainId(chain)}/${emitter}/${seq}`;
 let database: Database = new Database();
-export const initDb = async (): Promise<void> => {
+export const initDb = (): Database => {
   database = DB_SOURCE === 'bigtable' ? new BigtableDatabase() : new JsonDatabase();
+  return database;
 };
-export const getLastBlockByChain = async (chain: ChainName): Promise<string | null> => {
-  return database.getLastBlockByChain(chain);
+export const getLastBlockByChain = async (chain: ChainName): Promise<number | null> => {
+  const lastBlock: string =
+    (await database.getLastBlockByChain(chain)) ?? INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain]!;
+  return lastBlock === undefined ? null : Number(lastBlock);
 };
 export const storeVaasByBlock = async (
   chain: ChainName,

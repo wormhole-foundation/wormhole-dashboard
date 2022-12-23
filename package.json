@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "build": "tsc -b -i",
-    "check": "tsc --noEmit",
     "clean": "tsc -b --clean",
     "watch": "tsc -b -w -i"
   },

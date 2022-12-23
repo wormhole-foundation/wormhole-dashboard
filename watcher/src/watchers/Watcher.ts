@@ -1,8 +1,5 @@
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import {
-  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
-  sleep,
-} from '@wormhole-foundation/wormhole-monitor-common';
+import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { getMaximumBatchSize, TIMEOUT } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { getLastBlockByChain, storeVaasByBlock } from '../databases/utils';
@@ -25,13 +22,9 @@ export class Watcher {
     throw new Error('Not Implemented');
   }
 
-  async watch() {
+  async watch(): Promise<void> {
     let toBlock: number | null = null;
-    const lastReadBlock: string | null =
-      (await getLastBlockByChain(this.chain)) ||
-      INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[this.chain] ||
-      null;
-    let fromBlock: number | null = lastReadBlock !== null ? Number(lastReadBlock) : toBlock;
+    let fromBlock: number | null = await getLastBlockByChain(this.chain);
     let retry = 0;
     while (true) {
       try {
@@ -42,13 +35,18 @@ export class Watcher {
           const vaasByBlock = await this.getMessagesForBlocks(fromBlock, toBlock);
           await storeVaasByBlock(this.chain, vaasByBlock);
           fromBlock = toBlock + 1;
-          await sleep(TIMEOUT);
         }
         try {
           this.logger.info('fetching finalized block');
           toBlock = await this.getFinalizedBlockNumber();
+          if (fromBlock === null) {
+            // handle first loop on a fresh chain without initial block set
+            fromBlock = toBlock;
+          }
           retry = 0;
+          await sleep(TIMEOUT);
         } catch (e) {
+          // skip attempting to fetch messages until getting the finalized block succeeds
           toBlock = null;
           this.logger.error(`error fetching finalized block`);
           throw e;

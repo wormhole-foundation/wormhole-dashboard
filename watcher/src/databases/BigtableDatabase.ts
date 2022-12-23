@@ -10,14 +10,11 @@ import { VaasByBlock } from './types';
 export class BigtableDatabase extends Database {
   tableId: string;
   instanceId: string;
-  bigtable: Bigtable | undefined;
-  firestoreDb: FirebaseFirestore.Firestore | undefined;
+  bigtable: Bigtable;
+  firestoreDb: FirebaseFirestore.Firestore;
   latestCollectionName: string;
   constructor() {
     super();
-    this.bigtable = undefined;
-    this.firestoreDb = undefined;
-    // this.firestore = new FirestoreDatabase();
     this.tableId = assertEnvironmentVariable('BIGTABLE_TABLE_ID');
     this.instanceId = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
@@ -34,10 +31,6 @@ export class BigtableDatabase extends Database {
   }
 
   async getLastBlockByChain(chain: ChainName): Promise<string | null> {
-    if (this.firestoreDb === undefined) {
-      this.logger.warn('no firestore db set');
-      return null;
-    }
     const chainId = coalesceChainId(chain);
     const lastObservedBlock = this.firestoreDb
       .collection(this.latestCollectionName)

@@ -40,7 +40,8 @@ export class BigtableDatabase extends Database {
     const lastBlockKey = blockKeyData?.lastBlockKey;
     if (lastBlockKey) {
       this.logger.info(`for chain=${chain}, found most recent firestore block=${lastBlockKey}`);
-      return lastBlockKey.split('/')[0];
+      const tokens = lastBlockKey.split('/');
+      return chain === 'aptos' ? tokens.at(-1) : tokens[0];
     }
     return null;
   }

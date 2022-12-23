@@ -1,9 +1,9 @@
-import { CONTRACTS, EVMChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
-import { BigNumber } from 'ethers';
+import { CONTRACTS, EVMChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Log } from '@ethersproject/abstract-provider';
 import axios, { AxiosRequestConfig } from 'axios';
-import { EVM_RPCS_BY_CHAIN } from '../consts';
+import { BigNumber } from 'ethers';
+import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
@@ -29,12 +29,17 @@ export type Block = {
 
 export class EVMWatcher extends Watcher {
   finalizedBlockTag: BlockTag;
+
   constructor(chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
     super(chain);
     this.finalizedBlockTag = finalizedBlockTag;
+    if (chain === 'acala' || chain === 'karura') {
+      this.maximumBatchSize = 50;
+    }
   }
+
   async getBlock(blockNumberOrTag: number | BlockTag): Promise<Block> {
-    const rpc = EVM_RPCS_BY_CHAIN[this.chain];
+    const rpc = RPCS_BY_CHAIN[this.chain];
     if (!rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
@@ -70,7 +75,7 @@ export class EVMWatcher extends Watcher {
     );
   }
   async getBlocks(fromBlock: number, toBlock: number): Promise<Block[]> {
-    const rpc = EVM_RPCS_BY_CHAIN[this.chain];
+    const rpc = RPCS_BY_CHAIN[this.chain];
     if (!rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
@@ -114,7 +119,7 @@ export class EVMWatcher extends Watcher {
     address: string,
     topics: string[]
   ): Promise<Array<Log>> {
-    const rpc = EVM_RPCS_BY_CHAIN[this.chain];
+    const rpc = RPCS_BY_CHAIN[this.chain];
     if (!rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }

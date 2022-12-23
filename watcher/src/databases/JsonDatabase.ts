@@ -1,6 +1,6 @@
 import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { readFileSync, writeFileSync } from 'fs';
-import { JSON_DB_FILE, DB_LAST_BLOCK_FILE } from '../consts';
+import { DB_LAST_BLOCK_FILE, JSON_DB_FILE } from '../consts';
 import { Database } from './Database';
 import { DB, LastBlockByChain, VaasByBlock } from './types';
 
@@ -38,7 +38,8 @@ export class JsonDatabase extends Database {
     const chainId = coalesceChainId(chain);
     const blockInfo = this.lastBlockByChain[chainId];
     if (blockInfo) {
-      return blockInfo.split('/')[0];
+      const tokens = blockInfo.split('/');
+      return chain === 'aptos' ? tokens.at(-1)! : tokens[0];
     }
     return null;
   }

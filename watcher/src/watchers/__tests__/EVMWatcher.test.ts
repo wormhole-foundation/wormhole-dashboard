@@ -1,7 +1,6 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { expect, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
-import { getMaximumBatchSize } from '../../consts';
 import { EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 
 const initialAvalancheBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.avalanche);
@@ -29,9 +28,9 @@ test('getBlocks', async () => {
   const watcher = new EVMWatcher('avalanche');
   const blocks = await watcher.getBlocks(
     initialAvalancheBlock,
-    initialAvalancheBlock + getMaximumBatchSize('avalanche') - 1
+    initialAvalancheBlock + watcher.maximumBatchSize - 1
   );
-  expect(blocks.length).toEqual(getMaximumBatchSize('avalanche'));
+  expect(blocks.length).toEqual(watcher.maximumBatchSize);
   expect(blocks[0].number).toEqual(initialAvalancheBlock);
   expect(blocks[0].hash).toEqual(
     '0x33b358fe68a2a11b6a5a5969f29f9223001e36a5d719734ba542b238d397f14e'

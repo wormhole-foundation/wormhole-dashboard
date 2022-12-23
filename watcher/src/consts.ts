@@ -17,7 +17,7 @@ export const TIMEOUT = 0.5 * 1000;
 // this one immediately 429s
 // klaytn: 'https://public-node-api.klaytnapi.com/v1/cypress',
 
-export const EVM_RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
+export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   ethereum: process.env.ETH_RPC,
   bsc: 'https://rpc.ankr.com/bsc',
   polygon: 'https://rpc.ankr.com/polygon',
@@ -30,14 +30,12 @@ export const EVM_RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   celo: 'https://forno.celo.org',
   moonbeam: 'https://rpc.ankr.com/moonbeam',
   arbitrum: 'https://arb1.arbitrum.io/rpc',
+  aptos: 'https://fullnode.mainnet.aptoslabs.com/',
 };
 
 // Separating for now so if we max out infura we can keep Polygon going
 export const POLYGON_ROOT_CHAIN_RPC = 'https://rpc.ankr.com/eth';
 export const POLYGON_ROOT_CHAIN_ADDRESS = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287';
-
-export const getMaximumBatchSize = (chain: ChainName): number =>
-  chain === 'acala' || chain === 'karura' ? 50 : 100;
 
 export const DB_SOURCE = process.env.DB_SOURCE || 'local';
 export const JSON_DB_FILE = process.env.JSON_DB_FILE || '../server/db.json';

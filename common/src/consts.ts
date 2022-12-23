@@ -15,4 +15,5 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   celo: '12947144',
   moonbeam: '1486591',
   arbitrum: '18128584',
+  aptos: '0', // block is 1094390 but AptosWatcher uses sequence number instead
 };

@@ -1,6 +1,6 @@
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
-import { getMaximumBatchSize, TIMEOUT } from '../consts';
+import { TIMEOUT } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { getLastBlockByChain, storeVaasByBlock } from '../databases/utils';
 import { getLogger, WormholeLogger } from '../utils/logger';
@@ -8,6 +8,7 @@ import { getLogger, WormholeLogger } from '../utils/logger';
 export class Watcher {
   chain: ChainName;
   logger: WormholeLogger;
+  maximumBatchSize: number = 100;
 
   constructor(chain: ChainName) {
     this.chain = chain;
@@ -28,9 +29,9 @@ export class Watcher {
     let retry = 0;
     while (true) {
       try {
-        if (fromBlock && toBlock && fromBlock <= toBlock) {
-          // fetch logs for the block range
-          toBlock = Math.min(fromBlock + getMaximumBatchSize(this.chain) - 1, toBlock); // fix for "block range is too wide" or "maximum batch size is 50, but received 101"
+        if (fromBlock !== null && toBlock !== null && fromBlock <= toBlock) {
+          // fetch logs for the block range, inclusive of toBlock
+          toBlock = Math.min(fromBlock + this.maximumBatchSize - 1, toBlock);
           this.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
           const vaasByBlock = await this.getMessagesForBlocks(fromBlock, toBlock);
           await storeVaasByBlock(this.chain, vaasByBlock);

@@ -17,6 +17,7 @@
     "@certusone/wormhole-sdk": "^0.9.6",
     "@google-cloud/bigtable": "^4.1.0",
     "@wormhole-foundation/wormhole-monitor-common": "^0.0.1",
+    "aptos": "^1.4.0",
     "axios": "^1.2.1",
     "dotenv": "^16.0.3",
     "firebase-admin": "^11.4.0",

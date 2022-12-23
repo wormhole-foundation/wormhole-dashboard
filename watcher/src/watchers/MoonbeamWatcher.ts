@@ -1,6 +1,6 @@
 import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
-import { EVM_RPCS_BY_CHAIN } from '../consts';
+import { RPCS_BY_CHAIN } from '../consts';
 import { EVMWatcher, EVM_AXIOS_CONFIG } from './EVMWatcher';
 
 export class MoonbeamWatcher extends EVMWatcher {
@@ -11,7 +11,7 @@ export class MoonbeamWatcher extends EVMWatcher {
     const latestBlock = await super.getFinalizedBlockNumber();
     let isBlockFinalized = false;
     while (!isBlockFinalized) {
-      if (!EVM_RPCS_BY_CHAIN.moonbeam) {
+      if (!RPCS_BY_CHAIN.moonbeam) {
         throw new Error('Moonbeam RPC is not defined!');
       }
       await sleep(100);
@@ -21,7 +21,7 @@ export class MoonbeamWatcher extends EVMWatcher {
         isBlockFinalized =
           (
             await axios.post(
-              EVM_RPCS_BY_CHAIN.moonbeam,
+              RPCS_BY_CHAIN.moonbeam,
               [
                 {
                   jsonrpc: '2.0',

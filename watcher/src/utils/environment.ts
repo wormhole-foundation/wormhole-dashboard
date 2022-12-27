@@ -16,8 +16,3 @@ export const getEnvironment = () => {
     return loggingEnv;
   }
 };
-
-export const assertEnvironmentVariable = (varName: string) => {
-  if (varName in process.env) return process.env[varName]!;
-  throw new Error(`Missing required environment variable: ${varName}`);
-};

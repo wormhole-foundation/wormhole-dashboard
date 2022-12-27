@@ -10,7 +10,8 @@
   "workspaces": [
     "common",
     "watcher",
-    "web"
+    "web",
+    "cloud_functions"
   ],
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8"

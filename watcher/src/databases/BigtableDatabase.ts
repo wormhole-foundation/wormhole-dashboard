@@ -2,14 +2,12 @@ import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/util
 import { parseVaa } from '@certusone/wormhole-sdk/lib/cjs/vaa/wormhole';
 import { Bigtable } from '@google-cloud/bigtable';
 import {
+  assertEnvironmentVariable,
   chunkArray,
-  padUint16,
-  padUint64,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { assertEnvironmentVariable } from '../utils/environment';
 import { Database } from './Database';
 import {
   BigtableMessagesResultRow,

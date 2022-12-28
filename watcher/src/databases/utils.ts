@@ -1,28 +1,73 @@
 import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+  padUint16,
+  padUint64,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { DB_SOURCE } from '../consts';
 import { BigtableDatabase } from './BigtableDatabase';
 import { Database } from './Database';
 import { JsonDatabase } from './JsonDatabase';
 import { VaasByBlock } from './types';
-// // TODO: should this be a composite key or should the value become more complex
+
+// Bigtable Message ID format
+// chain/block/emitter/sequence
+// 00002/00000000000013140651/0000000000000000000000008ea8874192c8c715e620845f833f48f39b24e222/00000000000000000000
+
+export function makeMessageId(
+  chainId: number,
+  block: string,
+  emitter: string,
+  sequence: string
+): string {
+  return `${padUint16(chainId.toString())}/${padUint64(block)}/${emitter}/${padUint64(sequence)}`;
+}
+
+export function parseMessageId(id: string): {
+  chain: number;
+  block: number;
+  emitter: string;
+  sequence: bigint;
+} {
+  const [chain, block, emitter, sequence] = id.split('/');
+  return { chain: parseInt(chain), block: parseInt(block), emitter, sequence: BigInt(sequence) };
+}
+
+// Bigtable VAA ID format
+// chain:emitter:sequence
+// 2:00000000000000000000000005b70fb5477a93be33822bfb31fdaf2c171970df:0000000000000000
+
+export function makeVaaId(chain: number, emitter: string, sequence: bigint) {
+  return `${chain}:${emitter}:${sequence.toString().padStart(16, '0')}`;
+}
+
+// TODO: should this be a composite key or should the value become more complex
 export const makeBlockKey = (block: string, timestamp: string): string => `${block}/${timestamp}`;
+
 export const makeVaaKey = (
   transactionHash: string,
   chain: ChainId | ChainName,
   emitter: string,
   seq: string
 ): string => `${transactionHash}:${coalesceChainId(chain)}/${emitter}/${seq}`;
+
 let database: Database = new Database();
 export const initDb = (): Database => {
-  database = DB_SOURCE === 'bigtable' ? new BigtableDatabase() : new JsonDatabase();
+  if (DB_SOURCE === 'bigtable') {
+    database = new BigtableDatabase();
+    (database as BigtableDatabase).watchMissing();
+  } else {
+    database = new JsonDatabase();
+  }
   return database;
 };
+
 export const getLastBlockByChain = async (chain: ChainName): Promise<number | null> => {
   const lastBlock: string =
     (await database.getLastBlockByChain(chain)) ?? INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain]!;
   return lastBlock === undefined ? null : Number(lastBlock);
 };
+
 export const storeVaasByBlock = async (
   chain: ChainName,
   vaasByBlock: VaasByBlock

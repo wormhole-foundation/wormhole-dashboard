@@ -1,11 +1,25 @@
 import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { assertEnvironmentVariable } from '../utils/environment';
-import { Database } from './Database';
+import { parseVaa } from '@certusone/wormhole-sdk/lib/cjs/vaa/wormhole';
 import { Bigtable } from '@google-cloud/bigtable';
-import { padUint16, padUint64 } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  chunkArray,
+  padUint16,
+  padUint64,
+  sleep,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { VaasByBlock } from './types';
+import { assertEnvironmentVariable } from '../utils/environment';
+import { Database } from './Database';
+import {
+  BigtableMessagesResultRow,
+  BigtableMessagesRow,
+  BigtableVAAsResultRow,
+  VaasByBlock,
+} from './types';
+import { makeMessageId, makeVaaId, parseMessageId } from './utils';
+
+const WATCH_MISSING_TIMEOUT = 5 * 60 * 1000;
 
 export class BigtableDatabase extends Database {
   tableId: string;
@@ -59,7 +73,11 @@ export class BigtableDatabase extends Database {
     await lastObservedBlock.set({ lastBlockKey });
   }
 
-  async storeVaasByBlock(chain: ChainName, vaasByBlock: VaasByBlock): Promise<void> {
+  async storeVaasByBlock(
+    chain: ChainName,
+    vaasByBlock: VaasByBlock,
+    updateLatestBlock: boolean = true
+  ): Promise<void> {
     if (this.bigtable === undefined) {
       this.logger.warn('no bigtable instance set');
       return;
@@ -68,29 +86,16 @@ export class BigtableDatabase extends Database {
     const filteredBlocks = BigtableDatabase.filterEmptyBlocks(vaasByBlock);
     const instance = this.bigtable.instance(this.instanceId);
     const table = instance.table(this.tableId);
-    const rowsToInsert: {
-      key: string;
-      data: {
-        // column family
-        info: {
-          // columns
-          timestamp: { value: string; timestamp: string };
-          txHash: { value: string; timestamp: string };
-          hasSignedVaa: { value: number; timestamp: string };
-        };
-      };
-    }[] = [];
+    const rowsToInsert: BigtableMessagesRow[] = [];
     Object.keys(filteredBlocks).forEach((blockKey) => {
       const [block, timestamp] = blockKey.split('/');
       filteredBlocks[blockKey].forEach((msgKey) => {
         const [txHash, vaaKey] = msgKey.split(':');
         const [, emitter, seq] = vaaKey.split('/');
         rowsToInsert.push({
-          key: `${padUint16(chainId.toString())}/${padUint64(block)}/${emitter}/${padUint64(seq)}`,
+          key: makeMessageId(chainId, block, emitter, seq),
           data: {
-            // column family
             info: {
-              // columns
               timestamp: {
                 value: timestamp,
                 // write 0 timestamp to only keep 1 cell each
@@ -112,12 +117,106 @@ export class BigtableDatabase extends Database {
     });
     await table.insert(rowsToInsert);
 
-    // store latest vaasByBlock to firestore
-    const blockInfos = Object.keys(vaasByBlock);
-    if (blockInfos.length) {
-      const lastBlockKey = blockInfos[blockInfos.length - 1];
-      this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlockKey}`);
-      await this.storeLatestBlock(chain, lastBlockKey);
+    if (updateLatestBlock) {
+      // store latest vaasByBlock to firestore
+      const blockInfos = Object.keys(vaasByBlock);
+      if (blockInfos.length) {
+        const lastBlockKey = blockInfos[blockInfos.length - 1];
+        this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlockKey}`);
+        await this.storeLatestBlock(chain, lastBlockKey);
+      }
+    }
+  }
+
+  async updateMessageStatuses(messageKeys: string[]): Promise<void> {
+    const instance = this.bigtable.instance(this.instanceId);
+    const table = instance.table(this.tableId);
+    const chunkedMessageKeys = chunkArray(messageKeys, 1000);
+    for (const chunk of chunkedMessageKeys) {
+      const rowsToInsert: BigtableMessagesRow[] = chunk.map((id) => ({
+        key: id,
+        data: {
+          info: {
+            hasSignedVaa: {
+              value: 1,
+              timestamp: '0',
+            },
+          },
+        },
+      }));
+      await table.insert(rowsToInsert);
+    }
+  }
+
+  async fetchMissingVaaMessages(): Promise<BigtableMessagesResultRow[]> {
+    const instance = this.bigtable.instance(this.instanceId);
+    const messageTable = instance.table(this.tableId);
+    // TODO: how to filter to only messages with hasSignedVaa === 0
+    const observedMessages = (await messageTable.getRows())[0] as BigtableMessagesResultRow[];
+    const missingVaaMessages = observedMessages.filter(
+      (x) => x.data.info.hasSignedVaa?.[0].value === 0
+    );
+    return missingVaaMessages;
+  }
+
+  async watchMissing(): Promise<void> {
+    const vaaTableId = assertEnvironmentVariable('BIGTABLE_VAA_TABLE_ID');
+    const instance = this.bigtable.instance(this.instanceId);
+    const vaaTable = instance.table(vaaTableId);
+    while (true) {
+      try {
+        const missingVaaMessages = await this.fetchMissingVaaMessages();
+        const total = missingVaaMessages.length;
+        this.logger.info(`locating ${total} messages with hasSignedVAA === 0`);
+        let found = 0;
+        const chunkedVAAIds = chunkArray(
+          missingVaaMessages.map((observedMessage) => {
+            const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
+            return makeVaaId(chain, emitter, sequence);
+          }),
+          1000
+        );
+        let chunkNum = 0;
+        const foundRecords: string[] = [];
+        for (const chunk of chunkedVAAIds) {
+          this.logger.info(`processing chunk ${++chunkNum} of ${chunkedVAAIds.length}`);
+          const vaaRows = (
+            await vaaTable.getRows({
+              keys: chunk,
+              decode: false,
+            })
+          )[0] as BigtableVAAsResultRow[];
+          for (const row of vaaRows) {
+            try {
+              const vaaBytes = row.data.QuorumState.SignedVAA?.[0].value;
+              if (vaaBytes) {
+                const parsed = parseVaa(vaaBytes);
+                const matchingIndex = missingVaaMessages.findIndex((observedMessage) => {
+                  const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
+                  if (
+                    parsed.emitterChain === chain &&
+                    parsed.emitterAddress.toString('hex') === emitter &&
+                    parsed.sequence === sequence
+                  ) {
+                    return true;
+                  }
+                });
+                if (matchingIndex !== -1) {
+                  found++;
+                  // remove matches to keep array lean
+                  const [matching] = missingVaaMessages.splice(matchingIndex, 1);
+                  foundRecords.push(matching.id);
+                }
+              }
+            } catch (e) {}
+          }
+        }
+        this.logger.info(`processed ${total} messages, found ${found}, missing ${total - found}`);
+        this.updateMessageStatuses(foundRecords);
+      } catch (e) {
+        this.logger.error(e);
+      }
+      await sleep(WATCH_MISSING_TIMEOUT);
     }
   }
 }

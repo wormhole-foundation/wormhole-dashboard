@@ -4,6 +4,8 @@ import { CHAINS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { padUint16 } from '@wormhole-foundation/wormhole-monitor-common';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 
+// This script provides a summary of the message db
+
 (async () => {
   const bt = new BigtableDatabase();
   if (!bt.bigtable) {
@@ -11,17 +13,10 @@ import { BigtableDatabase } from '../src/databases/BigtableDatabase';
   }
   const instance = bt.bigtable.instance(bt.instanceId);
   const table = instance.table(bt.tableId);
-  //   const row = await table
-  //     .row('6/10000697/0000000000000000000000000e082f06ff657d94310cb8ce8b0d9a04541d8052/0')
-  //     .get();
-  //   console.log(JSON.stringify(row));
   try {
     for (const [chainName, chainId] of Object.entries(CHAINS)) {
       const prefix = `${padUint16(chainId.toString())}/`;
       const observedMessages = await table.getRows({ prefix });
-      // for (const msg of observedMessages[0]) {
-      //   console.log(chainName.padEnd(12), msg.id);
-      // }
       console.log(chainName.padEnd(12), observedMessages[0].length.toString().padStart(6));
       if (observedMessages[0][0]) {
         console.log('   id           ', observedMessages[0][0]?.id);

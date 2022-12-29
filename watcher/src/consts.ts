@@ -33,6 +33,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   moonbeam: 'https://rpc.ankr.com/moonbeam',
   arbitrum: 'https://arb1.arbitrum.io/rpc',
   aptos: 'https://fullnode.mainnet.aptoslabs.com/',
+  near: 'https://rpc.mainnet.near.org',
 };
 
 // Separating for now so if we max out infura we can keep Polygon going

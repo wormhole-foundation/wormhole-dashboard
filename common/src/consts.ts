@@ -17,4 +17,5 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   moonbeam: '1486591',
   arbitrum: '18128584',
   aptos: '0', // block is 1094390 but AptosWatcher uses sequence number instead
+  near: '72767136',
 };

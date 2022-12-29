@@ -1,19 +1,16 @@
 // npx pretty-quick
 
-import axios from 'axios';
 import { connect } from 'near-api-js';
 import { Provider } from 'near-api-js/lib/providers';
+import { ExecutionStatus } from 'near-api-js/lib/providers/provider';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
+import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 
+const NEAR_ARCHIVE_RPC = 'https://archival-rpc.mainnet.near.org';
 const NEAR_RPC = RPCS_BY_CHAIN.near!;
 const NEAR_CONTRACT = 'contract.wormhole_crypto.near';
-const AXIOS_CONFIG = {
-  headers: {
-    'Content-Type': 'application/json;charset=UTF-8',
-  },
-};
 
 export class NearWatcher extends Watcher {
   private provider: Provider | null = null;
@@ -30,16 +27,37 @@ export class NearWatcher extends Watcher {
   }
 
   public async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    let vaasByBlock: VaasByBlock = {};
-    let blockPromises = [];
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
+    const provider = await this.getProvider();
+    const vaasByBlock: VaasByBlock = {};
 
-    //    for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
-    //      blockPromises.push(this.algodClient.block(blockNumber).do());
-    //    }
-    //
-    //    const blocks = await Promise.all(blockPromises);
-    //    this.processBlocks(blocks, vaasByBlock);
+    for (let blockId = fromBlock; blockId <= toBlock; blockId++) {
+      const block = await provider.block({ blockId });
+      const chunks = await Promise.all(
+        block.chunks.map(({ chunk_hash }) => provider.chunk(chunk_hash))
+      );
+      const transactions = chunks.flatMap(({ transactions }) => transactions);
+      for (const tx of transactions) {
+        const outcome = await provider.txStatus(tx.hash, NEAR_CONTRACT);
+        if (
+          (outcome.status as ExecutionStatus).SuccessValue ||
+          (outcome.status as ExecutionStatus).SuccessReceiptId
+        ) {
+          const logs = outcome.receipts_outcome
+            .filter(({ outcome }) => (outcome as any).executor_id === NEAR_CONTRACT)
+            .flatMap(({ outcome }) => outcome.logs)
+            .filter((log) => log.startsWith('EVENT_JSON:')) // https://nomicon.io/Standards/EventsFormat
+            .map((log) => JSON.parse(log.slice(11)) as EventLog)
+            .filter(isWormholePublishEventLog);
+          for (const log of logs) {
+            const { height, timestamp } = block.header;
+            const blockKey = makeBlockKey(height.toString(), timestamp.toString());
+            const vaaKey = makeVaaKey(tx.hash, this.chain, log.emitter, log.seq.toString());
+            vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+          }
+        }
+      }
+    }
 
     return vaasByBlock;
   }
@@ -47,102 +65,33 @@ export class NearWatcher extends Watcher {
   async getProvider(): Promise<Provider> {
     if (!this.provider) {
       const connection = await connect({
-        nodeUrl: NEAR_RPC,
+        nodeUrl: NEAR_ARCHIVE_RPC,
         networkId: 'mainnet',
       });
       this.provider = connection.connection.provider;
     }
     return this.provider;
   }
-
-  async getBlock(block: number): Promise<any> {
-    let b = await axios.post(
-      NEAR_RPC,
-      {
-        jsonrpc: '2.0',
-        id: '1',
-        method: 'block',
-        params: {
-          block_id: block,
-        },
-      },
-      AXIOS_CONFIG
-    );
-
-    return b.data;
-  }
-
-  async getBlockHash(block: string): Promise<any> {
-    let b = await axios.post(
-      NEAR_RPC,
-      {
-        jsonrpc: '2.0',
-        id: '1',
-        method: 'block',
-        params: {
-          block_id: block,
-        },
-      },
-      AXIOS_CONFIG
-    );
-
-    return b.data;
-  }
-
-  async getFinalBlock(): Promise<any> {
-    let b = await axios.post(
-      NEAR_RPC,
-      {
-        jsonrpc: '2.0',
-        id: '1',
-        method: 'block',
-        params: {
-          finality: 'final',
-        },
-      },
-      AXIOS_CONFIG
-    );
-
-    return b.data;
-  }
-
-  async getChunk(chunk_id: string): Promise<any> {
-    let b = await axios.post(
-      NEAR_RPC,
-      {
-        jsonrpc: '2.0',
-        id: '1',
-        method: 'chunk',
-        params: {
-          chunk_id: chunk_id,
-        },
-      },
-      AXIOS_CONFIG
-    );
-
-    return b.data;
-  }
-
-  async getTxStatusWithReceipts(tx_hash: string, sender_account_id: string): Promise<any> {
-    let b = await axios.post(
-      NEAR_RPC,
-      {
-        jsonrpc: '2.0',
-        id: '1',
-        method: 'EXPERIMENTAL_tx_status',
-        params: [tx_hash, sender_account_id],
-      },
-      AXIOS_CONFIG
-    );
-
-    return b.data;
-  }
-
-  async test_watcher() {
-    const provider = await this.getProvider();
-    // console.log(await this.getFinalizedBlockNumber());
-  }
 }
 
-let a = new NearWatcher();
-a.test_watcher();
+// https://nomicon.io/Standards/EventsFormat
+type EventLog = {
+  event: string;
+  standard: string;
+  data?: unknown;
+  version?: string; // this is supposed to exist but is missing in WH logs
+} & Partial<WormholePublishEventLog>;
+
+type WormholePublishEventLog = {
+  standard: 'wormhole';
+  event: 'publish';
+  data: string;
+  nonce: number;
+  emitter: string;
+  seq: number;
+  block: number;
+};
+
+const isWormholePublishEventLog = (log: EventLog): log is WormholePublishEventLog => {
+  return log.standard === 'wormhole' && log.event === 'publish';
+};

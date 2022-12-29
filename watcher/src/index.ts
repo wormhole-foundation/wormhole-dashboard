@@ -4,6 +4,7 @@ dotenv.config();
 import { initDb } from './databases/utils';
 import { AptosWatcher, BSCWatcher, EVMWatcher, MoonbeamWatcher, PolygonWatcher } from './watchers';
 import { AlgorandWatcher } from './watchers/AlgorandWatcher';
+import { NearWatcher } from './watchers/NearWatcher';
 
 initDb();
 
@@ -21,3 +22,4 @@ new EVMWatcher('celo').watch();
 new MoonbeamWatcher().watch();
 // new EVMWatcher('arbitrum').watch(); // TODO: requires waiting for l1 finality
 new AptosWatcher().watch();
+new NearWatcher().watch();

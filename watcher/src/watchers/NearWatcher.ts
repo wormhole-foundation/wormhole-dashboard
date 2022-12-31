@@ -1,50 +1,70 @@
-// npx pretty-quick
-
+import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { connect } from 'near-api-js';
-import { Provider } from 'near-api-js/lib/providers';
-import { ExecutionStatus } from 'near-api-js/lib/providers/provider';
+import { Provider, TypedError } from 'near-api-js/lib/providers';
+import { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
+import { EventLog, isWormholePublishEventLog } from '../types/near';
 import { Watcher } from './Watcher';
 
-const NEAR_ARCHIVE_RPC = 'https://archival-rpc.mainnet.near.org';
-const NEAR_RPC = RPCS_BY_CHAIN.near!;
-const NEAR_CONTRACT = 'contract.wormhole_crypto.near';
-
 export class NearWatcher extends Watcher {
-  private provider: Provider | null = null;
+  provider: Provider | null = null;
 
   constructor() {
     super('near');
   }
 
-  public async getFinalizedBlockNumber(): Promise<number> {
+  async getFinalizedBlockNumber(): Promise<number> {
     this.logger.info(`fetching final block for ${this.chain}`);
     const provider = await this.getProvider();
     const block = await provider.block({ finality: 'final' });
     return block.header.height;
   }
 
-  public async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+    // assume toBlock was retrieved from getFinalizedBlockNumber and is finalized
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
     const provider = await this.getProvider();
-    const vaasByBlock: VaasByBlock = {};
+    const blocks: BlockResult[] = [];
+    let block = await provider.block(toBlock);
+    try {
+      blocks.push(block);
+      while (true) {
+        // traverse backwards via block hashes: https://github.com/wormhole-foundation/wormhole-monitor/issues/35
+        block = await provider.block(block.header.prev_hash);
+        if (block.header.height < fromBlock) break;
+        blocks.push(block);
+      }
+    } catch (e) {
+      if (e instanceof TypedError && e.type === 'HANDLER_ERROR') {
+        this.logger.error(
+          `block height for block ${block.header.prev_hash} is too old for rpc, use backfillNear to fetch blocks before height ${block.header.height}`
+        );
+      } else {
+        throw e;
+      }
+    }
 
-    for (let blockId = fromBlock; blockId <= toBlock; blockId++) {
-      const block = await provider.block({ blockId });
+    return this.getMessagesFromBlockResults(blocks);
+  }
+
+  async getMessagesFromBlockResults(blocks: BlockResult[]): Promise<VaasByBlock> {
+    const provider = await this.getProvider();
+    const vaasByBlock: VaasByBlock = {};
+    for (const block of blocks) {
       const chunks = await Promise.all(
         block.chunks.map(({ chunk_hash }) => provider.chunk(chunk_hash))
       );
       const transactions = chunks.flatMap(({ transactions }) => transactions);
       for (const tx of transactions) {
-        const outcome = await provider.txStatus(tx.hash, NEAR_CONTRACT);
+        const outcome = await provider.txStatus(tx.hash, CONTRACTS.MAINNET.near.core);
         if (
           (outcome.status as ExecutionStatus).SuccessValue ||
           (outcome.status as ExecutionStatus).SuccessReceiptId
         ) {
           const logs = outcome.receipts_outcome
-            .filter(({ outcome }) => (outcome as any).executor_id === NEAR_CONTRACT)
+            .filter(({ outcome }) => (outcome as any).executor_id === CONTRACTS.MAINNET.near.core)
             .flatMap(({ outcome }) => outcome.logs)
             .filter((log) => log.startsWith('EVENT_JSON:')) // https://nomicon.io/Standards/EventsFormat
             .map((log) => JSON.parse(log.slice(11)) as EventLog)
@@ -64,34 +84,9 @@ export class NearWatcher extends Watcher {
 
   async getProvider(): Promise<Provider> {
     if (!this.provider) {
-      const connection = await connect({
-        nodeUrl: NEAR_ARCHIVE_RPC,
-        networkId: 'mainnet',
-      });
+      const connection = await connect({ nodeUrl: RPCS_BY_CHAIN.near!, networkId: 'mainnet' });
       this.provider = connection.connection.provider;
     }
     return this.provider;
   }
 }
-
-// https://nomicon.io/Standards/EventsFormat
-type EventLog = {
-  event: string;
-  standard: string;
-  data?: unknown;
-  version?: string; // this is supposed to exist but is missing in WH logs
-} & Partial<WormholePublishEventLog>;
-
-type WormholePublishEventLog = {
-  standard: 'wormhole';
-  event: 'publish';
-  data: string;
-  nonce: number;
-  emitter: string;
-  seq: number;
-  block: number;
-};
-
-const isWormholePublishEventLog = (log: EventLog): log is WormholePublishEventLog => {
-  return log.standard === 'wormhole' && log.event === 'publish';
-};

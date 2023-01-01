@@ -1,4 +1,5 @@
 import { ChainName, CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { AxiosRequestConfig } from 'axios';
 
 export const TIMEOUT = 0.5 * 1000;
 
@@ -54,3 +55,8 @@ export const DB_SOURCE = process.env.DB_SOURCE || 'local';
 export const JSON_DB_FILE = process.env.JSON_DB_FILE || '../server/db.json';
 export const DB_LAST_BLOCK_FILE =
   process.env.DB_LAST_BLOCK_FILE || '../server/lastBlockByChain.json';
+
+// without this, axios request will error `Z_BUF_ERROR`: https://github.com/axios/axios/issues/5346
+export const AXIOS_CONFIG_JSON: AxiosRequestConfig = {
+  headers: { 'Accept-Encoding': 'application/json' },
+};

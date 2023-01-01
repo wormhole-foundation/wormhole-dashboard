@@ -1,9 +1,9 @@
 import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
 import { CONTRACTS, EVMChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Log } from '@ethersproject/abstract-provider';
-import axios, { AxiosRequestConfig } from 'axios';
+import axios from 'axios';
 import { BigNumber } from 'ethers';
-import { RPCS_BY_CHAIN } from '../consts';
+import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
@@ -12,12 +12,6 @@ import { Watcher } from './Watcher';
 // https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/contracts/Implementation.sol#L12
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
   '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
-
-// without this, Oasis will `Z_BUF_ERROR`
-export const EVM_AXIOS_CONFIG: AxiosRequestConfig = {
-  headers: { 'Accept-Encoding': 'application/json' },
-};
-
 export const wormholeInterface = Implementation__factory.createInterface();
 
 export type BlockTag = 'finalized' | 'safe' | 'latest';
@@ -59,7 +53,7 @@ export class EVMWatcher extends Watcher {
             ],
           },
         ],
-        EVM_AXIOS_CONFIG
+        AXIOS_CONFIG_JSON
       )
     )?.data?.[0]?.result;
     if (result && result.hash && result.number && result.timestamp) {
@@ -88,7 +82,7 @@ export class EVMWatcher extends Watcher {
         params: [`0x${blockNumber.toString(16)}`, false],
       });
     }
-    const results = (await axios.post(rpc, reqs, EVM_AXIOS_CONFIG))?.data;
+    const results = (await axios.post(rpc, reqs, AXIOS_CONFIG_JSON))?.data;
     if (results && results.length) {
       // Convert to Ethers compatible type
       return results.map((response: undefined | { result?: Block }, idx: number) => {
@@ -141,7 +135,7 @@ export class EVMWatcher extends Watcher {
             ],
           },
         ],
-        EVM_AXIOS_CONFIG
+        AXIOS_CONFIG_JSON
       )
     )?.data?.[0]?.result;
     if (result) {

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ethers } from 'ethers';
-import { POLYGON_ROOT_CHAIN_ADDRESS, POLYGON_ROOT_CHAIN_RPC } from '../consts';
-import { EVMWatcher, EVM_AXIOS_CONFIG } from './EVMWatcher';
+import { AXIOS_CONFIG_JSON, POLYGON_ROOT_CHAIN_ADDRESS, POLYGON_ROOT_CHAIN_RPC } from '../consts';
+import { EVMWatcher } from './EVMWatcher';
 
 export class PolygonWatcher extends EVMWatcher {
   constructor() {
@@ -27,7 +27,7 @@ export class PolygonWatcher extends EVMWatcher {
             ],
           },
         ],
-        EVM_AXIOS_CONFIG
+        AXIOS_CONFIG_JSON
       )
     )?.data?.[0]?.result;
     const block = rootChain.decodeFunctionResult('getLastChildBlock', callResult)[0].toNumber();

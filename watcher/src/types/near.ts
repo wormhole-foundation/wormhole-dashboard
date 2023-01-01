@@ -16,43 +16,109 @@ export type WormholePublishEventLog = {
   block: number;
 };
 
-export const isWormholePublishEventLog = (log: EventLog): log is WormholePublishEventLog => {
-  return log.standard === 'wormhole' && log.event === 'publish';
-};
+export type GetTransactionsByAccountIdResponse = [
+  | {
+      id: string | null;
+      result: {
+        type: string;
+        data: {
+          items: Transaction[];
+        };
+      };
+    }
+  | {
+      id: string | null;
+      error: {
+        message: string;
+        code: number;
+        data: {
+          code: string;
+          httpStatus: number;
+          path: string;
+        };
+      };
+    }
+];
 
-export type NearExplorerTransactionResponse = {
-  id: string | null;
-  result: {
-    type: string;
-    data: {
-      items: NearExplorerTransaction[];
-    };
-  };
-}[];
-
-export type NearExplorerTransaction = {
+export type Transaction = {
   hash: string;
   signerId: string;
   receiverId: string;
   blockHash: string;
   blockTimestamp: number;
-  actions: {
-    kind: string;
-    args: {
-      methodName: string;
-      args: string;
-      gas: number;
-      deposit: string;
-    };
-  }[];
-  status: string;
+  actions: Action[];
+  status: 'unknown' | 'failure' | 'success';
 };
 
-export type NearExplorerTransactionRequestParams = {
+export type GetTransactionsByAccountIdRequestParams = {
   accountId: string;
   limit: number;
   cursor?: {
-    timestamp: number; // paginate with timestamp
+    timestamp: string; // paginate with timestamp
     indexInChunk: number;
   };
 };
+
+type Action =
+  | {
+      kind: 'createAccount';
+      args: {};
+    }
+  | {
+      kind: 'deployContract';
+      args: {
+        code: string;
+      };
+    }
+  | {
+      kind: 'functionCall';
+      args: {
+        methodName: string;
+        args: string;
+        gas: number;
+        deposit: string;
+      };
+    }
+  | {
+      kind: 'transfer';
+      args: {
+        deposit: string;
+      };
+    }
+  | {
+      kind: 'stake';
+      args: {
+        stake: string;
+        publicKey: string;
+      };
+    }
+  | {
+      kind: 'addKey';
+      args: {
+        publicKey: string;
+        accessKey: {
+          nonce: number;
+          permission:
+            | {
+                type: 'fullAccess';
+              }
+            | {
+                type: 'functionCall';
+                contractId: string;
+                methodNames: string[];
+              };
+        };
+      };
+    }
+  | {
+      kind: 'deleteKey';
+      args: {
+        publicKey: string;
+      };
+    }
+  | {
+      kind: 'deleteAccount';
+      args: {
+        beneficiaryId: string;
+      };
+    };

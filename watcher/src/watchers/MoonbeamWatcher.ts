@@ -1,7 +1,7 @@
 import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
-import { RPCS_BY_CHAIN } from '../consts';
-import { EVMWatcher, EVM_AXIOS_CONFIG } from './EVMWatcher';
+import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
+import { EVMWatcher } from './EVMWatcher';
 
 export class MoonbeamWatcher extends EVMWatcher {
   constructor() {
@@ -30,7 +30,7 @@ export class MoonbeamWatcher extends EVMWatcher {
                   params: [blockFromNumber.hash],
                 },
               ],
-              EVM_AXIOS_CONFIG
+              AXIOS_CONFIG_JSON
             )
           )?.data?.[0]?.result || false;
       } catch (e) {

@@ -50,7 +50,7 @@ export class AptosWatcher extends Watcher {
           this.client.getBlockByVersion(Number(version)),
           this.client.getTransactionByVersion(Number(version)),
         ]);
-        const timestamp = new Date(Number(block.block_timestamp)).toISOString();
+        const timestamp = new Date(Number(block.block_timestamp) / 1000).toISOString();
         const blockKey = [block.block_height, timestamp, sequence_number].join('/'); // use custom block key for now so we can include sequence number
         const emitter = data.sender.padStart(64, '0');
         const vaaKey = makeVaaKey(transaction.hash, this.chain, emitter, data.sequence);

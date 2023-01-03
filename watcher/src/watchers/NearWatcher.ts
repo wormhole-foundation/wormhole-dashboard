@@ -1,12 +1,13 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { connect } from 'near-api-js';
 import { Provider, TypedError } from 'near-api-js/lib/providers';
 import { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
+import ora from 'ora';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { EventLog } from '../types/near';
-import { isWormholePublishEventLog } from '../utils/types';
+import { getRateLimitedProvider } from '../utils/near';
+import { isWormholePublishEventLog } from '../utils/validation';
 import { Watcher } from './Watcher';
 
 export class NearWatcher extends Watcher {
@@ -53,44 +54,50 @@ export class NearWatcher extends Watcher {
   }
 
   async getProvider(): Promise<Provider> {
-    if (!this.provider) {
-      const connection = await connect({ nodeUrl: RPCS_BY_CHAIN.near!, networkId: 'mainnet' });
-      this.provider = connection.connection.provider;
-    }
-    return this.provider;
+    return (this.provider = this.provider || (await getRateLimitedProvider(RPCS_BY_CHAIN.near!)));
   }
 }
 
 export const getMessagesFromBlockResults = async (
   provider: Provider,
-  blocks: BlockResult[]
+  blocks: BlockResult[],
+  debug: boolean = false
 ): Promise<VaasByBlock> => {
   const vaasByBlock: VaasByBlock = {};
-  for (const block of blocks) {
-    const chunks = await Promise.all(
-      block.chunks.map(({ chunk_hash }) => provider.chunk(chunk_hash))
-    );
+  let log: ora.Ora;
+  if (debug) log = ora(`Fetching messages from ${blocks.length} blocks...`).start();
+  for (let i = 0; i < blocks.length; i++) {
+    if (debug) log!.text = `Fetching messages from block ${i + 1}/${blocks.length}...`;
+    const chunks = [];
+    for (const chunk of blocks[i].chunks) {
+      chunks.push(await provider.chunk(chunk.chunk_hash));
+    }
+
     const transactions = chunks.flatMap(({ transactions }) => transactions);
     for (const tx of transactions) {
       const outcome = await provider.txStatus(tx.hash, CONTRACTS.MAINNET.near.core);
-      if (
-        (outcome.status as ExecutionStatus).SuccessValue ||
-        (outcome.status as ExecutionStatus).SuccessReceiptId
-      ) {
-        const logs = outcome.receipts_outcome
-          .filter(({ outcome }) => (outcome as any).executor_id === CONTRACTS.MAINNET.near.core)
-          .flatMap(({ outcome }) => outcome.logs)
-          .filter((log) => log.startsWith('EVENT_JSON:')) // https://nomicon.io/Standards/EventsFormat
-          .map((log) => JSON.parse(log.slice(11)) as EventLog)
-          .filter(isWormholePublishEventLog);
-        for (const log of logs) {
-          const { height, timestamp } = block.header;
-          const blockKey = makeBlockKey(height.toString(), timestamp.toString());
-          const vaaKey = makeVaaKey(tx.hash, 'near', log.emitter, log.seq.toString());
-          vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
-        }
+      const logs = outcome.receipts_outcome
+        .filter(
+          ({ outcome }) =>
+            (outcome as any).executor_id === CONTRACTS.MAINNET.near.core &&
+            (outcome.status as ExecutionStatus).SuccessValue
+        )
+        .flatMap(({ outcome }) => outcome.logs)
+        .filter((log) => log.startsWith('EVENT_JSON:')) // https://nomicon.io/Standards/EventsFormat
+        .map((log) => JSON.parse(log.slice(11)) as EventLog)
+        .filter(isWormholePublishEventLog);
+      for (const log of logs) {
+        const { height, timestamp } = blocks[i].header;
+        const blockKey = makeBlockKey(height.toString(), timestamp.toString());
+        const vaaKey = makeVaaKey(tx.hash, 'near', log.emitter, log.seq.toString());
+        vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
       }
     }
+  }
+
+  if (debug) {
+    const numMessages = Object.values(vaasByBlock).flat().length;
+    log!.succeed(`Fetched ${numMessages} messages from ${blocks.length} blocks`);
   }
 
   return vaasByBlock;

@@ -2,9 +2,10 @@ import { CONTRACTS } from '@certusone/wormhole-sdk';
 import { describe, expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
 import {
-  ARCHIVAL_NODE_RATE_LIMIT_MS,
-  getArchivalRpcProvider,
+  getRateLimitedProvider,
   getTransactionsByAccountId,
+  NEAR_ARCHIVE_NODE_RATE_LIMIT_MS,
+  NEAR_ARCHIVE_RPC,
 } from '../../utils/near';
 import { getMessagesFromBlockResults, NearWatcher } from '../NearWatcher';
 
@@ -26,14 +27,14 @@ test('getMessagesForBlocks', async () => {
 });
 
 test('getArchivalRpcProvider', async () => {
-  const provider = await getArchivalRpcProvider();
+  const provider = await getRateLimitedProvider(NEAR_ARCHIVE_RPC);
   const start = performance.now();
 
   // grab first block with activity from core contract
   expect(
     await provider.block({ blockId: 'Asie8hpJFKaipvw8jh1wPfBwwbjP6JUfsQdCuQvwr3Sz' })
   ).toBeTruthy();
-  expect(performance.now() - start).toBeGreaterThan(ARCHIVAL_NODE_RATE_LIMIT_MS);
+  expect(performance.now() - start).toBeGreaterThan(NEAR_ARCHIVE_NODE_RATE_LIMIT_MS);
 });
 
 test('getTransactionsByAccountId', async () => {
@@ -43,7 +44,7 @@ test('getTransactionsByAccountId', async () => {
     '1669732480649090392'
   );
   expect(transactions.length).toEqual(10);
-  expect(transactions[0].hash).toEqual('8Bnf3ehhB5AWLxjVXMcTUmku1SdKgRLZpVxN67ViDgiD');
+  expect(transactions[0].hash).toEqual('7jDrPnvErjbi3EHbQBcKT9wtiUPo77J9tpxXjE3KHcUp');
 
   // test custom timestamp, filtering out non function call actions, and querying last page
   transactions = await getTransactionsByAccountId(
@@ -52,7 +53,7 @@ test('getTransactionsByAccountId', async () => {
     '1661429914932000000'
   );
   expect(transactions.length).toEqual(2);
-  expect(transactions.at(-1)?.hash).toEqual('3VivTHp1W5ErWgsASUQvW1qwoTCsxYeke4498apDJsss');
+  expect(transactions[0].hash).toEqual('3VivTHp1W5ErWgsASUQvW1qwoTCsxYeke4498apDJsss');
 });
 
 describe('getMessagesFromBlockResults', () => {
@@ -66,7 +67,7 @@ describe('getMessagesFromBlockResults', () => {
   });
 
   test('with ArchivalProvider', async () => {
-    const provider = await getArchivalRpcProvider();
+    const provider = await getRateLimitedProvider(NEAR_ARCHIVE_RPC);
     const messages = await getMessagesFromBlockResults(provider, [
       await provider.block({ blockId: 'Bzjemj99zxe1h8kVp8H2hwVifmbQL8HT34LyPHzEK5qp' }),
       await provider.block({ blockId: '4SHFxSo8DdP8DhMauS5iFqfmdLwLET3W3e8Lg9PFvBSn' }),

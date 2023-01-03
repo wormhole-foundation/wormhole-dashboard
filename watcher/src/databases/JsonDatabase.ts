@@ -53,7 +53,7 @@ export class JsonDatabase extends Database {
     // this will always overwrite the "last" block, so take caution if manually backfilling gaps
     const blockInfos = Object.keys(vaasByBlock);
     if (blockInfos.length) {
-      this.lastBlockByChain[chainId] = blockInfos[blockInfos.length - 1];
+      this.lastBlockByChain[chainId] = blockInfos.sort()[blockInfos.length - 1];
       writeFileSync(this.dbLastBlockFile, JSON.stringify(this.lastBlockByChain), ENCODING);
     }
   }

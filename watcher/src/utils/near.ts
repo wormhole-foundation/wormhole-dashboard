@@ -9,20 +9,19 @@ import {
   Transaction,
 } from '../types/near';
 
-const NEAR_ARCHIVE_RPC = 'https://archival-rpc.mainnet.near.org';
 const NEAR_EXPLORER_TRANSACTION_URL =
   'https://backend-mainnet-1713.onrender.com/trpc/transaction.listByAccountId';
-export const ARCHIVAL_NODE_RATE_LIMIT_MS = 100;
+export const NEAR_ARCHIVE_RPC = 'https://archival-rpc.mainnet.near.org';
+export const NEAR_ARCHIVE_NODE_RATE_LIMIT_MS = 100;
 
-export const getArchivalRpcProvider = async (): Promise<Provider> => {
-  const connection = await connect({ nodeUrl: NEAR_ARCHIVE_RPC, networkId: 'mainnet' });
-  const provider = connection.connection.provider as JsonRpcProvider;
-  const originalFn = provider.sendJsonRpc;
-  provider.sendJsonRpc = async function <T>(method: string, params: object) {
-    await sleep(ARCHIVAL_NODE_RATE_LIMIT_MS); // respect rate limits: 600req/min
+export const getRateLimitedProvider = async (rpc: string): Promise<Provider> => {
+  const connection = await connect({ nodeUrl: rpc, networkId: 'mainnet' });
+  const provider = connection.connection.provider;
+  const originalFn = (provider as JsonRpcProvider).sendJsonRpc;
+  (provider as JsonRpcProvider).sendJsonRpc = async function <T>(method: string, params: object) {
+    await sleep(NEAR_ARCHIVE_NODE_RATE_LIMIT_MS); // respect rate limits: 600req/min
     return originalFn.call(this, method, params) as Promise<T>;
   };
-
   return provider;
 };
 
@@ -50,7 +49,9 @@ export const getTransactionsByAccountId = async (
     ).data as GetTransactionsByAccountIdResponse
   )[0];
   if ('error' in res) throw new Error(res.error.message);
-  return res.result.data.items.filter(
-    (tx) => tx.status === 'success' && tx.actions.some((a) => a.kind === 'functionCall') // other actions don't generate logs
-  );
+  return res.result.data.items
+    .filter(
+      (tx) => tx.status === 'success' && tx.actions.some((a) => a.kind === 'functionCall') // other actions don't generate logs
+    )
+    .reverse(); // return chronological order
 };

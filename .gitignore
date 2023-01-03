@@ -6,4 +6,5 @@ db.json
 lastBlockByChain.json
 .env
 serviceAccountKey.json
+bigtableAccountKey.json
 tsconfig.tsbuildinfo

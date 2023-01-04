@@ -8,6 +8,7 @@ export const TIMEOUT = 0.5 * 1000;
 // BSC
 //   https://docs.bscscan.com/misc-tools-and-utilities/public-rpc-nodes
 //   bsc: "https://bsc-dataseed1.binance.org", // Cannot read properties of undefined (reading 'error')
+//   'https://rpc.ankr.com/bsc' has been very slow, trying a diff rpc
 // Avalanche
 //   https://docs.avax.network/apis/avalanchego/public-api-server
 //   avalanche: "https://api.avax.network/ext/bc/C/rpc", // 500 error on batch request
@@ -19,7 +20,7 @@ export const TIMEOUT = 0.5 * 1000;
 
 export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   ethereum: process.env.ETH_RPC,
-  bsc: 'https://rpc.ankr.com/bsc',
+  bsc: process.env.BSC_RPC || 'https://bsc-dataseed2.defibit.io',
   polygon: 'https://rpc.ankr.com/polygon',
   avalanche: 'https://rpc.ankr.com/avalanche',
   oasis: 'https://emerald.oasis.dev',

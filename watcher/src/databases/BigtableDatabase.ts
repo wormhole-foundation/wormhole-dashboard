@@ -180,10 +180,17 @@ export class BigtableDatabase extends Database {
         const foundRecords: string[] = [];
         for (const chunk of chunkedVAAIds) {
           this.logger.info(`processing chunk ${++chunkNum} of ${chunkedVAAIds.length}`);
+          const filter = [
+            {
+              family: 'QuorumState',
+              column: 'SignedVaa',
+            },
+          ];
           const vaaRows = (
             await vaaTable.getRows({
               keys: chunk,
               decode: false,
+              filter,
             })
           )[0] as BigtableVAAsResultRow[];
           for (const row of vaaRows) {

@@ -35,6 +35,10 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   arbitrum: 'https://arb1.arbitrum.io/rpc',
   aptos: 'https://fullnode.mainnet.aptoslabs.com/',
   near: 'https://rpc.mainnet.near.org',
+  xpla: 'https://dimension-lcd.xpla.dev',
+  terra2: 'https://phoenix-lcd.terra.dev',
+  terra: 'https://columbus-lcd.terra.dev',
+  injective: 'https://k8s.mainnet.lcd.injective.network',
 };
 
 // Separating for now so if we max out infura we can keep Polygon going

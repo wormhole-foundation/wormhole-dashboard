@@ -2,7 +2,14 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import { initDb } from './databases/utils';
-import { AptosWatcher, BSCWatcher, EVMWatcher, MoonbeamWatcher, PolygonWatcher } from './watchers';
+import {
+  AptosWatcher,
+  BSCWatcher,
+  CosmwasmWatcher,
+  EVMWatcher,
+  MoonbeamWatcher,
+  PolygonWatcher,
+} from './watchers';
 import { AlgorandWatcher } from './watchers/AlgorandWatcher';
 import { NearWatcher } from './watchers/NearWatcher';
 
@@ -23,3 +30,7 @@ new MoonbeamWatcher().watch();
 // new EVMWatcher('arbitrum').watch(); // TODO: requires waiting for l1 finality
 new AptosWatcher().watch();
 new NearWatcher().watch();
+new CosmwasmWatcher('terra2').watch();
+new CosmwasmWatcher('terra').watch();
+new CosmwasmWatcher('xpla').watch();
+new CosmwasmWatcher('injective').watch();

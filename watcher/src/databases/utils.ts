@@ -1,6 +1,7 @@
 import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
   INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+  MAX_UINT_64,
   padUint16,
   padUint64,
 } from '@wormhole-foundation/wormhole-monitor-common';
@@ -11,10 +12,10 @@ import { JsonDatabase } from './JsonDatabase';
 import { VaasByBlock } from './types';
 
 // Bigtable Message ID format
-// chain/block/emitter/sequence
+// chain/MAX_UINT64-block/emitter/sequence
 // 00002/00000000000013140651/0000000000000000000000008ea8874192c8c715e620845f833f48f39b24e222/00000000000000000000
 
-export function makeMessageId(
+export function makeLegacyMessageId(
   chainId: number,
   block: string,
   emitter: string,
@@ -23,7 +24,18 @@ export function makeMessageId(
   return `${padUint16(chainId.toString())}/${padUint64(block)}/${emitter}/${padUint64(sequence)}`;
 }
 
-export function parseMessageId(id: string): {
+export function makeMessageId(
+  chainId: number,
+  block: string,
+  emitter: string,
+  sequence: string
+): string {
+  return `${padUint16(chainId.toString())}/${padUint64(
+    (BigInt(MAX_UINT_64) - BigInt(block)).toString()
+  )}/${emitter}/${padUint64(sequence)}`;
+}
+
+export function parseLegacyMessageId(id: string): {
   chain: number;
   block: number;
   emitter: string;
@@ -31,6 +43,21 @@ export function parseMessageId(id: string): {
 } {
   const [chain, block, emitter, sequence] = id.split('/');
   return { chain: parseInt(chain), block: parseInt(block), emitter, sequence: BigInt(sequence) };
+}
+
+export function parseMessageId(id: string): {
+  chain: number;
+  block: number;
+  emitter: string;
+  sequence: bigint;
+} {
+  const [chain, inverseBlock, emitter, sequence] = id.split('/');
+  return {
+    chain: parseInt(chain),
+    block: Number(BigInt(MAX_UINT_64) - BigInt(inverseBlock)),
+    emitter,
+    sequence: BigInt(sequence),
+  };
 }
 
 // Bigtable VAA ID format

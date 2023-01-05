@@ -13,7 +13,9 @@
     "backfill-near": "ts-node scripts/backfillNear.ts",
     "locate-message-gaps": "ts-node scripts/locateMessageGaps.ts",
     "fetch-missing-vaas": "ts-node scripts/fetchMissingVAAs.ts",
-    "read-bigtable": "ts-node scripts/readBigtable.ts"
+    "read-bigtable": "ts-node scripts/readBigtable.ts",
+    "read-firestore": "ts-node scripts/readFirestore.ts",
+    "migration-1": "ts-node scripts/migration-1.ts"
   },
   "dependencies": {
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",

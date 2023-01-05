@@ -39,7 +39,7 @@ async function getMessages_(
     let start = fromKey === undefined ? prefix : fromKey;
     let end = `${padUint16((chainId + 1).toString())}/`;
     var [observedMessages] = await table.getRows({
-      limit: numMessages,
+      limit: fromKey ? numMessages + 1 : numMessages,
       ranges: [
         {
           start,
@@ -48,7 +48,7 @@ async function getMessages_(
       ],
     });
 
-    const filteredMessages: ObservedEvent[] = observedMessages.filter((o) => o?.id !== end);
+    const filteredMessages: ObservedEvent[] = observedMessages.filter((o) => o?.id !== start);
 
     for (const message of filteredMessages.slice(0, numMessages)) {
       if (message) {

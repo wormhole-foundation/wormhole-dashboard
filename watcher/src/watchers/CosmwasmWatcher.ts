@@ -1,4 +1,4 @@
-import { CosmWasmChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { CONTRACTS, CosmWasmChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
@@ -27,6 +27,7 @@ export class CosmwasmWatcher extends Watcher {
     if (chain === 'injective') {
       this.latestBlockTag = 'cosmos/base/tendermint/v1beta1/blocks/latest';
       this.getBlockTag = 'cosmos/base/tendermint/v1beta1/blocks/';
+      // this.rpc = 'http://147.75.55.247:10337';
     }
   }
 
@@ -45,7 +46,7 @@ export class CosmwasmWatcher extends Watcher {
       let blockHeight: number = parseInt(result.block.header.height);
       if (blockHeight !== this.latestBlockHeight) {
         this.latestBlockHeight = blockHeight;
-        this.logger.info('blockHeight = ' + blockHeight);
+        this.logger.debug('blockHeight = ' + blockHeight);
       }
       return blockHeight;
     }
@@ -53,6 +54,11 @@ export class CosmwasmWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+    const address = CONTRACTS.MAINNET[this.chain].core;
+    if (!address) {
+      throw new Error(`Core contract not defined for ${this.chain}`);
+    }
+    this.logger.debug(`core contract for ${this.chain} is ${address}`);
     let vaasByBlock: VaasByBlock = {};
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
 
@@ -62,65 +68,72 @@ export class CosmwasmWatcher extends Watcher {
     // Walk the logs/events
 
     for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
-      this.logger.info('Getting block number ' + blockNumber);
+      this.logger.debug('Getting block number ' + blockNumber);
       const blockResult: CosmwasmBlockResult = (
         await axios.get(`${this.rpc}/${this.getBlockTag}${blockNumber}`)
       ).data;
-      if (blockResult && blockResult.block.data) {
-        const blockKey = makeBlockKey(
-          blockNumber.toString(),
-          new Date(blockResult.block.header.time).toISOString()
-        );
-        let vaaKey: string = '';
-        let numTxs: number = 0;
-        if (blockResult.block.data.txs) {
-          numTxs = blockResult.block.data.txs.length;
+      if (!blockResult || !blockResult.block.data) {
+        throw new Error('bad result for block ${blockNumber}');
+      }
+      const blockKey = makeBlockKey(
+        blockNumber.toString(),
+        new Date(blockResult.block.header.time).toISOString()
+      );
+      vaasByBlock[blockKey] = [];
+      let vaaKey: string = '';
+      let numTxs: number = 0;
+      if (blockResult.block.data.txs) {
+        numTxs = blockResult.block.data.txs.length;
+      }
+      for (let i = 0; i < numTxs; i++) {
+        // The following check is not needed because of the check for numTxs.
+        // But typescript wanted it anyway.
+        if (!blockResult.block.data.txs) {
+          continue;
         }
-        for (let i = 0; i < numTxs; i++) {
-          // The following check is not needed because of the check for numTxs.
-          // But typescript wanted it anyway.
-          if (!blockResult.block.data.txs) {
-            continue;
-          }
-          let hash: string = this.hexToHash(blockResult.block.data.txs[i]);
-          this.logger.info('blockNumber = ' + blockNumber + ', txHash[' + i + '] = ' + hash);
-          const hashResult: CosmwasmHashResult = (
-            await axios.get(`${this.rpc}/${this.hashTag}${hash}`)
-          ).data;
-          if (hashResult && hashResult.tx_response.events) {
-            const numEvents = hashResult.tx_response.events.length;
-            for (let j = 0; j < numEvents; j++) {
-              let type: string = hashResult.tx_response.events[j].type;
-              // this.logger.info('Found event type of ' + type);
-              if (type === 'wasm') {
-                if (hashResult.tx_response.events[j].attributes) {
-                  let attrs = hashResult.tx_response.events[j].attributes;
-                  let emitter: string = '';
-                  let sequence: string = '';
-                  // only care about message.sender and message.sequence
-                  const numAttrs = attrs.length;
-                  for (let k = 0; k < numAttrs; k++) {
-                    const key = Buffer.from(attrs[k].key, 'base64').toString().toLowerCase();
-                    // this.logger.info('Encoded Key = ' + attrs[k].key + ', decoded = ' + key);
-                    if (key === 'message.sender') {
-                      emitter = Buffer.from(attrs[k].value, 'base64').toString();
-                    } else if (key === 'message.sequence') {
-                      sequence = Buffer.from(attrs[k].value, 'base64').toString();
+        let hash: string = this.hexToHash(blockResult.block.data.txs[i]);
+        this.logger.debug('blockNumber = ' + blockNumber + ', txHash[' + i + '] = ' + hash);
+        const hashResult: CosmwasmHashResult = (
+          await axios.get(`${this.rpc}/${this.hashTag}${hash}`)
+        ).data;
+        if (hashResult && hashResult.tx_response.events) {
+          const numEvents = hashResult.tx_response.events.length;
+          for (let j = 0; j < numEvents; j++) {
+            let type: string = hashResult.tx_response.events[j].type;
+            if (type === 'wasm') {
+              if (hashResult.tx_response.events[j].attributes) {
+                let attrs = hashResult.tx_response.events[j].attributes;
+                let emitter: string = '';
+                let sequence: string = '';
+                let coreContract: boolean = false;
+                // only care about _contract_address, message.sender and message.sequence
+                const numAttrs = attrs.length;
+                for (let k = 0; k < numAttrs; k++) {
+                  const key = Buffer.from(attrs[k].key, 'base64').toString().toLowerCase();
+                  this.logger.debug('Encoded Key = ' + attrs[k].key + ', decoded = ' + key);
+                  if (key === 'message.sender') {
+                    emitter = Buffer.from(attrs[k].value, 'base64').toString();
+                  } else if (key === 'message.sequence') {
+                    sequence = Buffer.from(attrs[k].value, 'base64').toString();
+                  } else if (key === '_contract_address' || key === 'contract_address') {
+                    let addr = Buffer.from(attrs[k].value, 'base64').toString();
+                    if (addr === address) {
+                      coreContract = true;
                     }
                   }
-                  if (emitter !== '' && sequence !== '') {
-                    vaaKey = makeVaaKey(hash, this.chain, emitter, sequence);
-                  }
+                }
+                if (coreContract && emitter !== '' && sequence !== '') {
+                  vaaKey = makeVaaKey(hash, this.chain, emitter, sequence);
+                  this.logger.debug('blockKey: ' + blockKey);
+                  this.logger.debug('Making vaaKey: ' + vaaKey);
+                  vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
                 }
               }
             }
-          } else {
-            this.logger.error('There were no hashResults');
           }
+        } else {
+          this.logger.error('There were no hashResults');
         }
-        vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
-      } else {
-        this.logger.warn('No txHash for block number ' + blockNumber);
       }
     }
     return vaasByBlock;

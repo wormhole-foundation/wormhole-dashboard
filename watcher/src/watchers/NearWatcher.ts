@@ -88,7 +88,10 @@ export const getMessagesFromBlockResults = async (
         .filter(isWormholePublishEventLog);
       for (const log of logs) {
         const { height, timestamp } = blocks[i].header;
-        const blockKey = makeBlockKey(height.toString(), timestamp.toString());
+        const blockKey = makeBlockKey(
+          height.toString(),
+          new Date(timestamp / 1_000_000).toISOString()
+        );
         const vaaKey = makeVaaKey(tx.hash, 'near', log.emitter, log.seq.toString());
         vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
       }

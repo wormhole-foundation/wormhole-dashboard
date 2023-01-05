@@ -52,8 +52,7 @@ const BATCH_SIZE = 1000;
     }
   }
 
-  log.text = `Fetched ${blocks.length} blocks`;
-  log.succeed();
+  log.succeed(`Fetched ${blocks.length} blocks`);
   const vaasByBlock = await getMessagesFromBlockResults(provider, blocks, true);
   await db.storeVaasByBlock(chain, vaasByBlock);
   log.succeed('Uploaded messages to db successfully');

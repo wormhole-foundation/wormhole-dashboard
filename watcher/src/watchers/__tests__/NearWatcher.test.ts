@@ -75,7 +75,7 @@ describe('getMessagesFromBlockResults', () => {
     ]);
     const blockKeys = Object.keys(messages);
     expect(blockKeys.length).toEqual(2);
-    expect(blockKeys[0]).toEqual('74616314/1663786085392436500');
-    expect(blockKeys[1]).toEqual('74714181/1663910153722175000');
+    expect(blockKeys[0]).toEqual('74616314/2022-09-21T18:48:05.392Z');
+    expect(blockKeys[1]).toEqual('74714181/2022-09-23T05:15:53.722Z');
   });
 });

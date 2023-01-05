@@ -47,16 +47,6 @@ Currently three options to load and save data:
    > set DB_SOURCE="bigtable", BIGTABLE_INSTANCE_ID, and BIGTABLE_TABLE_ID
    > The current implementation of bigtable uses firestore to read/write the latest processed blocks by chain (incl empty blocks). Set FIRESTORE_LATEST_COLLECTION to the firestore table that will store these values
 
-# Server
-
-Express server that serves up the db file. Eventually there should be, like, a real db and stuff.
-
-## Run
-
-```bash
-npm run dev -w server
-```
-
 # Web
 
 Displays a visualization of the database.

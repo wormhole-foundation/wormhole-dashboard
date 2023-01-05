@@ -9,7 +9,6 @@
   },
   "workspaces": [
     "common",
-    "server",
     "watcher",
     "web"
   ],

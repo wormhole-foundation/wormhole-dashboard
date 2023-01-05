@@ -52,9 +52,8 @@ export const ALGORAND_INFO = {
 };
 
 export const DB_SOURCE = process.env.DB_SOURCE || 'local';
-export const JSON_DB_FILE = process.env.JSON_DB_FILE || '../server/db.json';
-export const DB_LAST_BLOCK_FILE =
-  process.env.DB_LAST_BLOCK_FILE || '../server/lastBlockByChain.json';
+export const JSON_DB_FILE = process.env.JSON_DB_FILE || './db.json';
+export const DB_LAST_BLOCK_FILE = process.env.DB_LAST_BLOCK_FILE || './lastBlockByChain.json';
 
 // without this, axios request will error `Z_BUF_ERROR`: https://github.com/axios/axios/issues/5346
 export const AXIOS_CONFIG_JSON: AxiosRequestConfig = {

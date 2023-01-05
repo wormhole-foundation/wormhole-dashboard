@@ -1,4 +1,4 @@
 {
   "files": [],
-  "references": [{ "path": "common" }, { "path": "server" }, { "path": "watcher" }]
+  "references": [{ "path": "common" }, { "path": "watcher" }]
 }

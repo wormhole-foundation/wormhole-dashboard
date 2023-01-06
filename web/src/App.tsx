@@ -1,7 +1,8 @@
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
-import { Launch } from '@mui/icons-material';
+import { ArrowUpward, Launch } from '@mui/icons-material';
 import {
   Box,
+  Button,
   CircularProgress,
   IconButton,
   SxProps,
@@ -10,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import CollapsibleSection from './CollapsibleSection';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from './DataWrapper';
 import { explorerBlock, explorerTx, explorerVaa } from './utils';
@@ -114,6 +115,7 @@ function DetailBlocks({ chain }: { chain: string }) {
   const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
     getEmptyDataWrapper()
   );
+  const [fromId, setFromId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
     const fetchLastBlockByChain = async () => {
@@ -121,10 +123,13 @@ function DetailBlocks({ chain }: { chain: string }) {
       setMessagesWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
         const response = await axios.get<ObservedMessage[]>(
-          `https://europe-west3-wormhole-315720.cloudfunctions.net/messages/${chain}`
+          `https://europe-west3-wormhole-315720.cloudfunctions.net/messages/${chain}${
+            fromId ? `?fromId=${fromId}` : ''
+          }`
         );
         if (response.data && !cancelled) {
-          setMessagesWrapper(receiveDataWrapper(response.data.reverse()));
+          response.data.reverse();
+          setMessagesWrapper((w) => receiveDataWrapper([...response.data, ...(w.data || [])]));
         }
       } catch (e: any) {
         setMessagesWrapper((r) => ({
@@ -140,28 +145,43 @@ function DetailBlocks({ chain }: { chain: string }) {
     return () => {
       cancelled = true;
     };
-  }, [chain]);
+  }, [chain, fromId]);
   const messages = messagesWrapper.data;
+  const lastMessageId = messages && messages[0].id;
+  const handlePageClick = useCallback(() => {
+    if (lastMessageId) {
+      setFromId(lastMessageId);
+    }
+  }, [lastMessageId]);
   return (
     <Box textAlign="center" maxWidth={16 * 20} margin="auto">
       {' '}
-      {messagesWrapper.isFetching ? (
+      {messagesWrapper.isFetching && !messages ? (
         <CircularProgress />
       ) : messages && messages.length ? (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', mb: 2 }}>
-          {messages.map((observedMessage) => (
-            <Tooltip
-              key={observedMessage.id}
-              arrow
-              enterDelay={500}
-              enterNextDelay={100}
-              TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
-              title={<BlockDetail chain={chain} message={observedMessage} />}
-            >
-              <Box sx={observedMessage.hasSignedVaa ? doneBlockSx : missingBlockSx} />
-            </Tooltip>
-          ))}
-        </Box>
+        <>
+          <Button
+            onClick={handlePageClick}
+            endIcon={<ArrowUpward />}
+            disabled={messagesWrapper.isFetching}
+          >
+            Load More
+          </Button>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', mb: 2 }}>
+            {messages.map((observedMessage) => (
+              <Tooltip
+                key={observedMessage.id}
+                arrow
+                enterDelay={500}
+                enterNextDelay={100}
+                TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
+                title={<BlockDetail chain={chain} message={observedMessage} />}
+              >
+                <Box sx={observedMessage.hasSignedVaa ? doneBlockSx : missingBlockSx} />
+              </Tooltip>
+            ))}
+          </Box>
+        </>
       ) : (
         <Typography>No messages</Typography>
       )}

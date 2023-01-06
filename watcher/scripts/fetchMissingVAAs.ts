@@ -2,8 +2,10 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import axios from 'axios';
 import { writeFileSync } from 'fs';
+import ora from 'ora';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { makeVaaId, parseMessageId } from '../src/databases/utils';
+import { AXIOS_CONFIG_JSON } from '../src/consts';
 
 // This script checks for messages which don't have VAAs and attempts to fetch the VAAs from the guardians
 // This is useful for cases where the VAA doesn't exist in bigtable (perhaps due to an outage) but is available
@@ -20,7 +22,6 @@ const GUARDIAN_RPCS = [
   'https://wormhole-v2-mainnet-api.mcf.rocks',
   'https://wormhole-v2-mainnet-api.chainlayer.network',
   'https://wormhole-v2-mainnet-api.staking.fund',
-  'https://wormhole-v2-mainnet.01node.com',
 ];
 
 (async () => {
@@ -29,17 +30,24 @@ const GUARDIAN_RPCS = [
     throw new Error('bigtable is undefined');
   }
   try {
+    let log = ora('Fetching messages without a signed VAA...').start();
     const missingVaaMessages = await bt.fetchMissingVaaMessages();
+    log.succeed();
     const total = missingVaaMessages.length;
     let found = 0;
+    let search = 0;
+    log = ora(`Searching for VAA...`).start();
     for (const observedMessage of missingVaaMessages) {
+      log.text = `Searching for VAA ${++search}/${total}...`;
       const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
       const id = makeVaaId(chain, emitter, sequence);
       let vaaBytes: string | null = null;
       for (const rpc of GUARDIAN_RPCS) {
+        log.text = `Searching for VAA ${search}/${total} (${rpc})...`;
         try {
           const result = await axios.get(
-            `${rpc}/v1/signed_vaa/${chain}/${emitter}/${sequence.toString()}`
+            `${rpc}/v1/signed_vaa/${chain}/${emitter}/${sequence.toString()}`,
+            AXIOS_CONFIG_JSON
           );
           if (result.data.vaaBytes) {
             vaaBytes = result.data.vaaBytes;
@@ -54,6 +62,7 @@ const GUARDIAN_RPCS = [
         missingVaas[id] = observedMessage.data.info.txHash?.[0].value;
       }
     }
+    log.succeed();
     console.log('Total:', total);
     console.log('Found:', found);
     console.log('Missing:', total - found);

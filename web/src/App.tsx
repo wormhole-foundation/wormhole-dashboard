@@ -1,8 +1,7 @@
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
-import { CheckBox, CheckBoxOutlineBlank, Launch } from '@mui/icons-material';
+import { Launch } from '@mui/icons-material';
 import {
   Box,
-  Button,
   CircularProgress,
   IconButton,
   SxProps,
@@ -11,16 +10,31 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import CollapsibleSection from './CollapsibleSection';
+import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from './DataWrapper';
 import { explorerBlock, explorerTx, explorerVaa } from './utils';
 
-type VaasByBlock = { [block: number]: string[] };
-type DB = { [chain in ChainId]?: VaasByBlock };
-type LastBlockByChain = { [chain in ChainId]?: string };
-type QueryResult = { db: DB; lastBlockByChain: LastBlockByChain };
+type LastBlockByChain = { [chainId: string]: string };
+type CountsByChain = {
+  [chain in ChainId]?: {
+    numTotalMessages: number;
+    numMessagesWithoutVaas: number;
+    lastRowKey: string;
+    firstMissingVaaRowKey: string;
+  };
+};
+type ObservedMessage = {
+  id: string;
+  chain: number;
+  block: number;
+  emitter: string;
+  seq: string;
+  timestamp: any;
+  txHash: any;
+  hasSignedVaa: any;
+};
 
-const TIMEOUT = 10 * 1000;
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',
   padding: 0,
@@ -34,27 +48,27 @@ const baseBlockSx: SxProps<Theme> = {
   textAlign: 'center',
   verticalAlign: 'middle',
 };
-const emptyBlockSx: SxProps<Theme> = {
-  ...baseBlockSx,
-  backgroundColor: '#333',
-};
+// const emptyBlockSx: SxProps<Theme> = {
+//   ...baseBlockSx,
+//   backgroundColor: '#333',
+// };
 const doneBlockSx: SxProps<Theme> = {
   ...baseBlockSx,
   backgroundColor: 'green',
 };
+const missingBlockSx: SxProps<Theme> = {
+  ...baseBlockSx,
+  backgroundColor: 'darkred',
+};
 
-async function sleep(timeout: number) {
-  return new Promise((resolve) => setTimeout(resolve, timeout));
-}
-
-function BlockDetail({ chain, block, vaas }: { chain: string; block: string; vaas: string[] }) {
-  const [blockNumber, timestamp] = block.split('/');
+function BlockDetail({ chain, message }: { chain: string; message: ObservedMessage }) {
+  const vaaId = `${message.chain}/${message.emitter}/${message.seq}`;
   return (
     <Box>
       <Typography gutterBottom>
-        Block {blockNumber}{' '}
+        Block {message.block}{' '}
         <IconButton
-          href={explorerBlock(Number(chain) as ChainId, blockNumber)}
+          href={explorerBlock(Number(chain) as ChainId, message.block.toString())}
           target="_blank"
           size="small"
           sx={inlineIconButtonSx}
@@ -63,291 +77,223 @@ function BlockDetail({ chain, block, vaas }: { chain: string; block: string; vaa
         </IconButton>
       </Typography>
       <Typography variant="body2" gutterBottom>
-        {new Date(timestamp).toLocaleString()}
+        {new Date(message.timestamp).toLocaleString()}
       </Typography>
       <Typography sx={{ mt: 2 }} gutterBottom>
         VAAs
       </Typography>
-      {vaas.length === 0
-        ? 'None'
-        : vaas.map((vaa) => (
-            <Box key={vaa} sx={{ mb: 1 }}>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace' }} gutterBottom>
-                {vaa.split(':')[0]}{' '}
-                <IconButton
-                  href={explorerTx(Number(chain) as ChainId, vaa.split(':')[0])}
-                  target="_blank"
-                  size="small"
-                  sx={inlineIconButtonSx}
-                >
-                  <Launch fontSize="inherit" />
-                </IconButton>
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace', ml: 1 }} gutterBottom>
-                {vaa.split(':')[1]}{' '}
-                <IconButton
-                  href={explorerVaa(vaa.split(':')[1])}
-                  target="_blank"
-                  size="small"
-                  sx={inlineIconButtonSx}
-                >
-                  <Launch fontSize="inherit" />
-                </IconButton>
-              </Typography>
-            </Box>
-          ))}
-    </Box>
-  );
-}
-
-function DetailBlocks({
-  chain,
-  vaasByBlock,
-  showCounts,
-}: {
-  chain: string;
-  vaasByBlock: VaasByBlock;
-  showCounts: boolean;
-}) {
-  const entries = Object.entries(vaasByBlock);
-  return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', mb: 2 }}>
-      {entries
-        // TODO: this is a hack to not grind the render to a halt
-        .slice(Math.max(entries.length, 100) - 100)
-        .map(([block, vaas]) => (
-          <Tooltip
-            key={block}
-            arrow
-            enterDelay={500}
-            enterNextDelay={100}
-            TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
-            title={<BlockDetail chain={chain} block={block} vaas={vaas} />}
+      <Box sx={{ mb: 1 }}>
+        <Typography variant="body2" sx={{ fontFamily: 'monospace' }} gutterBottom>
+          {message.txHash}{' '}
+          <IconButton
+            href={explorerTx(Number(chain) as ChainId, message.txHash)}
+            target="_blank"
+            size="small"
+            sx={inlineIconButtonSx}
           >
-            <Box sx={vaas.length ? doneBlockSx : emptyBlockSx}>
-              {showCounts ? vaas.length : null}
-            </Box>
-          </Tooltip>
-        ))}
+            <Launch fontSize="inherit" />
+          </IconButton>
+        </Typography>
+        <Typography variant="body2" sx={{ fontFamily: 'monospace', ml: 1 }} gutterBottom>
+          {vaaId}{' '}
+          <IconButton
+            href={explorerVaa(vaaId)}
+            target="_blank"
+            size="small"
+            sx={inlineIconButtonSx}
+          >
+            <Launch fontSize="inherit" />
+          </IconButton>
+        </Typography>
+      </Box>
     </Box>
   );
 }
 
-function CircularProgressCountdown({
-  autoRefresh,
-  nextFetch,
-  isFetching,
-}: {
-  autoRefresh: boolean;
-  nextFetch: number;
-  isFetching: boolean;
-}) {
-  const [nextFetchPercent, setNextFetchPercent] = useState<number>(0);
-  // clear the state on toggle and refresh
-  useEffect(() => {
-    setNextFetchPercent(0);
-  }, [autoRefresh, isFetching]);
-  useEffect(() => {
-    if (autoRefresh) {
-      let cancelled = false;
-      const interval = setInterval(() => {
-        const now = Date.now();
-        if (nextFetch > now && !cancelled) {
-          setNextFetchPercent((1 - (nextFetch - now) / TIMEOUT) * 100);
-        }
-      }, TIMEOUT / 20);
-      return () => {
-        cancelled = true;
-        clearInterval(interval);
-      };
-    }
-  }, [autoRefresh, nextFetch]);
-  return (
-    <CircularProgress
-      size={20}
-      variant={isFetching ? 'indeterminate' : 'determinate'}
-      value={isFetching ? undefined : nextFetchPercent}
-      sx={{ ml: 1 }}
-    />
+function DetailBlocks({ chain }: { chain: string }) {
+  const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
+    getEmptyDataWrapper()
   );
-}
-
-function ToggleButton({
-  value,
-  onClick,
-  children,
-}: {
-  value: boolean;
-  onClick: (e: React.MouseEvent) => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <Button
-      variant="outlined"
-      onClick={onClick}
-      startIcon={value ? <CheckBox /> : <CheckBoxOutlineBlank />}
-      sx={{ mr: 1, mb: 1 }}
-    >
-      {children}
-    </Button>
-  );
-}
-
-function App() {
-  const [dbWrapper, setDbWrapper] = useState<{
-    lastFetched: string;
-    nextFetch: number;
-    isFetching: boolean;
-    error: string;
-    result: QueryResult;
-  }>({
-    lastFetched: '',
-    isFetching: true,
-    nextFetch: Date.now(),
-    error: '',
-    result: { db: {}, lastBlockByChain: {} },
-  });
-  const db = dbWrapper.result.db;
-  const lastBlockByChain = dbWrapper.result.lastBlockByChain;
-  const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
-  const handleToggleAutoRefresh = useCallback(() => {
-    setAutoRefresh((v) => !v);
-  }, []);
-  const [showCounts, setShowCounts] = useState<boolean>(false);
-  const handleToggleCounts = useCallback(() => {
-    setShowCounts((v) => !v);
-  }, []);
   useEffect(() => {
     let cancelled = false;
-    const fetchDb = async () => {
+    const fetchLastBlockByChain = async () => {
       if (cancelled) return;
-      setDbWrapper((r) => ({ ...r, isFetching: true, error: '' }));
+      setMessagesWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
-        const response = await axios.get<QueryResult>('/api/db');
+        const response = await axios.get<ObservedMessage[]>(
+          `https://europe-west3-wormhole-315720.cloudfunctions.net/messages/${chain}`
+        );
         if (response.data && !cancelled) {
-          setDbWrapper({
-            lastFetched: new Date().toLocaleString(),
-            nextFetch: Date.now() + TIMEOUT,
-            isFetching: false,
-            error: '',
-            result: response.data,
-          });
+          setMessagesWrapper(receiveDataWrapper(response.data.reverse()));
         }
       } catch (e: any) {
-        setDbWrapper((r) => ({
+        setMessagesWrapper((r) => ({
           ...r,
-          nextFetch: Date.now() + TIMEOUT,
           isFetching: false,
           error: e?.message || 'An error occurred while fetching the database',
         }));
       }
     };
     (async () => {
-      fetchDb();
-      if (autoRefresh) {
-        while (!cancelled) {
-          await sleep(TIMEOUT);
-          fetchDb();
+      fetchLastBlockByChain();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [chain]);
+  const messages = messagesWrapper.data;
+  return (
+    <Box textAlign="center" maxWidth={16 * 20} margin="auto">
+      {' '}
+      {messagesWrapper.isFetching ? (
+        <CircularProgress />
+      ) : messages && messages.length ? (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', mb: 2 }}>
+          {messages.map((observedMessage) => (
+            <Tooltip
+              key={observedMessage.id}
+              arrow
+              enterDelay={500}
+              enterNextDelay={100}
+              TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
+              title={<BlockDetail chain={chain} message={observedMessage} />}
+            >
+              <Box sx={observedMessage.hasSignedVaa ? doneBlockSx : missingBlockSx} />
+            </Tooltip>
+          ))}
+        </Box>
+      ) : (
+        <Typography>No messages</Typography>
+      )}
+    </Box>
+  );
+}
+
+function App() {
+  const [lastBlockByChainWrapper, setLastBlockByChainWrapper] = useState<
+    DataWrapper<LastBlockByChain>
+  >(getEmptyDataWrapper());
+  const lastBlockByChain = lastBlockByChainWrapper.data;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLastBlockByChainWrapper((r) => ({ ...r, isFetching: true, error: null }));
+      try {
+        const response = await axios.get<LastBlockByChain>(
+          'https://europe-west3-wormhole-315720.cloudfunctions.net/latest-blocks'
+        );
+        if (response.data && !cancelled) {
+          setLastBlockByChainWrapper(receiveDataWrapper(response.data));
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setLastBlockByChainWrapper((r) => ({
+            ...r,
+            isFetching: false,
+            error: e?.message || 'An error occurred while fetching the database',
+          }));
         }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [autoRefresh]);
-  const metaByChain = useMemo(() => {
-    const metaByChain: {
-      [chain: string]: {
-        lastIndexedBlockNumber: string;
-        lastIndexedBlockTime: string;
-        counts: {
-          empty: number;
-          pending: number;
-          missed: number;
-          done: number;
-        };
-      };
-    } = {};
-    Object.entries(db).forEach(([chain, vaasByBlock]) => {
-      const entries = Object.entries(vaasByBlock);
-      const [lastIndexedBlockNumber, lastIndexedBlockTime] = (
-        lastBlockByChain[Number(chain) as ChainId] || entries[entries.length - 1][0]
-      ).split('/');
-      metaByChain[chain] = {
-        lastIndexedBlockNumber,
-        lastIndexedBlockTime,
-        counts: { empty: 0, pending: 0, missed: 0, done: 0 },
-      };
-      entries.forEach(([block, vaas]) => {
-        if (vaas.length === 0) {
-          metaByChain[chain].counts.empty++;
-        } else {
-          metaByChain[chain].counts.done++;
+  }, []);
+  const [messageCountsWrapper, setMessageCountsWrapper] = useState<DataWrapper<CountsByChain>>(
+    getEmptyDataWrapper()
+  );
+  const messageCounts = messageCountsWrapper.data;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setMessageCountsWrapper((r) => ({ ...r, isFetching: true, error: null }));
+      try {
+        const response = await axios.get<CountsByChain>(
+          'https://europe-west3-wormhole-315720.cloudfunctions.net/message-counts'
+        );
+        if (response.data && !cancelled) {
+          setMessageCountsWrapper(receiveDataWrapper(response.data));
         }
-      });
-    });
-    return metaByChain;
-  }, [db, lastBlockByChain]);
+      } catch (e: any) {
+        if (!cancelled) {
+          setMessageCountsWrapper((r) => ({
+            ...r,
+            isFetching: false,
+            error: e?.message || 'An error occurred while fetching the database',
+          }));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   return (
     <Box sx={{ m: { xs: 1, md: 2 } }}>
-      <ToggleButton value={autoRefresh} onClick={handleToggleAutoRefresh}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          Auto-Refresh ({TIMEOUT / 1000}s)
-          <CircularProgressCountdown
-            autoRefresh={autoRefresh}
-            nextFetch={dbWrapper.nextFetch}
-            isFetching={dbWrapper.isFetching}
-          />
-        </Box>
-      </ToggleButton>
-      <ToggleButton value={showCounts} onClick={handleToggleCounts}>
-        Show Counts
-      </ToggleButton>
-      {dbWrapper.lastFetched ? (
+      {lastBlockByChainWrapper.receivedAt ? (
         <Typography variant="body2">
-          Last retrieved at {dbWrapper.lastFetched}{' '}
-          {dbWrapper.error ? (
+          Last retrieved latest blocks at{' '}
+          {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}{' '}
+          {lastBlockByChainWrapper.error ? (
             <Typography component="span" color="error" variant="body2">
-              {dbWrapper.error}
+              {lastBlockByChainWrapper.error}
             </Typography>
           ) : null}
         </Typography>
       ) : (
-        <Typography variant="body2">Loading db...</Typography>
+        <Typography variant="body2">Loading last block by chain...</Typography>
       )}
-      {Object.entries(db).map(([chain, vaasByBlock]) => (
-        <CollapsibleSection
-          key={chain}
-          header={
-            <div>
-              <Typography variant="h5" gutterBottom>
-                {coalesceChainName(Number(chain) as ChainId)} ({chain})
-              </Typography>
-              <Typography
-                component="div"
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-                gutterBottom
-              >
-                <Box sx={emptyBlockSx} />
-                &nbsp;= {metaByChain[chain].counts.empty}
-                &nbsp;&nbsp;
-                <Box sx={doneBlockSx} />
-                &nbsp;= {metaByChain[chain].counts.done}
-              </Typography>
-              <Typography variant="body2">
-                Last Indexed Block - {metaByChain[chain].lastIndexedBlockNumber}
-                {' - '}
-                {new Date(metaByChain[chain].lastIndexedBlockTime).toLocaleString()}
-              </Typography>
-            </div>
-          }
-        >
-          <DetailBlocks chain={chain} vaasByBlock={vaasByBlock} showCounts={showCounts} />
-        </CollapsibleSection>
-      ))}
+      {messageCountsWrapper.receivedAt ? (
+        <Typography variant="body2">
+          Last retrieved latest blocks at{' '}
+          {new Date(messageCountsWrapper.receivedAt).toLocaleString()}{' '}
+          {messageCountsWrapper.error ? (
+            <Typography component="span" color="error" variant="body2">
+              {messageCountsWrapper.error}
+            </Typography>
+          ) : null}
+        </Typography>
+      ) : (
+        <Typography variant="body2">Loading message counts by chain...</Typography>
+      )}
+      {lastBlockByChain &&
+        Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
+          <CollapsibleSection
+            key={chain}
+            header={
+              <div>
+                <Typography variant="h5" gutterBottom>
+                  {coalesceChainName(Number(chain) as ChainId)} ({chain})
+                </Typography>
+                {messageCounts?.[Number(chain) as ChainId] ? (
+                  <Typography
+                    component="div"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    gutterBottom
+                  >
+                    <Box sx={missingBlockSx} />
+                    &nbsp;= {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
+                    &nbsp;&nbsp;
+                    <Box sx={doneBlockSx} />
+                    &nbsp;={' '}
+                    {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
+                      (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas || 0)}
+                  </Typography>
+                ) : null}
+                <Typography variant="body2">
+                  Last Indexed Block - {lastBlock.split('/')[0]}
+                  {' - '}
+                  {new Date(lastBlock.split('/')[1]).toLocaleString()}
+                </Typography>
+              </div>
+            }
+          >
+            <DetailBlocks chain={chain} />
+          </CollapsibleSection>
+        ))}
     </Box>
   );
 }

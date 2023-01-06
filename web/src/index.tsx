@@ -4,31 +4,30 @@ import App from './App';
 import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as Element);
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+        },
+      },
+    },
+    MuiTooltip: {
+      styleOverrides: {
+        tooltip: {
+          maxWidth: 'none',
+        },
+      },
+    },
+  },
+});
 root.render(
   <React.StrictMode>
-    <ThemeProvider
-      theme={createTheme({
-        palette: {
-          mode: 'dark',
-        },
-        components: {
-          MuiButton: {
-            styleOverrides: {
-              root: {
-                textTransform: 'none',
-              },
-            },
-          },
-          MuiTooltip: {
-            styleOverrides: {
-              tooltip: {
-                maxWidth: 'none',
-              },
-            },
-          },
-        },
-      })}
-    >
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <App />
     </ThemeProvider>

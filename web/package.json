@@ -2,7 +2,6 @@
   "name": "@wormhole-foundation/wormhole-monitor-web",
   "version": "0.0.1",
   "private": true,
-  "proxy": "http://localhost:4000",
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.6",
     "@emotion/react": "^11.10.5",

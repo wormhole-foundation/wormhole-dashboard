@@ -93,6 +93,27 @@ export async function getMessageCounts(req: any, res: any) {
     res.status(204).send('');
     return;
   }
+  const { reloadCache } = req.query;
+  if (
+    reloadCache !== undefined &&
+    reloadCache !== 'true' &&
+    reloadCache !== '1' &&
+    reloadCache !== 'false' &&
+    reloadCache !== '0'
+  ) {
+    res
+      .status(400)
+      .send(
+        'incorrect value for query param: reloadCache\n. Use reloadCache=true or reloadCache=false'
+      );
+    return;
+  }
+
+  if (reloadCache === 'true' || reloadCache === '1') {
+    console.log('emptying the caches');
+    cache = { messages: {} as CountsByChain, lastUpdated: Date.now() };
+  }
+
   let messages: CountsByChain = {};
   try {
     if (

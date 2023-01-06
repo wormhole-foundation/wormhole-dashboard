@@ -82,7 +82,6 @@ async function getMessages_(
 async function getMessagesNoSignedVaa_(
   chainId: number,
   numMessages: number,
-  fromKey: string,
   prevMissingVaaKey: string
 ): Promise<ObservedMessageResponse> {
   const bigtable = new Bigtable();
@@ -94,7 +93,7 @@ async function getMessagesNoSignedVaa_(
   try {
     const prefix = `${padUint16(chainId.toString())}/`;
     // if lastKey is empty, start with prefix
-    let start = fromKey === undefined ? prefix : fromKey;
+    let start = prefix;
     let end =
       firstMissingVaaKey === '' ? `${padUint16((chainId + 1).toString())}/` : firstMissingVaaKey;
     // retrieve rows starting from lastKey to the start of the next chain's rows
@@ -108,8 +107,6 @@ async function getMessagesNoSignedVaa_(
         ],
       });
 
-      // avoid duping end if rowkey
-      observedMessages = observedMessages.filter((o) => o?.id !== end);
       const filteredMessages: ObservedEvent[] = observedMessages.filter(
         (m) => m.data.info.hasSignedVaa[0].value === 0
       );
@@ -130,7 +127,6 @@ async function getMessagesNoSignedVaa_(
         }
       }
       let startBlock = start !== prefix ? start.split('/')[1] : undefined;
-
       // break if startBlock is undefined (the initial load), already below the initial deployment block or if no messages
       if (startBlock === undefined || filteredMessages.length === 0) {
         // firstMissingVaaKey is the earliest message without a vaa, the most recent observedMessage, or if both
@@ -144,7 +140,6 @@ async function getMessagesNoSignedVaa_(
           BigInt(startBlock) - BigInt(blockIncrement) >= 0
             ? BigInt(startBlock) - BigInt(blockIncrement)
             : '0';
-        end = start;
         start = `${padUint16(chainId.toString())}/${padUint64(prevBlock.toString())}`;
         console.log(start);
         firstMissingVaaKey =
@@ -196,7 +191,6 @@ export async function getMessages(req: any, res: any) {
   }
 
   const { missingVaa, fromId, reloadCache } = req.query;
-  console.log(missingVaa, fromId, reloadCache);
   if (
     missingVaa !== undefined &&
     missingVaa !== 'true' &&
@@ -266,7 +260,7 @@ export async function getMessages(req: any, res: any) {
           }
           let prevDate = Date.now();
           lastRowKey = noVaaCache[chainId]['lastRowKey'];
-          messageResponse = await getMessagesNoSignedVaa_(chainId, NUM_ROWS, fromId, lastRowKey);
+          messageResponse = await getMessagesNoSignedVaa_(chainId, NUM_ROWS, lastRowKey);
           console.log('In noVaaCache, after getMessages_=', Date.now() - prevDate);
           messages = messageResponse['messages'];
           noVaaCache[chainId] = messageResponse;

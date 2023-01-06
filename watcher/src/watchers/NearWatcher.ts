@@ -68,6 +68,10 @@ export const getMessagesFromBlockResults = async (
   if (debug) log = ora(`Fetching messages from ${blocks.length} blocks...`).start();
   for (let i = 0; i < blocks.length; i++) {
     if (debug) log!.text = `Fetching messages from block ${i + 1}/${blocks.length}...`;
+    const { height, timestamp } = blocks[i].header;
+    const blockKey = makeBlockKey(height.toString(), new Date(timestamp / 1_000_000).toISOString());
+    vaasByBlock[blockKey] = [];
+
     const chunks = [];
     for (const chunk of blocks[i].chunks) {
       chunks.push(await provider.chunk(chunk.chunk_hash));
@@ -87,13 +91,8 @@ export const getMessagesFromBlockResults = async (
         .map((log) => JSON.parse(log.slice(11)) as EventLog)
         .filter(isWormholePublishEventLog);
       for (const log of logs) {
-        const { height, timestamp } = blocks[i].header;
-        const blockKey = makeBlockKey(
-          height.toString(),
-          new Date(timestamp / 1_000_000).toISOString()
-        );
         const vaaKey = makeVaaKey(tx.hash, 'near', log.emitter, log.seq.toString());
-        vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+        vaasByBlock[blockKey] = [...vaasByBlock[blockKey], vaaKey];
       }
     }
   }

@@ -1,40 +1,52 @@
-import { CONTRACTS } from '@certusone/wormhole-sdk';
+import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { describe, expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
+import { RPCS_BY_CHAIN } from '../../consts';
 import {
   getRateLimitedProvider,
   getTransactionsByAccountId,
-  NEAR_ARCHIVE_NODE_RATE_LIMIT_MS,
   NEAR_ARCHIVE_RPC,
+  NEAR_RATE_LIMIT_MS,
 } from '../../utils/near';
 import { getMessagesFromBlockResults, NearWatcher } from '../NearWatcher';
 
 jest.setTimeout(60000);
 
-const INITAL_NEAR_BLOCK = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.near ?? 0);
+const INITIAL_NEAR_BLOCK = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.near ?? 0);
 
 test('getFinalizedBlockNumber', async () => {
   const watcher = new NearWatcher();
   const blockNumber = await watcher.getFinalizedBlockNumber();
-  expect(blockNumber).toBeGreaterThan(INITAL_NEAR_BLOCK);
+  expect(blockNumber).toBeGreaterThan(INITIAL_NEAR_BLOCK);
 });
 
 test('getMessagesForBlocks', async () => {
   // requests that are too old for rpc node should error, be caught, and return an empty object
   const watcher = new NearWatcher();
-  const messages = await watcher.getMessagesForBlocks(0, 0);
+  const messages = await watcher.getMessagesForBlocks(INITIAL_NEAR_BLOCK, INITIAL_NEAR_BLOCK);
   expect(Object.keys(messages).length).toEqual(0);
 });
 
-test('getArchivalRpcProvider', async () => {
-  const provider = await getRateLimitedProvider(NEAR_ARCHIVE_RPC);
-  const start = performance.now();
+describe('getRateLimitedProvider', () => {
+  test('with normal RPC', async () => {
+    const provider = await getRateLimitedProvider(RPCS_BY_CHAIN['near']!);
+    const start = performance.now();
 
-  // grab first block with activity from core contract
-  expect(
-    await provider.block({ blockId: 'Asie8hpJFKaipvw8jh1wPfBwwbjP6JUfsQdCuQvwr3Sz' })
-  ).toBeTruthy();
-  expect(performance.now() - start).toBeGreaterThan(NEAR_ARCHIVE_NODE_RATE_LIMIT_MS);
+    // grab last block from core contract
+    expect(await provider.block({ finality: 'final' })).toBeTruthy();
+    expect(performance.now() - start).toBeGreaterThan(NEAR_RATE_LIMIT_MS);
+  });
+
+  test('with archive RPC', async () => {
+    const provider = await getRateLimitedProvider(NEAR_ARCHIVE_RPC);
+    const start = performance.now();
+
+    // grab first block with activity from core contract
+    expect(
+      await provider.block({ blockId: 'Asie8hpJFKaipvw8jh1wPfBwwbjP6JUfsQdCuQvwr3Sz' })
+    ).toBeTruthy();
+    expect(performance.now() - start).toBeGreaterThan(NEAR_RATE_LIMIT_MS);
+  });
 });
 
 test('getTransactionsByAccountId', async () => {
@@ -66,16 +78,21 @@ describe('getMessagesFromBlockResults', () => {
     expect(messages).toBeTruthy();
   });
 
-  test('with ArchivalProvider', async () => {
+  test('with ArchiveProvider', async () => {
     const provider = await getRateLimitedProvider(NEAR_ARCHIVE_RPC);
     const messages = await getMessagesFromBlockResults(provider, [
       await provider.block({ blockId: 'Bzjemj99zxe1h8kVp8H2hwVifmbQL8HT34LyPHzEK5qp' }),
       await provider.block({ blockId: '4SHFxSo8DdP8DhMauS5iFqfmdLwLET3W3e8Lg9PFvBSn' }),
       await provider.block({ blockId: 'GtQYaYMhrDHgLJJTroUaUzSR24E29twewpkqyudrCyVN' }),
     ]);
-    const blockKeys = Object.keys(messages);
-    expect(blockKeys.length).toEqual(2);
-    expect(blockKeys[0]).toEqual('74616314/2022-09-21T18:48:05.392Z');
-    expect(blockKeys[1]).toEqual('74714181/2022-09-23T05:15:53.722Z');
+    expect(messages).toMatchObject({
+      '72777217/2022-08-25T18:42:26.121Z': [],
+      '74616314/2022-09-21T18:48:05.392Z': [
+        'SYRSkE8pBWWLPZWJtHEGN5Hk7SPZ7kHgf4D1Q4viRcz:15/148410499d3fcda4dcfd68a1ebfcdddda16ab28326448d4aae4d2f0465cdfcb7/233',
+      ],
+      '74714181/2022-09-23T05:15:53.722Z': [
+        '2xh2rLR3ehjRRjU1BbuHEhU6FbXiKp5rZ88niyKC6MBs:15/148410499d3fcda4dcfd68a1ebfcdddda16ab28326448d4aae4d2f0465cdfcb7/237',
+      ],
+    });
   });
 });

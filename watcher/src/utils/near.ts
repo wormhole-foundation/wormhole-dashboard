@@ -12,14 +12,14 @@ import {
 const NEAR_EXPLORER_TRANSACTION_URL =
   'https://backend-mainnet-1713.onrender.com/trpc/transaction.listByAccountId';
 export const NEAR_ARCHIVE_RPC = 'https://archival-rpc.mainnet.near.org';
-export const NEAR_ARCHIVE_NODE_RATE_LIMIT_MS = 100;
+export const NEAR_RATE_LIMIT_MS = 100;
 
 export const getRateLimitedProvider = async (rpc: string): Promise<Provider> => {
   const connection = await connect({ nodeUrl: rpc, networkId: 'mainnet' });
   const provider = connection.connection.provider;
   const originalFn = (provider as JsonRpcProvider).sendJsonRpc;
   (provider as JsonRpcProvider).sendJsonRpc = async function <T>(method: string, params: object) {
-    await sleep(NEAR_ARCHIVE_NODE_RATE_LIMIT_MS); // respect rate limits: 600req/min
+    await sleep(NEAR_RATE_LIMIT_MS); // respect rate limits: 600req/min
     return originalFn.call(this, method, params) as Promise<T>;
   };
   return provider;

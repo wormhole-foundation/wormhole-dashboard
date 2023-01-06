@@ -100,7 +100,7 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     : chainId === CHAIN_ID_ALGORAND
     ? `https://algoexplorer.io/tx/${tx}`
     : chainId === CHAIN_ID_NEAR
-    ? `https://explorer.near.org/txs/${tx}`
+    ? `https://explorer.near.org/transactions/${tx}`
     : chainId === CHAIN_ID_MOONBEAM
     ? `https://moonscan.io/tx/${tx}`
     : chainId === CHAIN_ID_XPLA

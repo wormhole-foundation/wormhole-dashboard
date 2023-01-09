@@ -126,7 +126,7 @@ export class BigtableDatabase extends Database {
     }
   }
 
-  async updateMessageStatuses(messageKeys: string[]): Promise<void> {
+  async updateMessageStatuses(messageKeys: string[], value: number = 1): Promise<void> {
     const instance = this.bigtable.instance(this.instanceId);
     const table = instance.table(this.tableId);
     const chunkedMessageKeys = chunkArray(messageKeys, 1000);
@@ -136,12 +136,13 @@ export class BigtableDatabase extends Database {
         data: {
           info: {
             hasSignedVaa: {
-              value: 1,
+              value: value,
               timestamp: '0',
             },
           },
         },
       }));
+      // console.log(rowsToInsert[0].data.info)
       await table.insert(rowsToInsert);
     }
   }

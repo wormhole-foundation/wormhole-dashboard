@@ -4,9 +4,11 @@ import { connect } from 'near-api-js';
 import { JsonRpcProvider, Provider } from 'near-api-js/lib/providers';
 import { AXIOS_CONFIG_JSON } from '../consts';
 import {
+  EventLog,
   GetTransactionsByAccountIdRequestParams,
   GetTransactionsByAccountIdResponse,
   Transaction,
+  WormholePublishEventLog,
 } from '../types/near';
 
 const NEAR_EXPLORER_TRANSACTION_URL =
@@ -54,4 +56,8 @@ export const getTransactionsByAccountId = async (
       (tx) => tx.status === 'success' && tx.actions.some((a) => a.kind === 'functionCall') // other actions don't generate logs
     )
     .reverse(); // return chronological order
+};
+
+export const isWormholePublishEventLog = (log: EventLog): log is WormholePublishEventLog => {
+  return log.standard === 'wormhole' && log.event === 'publish';
 };

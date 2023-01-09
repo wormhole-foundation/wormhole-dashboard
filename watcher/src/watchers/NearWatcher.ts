@@ -6,8 +6,7 @@ import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { EventLog } from '../types/near';
-import { getRateLimitedProvider } from '../utils/near';
-import { isWormholePublishEventLog } from '../utils/validation';
+import { getRateLimitedProvider, isWormholePublishEventLog } from '../utils/near';
 import { Watcher } from './Watcher';
 
 export class NearWatcher extends Watcher {

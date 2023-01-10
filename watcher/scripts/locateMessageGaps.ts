@@ -19,7 +19,9 @@ import { EVMWatcher } from '../src/watchers';
   const messageTable = instance.table(bt.tableId);
   try {
     // STEP 1
-    const observedMessages = (await messageTable.getRows())[0];
+    const observedMessages = (await messageTable.getRows())[0].sort((a, b) =>
+      Number(parseMessageId(a.id).sequence - parseMessageId(b.id).sequence)
+    );
     const total = observedMessages.length;
     console.log(`processing ${total} messages`);
     const gaps = [];

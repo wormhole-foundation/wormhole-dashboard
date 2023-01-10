@@ -21,6 +21,7 @@
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",
     "@certusone/wormhole-sdk": "^0.9.6",
     "@google-cloud/bigtable": "^4.1.0",
+    "@solana/web3.js": "^1.73.0",
     "@wormhole-foundation/wormhole-monitor-common": "^0.0.1",
     "algosdk": "^1.24.1",
     "aptos": "^1.4.0",

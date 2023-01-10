@@ -44,6 +44,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   terra2: 'https://phoenix-lcd.terra.dev',
   terra: 'https://columbus-lcd.terra.dev',
   injective: 'https://k8s.mainnet.lcd.injective.network',
+  solana: process.env.SOLANA_RPC ?? 'https://api.mainnet-beta.solana.com',
 };
 
 // Separating for now so if we max out infura we can keep Polygon going

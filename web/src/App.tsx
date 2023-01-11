@@ -116,7 +116,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
 }
 
 function DetailBlocks({ chain }: { chain: string }) {
-  const showDetails = useSettings().showDetails;
+  const { showDetails, hideFound } = useSettings();
   const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
     getEmptyDataWrapper()
   );
@@ -159,9 +159,11 @@ function DetailBlocks({ chain }: { chain: string }) {
     }
   }, [lastMessageId]);
   const messages = useMemo(() => {
-    if (!rawMessages || !showDetails) return rawMessages;
-    return [...(rawMessages || [])].reverse();
-  }, [rawMessages, showDetails]);
+    if (!rawMessages) return rawMessages;
+    const messages = hideFound ? rawMessages.filter((m) => !m.hasSignedVaa) : rawMessages;
+    if (!showDetails) return messages;
+    return [...(messages || [])].reverse();
+  }, [rawMessages, showDetails, hideFound]);
   const loadMoreButton = (
     <Button
       onClick={handlePageClick}
@@ -177,7 +179,7 @@ function DetailBlocks({ chain }: { chain: string }) {
       {' '}
       {messagesWrapper.isFetching && !messages ? (
         <CircularProgress />
-      ) : messages && messages.length ? (
+      ) : rawMessages && rawMessages.length && messages ? (
         <>
           {showDetails ? null : loadMoreButton}
           {showDetails ? (

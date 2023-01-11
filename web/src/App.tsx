@@ -1,9 +1,10 @@
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
-import { ArrowUpward, Launch } from '@mui/icons-material';
+import { ArrowDownward, ArrowUpward, Launch, Settings } from '@mui/icons-material';
 import {
   Box,
   Button,
   CircularProgress,
+  Divider,
   IconButton,
   SxProps,
   Theme,
@@ -11,9 +12,10 @@ import {
   Typography,
 } from '@mui/material';
 import axios from 'axios';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import CollapsibleSection from './CollapsibleSection';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from './DataWrapper';
+import { useSettings } from './SettingsContext';
 import { explorerBlock, explorerTx, explorerVaa } from './utils';
 
 type LastBlockByChain = { [chainId: string]: string };
@@ -53,35 +55,23 @@ const baseBlockSx: SxProps<Theme> = {
 //   ...baseBlockSx,
 //   backgroundColor: '#333',
 // };
+const FOUND_COLOR = 'green';
+const MISSING_COLOR = 'darkred';
 const doneBlockSx: SxProps<Theme> = {
   ...baseBlockSx,
-  backgroundColor: 'green',
+  backgroundColor: FOUND_COLOR,
 };
 const missingBlockSx: SxProps<Theme> = {
   ...baseBlockSx,
-  backgroundColor: 'darkred',
+  backgroundColor: MISSING_COLOR,
 };
 
 function BlockDetail({ chain, message }: { chain: string; message: ObservedMessage }) {
   const vaaId = `${message.chain}/${message.emitter}/${message.seq}`;
   return (
     <Box>
-      <Typography gutterBottom>
-        Block {message.block}{' '}
-        <IconButton
-          href={explorerBlock(Number(chain) as ChainId, message.block.toString())}
-          target="_blank"
-          size="small"
-          sx={inlineIconButtonSx}
-        >
-          <Launch fontSize="inherit" />
-        </IconButton>
-      </Typography>
-      <Typography variant="body2" gutterBottom>
-        {new Date(message.timestamp).toLocaleString()}
-      </Typography>
       <Typography sx={{ mt: 2 }} gutterBottom>
-        VAAs
+        VAA
       </Typography>
       <Box sx={{ mb: 1 }}>
         <Typography variant="body2" sx={{ fontFamily: 'monospace' }} gutterBottom>
@@ -107,11 +97,26 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
           </IconButton>
         </Typography>
       </Box>
+      <Typography gutterBottom>
+        Block {message.block}{' '}
+        <IconButton
+          href={explorerBlock(Number(chain) as ChainId, message.block.toString())}
+          target="_blank"
+          size="small"
+          sx={inlineIconButtonSx}
+        >
+          <Launch fontSize="inherit" />
+        </IconButton>
+      </Typography>
+      <Typography variant="body2" gutterBottom>
+        {new Date(message.timestamp).toLocaleString()}
+      </Typography>
     </Box>
   );
 }
 
 function DetailBlocks({ chain }: { chain: string }) {
+  const showDetails = useSettings().showDetails;
   const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
     getEmptyDataWrapper()
   );
@@ -146,46 +151,80 @@ function DetailBlocks({ chain }: { chain: string }) {
       cancelled = true;
     };
   }, [chain, fromId]);
-  const messages = messagesWrapper.data;
-  const lastMessageId = messages && messages[0].id;
+  const rawMessages = messagesWrapper.data;
+  const lastMessageId = rawMessages && rawMessages[0].id;
   const handlePageClick = useCallback(() => {
     if (lastMessageId) {
       setFromId(lastMessageId);
     }
   }, [lastMessageId]);
+  const messages = useMemo(() => {
+    if (!rawMessages || !showDetails) return rawMessages;
+    return [...(rawMessages || [])].reverse();
+  }, [rawMessages, showDetails]);
+  const loadMoreButton = (
+    <Button
+      onClick={handlePageClick}
+      endIcon={showDetails ? <ArrowDownward /> : <ArrowUpward />}
+      disabled={messagesWrapper.isFetching}
+      sx={{ my: 1 }}
+    >
+      Load More
+    </Button>
+  );
   return (
-    <Box textAlign="center" maxWidth={16 * 20} margin="auto">
+    <Box textAlign="center" maxWidth={showDetails ? undefined : 16 * 20} mx="auto" my={2}>
       {' '}
       {messagesWrapper.isFetching && !messages ? (
         <CircularProgress />
       ) : messages && messages.length ? (
         <>
-          <Button
-            onClick={handlePageClick}
-            endIcon={<ArrowUpward />}
-            disabled={messagesWrapper.isFetching}
-          >
-            Load More
-          </Button>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', mb: 2 }}>
-            {messages.map((observedMessage) => (
-              <Tooltip
+          {showDetails ? null : loadMoreButton}
+          {showDetails ? (
+            messages.map((observedMessage) => (
+              <Box
                 key={observedMessage.id}
-                arrow
-                enterDelay={500}
-                enterNextDelay={100}
-                TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
-                title={<BlockDetail chain={chain} message={observedMessage} />}
+                textAlign="left"
+                borderLeft={'4px solid'}
+                borderColor={observedMessage.hasSignedVaa ? FOUND_COLOR : MISSING_COLOR}
+                borderRadius="2px"
+                paddingLeft={1}
               >
-                <Box sx={observedMessage.hasSignedVaa ? doneBlockSx : missingBlockSx} />
-              </Tooltip>
-            ))}
-          </Box>
+                <BlockDetail chain={chain} message={observedMessage} />
+                <Divider />
+              </Box>
+            ))
+          ) : (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+              {messages.map((observedMessage) => (
+                <Tooltip
+                  key={observedMessage.id}
+                  arrow
+                  enterDelay={500}
+                  enterNextDelay={100}
+                  TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
+                  title={<BlockDetail chain={chain} message={observedMessage} />}
+                >
+                  <Box sx={observedMessage.hasSignedVaa ? doneBlockSx : missingBlockSx} />
+                </Tooltip>
+              ))}
+            </Box>
+          )}
+          {showDetails ? loadMoreButton : null}
         </>
       ) : (
         <Typography>No messages</Typography>
       )}
     </Box>
+  );
+}
+
+function SettingsButton() {
+  const open = useSettings().open;
+  return (
+    <IconButton onClick={open}>
+      <Settings />
+    </IconButton>
   );
 }
 
@@ -250,40 +289,55 @@ function App() {
   }, []);
   return (
     <Box sx={{ m: { xs: 1, md: 2 } }}>
-      {lastBlockByChainWrapper.receivedAt ? (
-        <Typography variant="body2">
-          Last retrieved latest blocks at{' '}
-          {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}{' '}
-          {lastBlockByChainWrapper.error ? (
-            <Typography component="span" color="error" variant="body2">
-              {lastBlockByChainWrapper.error}
+      <Box sx={{ display: 'flex', mb: 1, alignItems: 'center' }}>
+        <div>
+          {lastBlockByChainWrapper.receivedAt ? (
+            <Typography variant="body2">
+              Last retrieved latest blocks at{' '}
+              <Box component="span" sx={{ display: 'inline-block' }}>
+                {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
+              </Box>{' '}
+              {lastBlockByChainWrapper.error ? (
+                <Typography component="span" color="error" variant="body2">
+                  {lastBlockByChainWrapper.error}
+                </Typography>
+              ) : null}
             </Typography>
-          ) : null}
-        </Typography>
-      ) : (
-        <Typography variant="body2">Loading last block by chain...</Typography>
-      )}
-      {messageCountsWrapper.receivedAt ? (
-        <Typography variant="body2">
-          Last retrieved latest blocks at{' '}
-          {new Date(messageCountsWrapper.receivedAt).toLocaleString()}{' '}
-          {messageCountsWrapper.error ? (
-            <Typography component="span" color="error" variant="body2">
-              {messageCountsWrapper.error}
+          ) : (
+            <Typography variant="body2">Loading last block by chain...</Typography>
+          )}
+          {messageCountsWrapper.receivedAt ? (
+            <Typography variant="body2">
+              Last retrieved latest blocks at{' '}
+              <Box component="span" sx={{ display: 'inline-block' }}>
+                {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
+              </Box>{' '}
+              {messageCountsWrapper.error ? (
+                <Typography component="span" color="error" variant="body2">
+                  {messageCountsWrapper.error}
+                </Typography>
+              ) : null}
             </Typography>
-          ) : null}
-        </Typography>
-      ) : (
-        <Typography variant="body2">Loading message counts by chain...</Typography>
-      )}
+          ) : (
+            <Typography variant="body2">Loading message counts by chain...</Typography>
+          )}
+        </div>
+        <Box sx={{ flexGrow: 1 }} />
+        <SettingsButton />
+      </Box>
       {lastBlockByChain &&
         Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
           <CollapsibleSection
             key={chain}
             header={
               <div>
-                <Typography variant="h5" gutterBottom>
+                <Typography variant="h5" sx={{ mb: 0.5 }}>
                   {coalesceChainName(Number(chain) as ChainId)} ({chain})
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 0.5 }}>
+                  Last Indexed Block - {lastBlock.split('/')[0]}
+                  {' - '}
+                  {new Date(lastBlock.split('/')[1]).toLocaleString()}
                 </Typography>
                 {messageCounts?.[Number(chain) as ChainId] ? (
                   <Typography
@@ -292,7 +346,6 @@ function App() {
                       display: 'flex',
                       alignItems: 'center',
                     }}
-                    gutterBottom
                   >
                     <Box sx={missingBlockSx} />
                     &nbsp;= {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
@@ -303,11 +356,6 @@ function App() {
                       (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas || 0)}
                   </Typography>
                 ) : null}
-                <Typography variant="body2">
-                  Last Indexed Block - {lastBlock.split('/')[0]}
-                  {' - '}
-                  {new Date(lastBlock.split('/')[1]).toLocaleString()}
-                </Typography>
               </div>
             }
           >

@@ -122,6 +122,6 @@ export class SolanaWatcher extends Watcher {
       toSlot.toString(),
       new Date(toBlock.blockTime * 1000).toISOString()
     );
-    return Object.assign({ [lastBlockKey]: [] }, vaasByBlock);
+    return { [lastBlockKey]: [], ...vaasByBlock };
   }
 }

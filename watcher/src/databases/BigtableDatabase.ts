@@ -117,9 +117,11 @@ export class BigtableDatabase extends Database {
 
     if (updateLatestBlock) {
       // store latest vaasByBlock to firestore
-      const blockInfos = Object.keys(vaasByBlock);
-      if (blockInfos.length) {
-        const lastBlockKey = blockInfos[blockInfos.length - 1];
+      const blockKeys = Object.keys(vaasByBlock).sort(
+        (bk1, bk2) => Number(bk1.split('/')[0]) - Number(bk2.split('/')[0])
+      );
+      if (blockKeys.length) {
+        const lastBlockKey = blockKeys[blockKeys.length - 1];
         this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlockKey}`);
         await this.storeLatestBlock(chain, lastBlockKey);
       }

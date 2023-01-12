@@ -50,10 +50,13 @@ export class JsonDatabase extends Database {
       this.db[chainId] = { ...(this.db[chainId] || {}), ...filteredVaasByBlock };
       writeFileSync(this.dbFile, JSON.stringify(this.db), ENCODING);
     }
+
     // this will always overwrite the "last" block, so take caution if manually backfilling gaps
-    const blockInfos = Object.keys(vaasByBlock);
-    if (blockInfos.length) {
-      this.lastBlockByChain[chainId] = blockInfos.sort()[blockInfos.length - 1];
+    const blockKeys = Object.keys(vaasByBlock).sort(
+      (bk1, bk2) => Number(bk1.split('/')[0]) - Number(bk2.split('/')[0])
+    );
+    if (blockKeys.length) {
+      this.lastBlockByChain[chainId] = blockKeys[blockKeys.length - 1];
       writeFileSync(this.dbLastBlockFile, JSON.stringify(this.lastBlockByChain), ENCODING);
     }
   }

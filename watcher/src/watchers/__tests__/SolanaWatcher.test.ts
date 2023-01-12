@@ -30,7 +30,7 @@ describe('getMessagesForBlocks', () => {
 
   test('fromSlot is skipped slot', async () => {
     const watcher = new SolanaWatcher();
-    const messages = await watcher.getMessagesForBlocks(171774024, 171774032); // 171774024 - 171774031 are skipped
+    const messages = await watcher.getMessagesForBlocks(171774030, 171774032); // 171774024 - 171774031 are skipped
     expect(Object.keys(messages).length).toBe(1);
     expect(messages).toMatchObject({ '171774032/2023-01-10T13:36:38.000Z': [] });
   });
@@ -70,5 +70,19 @@ describe('getMessagesForBlocks', () => {
     const messages = await watcher.getMessagesForBlocks(171582367, 171583452);
     expect(Object.keys(messages).length).toBe(3);
     expect(Object.values(messages).flat().length).toBe(3);
+  });
+
+  test('multiple calls', async () => {
+    const watcher = new SolanaWatcher();
+    const messages1 = await watcher.getMessagesForBlocks(171773021, 171773211);
+    const messages2 = await watcher.getMessagesForBlocks(171773212, 171773250);
+    const messages3 = await watcher.getMessagesForBlocks(171773251, 171773500);
+    const allMessageKeys = [
+      ...Object.keys(messages1),
+      ...Object.keys(messages2),
+      ...Object.keys(messages3),
+    ];
+    const uniqueMessageKeys = [...new Set(allMessageKeys)];
+    expect(allMessageKeys.length).toBe(uniqueMessageKeys.length); // assert no duplicate keys
   });
 });

@@ -25,7 +25,8 @@ export class Watcher {
 
   async watch(): Promise<void> {
     let toBlock: number | null = null;
-    let fromBlock: number | null = await getLastBlockByChain(this.chain);
+    const lastBlock = await getLastBlockByChain(this.chain);
+    let fromBlock: number | null = lastBlock ? lastBlock + 1 : null;
     let retry = 0;
     while (true) {
       try {

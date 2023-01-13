@@ -18,6 +18,9 @@ export const TIMEOUT = 0.5 * 1000;
 // Klaytn
 // this one immediately 429s
 // klaytn: 'https://public-node-api.klaytnapi.com/v1/cypress',
+// Near
+//   archive node
+//   https://archival-rpc.mainnet.near.org
 
 export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   ethereum: process.env.ETH_RPC,

@@ -1,19 +1,19 @@
 import { ChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Storage } from '@google-cloud/storage';
+import { ObservedMessage } from './types';
 
 // Read from cloud storage
 const storage = new Storage();
 
-export type CountsByChain = {
+export type MissingVaasByChain = {
   [chain in ChainId]?: {
-    numTotalMessages: number;
-    numMessagesWithoutVaas: number;
+    messages: ObservedMessage[];
     lastRowKey: string;
-    firstMissingVaaRowKey: string;
+    lastUpdated: number;
   };
 };
 
-export async function getMessageCounts(req: any, res: any) {
+export async function getMissingVaas(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') {
     // Send response to OPTIONS requests
@@ -24,15 +24,16 @@ export async function getMessageCounts(req: any, res: any) {
     return;
   }
 
-  let messages: CountsByChain = {};
+  let messages: MissingVaasByChain = {};
   try {
     // The ID of your GCS bucket
     const bucketName = 'observed-blocks-cache';
     const cacheBucket = storage.bucket(bucketName);
-    const cacheFileName = 'message-counts-cache.json';
+    const cacheFileName = 'missing-vaas-cache.json';
+
     const cloudStorageCache = cacheBucket.file(cacheFileName);
     const [csCache] = await cloudStorageCache.download();
-    messages = JSON.parse(csCache.toString())?.messages;
+    messages = JSON.parse(csCache.toString());
     res.status(200).send(JSON.stringify(messages));
   } catch (e) {
     res.sendStatus(500);

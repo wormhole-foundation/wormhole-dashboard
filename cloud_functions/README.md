@@ -12,3 +12,5 @@ Be sure to first export env variables: BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, 
    If you want to just update the env variables without destroying them, use "update-env-vars"
 
 gcloud functions deploy <name of cloud function> --entry-point <name of function> --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 1GB --region <location> --set-env-vars LIST_OF_ENV_VARS
+
+Note: these cloud functions are managed in conjunction with cloud storage (caches) and cloud scheduler (cron job to perdiodically compute cloud functions)

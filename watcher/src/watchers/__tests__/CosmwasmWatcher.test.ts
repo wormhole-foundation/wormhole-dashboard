@@ -1,5 +1,7 @@
-import { expect, test } from '@jest/globals';
+import { expect, jest, test } from '@jest/globals';
 import { CosmwasmWatcher } from '../CosmwasmWatcher';
+
+jest.setTimeout(60000);
 
 test('getFinalizedBlockNumber(terra2)', async () => {
   const watcher = new CosmwasmWatcher('terra2');

@@ -21,6 +21,8 @@ export const TIMEOUT = 0.5 * 1000;
 // Near
 //   archive node
 //   https://archival-rpc.mainnet.near.org
+// Arbitrum
+//  This node didn't work:  'https://arb1.arbitrum.io/rpc',
 
 export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   ethereum: process.env.ETH_RPC,
@@ -35,7 +37,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   klaytn: 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
   celo: 'https://forno.celo.org',
   moonbeam: 'https://rpc.ankr.com/moonbeam',
-  arbitrum: 'https://arb1.arbitrum.io/rpc',
+  arbitrum: 'https://rpc.ankr.com/arbitrum',
   aptos: 'https://fullnode.mainnet.aptoslabs.com/',
   near: 'https://rpc.mainnet.near.org',
   xpla: 'https://dimension-lcd.xpla.dev',

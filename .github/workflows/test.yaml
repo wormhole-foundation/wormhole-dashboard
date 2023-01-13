@@ -14,7 +14,10 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run build -w web
-      - run: npm run test --workspaces --if-present
+      - name: Run tests
+        env:
+          ETH_RPC: ${{ secrets.ETH_RPC }}
+        run: npm run test --workspaces --if-present
   format:
     runs-on: ubuntu-latest
     steps:

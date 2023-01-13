@@ -11,6 +11,7 @@ import {
   PolygonWatcher,
 } from './watchers';
 import { AlgorandWatcher } from './watchers/AlgorandWatcher';
+import { ArbitrumWatcher } from './watchers/ArbitrumWatcher';
 import { NearWatcher } from './watchers/NearWatcher';
 
 initDb();
@@ -27,7 +28,7 @@ new EVMWatcher('acala', 'finalized').watch();
 new EVMWatcher('klaytn').watch();
 new EVMWatcher('celo').watch();
 new MoonbeamWatcher().watch();
-// new EVMWatcher('arbitrum').watch(); // TODO: requires waiting for l1 finality
+new ArbitrumWatcher().watch();
 new AptosWatcher().watch();
 new NearWatcher().watch();
 new CosmwasmWatcher('terra2').watch();

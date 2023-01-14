@@ -27,6 +27,13 @@ type CountsByChain = {
     firstMissingVaaRowKey: string;
   };
 };
+type MissesByChain = {
+  [chain in ChainId]?: {
+    messages: ObservedMessage[];
+    lastUpdated: number;
+    lastRowKey: string;
+  };
+};
 type ObservedMessage = {
   id: string;
   chain: number;
@@ -116,7 +123,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
 }
 
 function DetailBlocks({ chain }: { chain: string }) {
-  const { showDetails, hideFound } = useSettings();
+  const { showDetails } = useSettings();
   const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
     getEmptyDataWrapper()
   );
@@ -159,11 +166,9 @@ function DetailBlocks({ chain }: { chain: string }) {
     }
   }, [lastMessageId]);
   const messages = useMemo(() => {
-    if (!rawMessages) return rawMessages;
-    const messages = hideFound ? rawMessages.filter((m) => !m.hasSignedVaa) : rawMessages;
-    if (!showDetails) return messages;
-    return [...(messages || [])].reverse();
-  }, [rawMessages, showDetails, hideFound]);
+    if (!rawMessages || !showDetails) return rawMessages;
+    return [...(rawMessages || [])].reverse();
+  }, [rawMessages, showDetails]);
   const loadMoreButton = (
     <Button
       onClick={handlePageClick}
@@ -218,6 +223,99 @@ function DetailBlocks({ chain }: { chain: string }) {
         <Typography>No messages</Typography>
       )}
     </Box>
+  );
+}
+
+function Misses() {
+  const { showAllMisses } = useSettings();
+  const [missesWrapper, setMissesWrapper] = useState<DataWrapper<MissesByChain>>(
+    getEmptyDataWrapper()
+  );
+  const misses = missesWrapper.data;
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setMissesWrapper((r) => ({ ...r, isFetching: true, error: null }));
+      try {
+        const response = await axios.get<MissesByChain>(
+          'https://europe-west3-wormhole-315720.cloudfunctions.net/missing-vaas'
+        );
+        if (response.data && !cancelled) {
+          setMissesWrapper(receiveDataWrapper(response.data));
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setMissesWrapper((r) => ({
+            ...r,
+            isFetching: false,
+            error: e?.message || 'An error occurred while fetching the database',
+          }));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const now = new Date();
+  now.setHours(now.getHours() - 2);
+  const twoHoursAgo = now.toISOString();
+  return (
+    <>
+      <Typography variant="h2">Misses {showAllMisses ? '' : '> 2 Hours'}</Typography>
+      <Box pl={0.5}>
+        {missesWrapper.receivedAt ? (
+          <Typography variant="body2">
+            Last retrieved misses at{' '}
+            <Box component="span" sx={{ display: 'inline-block' }}>
+              {new Date(missesWrapper.receivedAt).toLocaleString()}
+            </Box>{' '}
+            {missesWrapper.error ? (
+              <Typography component="span" color="error" variant="body2">
+                {missesWrapper.error}
+              </Typography>
+            ) : null}
+          </Typography>
+        ) : (
+          <Typography variant="body2">Loading message counts by chain...</Typography>
+        )}
+      </Box>
+      {missesWrapper.isFetching ? (
+        <CircularProgress />
+      ) : misses ? (
+        Object.entries(misses).map(([chain, info]) => {
+          const filteredMisses = showAllMisses
+            ? info.messages
+            : info.messages.filter((message) => message.timestamp < twoHoursAgo);
+          return filteredMisses.length === 0 ? null : (
+            <CollapsibleSection
+              key={chain}
+              header={
+                <Typography variant="h5">
+                  {coalesceChainName(Number(chain) as ChainId)} ({chain}) - {filteredMisses.length}
+                </Typography>
+              }
+            >
+              {filteredMisses.map((message) => (
+                <Box
+                  key={message.id}
+                  textAlign="left"
+                  borderLeft={'4px solid'}
+                  borderColor={message.hasSignedVaa ? FOUND_COLOR : MISSING_COLOR}
+                  borderRadius="2px"
+                  paddingLeft={1}
+                >
+                  <BlockDetail chain={chain} message={message} />
+                  <Divider />
+                </Box>
+              ))}
+            </CollapsibleSection>
+          );
+        })
+      ) : (
+        <Typography>No misses!</Typography>
+      )}
+    </>
   );
 }
 
@@ -292,42 +390,48 @@ function App() {
   return (
     <Box sx={{ m: { xs: 1, md: 2 } }}>
       <Box sx={{ display: 'flex', mb: 1, alignItems: 'center' }}>
-        <div>
-          {lastBlockByChainWrapper.receivedAt ? (
-            <Typography variant="body2">
-              Last retrieved latest blocks at{' '}
-              <Box component="span" sx={{ display: 'inline-block' }}>
-                {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
-              </Box>{' '}
-              {lastBlockByChainWrapper.error ? (
-                <Typography component="span" color="error" variant="body2">
-                  {lastBlockByChainWrapper.error}
-                </Typography>
-              ) : null}
-            </Typography>
-          ) : (
-            <Typography variant="body2">Loading last block by chain...</Typography>
-          )}
-          {messageCountsWrapper.receivedAt ? (
-            <Typography variant="body2">
-              Last retrieved latest blocks at{' '}
-              <Box component="span" sx={{ display: 'inline-block' }}>
-                {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
-              </Box>{' '}
-              {messageCountsWrapper.error ? (
-                <Typography component="span" color="error" variant="body2">
-                  {messageCountsWrapper.error}
-                </Typography>
-              ) : null}
-            </Typography>
-          ) : (
-            <Typography variant="body2">Loading message counts by chain...</Typography>
-          )}
-        </div>
+        <div></div>
         <Box sx={{ flexGrow: 1 }} />
         <SettingsButton />
       </Box>
-      {lastBlockByChain &&
+      <Misses />
+      <Typography variant="h2">Chains</Typography>
+      <Box pl={0.5}>
+        {lastBlockByChainWrapper.receivedAt ? (
+          <Typography variant="body2">
+            Last retrieved latest blocks at{' '}
+            <Box component="span" sx={{ display: 'inline-block' }}>
+              {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
+            </Box>{' '}
+            {lastBlockByChainWrapper.error ? (
+              <Typography component="span" color="error" variant="body2">
+                {lastBlockByChainWrapper.error}
+              </Typography>
+            ) : null}
+          </Typography>
+        ) : (
+          <Typography variant="body2">Loading last block by chain...</Typography>
+        )}
+        {messageCountsWrapper.receivedAt ? (
+          <Typography variant="body2">
+            Last retrieved message counts at{' '}
+            <Box component="span" sx={{ display: 'inline-block' }}>
+              {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
+            </Box>{' '}
+            {messageCountsWrapper.error ? (
+              <Typography component="span" color="error" variant="body2">
+                {messageCountsWrapper.error}
+              </Typography>
+            ) : null}
+          </Typography>
+        ) : (
+          <Typography variant="body2">Loading message counts by chain...</Typography>
+        )}
+      </Box>
+      {lastBlockByChainWrapper.isFetching ? (
+        <CircularProgress />
+      ) : (
+        lastBlockByChain &&
         Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
           <CollapsibleSection
             key={chain}
@@ -363,7 +467,8 @@ function App() {
           >
             <DetailBlocks chain={chain} />
           </CollapsibleSection>
-        ))}
+        ))
+      )}
     </Box>
   );
 }

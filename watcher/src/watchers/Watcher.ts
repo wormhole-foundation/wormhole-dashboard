@@ -1,5 +1,9 @@
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+  sleep,
+} from '@wormhole-foundation/wormhole-monitor-common';
+import { z } from 'zod';
 import { TIMEOUT } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { getLastBlockByChain, storeVaasByBlock } from '../databases/utils';
@@ -20,6 +24,26 @@ export class Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+    throw new Error('Not Implemented');
+  }
+
+  isValidBlockKey(key: string) {
+    try {
+      const [block, timestamp] = key.split('/');
+      const initialBlock = z
+        .number()
+        .int()
+        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[this.chain]));
+      return (
+        z.number().int().parse(Number(block)) > initialBlock &&
+        Date.parse(z.string().datetime().parse(timestamp)) < Date.now()
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  isValidVaaKey(key: string): boolean {
     throw new Error('Not Implemented');
   }
 

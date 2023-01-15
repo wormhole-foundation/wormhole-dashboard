@@ -24,6 +24,10 @@ test('getMessagesForSequenceNumbers', async () => {
     ],
   });
 
+  // validate keys
+  expect(watcher.isValidBlockKey(Object.keys(messages)[0])).toBe(true);
+  expect(watcher.isValidVaaKey(Object.values(messages).flat()[0])).toBe(true);
+
   // test that block number, timestamp, and sequence number are all strictly increasing
   const latestSequenceNumber = await watcher.getFinalizedBlockNumber();
   const messageKeys = Object.keys(

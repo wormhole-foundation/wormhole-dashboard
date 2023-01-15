@@ -1,7 +1,9 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { decode } from 'bs58';
 import { Provider, TypedError } from 'near-api-js/lib/providers';
 import { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
 import ora from 'ora';
+import { z } from 'zod';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
@@ -54,6 +56,21 @@ export class NearWatcher extends Watcher {
 
   async getProvider(): Promise<Provider> {
     return (this.provider = this.provider || (await getRateLimitedProvider(RPCS_BY_CHAIN.near!)));
+  }
+
+  isValidVaaKey(key: string) {
+    try {
+      const [txHash, vaaKey] = key.split(':');
+      const txHashDecoded = Buffer.from(decode(txHash)).toString('hex');
+      const [_, emitter, sequence] = vaaKey.split('/');
+      return (
+        /^[0-9a-fA-F]{64}$/.test(z.string().parse(txHashDecoded)) &&
+        /^[0-9a-fA-F]{64}$/.test(z.string().parse(emitter)) &&
+        z.number().int().parse(Number(sequence)) >= 0
+      );
+    } catch (e) {
+      return false;
+    }
   }
 }
 

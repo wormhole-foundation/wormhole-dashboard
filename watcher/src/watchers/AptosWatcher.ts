@@ -1,8 +1,11 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils';
-import { AptosClient, Types } from 'aptos';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
+import { AptosClient } from 'aptos';
+import { z } from 'zod';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeVaaKey } from '../databases/utils';
+import { AptosEvent } from '../types/aptos';
 import { Watcher } from './Watcher';
 
 const APTOS_CORE_BRIDGE_ADDRESS = CONTRACTS.MAINNET.aptos.core;
@@ -59,16 +62,35 @@ export class AptosWatcher extends Watcher {
     );
     return vaasByBlock;
   }
-}
 
-type AptosEvent = Omit<Types.Event, 'data'> & {
-  version: string;
-  data: {
-    consistency_level: number;
-    nonce: string;
-    payload: string;
-    sender: string;
-    sequence: string;
-    timestamp: string;
-  };
-};
+  isValidBlockKey(key: string) {
+    try {
+      const [block, timestamp, sequence] = key.split('/');
+      const initialSequence = z
+        .number()
+        .int()
+        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.aptos));
+      return (
+        z.number().int().parse(Number(block)) > 1094390 && // initial deployment block
+        Date.parse(z.string().datetime().parse(timestamp)) < Date.now() &&
+        z.number().int().parse(Number(sequence)) >= initialSequence // initial deployment sequence
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  isValidVaaKey(key: string) {
+    try {
+      const [txHash, vaaKey] = key.split(':');
+      const [_, emitter, sequence] = vaaKey.split('/');
+      return (
+        /^0x[0-9a-fA-F]{64}$/.test(z.string().parse(txHash)) &&
+        /^[0-9]{64}$/.test(z.string().parse(emitter)) &&
+        z.number().int().parse(Number(sequence)) >= 0
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+}

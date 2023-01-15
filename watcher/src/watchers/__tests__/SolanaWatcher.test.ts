@@ -6,7 +6,7 @@ import { SolanaJSONRPCError } from '@solana/web3.js';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
 import { SolanaWatcher } from '../SolanaWatcher';
 
-jest.setTimeout(6000000);
+jest.setTimeout(60000);
 
 const INITIAL_SOLANA_BLOCK = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.solana ?? 0);
 
@@ -26,6 +26,10 @@ describe('getMessagesForBlocks', () => {
         '3zWJevhFB5XqUCdDmqoRLQUMgiNBmFZLaE5rZpSexH47Mx2268eimrj2FY23Z1mq1WXsRRkyhmMcsguXcSw7Rnh1:1/ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5/262100',
       ],
     });
+
+    // validate keys
+    expect(watcher.isValidBlockKey(Object.keys(messages)[0])).toBe(true);
+    expect(watcher.isValidVaaKey(Object.values(messages).flat()[0])).toBe(true);
   });
 
   test('fromSlot is skipped slot', async () => {

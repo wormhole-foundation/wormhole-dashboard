@@ -94,5 +94,11 @@ describe('getMessagesFromBlockResults', () => {
         '2xh2rLR3ehjRRjU1BbuHEhU6FbXiKp5rZ88niyKC6MBs:15/148410499d3fcda4dcfd68a1ebfcdddda16ab28326448d4aae4d2f0465cdfcb7/237',
       ],
     });
+
+    // validate keys
+    const watcher = new NearWatcher();
+    const blockKey = Object.keys(messages).at(-1)!;
+    expect(watcher.isValidBlockKey(blockKey)).toBe(true);
+    expect(watcher.isValidVaaKey(messages[blockKey][0])).toBe(true);
   });
 });

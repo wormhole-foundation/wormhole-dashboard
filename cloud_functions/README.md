@@ -14,3 +14,5 @@ Be sure to first export env variables: BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, 
 gcloud functions deploy <name of cloud function> --entry-point <name of function> --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 1GB --region <location> --set-env-vars LIST_OF_ENV_VARS
 
 Note: these cloud functions are managed in conjunction with cloud storage (caches) and cloud scheduler (cron job to perdiodically compute cloud functions)
+The compute CFs are currently deployed with --allow-unauthenticated flag so the cache can be reloaded manually, but then anyone can refresh the cache.
+TODO: figure out how to allow the cloud schedular to run the cache reload and remove the --allow-unauthenticated flag

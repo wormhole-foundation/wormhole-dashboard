@@ -11,7 +11,7 @@ export const { computeMessageCounts } = require('./computeMessageCounts');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.
-// for local testing in functions-framework
+// below is for local testing in functions-framework
 functions.http('messages', getMessages);
 functions.http('messageCounts', getMessageCounts);
 functions.http('computeMessageCounts', computeMessageCounts);

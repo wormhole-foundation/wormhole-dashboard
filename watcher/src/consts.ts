@@ -38,6 +38,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   celo: 'https://forno.celo.org',
   moonbeam: 'https://rpc.ankr.com/moonbeam',
   arbitrum: 'https://rpc.ankr.com/arbitrum',
+  optimism: 'https://www.ankr.com/rpc/optimism',
   aptos: 'https://fullnode.mainnet.aptoslabs.com/',
   near: 'https://rpc.mainnet.near.org',
   xpla: 'https://dimension-lcd.xpla.dev',
@@ -50,6 +51,8 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
 // Separating for now so if we max out infura we can keep Polygon going
 export const POLYGON_ROOT_CHAIN_RPC = 'https://rpc.ankr.com/eth';
 export const POLYGON_ROOT_CHAIN_ADDRESS = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287';
+export const OPTIMISM_CTC_CHAIN_RPC = 'https://rpc.ankr.com/eth';
+export const OPTIMISM_CTC_CHAIN_ADDRESS = '0x5E4e65926BA27467555EB562121fac00D24E9dD2';
 
 export const ALGORAND_INFO = {
   appid: Number(CONTRACTS.MAINNET.algorand.core),

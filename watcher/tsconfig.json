@@ -4,5 +4,5 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "include": ["scripts", "src"]
+  "include": ["scripts", "src", "src/abi/*.json"]
 }

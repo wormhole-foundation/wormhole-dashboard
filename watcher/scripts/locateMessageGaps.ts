@@ -5,8 +5,7 @@ import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { TIMEOUT } from '../src/consts';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { parseMessageId } from '../src/databases/utils';
-import { EVMWatcher } from '../src/watchers';
-import { AlgorandWatcher } from '../src/watchers/AlgorandWatcher';
+import { makeFinalizedWatcher } from '../src/watchers/utils';
 import { Watcher } from '../src/watchers/Watcher';
 
 // This script checks for gaps in the message sequences for an emitter.
@@ -72,18 +71,9 @@ import { Watcher } from '../src/watchers/Watcher';
       const [chain, blockRange, emitter, sequence] = gap.split('/');
       const chainName = coalesceChainName(Number(chain) as ChainId);
       let watcher: Watcher;
-      // TODO: we should have this reuse the logic in index
-      if (chainName === 'oasis') {
-        watcher = new EVMWatcher('oasis');
-      } else if (chainName === 'algorand') {
-        watcher = new AlgorandWatcher();
-      } else if (chainName === 'fantom') {
-        watcher = new EVMWatcher('fantom');
-      } else if (chainName === 'karura') {
-        watcher = new EVMWatcher('karura', 'finalized');
-      } else if (chainName === 'celo') {
-        watcher = new EVMWatcher('celo');
-      } else {
+      try {
+        watcher = makeFinalizedWatcher(chainName);
+      } catch (e) {
         console.error('skipping gap for unsupported chain', chainName);
         continue;
       }

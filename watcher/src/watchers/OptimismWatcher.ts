@@ -27,10 +27,7 @@ export class OptimismWatcher extends EVMWatcher {
             jsonrpc: '2.0',
             id: 2,
             method: 'eth_call',
-            params: [
-              { to: OPTIMISM_CTC_CHAIN_ADDRESS, data: gtbData },
-              'finalized', // does the guardian use latest?
-            ],
+            params: [{ to: OPTIMISM_CTC_CHAIN_ADDRESS, data: gtbData }, 'finalized'],
           },
         ],
         AXIOS_CONFIG_JSON

@@ -1,9 +1,11 @@
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
-import { ArrowDownward, ArrowUpward, Launch, Settings } from '@mui/icons-material';
+import { ArrowDownward, ArrowUpward, Code, Launch, Settings } from '@mui/icons-material';
 import {
   Box,
   Button,
   CircularProgress,
+  Dialog,
+  DialogContent,
   Divider,
   IconButton,
   SxProps,
@@ -226,6 +228,52 @@ function DetailBlocks({ chain }: { chain: string }) {
   );
 }
 
+function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
+  const now = new Date();
+  now.setHours(now.getHours() - 2);
+  const twoHoursAgo = now.toISOString();
+  const { showAllMisses } = useSettings();
+  return (
+    <pre>
+      {Object.entries(misses)
+        .map(([chain, info]) => {
+          const filteredMisses = showAllMisses
+            ? info.messages
+            : info.messages.filter((message) => message.timestamp < twoHoursAgo);
+          return filteredMisses.length === 0
+            ? null
+            : filteredMisses
+                .map((m) => `send-observation-request ${chain} ${m.txHash.replace('0x', '')}`)
+                .join('\n');
+        })
+        .filter((c) => !!c)
+        .join('\n')}
+    </pre>
+  );
+}
+
+function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const handleOpenClick = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+  const handleCloseClick = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+  return misses ? (
+    <>
+      <IconButton onClick={handleOpenClick}>
+        <Code />
+      </IconButton>
+      <Dialog open={isOpen} onClose={handleCloseClick} maxWidth="xl">
+        <DialogContent>
+          <ReobserveCodeContent misses={misses} />
+        </DialogContent>
+      </Dialog>
+    </>
+  ) : null;
+}
+
 function Misses() {
   const { showAllMisses } = useSettings();
   const [missesWrapper, setMissesWrapper] = useState<DataWrapper<MissesByChain>>(
@@ -262,7 +310,11 @@ function Misses() {
   const twoHoursAgo = now.toISOString();
   return (
     <>
-      <Typography variant="h2">Misses {showAllMisses ? '' : '> 2 Hours'}</Typography>
+      <Box display="flex" alignItems="center">
+        <Typography variant="h2">Misses {showAllMisses ? '' : '> 2 Hours'}</Typography>
+        <Box flexGrow="1" />
+        <ReobserveCode misses={misses} />
+      </Box>
       <Box pl={0.5}>
         {missesWrapper.receivedAt ? (
           <Typography variant="body2">

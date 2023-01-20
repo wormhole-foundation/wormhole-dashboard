@@ -4,7 +4,7 @@ import {
   AXIOS_CONFIG_JSON,
   OPTIMISM_CTC_CHAIN_ADDRESS,
   OPTIMISM_CTC_CHAIN_RPC,
-  RPCS_BY_CHAIN,
+  // RPCS_BY_CHAIN,
 } from '../consts';
 import { EVMWatcher } from './EVMWatcher';
 import ctcAbi from '../abi/OptimismCtcAbi.json';
@@ -14,18 +14,9 @@ export class OptimismWatcher extends EVMWatcher {
 
   constructor() {
     super('optimism');
-
-    this.rpc = RPCS_BY_CHAIN[this.chain];
-    if (!this.rpc) {
-      throw new Error(`${this.chain} RPC is not defined!`);
-    }
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
-    if (!this.rpc) {
-      throw new Error(`${this.chain} RPC is not defined!`);
-    }
-
     const contract = new ethers.utils.Interface(ctcAbi);
     const gtbData = contract.encodeFunctionData('getTotalBatches');
     const result = (

@@ -8,10 +8,13 @@ import { EVMWatcher } from './EVMWatcher';
 import { MoonbeamWatcher } from './MoonbeamWatcher';
 import { NearWatcher } from './NearWatcher';
 import { PolygonWatcher } from './PolygonWatcher';
+import { SolanaWatcher } from './SolanaWatcher';
 import { Watcher } from './Watcher';
 
 export function makeFinalizedWatcher(chainName: ChainName): Watcher {
-  if (chainName === 'ethereum' || chainName === 'karura' || chainName === 'acala') {
+  if (chainName === 'solana') {
+    return new SolanaWatcher();
+  } else if (chainName === 'ethereum' || chainName === 'karura' || chainName === 'acala') {
     return new EVMWatcher(chainName, 'finalized');
   } else if (chainName === 'bsc') {
     return new BSCWatcher();

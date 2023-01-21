@@ -41,9 +41,8 @@ describe('getMessagesForBlocks', () => {
 
   test('toSlot is skipped slot', async () => {
     const watcher = new SolanaWatcher();
-    await expect(watcher.getMessagesForBlocks(171774023, 171774025)).rejects.toThrow(
-      SolanaJSONRPCError
-    );
+    const messages = await watcher.getMessagesForBlocks(171774023, 171774025);
+    expect(messages).toMatchObject({ '171774023/2023-01-10T13:36:34.000Z': [] });
   });
 
   test('empty block', async () => {
@@ -88,5 +87,18 @@ describe('getMessagesForBlocks', () => {
     ];
     const uniqueMessageKeys = [...new Set(allMessageKeys)];
     expect(allMessageKeys.length).toBe(uniqueMessageKeys.length); // assert no duplicate keys
+  });
+
+  test('handle failed transactions', async () => {
+    const watcher = new SolanaWatcher();
+    const messages = await watcher.getMessagesForBlocks(94401321, 94501321);
+    expect(Object.keys(messages).length).toBe(6);
+    expect(Object.values(messages).flat().length).toBe(5);
+    expect(
+      Object.values(messages)
+        .flat()
+        .map((m) => m.split('/')[2])
+        .join(',')
+    ).toBe('4,3,2,1,0');
   });
 });

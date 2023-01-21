@@ -40,13 +40,25 @@ export class SolanaWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromSlot: number, toSlot: number): Promise<VaasByBlock> {
+    // in the rare case of maximumBatchSize skipped blocks in a row,
+    // you might hit this error due to the recursion below
     if (fromSlot > toSlot) throw new Error('solana: invalid block range');
     this.logger.info(`fetching info for blocks ${fromSlot} to ${toSlot}`);
     const vaasByBlock: VaasByBlock = {};
 
     // identify block range by fetching the first and last transactions
     // getSignaturesForAddress walks backwards so fromSignature occurs after toSignature
-    const toBlock = await this.connection.getBlock(toSlot, { maxSupportedTransactionVersion: 0 });
+    let toBlock: VersionedBlockResponse | null = null;
+    try {
+      toBlock = await this.connection.getBlock(toSlot, { maxSupportedTransactionVersion: 0 });
+    } catch (e) {
+      if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
+        // failed to get confirmed block: slot was skipped or missing in long-term storage
+        return this.getMessagesForBlocks(fromSlot, toSlot - 1);
+      } else {
+        throw e;
+      }
+    }
     if (!toBlock || !toBlock.blockTime) throw new Error(`solana: failed to fetch block ${toSlot}`);
     const fromSignature = toBlock.transactions.at(-1)?.transaction.signatures[0];
 
@@ -54,6 +66,7 @@ export class SolanaWatcher extends Watcher {
     try {
       fromBlock = await this.connection.getBlock(fromSlot, { maxSupportedTransactionVersion: 0 });
     } catch (e) {
+      console.log(e);
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
         return this.getMessagesForBlocks(fromSlot + 1, toSlot);
@@ -88,6 +101,10 @@ export class SolanaWatcher extends Watcher {
         const res = await this.connection.getTransaction(signature, {
           maxSupportedTransactionVersion: 0,
         });
+        if (res?.meta?.err) {
+          // skip errored txs
+          continue;
+        }
         if (!res || !res.blockTime) {
           throw new Error(`solana: failed to fetch tx for signature ${signature}`);
         }

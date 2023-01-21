@@ -6,7 +6,7 @@ import {
 import { z } from 'zod';
 import { TIMEOUT } from '../consts';
 import { VaasByBlock } from '../databases/types';
-import { getLastBlockByChain, storeVaasByBlock } from '../databases/utils';
+import { getResumeBlockByChain, storeVaasByBlock } from '../databases/utils';
 import { getLogger, WormholeLogger } from '../utils/logger';
 
 export class Watcher {
@@ -49,8 +49,7 @@ export class Watcher {
 
   async watch(): Promise<void> {
     let toBlock: number | null = null;
-    const lastBlock = await getLastBlockByChain(this.chain);
-    let fromBlock: number | null = lastBlock ? lastBlock + 1 : null;
+    let fromBlock: number | null = await getResumeBlockByChain(this.chain);
     let retry = 0;
     while (true) {
       try {

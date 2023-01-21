@@ -8,6 +8,7 @@ import { makeFinalizedWatcher } from './watchers/utils';
 initDb();
 
 const supportedChains: ChainName[] = [
+  'solana',
   'ethereum',
   'bsc',
   'polygon',

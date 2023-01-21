@@ -70,10 +70,14 @@ export const initDb = (): Database => {
   return database;
 };
 
-export const getLastBlockByChain = async (chain: ChainName): Promise<number | null> => {
-  const lastBlock: string =
-    (await database.getLastBlockByChain(chain)) ?? INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain]!;
-  return lastBlock === undefined ? null : Number(lastBlock);
+export const getResumeBlockByChain = async (chain: ChainName): Promise<number | null> => {
+  const lastBlock = await database.getLastBlockByChain(chain);
+  const initialBlock = INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain];
+  return lastBlock !== null
+    ? Number(lastBlock) + 1
+    : initialBlock !== undefined
+    ? Number(initialBlock)
+    : null;
 };
 
 export const storeVaasByBlock = async (

@@ -19,7 +19,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   terra2: '399813',
   injective: '20908376',
   arbitrum: '18128584',
-  optimism: '463184',
+  optimism: '69401779',
   aptos: '0', // block is 1094390 but AptosWatcher uses sequence number instead
   near: '72767136',
   xpla: '777549',

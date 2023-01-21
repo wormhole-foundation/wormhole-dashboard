@@ -22,6 +22,7 @@ const supportedChains: ChainName[] = [
   'celo',
   'moonbeam',
   'arbitrum',
+  'optimism',
   'aptos',
   'near',
   'terra2',

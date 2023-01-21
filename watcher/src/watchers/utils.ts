@@ -7,6 +7,7 @@ import { CosmwasmWatcher } from './CosmwasmWatcher';
 import { EVMWatcher } from './EVMWatcher';
 import { MoonbeamWatcher } from './MoonbeamWatcher';
 import { NearWatcher } from './NearWatcher';
+import { OptimismWatcher } from './OptimismWatcher';
 import { PolygonWatcher } from './PolygonWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
 import { Watcher } from './Watcher';
@@ -34,6 +35,8 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     return new MoonbeamWatcher();
   } else if (chainName === 'arbitrum') {
     return new ArbitrumWatcher();
+  } else if (chainName === 'optimism') {
+    return new OptimismWatcher();
   } else if (chainName === 'aptos') {
     return new AptosWatcher();
   } else if (chainName === 'near') {

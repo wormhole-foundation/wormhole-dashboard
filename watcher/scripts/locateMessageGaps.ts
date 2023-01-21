@@ -1,7 +1,12 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk';
-import { Environment, getEnvironment, sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  Environment,
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  getEnvironment,
+  sleep,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { TIMEOUT } from '../src/consts';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { parseMessageId } from '../src/databases/utils';
@@ -36,9 +41,13 @@ import { Watcher } from '../src/watchers/Watcher';
         emitter: emitterAddress,
         sequence,
       } = parseMessageId(observedMessage.id);
+      const chainName = coalesceChainName(emitterChain as ChainId);
       const emitter = `${emitterChain}/${emitterAddress}`;
       if (!latestEmission[emitter]) {
-        latestEmission[emitter] = { sequence: 0n, block: 0 };
+        latestEmission[emitter] = {
+          sequence: chainName === 'algorand' || chainName === 'near' ? 0n : -1n,
+          block: Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[network][chainName] || 0),
+        };
       }
       while (sequence > latestEmission[emitter].sequence + 1n) {
         latestEmission[emitter].sequence += 1n;
@@ -71,6 +80,10 @@ import { Watcher } from '../src/watchers/Watcher';
     for (const gap of gaps) {
       const [chain, blockRange, emitter, sequence] = gap.split('/');
       const chainName = coalesceChainName(Number(chain) as ChainId);
+      if (chainName === 'algorand') {
+        console.warn('skipping algorand gaps until backfilled');
+        continue;
+      }
       let watcher: Watcher;
       try {
         watcher = makeFinalizedWatcher(network, chainName);

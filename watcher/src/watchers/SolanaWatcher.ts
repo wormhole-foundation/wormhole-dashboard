@@ -97,16 +97,26 @@ export class SolanaWatcher extends Watcher {
       // instructions are relevant when looking for messages. Then, the message account is the
       // account given by the second index in the instruction's account key indices. From here,
       // we can fetch the message data from the account and parse out the emitter and sequence.
-      for (const { signature } of signatures) {
-        const res = await this.connection.getTransaction(signature, {
+      const results = await this.connection.getTransactions(
+        signatures.map((s) => s.signature),
+        {
           maxSupportedTransactionVersion: 0,
-        });
+        }
+      );
+      if (results.length !== signatures.length) {
+        throw new Error(`solana: failed to fetch tx for signatures`);
+      }
+      for (const res of results) {
         if (res?.meta?.err) {
           // skip errored txs
           continue;
         }
         if (!res || !res.blockTime) {
-          throw new Error(`solana: failed to fetch tx for signature ${signature}`);
+          throw new Error(
+            `solana: failed to fetch tx for signature ${
+              res?.transaction.signatures[0] || 'unknown'
+            }`
+          );
         }
 
         const message = res.transaction.message;
@@ -136,7 +146,7 @@ export class SolanaWatcher extends Watcher {
             new Date(res.blockTime * 1000).toISOString()
           );
           const vaaKey = makeVaaKey(
-            signature,
+            res.transaction.signatures[0],
             this.chain,
             emitterAddress.toString('hex'),
             sequence.toString()

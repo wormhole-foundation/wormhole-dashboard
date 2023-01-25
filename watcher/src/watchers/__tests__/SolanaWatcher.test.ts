@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { describe, expect, jest, test } from '@jest/globals';
-import { SolanaJSONRPCError } from '@solana/web3.js';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
 import { SolanaWatcher } from '../SolanaWatcher';
 
@@ -51,6 +50,21 @@ describe('getMessagesForBlocks', () => {
     const messages = await watcher.getMessagesForBlocks(170979766, 170979766);
     expect(Object.keys(messages).length).toBe(1);
     expect(messages).toMatchObject({ '170979766/2023-01-05T18:40:24.000Z': [] });
+  });
+
+  test('block with no transactions', async () => {
+    const watcher = new SolanaWatcher();
+    expect(watcher.getMessagesForBlocks(174108861, 174108861)).rejects.toThrowError(
+      'solana: invalid block range'
+    );
+
+    let messages = await watcher.getMessagesForBlocks(174108661, 174108861);
+    expect(Object.keys(messages).length).toBe(1);
+    expect(Object.values(messages).flat().length).toBe(0);
+
+    messages = await watcher.getMessagesForBlocks(174108863, 174109061);
+    expect(Object.keys(messages).length).toBe(1);
+    expect(Object.values(messages).flat().length).toBe(0);
   });
 
   test('multiple blocks', async () => {

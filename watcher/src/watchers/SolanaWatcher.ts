@@ -2,6 +2,7 @@ import { getPostedMessage } from '@certusone/wormhole-sdk/lib/cjs/solana/wormhol
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
   Commitment,
+  ConfirmedSignatureInfo,
   Connection,
   PublicKey,
   SolanaJSONRPCError,
@@ -46,7 +47,7 @@ export class SolanaWatcher extends Watcher {
     this.logger.info(`fetching info for blocks ${fromSlot} to ${toSlot}`);
     const vaasByBlock: VaasByBlock = {};
 
-    // identify block range by fetching the first and last transactions
+    // identify block range by fetching signatures of the first and last transactions
     // getSignaturesForAddress walks backwards so fromSignature occurs after toSignature
     let toBlock: VersionedBlockResponse | null = null;
     try {
@@ -59,14 +60,16 @@ export class SolanaWatcher extends Watcher {
         throw e;
       }
     }
-    if (!toBlock || !toBlock.blockTime) throw new Error(`solana: failed to fetch block ${toSlot}`);
-    const fromSignature = toBlock.transactions.at(-1)?.transaction.signatures[0];
+    if (!toBlock || !toBlock.blockTime || toBlock.transactions.length === 0) {
+      return this.getMessagesForBlocks(fromSlot, toSlot - 1);
+    }
+    const fromSignature =
+      toBlock.transactions[toBlock.transactions.length - 1].transaction.signatures[0];
 
     let fromBlock: VersionedBlockResponse | null = null;
     try {
       fromBlock = await this.connection.getBlock(fromSlot, { maxSupportedTransactionVersion: 0 });
     } catch (e) {
-      console.log(e);
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
         return this.getMessagesForBlocks(fromSlot + 1, toSlot);
@@ -74,14 +77,16 @@ export class SolanaWatcher extends Watcher {
         throw e;
       }
     }
-    if (!fromBlock || !fromBlock.blockTime) return this.getMessagesForBlocks(fromSlot + 1, toSlot);
+    if (!fromBlock || !fromBlock.blockTime || fromBlock.transactions.length === 0) {
+      return this.getMessagesForBlocks(fromSlot + 1, toSlot);
+    }
     const toSignature = fromBlock.transactions[0].transaction.signatures[0];
 
     // get all core bridge signatures between fromTransaction and toTransaction
     let numSignatures = this.getSignaturesLimit;
-    let currSignature = fromSignature;
+    let currSignature: string | undefined = fromSignature;
     while (numSignatures === this.getSignaturesLimit) {
-      const signatures = await this.connection.getSignaturesForAddress(
+      const signatures: ConfirmedSignatureInfo[] = await this.connection.getSignaturesForAddress(
         new PublicKey(WORMHOLE_PROGRAM_ID),
         {
           before: currSignature,

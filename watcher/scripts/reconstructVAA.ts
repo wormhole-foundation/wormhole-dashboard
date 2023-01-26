@@ -15,15 +15,6 @@ import { LOG_MESSAGE_PUBLISHED_TOPIC, wormholeInterface } from '../src/watchers/
 import { Log } from '@ethersproject/abstract-provider';
 
 const misses: { chain: ChainId; txHash: string }[] = [
-  { chain: 11, txHash: '0x82c499401faa8642c1f773675fed38eaf79b8e55019b4bc002e04548e86b1927' },
-  { chain: 11, txHash: '0xfa4b8d481ded6c09d939361f38143a3d003d5c0028dee7a433bc1a02c1173b88' },
-  { chain: 11, txHash: '0x8dc9cc5a0a836c9206abd0702bc5133bbd901a509efdfc370940ca98b8cb1293' },
-  { chain: 11, txHash: '0xd80c8b50e50b399543d70c1cb1110d9334f1ca5fe8d18e471a531e19b5fab769' },
-  { chain: 11, txHash: '0x379a53ab3b696180ea3721ddd7ad81b1f3b8b9bee963524bf5265e8b3764f589' },
-  { chain: 11, txHash: '0xd5c9d547877ae9fe8637f5f1f6662ae8fe7baeacfcf1ed61cdbde66241d1996a' },
-  { chain: 11, txHash: '0x569d1888ff14f379952339f24fe9706cd274af7ddec0ac73d123512ec61250e4' },
-  { chain: 11, txHash: '0x9382ad5d54ac1ce2a1da29e623f2b447220dcaaa9f6998cfa951e44675a1bd08' },
-  { chain: 11, txHash: '0x2ee363bd0a8708755474013306213cffc8ca28d53a65f999b57ac7b89da7e231' },
   { chain: 11, txHash: '0x14180a4b1b056c71d473348203976f5b250e1c7342abd1947fa7de79195a91d4' },
   { chain: 11, txHash: '0x403c10df0d87dfca40783ee00aaed3c338b8e5a18643479d77ef2d9e667c5401' },
   { chain: 11, txHash: '0xa433e28d368f1478430ae195439698dacd645eb39e44a4c08efad383702c1ef6' },
@@ -35,8 +26,6 @@ const misses: { chain: ChainId; txHash: string }[] = [
   { chain: 11, txHash: '0xa75a8fcbf135384420c0780a90f59edcbb3159bbb2b80dc100204a61b8f221bf' },
   { chain: 11, txHash: '0x48f532fdc933fc27afb73c580ade371e2d961dee8e56b496298f4bc4dddd19dc' },
   { chain: 11, txHash: '0xd16540dcddea5a467ecb5c100329e86495719f68d7b01d883379eaea2c2746ef' },
-  { chain: 12, txHash: '0x531f78064f97c08875fb8e28054f7a52ea117440327a9ad8c4c9a0d091897098' },
-  { chain: 12, txHash: '0x436a6676477dd90f0cf0e8a0e78126c6653c7fe2e44a5dc921dc1fa3d5c4853b' },
 ];
 
 type GuardianSetEntry = { pubkey: string; name: string };

@@ -17,7 +17,7 @@ import { BigtableVAAsResultRow } from '../src/databases/types';
 const LIMIT = 10000;
 
 (async () => {
-  const fd = openSync(`${new Date().toISOString()}.csv`, 'a');
+  const fd = openSync(`vaas-${new Date().toISOString()}.csv`, 'a');
   try {
     const bt = new BigtableDatabase();
     if (!bt.bigtable) {

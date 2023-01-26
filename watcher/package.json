@@ -16,6 +16,7 @@
     "backfill-signed-vaas": "ts-node scripts/backfillSignedVAAs",
     "backfill-vaas-by-tx-hash": "ts-node scripts/backfillVAAsByTxHash.ts",
     "delete-messages-by-chain": "ts-node scripts/deleteMessagesByChain.ts",
+    "dump-messages": "ts-node scripts/dumpMessages.ts",
     "dump-vaas": "ts-node scripts/dumpVAAs.ts",
     "locate-message-gaps": "ts-node scripts/locateMessageGaps.ts",
     "fetch-missing-vaas": "ts-node scripts/fetchMissingVAAs.ts",

@@ -106,7 +106,7 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     : chainId === CHAIN_ID_XPLA
     ? `https://explorer.xpla.io/mainnet/tx/${tx}`
     : chainId === CHAIN_ID_APTOS
-    ? `https://explorer.aptoslabs.com/tx/${tx}`
+    ? `https://explorer.aptoslabs.com/txn/${tx}`
     : chainId === CHAIN_ID_ARBITRUM
     ? `https://arbiscan.io/tx/${tx}`
     : chainId === CHAIN_ID_INJECTIVE

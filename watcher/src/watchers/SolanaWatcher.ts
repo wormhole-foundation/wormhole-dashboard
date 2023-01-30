@@ -98,10 +98,12 @@ export class SolanaWatcher extends Watcher {
       this.logger.info(`processing ${signatures.length} transactions`);
 
       // In order to determine if a transaction has a Wormhole message, we normalize and iterate
-      // through all instructions in the transaction. Only PostMessage and PostMessageUnreliable
-      // instructions are relevant when looking for messages. Then, the message account is the
-      // account given by the second index in the instruction's account key indices. From here,
-      // we can fetch the message data from the account and parse out the emitter and sequence.
+      // through all instructions in the transaction. Only PostMessage instructions are relevant
+      // when looking for messages. PostMessageUnreliable instructions are ignored because there
+      // are no data availability guarantees (ie the associated message accounts may have been
+      // reused, overwriting previous data). Then, the message account is the account given by
+      // the second index in the instruction's account key indices. From here, we can fetch the
+      // message data from the account and parse out the emitter and sequence.
       const results = await this.connection.getTransactions(
         signatures.map((s) => s.signature),
         {
@@ -140,7 +142,7 @@ export class SolanaWatcher extends Watcher {
         for (const instruction of whInstructions) {
           // skip if not postMessage instruction
           const instructionId = instruction.data;
-          if (instructionId[0] !== 0x01 && instructionId[0] !== 0x08) continue;
+          if (instructionId[0] !== 0x01) continue;
 
           const accountId = accountKeys[instruction.accountKeyIndexes[1]];
           const {

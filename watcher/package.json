@@ -15,6 +15,7 @@
     "backfill-vaas-by-tx-hash": "ts-node scripts/backfillVAAsByTxHash.ts",
     "locate-message-gaps": "ts-node scripts/locateMessageGaps.ts",
     "fetch-missing-vaas": "ts-node scripts/fetchMissingVAAs.ts",
+    "update-found-vaas": "ts-node scripts/updateFoundVAAs.ts",
     "read-bigtable": "ts-node scripts/readBigtable.ts",
     "read-firestore": "ts-node scripts/readFirestore.ts"
   },

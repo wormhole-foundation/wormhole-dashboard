@@ -8,7 +8,6 @@ import {
   makeVAAsByTxHashRowKey,
   parseMessageId,
 } from '../src/databases/utils';
-import { ChainId } from '@certusone/wormhole-sdk';
 import { chunkArray } from '@wormhole-foundation/wormhole-monitor-common';
 
 const CHUNK_SIZE = 10000;
@@ -20,17 +19,17 @@ const CHUNK_SIZE = 10000;
       throw new Error('bigtable is undefined');
     }
     const instance = bt.bigtable.instance(bt.instanceId);
-    const messageTable = instance.table(bt.tableId);
+    const messageTable = instance.table(bt.msgTableId);
     const vaasByTxHashTable = instance.table(bt.vaasByTxHashTableId);
 
-    let log = ora(`Reading rows from ${bt.tableId}...`).start();
+    let log = ora(`Reading rows from ${bt.msgTableId}...`).start();
     const observedMessages = await messageTable.getRows(); // TODO: pagination
     const vaasByTxHash: { [key: string]: string[] } = {};
     for (const msg of observedMessages[0]) {
       const txHash = msg.data.info.txHash[0].value;
       const { chain, emitter, sequence } = parseMessageId(msg.id);
-      const txHashRowKey = makeVAAsByTxHashRowKey(txHash, chain as ChainId);
-      const vaaRowKey = makeSignedVAAsRowKey(chain as ChainId, emitter, sequence.toString());
+      const txHashRowKey = makeVAAsByTxHashRowKey(txHash, chain);
+      const vaaRowKey = makeSignedVAAsRowKey(chain, emitter, sequence.toString());
       vaasByTxHash[txHashRowKey] = [...(vaasByTxHash[txHashRowKey] || []), vaaRowKey];
     }
     const rowsToInsert = Object.entries(vaasByTxHash).map<BigtableVAAsByTxHashRow>(

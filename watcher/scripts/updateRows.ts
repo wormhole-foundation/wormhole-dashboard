@@ -18,7 +18,7 @@ export function parseVaaId(vaaRowKey: string) {
     throw new Error('bigtable is undefined');
   }
   const instance = bt.bigtable.instance(bt.instanceId);
-  const messageTable = instance.table(bt.tableId);
+  const messageTable = instance.table(bt.msgTableId);
 
   const rowKeysToUpdate: string[] = [
     '5:0000000000000000000000005a58505a96d1dbf8df91cb21b54419fc36e93fde:0000000000006840',

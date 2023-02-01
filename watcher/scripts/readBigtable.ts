@@ -12,7 +12,7 @@ import { BigtableDatabase } from '../src/databases/BigtableDatabase';
     throw new Error('bigtable is undefined');
   }
   const mainnetInstance = bt.bigtable.instance(bt.instanceId);
-  const messageTable = mainnetInstance.table(bt.tableId);
+  const messageTable = mainnetInstance.table(bt.msgTableId);
   try {
     const chain: ChainId = 22;
     const prefix = `${padUint16(chain.toString())}/`;

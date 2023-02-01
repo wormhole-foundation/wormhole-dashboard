@@ -16,7 +16,7 @@ const CHAIN = CHAIN_ID_SOLANA;
   }
 
   const instance = bt.bigtable.instance(bt.instanceId);
-  const messageTable = instance.table(bt.tableId);
+  const messageTable = instance.table(bt.msgTableId);
   await messageTable.deleteRows(`${padUint16(coalesceChainId(CHAIN).toString())}/`);
   console.log('Deleted all rows starting with', coalesceChainName(CHAIN));
 })();

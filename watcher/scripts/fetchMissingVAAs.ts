@@ -4,8 +4,8 @@ import axios from 'axios';
 import { writeFileSync } from 'fs';
 import ora from 'ora';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
-import { makeVaaId, parseMessageId } from '../src/databases/utils';
-import { AXIOS_CONFIG_JSON } from '../src/consts';
+import { makeSignedVAAsRowKey, parseMessageId } from '../src/databases/utils';
+import { AXIOS_CONFIG_JSON, GUARDIAN_RPC_HOSTS } from '../src/consts';
 import { parseVaa } from '@certusone/wormhole-sdk';
 
 // This script checks for messages which don't have VAAs and attempts to fetch the VAAs from the guardians
@@ -16,14 +16,6 @@ import { parseVaa } from '@certusone/wormhole-sdk';
 
 const foundVaas: { [id: string]: string } = {};
 const missingVaas: { [id: string]: string | undefined } = {};
-
-const GUARDIAN_RPCS = [
-  'https://wormhole-v2-mainnet-api.certus.one',
-  'https://wormhole.inotel.ro',
-  'https://wormhole-v2-mainnet-api.mcf.rocks',
-  'https://wormhole-v2-mainnet-api.chainlayer.network',
-  'https://wormhole-v2-mainnet-api.staking.fund',
-];
 
 (async () => {
   const bt = new BigtableDatabase();
@@ -43,13 +35,13 @@ const GUARDIAN_RPCS = [
     for (const observedMessage of missingVaaMessages) {
       log.text = `Searching for VAA ${++search}/${total}...`;
       const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
-      const id = makeVaaId(chain, emitter, sequence);
+      const id = makeSignedVAAsRowKey(chain, emitter, sequence.toString());
       let vaaBytes: string | null = null;
-      for (const rpc of GUARDIAN_RPCS) {
-        log.text = `Searching for VAA ${search}/${total} (${rpc})...`;
+      for (const host of GUARDIAN_RPC_HOSTS) {
+        log.text = `Searching for VAA ${search}/${total} (${host})...`;
         try {
           const result = await axios.get(
-            `${rpc}/v1/signed_vaa/${chain}/${emitter}/${sequence.toString()}`,
+            `${host}/v1/signed_vaa/${chain}/${emitter}/${sequence.toString()}`,
             AXIOS_CONFIG_JSON
           );
           if (result.data.vaaBytes) {

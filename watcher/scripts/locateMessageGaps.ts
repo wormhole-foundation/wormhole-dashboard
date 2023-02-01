@@ -17,7 +17,7 @@ import { Watcher } from '../src/watchers/Watcher';
     throw new Error('bigtable is undefined');
   }
   const instance = bt.bigtable.instance(bt.instanceId);
-  const messageTable = instance.table(bt.tableId);
+  const messageTable = instance.table(bt.msgTableId);
   try {
     // Find gaps in sequence numbers with the same chain and emitter
     // Sort by ascending sequence number

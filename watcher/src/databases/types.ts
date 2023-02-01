@@ -16,6 +16,16 @@ export type BigtableMessagesRow = {
     };
   };
 };
+export interface BigtableSignedVAAsRow {
+  key: string;
+  data: {
+    // column family
+    info: {
+      // columns
+      bytes: { value: Buffer; timestamp: string };
+    };
+  };
+}
 export interface BigtableVAAsByTxHashRow {
   key: string;
   data: {
@@ -38,13 +48,13 @@ export interface BigtableMessagesResultRow extends Row {
     };
   };
 }
-export interface BigtableVAAsResultRow extends Row {
+export interface BigtableSignedVAAsResultRow extends Row {
   key: string;
   data: {
     // column family
-    QuorumState: {
+    info: {
       // columns
-      SignedVAA?: [{ value: Buffer; timestamp: string }];
+      bytes: [{ value: Buffer; timestamp: string }];
     };
   };
 }

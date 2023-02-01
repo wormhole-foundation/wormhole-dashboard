@@ -12,22 +12,24 @@ import { Database } from './Database';
 import {
   BigtableMessagesResultRow,
   BigtableMessagesRow,
+  BigtableSignedVAAsResultRow,
+  BigtableSignedVAAsRow,
   BigtableVAAsByTxHashRow,
-  BigtableVAAsResultRow,
   VaasByBlock,
 } from './types';
 import {
   makeMessageId,
   makeVAAsByTxHashRowKey,
-  makeVaaId,
   makeSignedVAAsRowKey,
   parseMessageId,
 } from './utils';
+import { getSignedVAA } from '../utils/getSignedVAA';
 
 const WATCH_MISSING_TIMEOUT = 5 * 60 * 1000;
 
 export class BigtableDatabase extends Database {
-  tableId: string;
+  msgTableId: string;
+  signedVAAsTableId: string;
   vaasByTxHashTableId: string;
   instanceId: string;
   bigtable: Bigtable;
@@ -35,7 +37,8 @@ export class BigtableDatabase extends Database {
   latestCollectionName: string;
   constructor() {
     super();
-    this.tableId = assertEnvironmentVariable('BIGTABLE_TABLE_ID');
+    this.msgTableId = assertEnvironmentVariable('BIGTABLE_TABLE_ID');
+    this.signedVAAsTableId = assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID');
     this.vaasByTxHashTableId = assertEnvironmentVariable('BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID');
     this.instanceId = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
@@ -92,7 +95,7 @@ export class BigtableDatabase extends Database {
     const chainId = coalesceChainId(chain);
     const filteredBlocks = BigtableDatabase.filterEmptyBlocks(vaasByBlock);
     const instance = this.bigtable.instance(this.instanceId);
-    const table = instance.table(this.tableId);
+    const table = instance.table(this.msgTableId);
     const vaasByTxHashTable = instance.table(this.vaasByTxHashTableId);
     const rowsToInsert: BigtableMessagesRow[] = [];
     const vaasByTxHash: { [key: string]: string[] } = {};
@@ -122,7 +125,7 @@ export class BigtableDatabase extends Database {
             },
           },
         });
-        const txHashRowKey = makeVAAsByTxHashRowKey(txHash, chain);
+        const txHashRowKey = makeVAAsByTxHashRowKey(txHash, chainId);
         const vaaRowKey = makeSignedVAAsRowKey(chainId, emitter, seq);
         vaasByTxHash[txHashRowKey] = [...(vaasByTxHash[txHashRowKey] || []), vaaRowKey];
       });
@@ -154,7 +157,7 @@ export class BigtableDatabase extends Database {
 
   async updateMessageStatuses(messageKeys: string[], value: number = 1): Promise<void> {
     const instance = this.bigtable.instance(this.instanceId);
-    const table = instance.table(this.tableId);
+    const table = instance.table(this.msgTableId);
     const chunkedMessageKeys = chunkArray(messageKeys, 1000);
     for (const chunk of chunkedMessageKeys) {
       const rowsToInsert: BigtableMessagesRow[] = chunk.map((id) => ({
@@ -175,7 +178,7 @@ export class BigtableDatabase extends Database {
 
   async fetchMissingVaaMessages(): Promise<BigtableMessagesResultRow[]> {
     const instance = this.bigtable.instance(this.instanceId);
-    const messageTable = instance.table(this.tableId);
+    const messageTable = instance.table(this.msgTableId);
     // TODO: how to filter to only messages with hasSignedVaa === 0
     const observedMessages = (await messageTable.getRows())[0] as BigtableMessagesResultRow[];
     const missingVaaMessages = observedMessages.filter(
@@ -185,11 +188,13 @@ export class BigtableDatabase extends Database {
   }
 
   async watchMissing(): Promise<void> {
-    const vaaTableId = assertEnvironmentVariable('BIGTABLE_VAA_TABLE_ID');
     const instance = this.bigtable.instance(this.instanceId);
-    const vaaTable = instance.table(vaaTableId);
+    const signedVAAsTable = instance.table(this.signedVAAsTableId);
     while (true) {
       try {
+        // this array first stores all of the messages which are missing VAAs
+        // messages which we find VAAs for are then pruned from the array
+        // lastly we try to fetch VAAs for the messages in the pruned array from the guardians
         const missingVaaMessages = await this.fetchMissingVaaMessages();
         const total = missingVaaMessages.length;
         this.logger.info(`locating ${total} messages with hasSignedVAA === 0`);
@@ -197,58 +202,81 @@ export class BigtableDatabase extends Database {
         const chunkedVAAIds = chunkArray(
           missingVaaMessages.map((observedMessage) => {
             const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
-            return makeVaaId(chain, emitter, sequence);
+            return makeSignedVAAsRowKey(chain, emitter, sequence.toString());
           }),
           1000
         );
         let chunkNum = 0;
-        const foundRecords: string[] = [];
+        const foundKeys: string[] = [];
         for (const chunk of chunkedVAAIds) {
           this.logger.info(`processing chunk ${++chunkNum} of ${chunkedVAAIds.length}`);
-          const filter = [
-            {
-              family: 'QuorumState',
-              column: 'SignedVaa',
-            },
-          ];
           const vaaRows = (
-            await vaaTable.getRows({
+            await signedVAAsTable.getRows({
               keys: chunk,
               decode: false,
-              filter,
             })
-          )[0] as BigtableVAAsResultRow[];
+          )[0] as BigtableSignedVAAsResultRow[];
           for (const row of vaaRows) {
             try {
-              const vaaBytes = row.data.QuorumState.SignedVAA?.[0].value;
-              if (vaaBytes) {
-                const parsed = parseVaa(vaaBytes);
-                const matchingIndex = missingVaaMessages.findIndex((observedMessage) => {
-                  const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
-                  if (
-                    parsed.emitterChain === chain &&
-                    parsed.emitterAddress.toString('hex') === emitter &&
-                    parsed.sequence === sequence
-                  ) {
-                    return true;
-                  }
-                });
-                if (matchingIndex !== -1) {
-                  found++;
-                  // remove matches to keep array lean
-                  const [matching] = missingVaaMessages.splice(matchingIndex, 1);
-                  foundRecords.push(matching.id);
+              const vaaBytes = row.data.info.bytes[0].value;
+              const parsed = parseVaa(vaaBytes);
+              const matchingIndex = missingVaaMessages.findIndex((observedMessage) => {
+                const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
+                if (
+                  parsed.emitterChain === chain &&
+                  parsed.emitterAddress.toString('hex') === emitter &&
+                  parsed.sequence === sequence
+                ) {
+                  return true;
                 }
+              });
+              if (matchingIndex !== -1) {
+                found++;
+                // remove matches to keep array lean
+                // messages with missing VAAs will be kept in the array
+                const [matching] = missingVaaMessages.splice(matchingIndex, 1);
+                foundKeys.push(matching.id);
               }
             } catch (e) {}
           }
         }
         this.logger.info(`processed ${total} messages, found ${found}, missing ${total - found}`);
-        this.updateMessageStatuses(foundRecords);
+        this.updateMessageStatuses(foundKeys);
+        // attempt to fetch VAAs missing from messages from the guardians and store them
+        // this is useful for cases where the VAA doesn't exist in the `signedVAAsTable` (perhaps due to an outage) but is available
+        const missingSignedVAARows: BigtableSignedVAAsRow[] = [];
+        for (const msg of missingVaaMessages) {
+          const { chain, emitter, sequence } = parseMessageId(msg.id);
+          const seq = sequence.toString();
+          const vaaBytes = await getSignedVAA(chain, emitter, seq);
+          if (vaaBytes) {
+            const key = makeSignedVAAsRowKey(chain, emitter, seq);
+            missingSignedVAARows.push({
+              key,
+              data: {
+                info: {
+                  bytes: { value: vaaBytes, timestamp: '0' },
+                },
+              },
+            });
+          }
+        }
+        this.storeSignedVAAs(missingSignedVAARows);
+        // TODO: add slack message alerts
       } catch (e) {
         this.logger.error(e);
       }
       await sleep(WATCH_MISSING_TIMEOUT);
+    }
+  }
+
+  async storeSignedVAAs(rows: BigtableSignedVAAsRow[]): Promise<void> {
+    const instance = this.bigtable.instance(this.instanceId);
+    const table = instance.table(this.signedVAAsTableId);
+    const chunks = chunkArray(rows, 1000);
+    for (const chunk of chunks) {
+      await table.insert(chunk);
+      this.logger.info(`wrote ${chunk.length} signed VAAs to the ${this.signedVAAsTableId} table`);
     }
   }
 }

@@ -41,14 +41,6 @@ export function parseMessageId(id: string): {
   };
 }
 
-// Bigtable VAA ID format
-// chain:emitter:sequence
-// 2:00000000000000000000000005b70fb5477a93be33822bfb31fdaf2c171970df:0000000000000000
-
-export function makeVaaId(chain: number, emitter: string, sequence: bigint) {
-  return `${chain}:${emitter}:${sequence.toString().padStart(16, '0')}`;
-}
-
 // TODO: should this be a composite key or should the value become more complex
 export const makeBlockKey = (block: string, timestamp: string): string => `${block}/${timestamp}`;
 
@@ -60,15 +52,12 @@ export const makeVaaKey = (
 ): string => `${transactionHash}:${coalesceChainId(chain)}/${emitter}/${seq}`;
 
 // make a bigtable row key for the `vaasByTxHash` table
-export const makeVAAsByTxHashRowKey = (txHash: string, chain: ChainId | ChainName): string =>
-  `${txHash}/${padUint16(coalesceChainId(chain).toString())}`;
+export const makeVAAsByTxHashRowKey = (txHash: string, chain: number): string =>
+  `${txHash}/${padUint16(chain.toString())}`;
 
 // make a bigtable row key for the `signedVAAs` table
-export const makeSignedVAAsRowKey = (
-  chain: ChainId | ChainName,
-  emitter: string,
-  sequence: string
-): string => `${padUint16(coalesceChainId(chain).toString())}/${emitter}/${padUint64(sequence)}`;
+export const makeSignedVAAsRowKey = (chain: number, emitter: string, sequence: string): string =>
+  `${padUint16(chain.toString())}/${emitter}/${padUint64(sequence)}`;
 
 let database: Database = new Database();
 export const initDb = (): Database => {

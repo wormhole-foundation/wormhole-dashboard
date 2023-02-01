@@ -74,3 +74,11 @@ export const DB_LAST_BLOCK_FILE = process.env.DB_LAST_BLOCK_FILE || './lastBlock
 export const AXIOS_CONFIG_JSON: AxiosRequestConfig = {
   headers: { 'Accept-Encoding': 'application/json' },
 };
+
+export const GUARDIAN_RPC_HOSTS = [
+  'https://wormhole-v2-mainnet-api.certus.one',
+  'https://wormhole.inotel.ro',
+  'https://wormhole-v2-mainnet-api.mcf.rocks',
+  'https://wormhole-v2-mainnet-api.chainlayer.network',
+  'https://wormhole-v2-mainnet-api.staking.fund',
+];

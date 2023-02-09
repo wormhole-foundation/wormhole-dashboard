@@ -6,6 +6,7 @@ import ora from 'ora';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { makeVaaId, parseMessageId } from '../src/databases/utils';
 import { AXIOS_CONFIG_JSON } from '../src/consts';
+import { parseVaa } from '@certusone/wormhole-sdk';
 
 // This script checks for messages which don't have VAAs and attempts to fetch the VAAs from the guardians
 // This is useful for cases where the VAA doesn't exist in bigtable (perhaps due to an outage) but is available
@@ -29,6 +30,7 @@ const GUARDIAN_RPCS = [
   if (!bt.bigtable) {
     throw new Error('bigtable is undefined');
   }
+  const now = Math.floor(Date.now() / 1000);
   try {
     let log = ora('Fetching messages without a signed VAA...').start();
     const missingVaaMessages = await bt.fetchMissingVaaMessages();
@@ -36,6 +38,7 @@ const GUARDIAN_RPCS = [
     const total = missingVaaMessages.length;
     let found = 0;
     let search = 0;
+    let tooNew = 0;
     log = ora(`Searching for VAA...`).start();
     for (const observedMessage of missingVaaMessages) {
       log.text = `Searching for VAA ${++search}/${total}...`;
@@ -57,7 +60,15 @@ const GUARDIAN_RPCS = [
       }
       if (vaaBytes) {
         found++;
-        foundVaas[id] = Buffer.from(vaaBytes, 'base64').toString('hex');
+        const signedVAA = Buffer.from(vaaBytes, 'base64');
+        const vaa = parseVaa(signedVAA);
+        const vaaTime = vaa.timestamp;
+        if (now - vaaTime > 3600) {
+          // More than one hour old.
+          foundVaas[id] = Buffer.from(vaaBytes, 'base64').toString('hex');
+        } else {
+          tooNew++;
+        }
       } else {
         missingVaas[id] = observedMessage.data.info.txHash?.[0].value;
       }
@@ -65,6 +76,7 @@ const GUARDIAN_RPCS = [
     log.succeed();
     console.log('Total:', total);
     console.log('Found:', found);
+    console.log('Too New:', tooNew);
     console.log('Missing:', total - found);
     writeFileSync('./found.json', JSON.stringify(foundVaas, undefined, 2));
     writeFileSync('./missing.json', JSON.stringify(missingVaas, undefined, 2));

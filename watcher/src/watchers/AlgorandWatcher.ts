@@ -306,7 +306,11 @@ export class AlgorandWatcher extends Watcher {
             let obs = new Observation();
 
             obs.emitter = Buffer.from(stwad.txn.txn.from.publicKey).toString('hex');
-            obs.sequence = Buffer.from(eval_delta.logs[0].slice(0, 8)).readBigUInt64BE(0);
+            const seqBuf = Buffer.from(eval_delta.logs[0].slice(0, 8), 'hex');
+            const padding = Buffer.from('0000000000000000', 'hex');
+            const paddedSeqBuf = Buffer.concat([padding, seqBuf]);
+            const finalSeqBuf = paddedSeqBuf.slice(paddedSeqBuf.length - 8);
+            obs.sequence = finalSeqBuf.readBigUInt64BE(0);
 
             ret.push(obs);
           }

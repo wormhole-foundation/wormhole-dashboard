@@ -306,7 +306,7 @@ export class AlgorandWatcher extends Watcher {
             let obs = new Observation();
 
             obs.emitter = Buffer.from(stwad.txn.txn.from.publicKey).toString('hex');
-            obs.sequence = BigInt(`0x${eval_delta.logs[0].slice(0, 8)}`);
+            obs.sequence = BigInt(`0x${Buffer.from(eval_delta.logs[0], 'ascii').toString('hex')}`);
 
             ret.push(obs);
           }

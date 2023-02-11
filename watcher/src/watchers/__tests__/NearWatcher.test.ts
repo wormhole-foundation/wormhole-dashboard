@@ -2,12 +2,7 @@ import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { describe, expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
 import { RPCS_BY_CHAIN } from '../../consts';
-import {
-  getRateLimitedProvider,
-  getTransactionsByAccountId,
-  NEAR_ARCHIVE_RPC,
-  NEAR_RATE_LIMIT_MS,
-} from '../../utils/near';
+import { getNearProvider, getTransactionsByAccountId, NEAR_ARCHIVE_RPC } from '../../utils/near';
 import { getMessagesFromBlockResults, NearWatcher } from '../NearWatcher';
 
 jest.setTimeout(60000);
@@ -27,25 +22,19 @@ test('getMessagesForBlocks', async () => {
   expect(Object.keys(messages).length).toEqual(0);
 });
 
-describe('getRateLimitedProvider', () => {
+describe('getNearProvider', () => {
   test('with normal RPC', async () => {
-    const provider = await getRateLimitedProvider(RPCS_BY_CHAIN['near']!);
-    const start = performance.now();
-
+    const provider = await getNearProvider(RPCS_BY_CHAIN['near']!);
     // grab last block from core contract
     expect(await provider.block({ finality: 'final' })).toBeTruthy();
-    expect(performance.now() - start).toBeGreaterThan(NEAR_RATE_LIMIT_MS);
   });
 
   test('with archive RPC', async () => {
-    const provider = await getRateLimitedProvider(NEAR_ARCHIVE_RPC);
-    const start = performance.now();
-
+    const provider = await getNearProvider(NEAR_ARCHIVE_RPC);
     // grab first block with activity from core contract
     expect(
       await provider.block({ blockId: 'Asie8hpJFKaipvw8jh1wPfBwwbjP6JUfsQdCuQvwr3Sz' })
     ).toBeTruthy();
-    expect(performance.now() - start).toBeGreaterThan(NEAR_RATE_LIMIT_MS);
   });
 });
 
@@ -79,7 +68,7 @@ describe('getMessagesFromBlockResults', () => {
   });
 
   test('with ArchiveProvider', async () => {
-    const provider = await getRateLimitedProvider(NEAR_ARCHIVE_RPC);
+    const provider = await getNearProvider(NEAR_ARCHIVE_RPC);
     const messages = await getMessagesFromBlockResults(provider, [
       await provider.block({ blockId: 'Bzjemj99zxe1h8kVp8H2hwVifmbQL8HT34LyPHzEK5qp' }),
       await provider.block({ blockId: '4SHFxSo8DdP8DhMauS5iFqfmdLwLET3W3e8Lg9PFvBSn' }),

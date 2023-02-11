@@ -5,11 +5,7 @@ import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole
 import { BlockResult } from 'near-api-js/lib/providers/provider';
 import ora from 'ora';
 import { initDb } from '../src/databases/utils';
-import {
-  getRateLimitedProvider,
-  getTransactionsByAccountId,
-  NEAR_ARCHIVE_RPC,
-} from '../src/utils/near';
+import { getNearProvider, getTransactionsByAccountId, NEAR_ARCHIVE_RPC } from '../src/utils/near';
 import { getMessagesFromBlockResults } from '../src/watchers/NearWatcher';
 
 // This script exists because NEAR RPC nodes do not support querying blocks older than 5 epochs
@@ -25,7 +21,7 @@ const BATCH_SIZE = 1000;
 (async () => {
   const db = initDb();
   const chain: ChainName = 'near';
-  const provider = await getRateLimitedProvider(NEAR_ARCHIVE_RPC);
+  const provider = await getNearProvider(NEAR_ARCHIVE_RPC);
   const fromBlock = Number(
     (await db.getLastBlockByChain(chain)) ?? INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] ?? 0
   );

@@ -9,7 +9,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   polygon: '20629146',
   avalanche: '8237163',
   oasis: '1757',
-  algorand: '23753839',
+  algorand: '22931277',
   fantom: '31817467',
   karura: '1824665',
   acala: '1144161',

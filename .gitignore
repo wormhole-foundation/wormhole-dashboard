@@ -8,3 +8,4 @@ lastBlockByChain.json
 serviceAccountKey.json
 bigtableAccountKey.json
 tsconfig.tsbuildinfo
+serviceAccount.json

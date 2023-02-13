@@ -43,7 +43,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   near: 'https://rpc.mainnet.near.org',
   xpla: 'https://dimension-lcd.xpla.dev',
   terra2: 'https://phoenix-lcd.terra.dev',
-  terra: 'https://columbus-lcd.terra.dev',
+  terra: 'https://columbus-fcd.terra.dev',
   injective: 'https://k8s.mainnet.lcd.injective.network',
   solana: process.env.SOLANA_RPC ?? 'https://api.mainnet-beta.solana.com',
 };

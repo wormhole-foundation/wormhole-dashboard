@@ -205,7 +205,7 @@ func main() {
 				return
 			case govConfig := <-govConfigC:
 				id := hex.EncodeToString(govConfig.GuardianAddr)
-				_, isFromGuardian := gs.KeyIndex(eth_common.HexToAddress(id))
+				_, isFromGuardian := gst.Get().KeyIndex(eth_common.HexToAddress(id))
 				if !isFromGuardian {
 					log.Printf("gov cfg not from guardian set")
 					continue
@@ -269,7 +269,7 @@ func main() {
 				return
 			case govStatus := <-govStatusC:
 				id := hex.EncodeToString(govStatus.GuardianAddr)
-				_, isFromGuardian := gs.KeyIndex(eth_common.HexToAddress(id))
+				_, isFromGuardian := gst.Get().KeyIndex(eth_common.HexToAddress(id))
 				if !isFromGuardian {
 					log.Printf("gov status not from guardian set")
 					continue

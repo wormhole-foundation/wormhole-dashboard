@@ -112,15 +112,16 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, gs, err := utils.FetchCurrentGuardianSet()
+	idx, sgs, err := utils.FetchCurrentGuardianSet()
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}
-	logger.Info("guardian set", zap.Uint32("index", idx), zap.Any("gs", gs))
-	gst.Set(&common.GuardianSet{
-		Keys:  gs.Keys,
+	logger.Info("guardian set", zap.Uint32("index", idx), zap.Any("gs", sgs))
+	gs := common.GuardianSet{
+		Keys:  sgs.Keys,
 		Index: idx,
-	})
+	}
+	gst.Set(&gs)
 
 	notionalByChainMu := sync.Mutex{}
 	availableNotionalByChain := map[string]map[uint32]uint64{}
@@ -205,7 +206,7 @@ func main() {
 				return
 			case govConfig := <-govConfigC:
 				id := hex.EncodeToString(govConfig.GuardianAddr)
-				_, isFromGuardian := gst.Get().KeyIndex(eth_common.HexToAddress(id))
+				_, isFromGuardian := gs.KeyIndex(eth_common.HexToAddress(id))
 				if !isFromGuardian {
 					log.Printf("gov cfg not from guardian set")
 					continue
@@ -269,7 +270,7 @@ func main() {
 				return
 			case govStatus := <-govStatusC:
 				id := hex.EncodeToString(govStatus.GuardianAddr)
-				_, isFromGuardian := gst.Get().KeyIndex(eth_common.HexToAddress(id))
+				_, isFromGuardian := gs.KeyIndex(eth_common.HexToAddress(id))
 				if !isFromGuardian {
 					log.Printf("gov status not from guardian set")
 					continue

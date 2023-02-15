@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"cloud.google.com/go/bigtable"
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/p2p"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
@@ -17,6 +18,7 @@ import (
 	ipfslog "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
+	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 
 	"go.uber.org/zap"
 
@@ -33,24 +35,57 @@ var (
 )
 
 var (
-	p2pNetworkID string
-	p2pPort      uint
-	p2pBootstrap string
-	nodeKeyPath  string
-	logLevel     string
+	p2pNetworkID  string
+	p2pPort       uint
+	p2pBootstrap  string
+	nodeKeyPath   string
+	logLevel      string
+	gcpProjectID  string
+	gcpInstanceID string
 )
 
+// Make a bigtable row key from a VAA
+// example: 00002/0000000000000000000000008ea8874192c8c715e620845f833f48f39b24e222/00000000000000000000
+func makeRowKey(v *vaa.VAA) string {
+	s := strconv.FormatUint(v.Sequence, 10)
+	return fmt.Sprintf("%05d/%s/%020s", v.EmitterChain, v.EmitterAddress, s)
+}
+
+func writeSignedVAAsToBigtable(ctx context.Context, client *bigtable.Client, signedVAAs map[string][]byte, logger *zap.Logger) {
+	tbl := client.Open("signedVAAs")
+	muts := make([]*bigtable.Mutation, len(signedVAAs))
+	rowKeys := make([]string, len(signedVAAs))
+	i := 0
+	for rowKey, bytes := range signedVAAs {
+		muts[i] = bigtable.NewMutation()
+		// write 0 timestamp to only keep 1 cell each
+		// https://cloud.google.com/bigtable/docs/gc-latest-value
+		muts[i].Set("info", "bytes", 0, bytes)
+		rowKeys[i] = rowKey
+		i++
+	}
+	// TODO: benchmark simple vs batch writes
+	// https://cloud.google.com/bigtable/docs/writes#not-simple
+	rowErrs, err := tbl.ApplyBulk(ctx, rowKeys, muts)
+	if err != nil {
+		logger.Error("Could not apply bulk row mutation", zap.Error(err))
+	}
+	if rowErrs != nil {
+		for _, rowErr := range rowErrs {
+			logger.Error("Error writing row", zap.Error(rowErr))
+		}
+		logger.Error("Could not write some rows")
+	}
+}
+
 func main() {
-	// main
 	p2pNetworkID = "/wormhole/mainnet/2"
 	p2pBootstrap = "/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7"
-	// devnet
-	// p2pNetworkID = "/wormhole/dev"
-	// p2pBootstrap = "/dns4/guardian-0.guardian/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
 	p2pPort = 8999
 	nodeKeyPath = "/tmp/node.key"
 	logLevel = "warn"
-	// common.SetRestrictiveUmask()
+	gcpProjectID = "wormhole-315720"
+	gcpInstanceID = "wormhole-mainnet"
 
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
@@ -83,6 +118,12 @@ func main() {
 		log.Fatalln(err)
 	}
 	defer client.Close()
+
+	btClient, err := bigtable.NewClient(ctx, gcpProjectID, gcpInstanceID, sa)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer btClient.Close()
 
 	// Node's main lifecycle context.
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
@@ -149,13 +190,38 @@ func main() {
 		}
 	}()
 
-	// Ignore signed VAAs
+	// Write signed VAAs to bigtable periodically
 	go func() {
+		signedVAAs := map[string][]byte{}
+		ticker := time.NewTicker(time.Minute)
+		var wg sync.WaitGroup
+		defer ticker.Stop()
 		for {
 			select {
 			case <-rootCtx.Done():
+				wg.Wait()
 				return
-			case <-signedInC:
+			case <-ticker.C:
+				if len(signedVAAs) > 0 {
+					wg.Add(1)
+					go func(signedVAAs map[string][]byte) {
+						writeSignedVAAsToBigtable(rootCtx, btClient, signedVAAs, logger)
+						defer wg.Done()
+					}(signedVAAs)
+					signedVAAs = map[string][]byte{}
+				}
+			case m := <-signedInC:
+				v, err := vaa.Unmarshal(m.Vaa)
+				if err != nil {
+					logger.Warn("received invalid VAA in SignedVAAWithQuorum message",
+						zap.Error(err), zap.Any("message", m))
+					continue
+				}
+				if v.EmitterChain == vaa.ChainIDPythNet {
+					continue
+				}
+				rowKey := makeRowKey(v)
+				signedVAAs[rowKey] = m.Vaa
 			}
 		}
 	}()

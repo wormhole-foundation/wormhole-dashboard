@@ -12,6 +12,7 @@
     "backfill": "ts-node scripts/backfill.ts",
     "backfill-arbitrum": "ts-node scripts/backfillArbitrum.ts",
     "backfill-near": "ts-node scripts/backfillNear.ts",
+    "backfill-signed-vaas": "ts-node scripts/backfillSignedVAAs",
     "backfill-vaas-by-tx-hash": "ts-node scripts/backfillVAAsByTxHash.ts",
     "locate-message-gaps": "ts-node scripts/locateMessageGaps.ts",
     "fetch-missing-vaas": "ts-node scripts/fetchMissingVAAs.ts",

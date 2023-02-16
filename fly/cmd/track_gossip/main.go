@@ -17,7 +17,7 @@ import (
 	ipfslog "github.com/ipfs/go-log/v2"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 
-	"github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/libp2p/go-libp2p/core/crypto"
 
 	"go.uber.org/zap"
 )

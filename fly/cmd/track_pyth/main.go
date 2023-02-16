@@ -23,7 +23,7 @@ import (
 	eth_common "github.com/ethereum/go-ethereum/common"
 	eth_crypto "github.com/ethereum/go-ethereum/crypto"
 	ipfslog "github.com/ipfs/go-log/v2"
-	"github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/mr-tron/base58"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"

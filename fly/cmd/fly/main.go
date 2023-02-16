@@ -16,7 +16,7 @@ import (
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	eth_common "github.com/ethereum/go-ethereum/common"
 	ipfslog "github.com/ipfs/go-log/v2"
-	"github.com/libp2p/go-libp2p-core/crypto"
+	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 

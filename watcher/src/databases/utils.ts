@@ -59,6 +59,17 @@ export const makeVaaKey = (
   seq: string
 ): string => `${transactionHash}:${coalesceChainId(chain)}/${emitter}/${seq}`;
 
+// make a bigtable row key for the `vaasByTxHash` table
+export const makeVAAsByTxHashRowKey = (txHash: string, chain: ChainId | ChainName): string =>
+  `${txHash}/${padUint16(coalesceChainId(chain).toString())}`;
+
+// make a bigtable row key for the `signedVAAs` table
+export const makeSignedVAAsRowKey = (
+  chain: ChainId | ChainName,
+  emitter: string,
+  sequence: string
+): string => `${padUint16(coalesceChainId(chain).toString())}/${emitter}/${padUint64(sequence)}`;
+
 let database: Database = new Database();
 export const initDb = (): Database => {
   if (DB_SOURCE === 'bigtable') {

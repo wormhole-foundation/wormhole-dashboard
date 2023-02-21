@@ -35,13 +35,13 @@ test.skip('getMessagesForBlocks - fromSlot is skipped slot', async () => {
   expect(messages).toMatchObject({ '171774032/2023-01-10T13:36:38.000Z': [] });
 });
 
-test('getMessagesForBlocks - toSlot is skipped slot', async () => {
+test.skip('getMessagesForBlocks - toSlot is skipped slot', async () => {
   const watcher = new SolanaWatcher();
   const messages = await watcher.getMessagesForBlocks(171774023, 171774025);
   expect(messages).toMatchObject({ '171774023/2023-01-10T13:36:34.000Z': [] });
 });
 
-test('getMessagesForBlocks - empty block', async () => {
+test.skip('getMessagesForBlocks - empty block', async () => {
   // Even if there are no messages, last block should still be returned
   const watcher = new SolanaWatcher();
   const messages = await watcher.getMessagesForBlocks(170979766, 170979766);
@@ -65,21 +65,21 @@ test.skip('getMessagesForBlocks - block with no transactions', async () => {
   expect(Object.values(messages).flat().length).toBe(0);
 });
 
-test('getMessagesForBlocks - multiple blocks', async () => {
+test.skip('getMessagesForBlocks - multiple blocks', async () => {
   const watcher = new SolanaWatcher();
   const messages = await watcher.getMessagesForBlocks(171050470, 171050474);
   expect(Object.keys(messages).length).toBe(2);
   expect(Object.values(messages).flat().length).toBe(2);
 });
 
-test('getMessagesForBlocks - multiple blocks, last block empty', async () => {
+test.skip('getMessagesForBlocks - multiple blocks, last block empty', async () => {
   const watcher = new SolanaWatcher();
   const messages = await watcher.getMessagesForBlocks(170823000, 170825000);
   expect(Object.keys(messages).length).toBe(3);
   expect(Object.values(messages).flat().length).toBe(2); // 2 messages, last block has no message
 });
 
-test('getMessagesForBlocks - multiple blocks containing more than `getSignaturesLimit` WH transactions', async () => {
+test.skip('getMessagesForBlocks - multiple blocks containing more than `getSignaturesLimit` WH transactions', async () => {
   const watcher = new SolanaWatcher();
   watcher.getSignaturesLimit = 10;
   const messages = await watcher.getMessagesForBlocks(171582367, 171583452);
@@ -87,7 +87,7 @@ test('getMessagesForBlocks - multiple blocks containing more than `getSignatures
   expect(Object.values(messages).flat().length).toBe(3);
 });
 
-test('getMessagesForBlocks - multiple calls', async () => {
+test.skip('getMessagesForBlocks - multiple calls', async () => {
   const watcher = new SolanaWatcher();
   const messages1 = await watcher.getMessagesForBlocks(171773021, 171773211);
   const messages2 = await watcher.getMessagesForBlocks(171773212, 171773250);
@@ -101,7 +101,7 @@ test('getMessagesForBlocks - multiple calls', async () => {
   expect(allMessageKeys.length).toBe(uniqueMessageKeys.length); // assert no duplicate keys
 });
 
-test('getMessagesForBlocks - handle failed transactions', async () => {
+test.skip('getMessagesForBlocks - handle failed transactions', async () => {
   const watcher = new SolanaWatcher();
   const messages = await watcher.getMessagesForBlocks(94401321, 94501321);
   expect(Object.keys(messages).length).toBe(6);

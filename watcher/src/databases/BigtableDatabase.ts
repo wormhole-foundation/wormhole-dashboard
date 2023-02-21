@@ -12,15 +12,23 @@ import { Database } from './Database';
 import {
   BigtableMessagesResultRow,
   BigtableMessagesRow,
+  BigtableVAAsByTxHashRow,
   BigtableVAAsResultRow,
   VaasByBlock,
 } from './types';
-import { makeMessageId, makeVaaId, parseMessageId } from './utils';
+import {
+  makeMessageId,
+  makeVAAsByTxHashRowKey,
+  makeVaaId,
+  makeSignedVAAsRowKey,
+  parseMessageId,
+} from './utils';
 
 const WATCH_MISSING_TIMEOUT = 5 * 60 * 1000;
 
 export class BigtableDatabase extends Database {
   tableId: string;
+  vaasByTxHashTableId: string;
   instanceId: string;
   bigtable: Bigtable;
   firestoreDb: FirebaseFirestore.Firestore;
@@ -28,6 +36,7 @@ export class BigtableDatabase extends Database {
   constructor() {
     super();
     this.tableId = assertEnvironmentVariable('BIGTABLE_TABLE_ID');
+    this.vaasByTxHashTableId = assertEnvironmentVariable('BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID');
     this.instanceId = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
     try {
@@ -84,7 +93,9 @@ export class BigtableDatabase extends Database {
     const filteredBlocks = BigtableDatabase.filterEmptyBlocks(vaasByBlock);
     const instance = this.bigtable.instance(this.instanceId);
     const table = instance.table(this.tableId);
+    const vaasByTxHashTable = instance.table(this.vaasByTxHashTableId);
     const rowsToInsert: BigtableMessagesRow[] = [];
+    const vaasByTxHash: { [key: string]: string[] } = {};
     Object.keys(filteredBlocks).forEach((blockKey) => {
       const [block, timestamp] = blockKey.split('/');
       filteredBlocks[blockKey].forEach((msgKey) => {
@@ -111,9 +122,22 @@ export class BigtableDatabase extends Database {
             },
           },
         });
+        const txHashRowKey = makeVAAsByTxHashRowKey(txHash, chain);
+        const vaaRowKey = makeSignedVAAsRowKey(chainId, emitter, seq);
+        vaasByTxHash[txHashRowKey] = [...(vaasByTxHash[txHashRowKey] || []), vaaRowKey];
       });
     });
-    await table.insert(rowsToInsert);
+    const txHashRowsToInsert = Object.entries(vaasByTxHash).map<BigtableVAAsByTxHashRow>(
+      ([txHashRowKey, vaaRowKeys]) => ({
+        key: txHashRowKey,
+        data: {
+          info: {
+            vaaKeys: { value: JSON.stringify(vaaRowKeys), timestamp: '0' },
+          },
+        },
+      })
+    );
+    await Promise.all([table.insert(rowsToInsert), vaasByTxHashTable.insert(txHashRowsToInsert)]);
 
     if (updateLatestBlock) {
       // store latest vaasByBlock to firestore

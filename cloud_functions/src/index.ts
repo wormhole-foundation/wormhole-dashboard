@@ -8,6 +8,7 @@ export const { getLatestBlocks } = require('./getLatestBlocks');
 export const { getMissingVaas } = require('./getMissingVaas');
 export const { computeMissingVaas } = require('./computeMissingVaas');
 export const { computeMessageCounts } = require('./computeMessageCounts');
+export const { getVaasByTxHash } = require('./getVaasByTxHash');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.
@@ -18,3 +19,4 @@ functions.http('computeMessageCounts', computeMessageCounts);
 functions.http('latestBlocks', getLatestBlocks);
 functions.http('missingVaas', getMissingVaas);
 functions.http('computeMissingVaas', computeMissingVaas);
+functions.http('getVaasByTxHash', getVaasByTxHash);

@@ -3,6 +3,7 @@ import { Row } from '@google-cloud/bigtable';
 export type VaasByBlock = { [blockInfo: string]: string[] };
 export type DB = { [chain in ChainId]?: VaasByBlock };
 export type LastBlockByChain = { [chain in ChainId]?: string };
+export type JSONArray = string;
 export type BigtableMessagesRow = {
   key: string;
   data: {
@@ -15,6 +16,16 @@ export type BigtableMessagesRow = {
     };
   };
 };
+export interface BigtableVAAsByTxHashRow {
+  key: string;
+  data: {
+    // column family
+    info: {
+      // columns
+      vaaKeys: { value: JSONArray; timestamp: string };
+    };
+  };
+}
 export interface BigtableMessagesResultRow extends Row {
   key: string;
   data: {

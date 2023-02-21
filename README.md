@@ -44,7 +44,7 @@ Currently three options to load and save data:
 3. google bigtable with firestore:
    > you will need to set up your credentials: https://cloud.google.com/docs/authentication/provide-credentials-adc and set GOOGLE_APPLICATION_CREDENTIALS to the path of your credentials
    > set up the instance and table: https://cloud.google.com/bigtable/docs/creating-instance
-   > set DB_SOURCE="bigtable", BIGTABLE_INSTANCE_ID, and BIGTABLE_TABLE_ID
+   > set DB_SOURCE="bigtable", BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, BIGTABLE_SIGNED_VAAS_TABLE_ID, and BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID
    > The current implementation of bigtable uses firestore to read/write the latest processed blocks by chain (incl empty blocks). Set FIRESTORE_LATEST_COLLECTION to the firestore table that will store these values
 
 # Web

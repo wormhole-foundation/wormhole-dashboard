@@ -16,6 +16,9 @@ export class CosmwasmWatcher extends Watcher {
 
   constructor(chain: CosmWasmChainName) {
     super(chain);
+    if (chain === 'injective') {
+      throw new Error('Please use InjectiveExplorerWatcher for injective');
+    }
     this.rpc = RPCS_BY_CHAIN[this.chain];
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
@@ -24,11 +27,6 @@ export class CosmwasmWatcher extends Watcher {
     this.getBlockTag = 'blocks/';
     this.hashTag = 'cosmos/tx/v1beta1/txs/';
     this.latestBlockHeight = 0;
-    if (chain === 'injective') {
-      this.latestBlockTag = 'cosmos/base/tendermint/v1beta1/blocks/latest';
-      this.getBlockTag = 'cosmos/base/tendermint/v1beta1/blocks/';
-      // this.rpc = 'http://147.75.55.247:10337';
-    }
   }
 
   /**

@@ -181,12 +181,12 @@ type BulkTxn = {
   gas_wanted: string; //'869573';
 };
 
-type RawLogEvents = {
+export type RawLogEvents = {
   msg_index?: number;
   events: EventObjectsTypes[];
 };
 
-type EventObjectsTypes = {
+export type EventObjectsTypes = {
   type: string;
   attributes: Attribute[];
 };

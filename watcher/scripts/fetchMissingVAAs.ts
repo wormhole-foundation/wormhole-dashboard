@@ -66,12 +66,19 @@ const missingVaas: { [id: string]: string | undefined } = {};
       }
     }
     log.succeed();
+    const numBackFill: number = found - tooNew;
+    const numMissing: number = total - found;
     console.log('Total:', total);
     console.log('Found:', found);
     console.log('Too New:', tooNew);
-    console.log('Missing:', total - found);
-    writeFileSync('./found.json', JSON.stringify(foundVaas, undefined, 2));
-    writeFileSync('./missing.json', JSON.stringify(missingVaas, undefined, 2));
+    console.log('Backfillable:', numBackFill);
+    console.log('Missing:', numMissing);
+    if (numBackFill > 0) {
+      writeFileSync('./found.json', JSON.stringify(foundVaas, undefined, 2));
+    }
+    if (numMissing > 0) {
+      writeFileSync('./missing.json', JSON.stringify(missingVaas, undefined, 2));
+    }
   } catch (e) {
     console.error(e);
   }

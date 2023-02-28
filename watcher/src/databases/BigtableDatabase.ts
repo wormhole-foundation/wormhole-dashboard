@@ -24,6 +24,7 @@ import {
   parseMessageId,
 } from './utils';
 import { getSignedVAA } from '../utils/getSignedVAA';
+import { formatAndSendToSlack } from '../utils/slack';
 
 const WATCH_MISSING_TIMEOUT = 5 * 60 * 1000;
 
@@ -240,7 +241,15 @@ export class BigtableDatabase extends Database {
             } catch (e) {}
           }
         }
-        this.logger.info(`processed ${total} messages, found ${found}, missing ${total - found}`);
+        const msg: string = `processed ${total} messages, found ${found}, missing ${total - found}`;
+        this.logger.info(msg);
+        if (found > 0) {
+          try {
+            await formatAndSendToSlack(':alaaaarm: Found missing VAAs', msg);
+          } catch (e) {
+            console.error('Faled to send message to slack:', e);
+          }
+        }
         this.updateMessageStatuses(foundKeys);
         // attempt to fetch VAAs missing from messages from the guardians and store them
         // this is useful for cases where the VAA doesn't exist in the `signedVAAsTable` (perhaps due to an outage) but is available

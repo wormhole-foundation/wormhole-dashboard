@@ -5,7 +5,7 @@ set -e
 # SET ENV VARIABLES
 # note: load the service account key for either bigtable or firestore before running their respective CFs
 # e.g., EXPORT GOOGLE_APPLICATION_CREDENTIALS=<path-to-credentials>
-# export env variables: BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, CLOUD_FUNCTIONS_NUM_ROWS
+# export env variables: BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, CLOUD_FUNCTIONS_NUM_ROWS, BIGTABLE_SIGNED_VAAS_TABLE_ID, BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID
 # or source .env
 # make sure you npm run build in the root folder before trying to deploy :D
 
@@ -16,6 +16,16 @@ fi
 
 if [ -z "$BIGTABLE_TABLE_ID" ]; then
     echo "BIGTABLE_TABLE_ID must be specified"
+    exit 1
+fi
+
+if [ -z "$BIGTABLE_SIGNED_VAAS_TABLE_ID" ]; then
+    echo "BIGTABLE_SIGNED_VAAS_TABLE_ID must be specified"
+    exit 1
+fi
+
+if [ -z "$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID" ]; then
+    echo "BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID must be specified"
     exit 1
 fi
 
@@ -30,4 +40,5 @@ gcloud functions deploy compute-message-counts  --entry-point computeMessageCoun
 gcloud functions deploy latest-blocks  --entry-point getLatestBlocks  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,FIRESTORE_LATEST_COLLECTION=$FIRESTORE_LATEST_COLLECTION
 gcloud functions deploy compute-missing-vaas  --entry-point computeMissingVaas  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 2GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL
 gcloud functions deploy missing-vaas  --entry-point getMissingVaas  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3
+gcloud functions deploy vaas-by-tx-hash  --entry-point getVaasByTxHash --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3  --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID=$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID
 

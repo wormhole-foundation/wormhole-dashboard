@@ -9,6 +9,7 @@
   },
   "workspaces": [
     "common",
+    "ts-sdk",
     "watcher",
     "web",
     "cloud_functions"

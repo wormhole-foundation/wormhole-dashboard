@@ -2,6 +2,7 @@ import { Divider } from "@mui/material";
 import { useNetworkContext } from "../contexts/NetworkContext";
 import useChainHeartbeats from "../hooks/useChainHeartbeats";
 import useHeartbeats from "../hooks/useHeartbeats";
+import Accountant from "./Accountant";
 import Alerts from "./Alerts";
 import Chains from "./Chains";
 import CollapsibleSection from "./CollapsibleSection";
@@ -24,6 +25,11 @@ function Main() {
         <Guardians heartbeats={heartbeats} />
       </CollapsibleSection>
       <Divider />
+      {currentNetwork.name === "Mainnet" ? (
+        <CollapsibleSection header="Accountant">
+          <Accountant />
+        </CollapsibleSection>
+      ) : null}
       <CollapsibleSection header="Governor">
         {currentNetwork.name === "Mainnet" ? <MainnetGovernor /> : <Governor />}
       </CollapsibleSection>

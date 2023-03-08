@@ -1,11 +1,22 @@
-import { ArrowDownward, ArrowUpward } from "@mui/icons-material";
+import {
+  ArrowDownward,
+  ArrowUpward,
+  FirstPage,
+  LastPage,
+  NavigateBefore,
+  NavigateNext,
+} from "@mui/icons-material";
 import {
   Box,
+  IconButton,
+  MenuItem,
+  Select,
   SxProps,
   Table as MuiTable,
   TableBody,
   TableCell,
   TableContainer,
+  TableFooter,
   TableHead,
   TableRow,
   Theme,
@@ -16,9 +27,11 @@ import { flexRender, Table as TanTable } from "@tanstack/react-table";
 
 function Table<T>({
   table,
+  paginated = false,
   conditionalRowStyle,
 }: {
   table: TanTable<T>;
+  paginated?: boolean;
   conditionalRowStyle?: (a: T) => SxProps<Theme> | undefined;
 }) {
   const theme = useTheme();
@@ -83,6 +96,72 @@ function Table<T>({
             </TableRow>
           ))}
         </TableBody>
+        {paginated ? (
+          <TableFooter>
+            <TableRow>
+              <TableCell
+                colSpan={table
+                  .getHeaderGroups()
+                  .reduce(
+                    (total, headerGroup) => total + headerGroup.headers.length,
+                    0
+                  )}
+              >
+                <Box display="flex" alignItems="center">
+                  <Box>{table.getCoreRowModel().rows.length} Rows</Box>
+                  <Box flexGrow={1} />
+                  <Select
+                    margin="dense"
+                    size="small"
+                    value={table.getState().pagination.pageSize}
+                    onChange={(e) => {
+                      table.setPageSize(Number(e.target.value));
+                    }}
+                    sx={{ fontSize: "10px", mr: 0.5, "& > div": { py: "6px" } }}
+                  >
+                    {[10, 25, 50, 100].map((pageSize) => (
+                      <MenuItem key={pageSize} value={pageSize}>
+                        Show {pageSize}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <IconButton
+                    onClick={() => table.setPageIndex(0)}
+                    disabled={!table.getCanPreviousPage()}
+                    size="small"
+                  >
+                    <FirstPage fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                    size="small"
+                  >
+                    <NavigateBefore fontSize="small" />
+                  </IconButton>
+                  <Box>
+                    Page {table.getState().pagination.pageIndex + 1} of{" "}
+                    {table.getPageCount()}
+                  </Box>
+                  <IconButton
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                    size="small"
+                  >
+                    <NavigateNext fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                    disabled={!table.getCanNextPage()}
+                    size="small"
+                  >
+                    <LastPage fontSize="small" />
+                  </IconButton>
+                </Box>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        ) : null}
       </MuiTable>
     </TableContainer>
   );

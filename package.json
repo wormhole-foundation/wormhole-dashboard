@@ -6,6 +6,7 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.8.0",
     "@certusone/wormhole-sdk-proto-web": "^0.0.4",
+    "@cosmjs/cosmwasm-stargate": "^0.29.5",
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",
     "@metaplex/js": "^4.12.0",

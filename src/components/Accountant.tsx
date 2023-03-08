@@ -15,6 +15,16 @@ import useGetAccountantPendingTransfers, {
 import chainIdToName from "../utils/chainIdToName";
 import Table from "./Table";
 
+function getNumSignatures(signatures: string) {
+  let bitfield = Number(signatures);
+  let count = 0;
+  while (bitfield > 0) {
+    count += 1;
+    bitfield = bitfield & (bitfield - 1);
+  }
+  return count;
+}
+
 const pendingTransferColumnHelper = createColumnHelper<PendingTransfer>();
 
 const pendingTransferColumns = [
@@ -35,6 +45,7 @@ const pendingTransferColumns = [
   }),
   pendingTransferColumnHelper.accessor("data.0.signatures", {
     header: () => "Signatures",
+    cell: (info) => getNumSignatures(info.getValue()),
   }),
 ];
 

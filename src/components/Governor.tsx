@@ -86,7 +86,7 @@ const notionalColumns = [
     id: "progress",
     header: () => "Progress",
     cell: (info) => (
-      <Tooltip title={info.getValue()} arrow>
+      <Tooltip title={`${info.getValue().toFixed(2)}%`} arrow>
         <LinearProgress
           variant="determinate"
           value={info.getValue()}

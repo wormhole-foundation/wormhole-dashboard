@@ -5,6 +5,7 @@ import { useSettingsContext } from "../contexts/SettingsContext";
 import { ACCOUNTANT_CONTRACT_ADDRESS } from "../utils/consts";
 
 const POLL_INTERVAL_MS = 10 * 1000;
+const PAGE_LIMIT = 2000; // throws a gas limit error over this
 
 export type PendingTransfer = {
   key: {
@@ -39,14 +40,26 @@ const useGetAccountantPendingTransfers = (): PendingTransfer[] => {
       while (!cancelled) {
         try {
           const cosmWasmClient = await CosmWasmClient.connect(wormchainUrl);
-          const response = await cosmWasmClient.queryContractSmart(
-            ACCOUNTANT_CONTRACT_ADDRESS,
-            {
-              all_pending_transfers: {},
-            }
-          );
+          let pending: PendingTransfer[] = [];
+          let response;
+          let start_after = undefined;
+          do {
+            response = await cosmWasmClient.queryContractSmart(
+              ACCOUNTANT_CONTRACT_ADDRESS,
+              {
+                all_pending_transfers: {
+                  limit: PAGE_LIMIT,
+                  start_after,
+                },
+              }
+            );
+            pending = [...pending, ...response.pending];
+            start_after =
+              response.pending.length &&
+              response.pending[response.pending.length - 1].key;
+          } while (response.pending.length === PAGE_LIMIT);
           if (!cancelled) {
-            setAccountantInfo(response.pending);
+            setAccountantInfo(pending);
           }
         } catch (error) {
           if (!cancelled) {

@@ -10,6 +10,7 @@ import { NearWatcher } from './NearWatcher';
 import { OptimismWatcher } from './OptimismWatcher';
 import { PolygonWatcher } from './PolygonWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
+import { TerraExplorerWatcher } from './TerraExplorerWatcher';
 import { Watcher } from './Watcher';
 
 export function makeFinalizedWatcher(chainName: ChainName): Watcher {
@@ -41,13 +42,10 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     return new AptosWatcher();
   } else if (chainName === 'near') {
     return new NearWatcher();
-  } else if (
-    chainName === 'terra' ||
-    chainName === 'terra2' ||
-    chainName === 'xpla' ||
-    chainName === 'injective'
-  ) {
+  } else if (chainName === 'terra2' || chainName === 'xpla' || chainName === 'injective') {
     return new CosmwasmWatcher(chainName);
+  } else if (chainName === 'terra') {
+    return new TerraExplorerWatcher('terra');
   } else {
     throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
   }

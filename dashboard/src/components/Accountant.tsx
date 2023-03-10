@@ -185,11 +185,13 @@ function Accountant() {
     </Typography>
   ) : (
     <>
-      <Box mb={2}>
-        <Card>
-          <Table<GuardianSigningStat> table={guardianSigning} />
-        </Card>
-      </Box>
+      {pendingTransferInfo.length ? (
+        <Box mb={2}>
+          <Card>
+            <Table<GuardianSigningStat> table={guardianSigning} />
+          </Card>
+        </Box>
+      ) : null}
       <Box mb={2}>
         <Card>
           <Table<PendingTransfer> table={pendingTransfer} paginated />

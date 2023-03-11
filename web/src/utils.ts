@@ -43,7 +43,7 @@ export const explorerBlock = (chainId: ChainId, block: string) =>
     : chainId === CHAIN_ID_CELO
     ? `https://explorer.celo.org/block/${block}`
     : chainId === CHAIN_ID_KARURA
-    ? `https://"blockscout.karura.network/block/${block}`
+    ? `https://blockscout.karura.network/block/${block}`
     : chainId === CHAIN_ID_ACALA
     ? `https://blockscout.acala.network/block/${block}`
     : chainId === CHAIN_ID_SOLANA
@@ -88,7 +88,7 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     : chainId === CHAIN_ID_CELO
     ? `https://explorer.celo.org/tx/${tx}`
     : chainId === CHAIN_ID_KARURA
-    ? `https://"blockscout.karura.network/tx/${tx}`
+    ? `https://blockscout.karura.network/tx/${tx}`
     : chainId === CHAIN_ID_ACALA
     ? `https://blockscout.acala.network/tx/${tx}`
     : chainId === CHAIN_ID_SOLANA

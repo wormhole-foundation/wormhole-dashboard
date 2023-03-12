@@ -1,22 +1,52 @@
 import {
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_ETH,
-  CHAIN_ID_TERRA,
-  CHAIN_ID_BSC,
-  CHAIN_ID_POLYGON,
-  CHAIN_ID_AVAX,
-  CHAIN_ID_OASIS,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_AURORA,
-  CHAIN_ID_FANTOM,
-  CHAIN_ID_KARURA,
-  CHAIN_ID_ACALA,
-  CHAIN_ID_KLAYTN,
-  CHAIN_ID_CELO,
-  CHAIN_ID_TERRA2,
   ChainId,
+  CHAIN_ID_ACALA,
+  CHAIN_ID_ALGORAND,
+  CHAIN_ID_APTOS,
+  CHAIN_ID_ARBITRUM,
+  CHAIN_ID_AURORA,
+  CHAIN_ID_AVAX,
+  CHAIN_ID_BSC,
+  CHAIN_ID_CELO,
+  CHAIN_ID_ETH,
+  CHAIN_ID_FANTOM,
+  CHAIN_ID_INJECTIVE,
+  CHAIN_ID_KARURA,
+  CHAIN_ID_KLAYTN,
+  CHAIN_ID_MOONBEAM,
   CHAIN_ID_NEAR,
+  CHAIN_ID_OASIS,
+  CHAIN_ID_OPTIMISM,
+  CHAIN_ID_POLYGON,
+  CHAIN_ID_PYTHNET,
+  CHAIN_ID_SOLANA,
+  CHAIN_ID_TERRA,
+  CHAIN_ID_TERRA2,
+  CHAIN_ID_XPLA,
 } from "@certusone/wormhole-sdk";
+import acalaIcon from "../images/acala.svg";
+import algorandIcon from "../images/algorand.svg";
+import aptosIcon from "../images/aptos.svg";
+import arbitrumIcon from "../images/arbitrum.svg";
+import auroraIcon from "../images/aurora.svg";
+import avaxIcon from "../images/avax.svg";
+import bscIcon from "../images/bsc.svg";
+import celoIcon from "../images/celo.svg";
+import ethIcon from "../images/eth.svg";
+import fantomIcon from "../images/fantom.svg";
+import injectiveIcon from "../images/injective.svg";
+import karuraIcon from "../images/karura.svg";
+import klaytnIcon from "../images/klaytn.svg";
+import nearIcon from "../images/near.svg";
+import oasisIcon from "../images/oasis-network-rose-logo.svg";
+import optimismIcon from "../images/optimism.svg";
+import polygonIcon from "../images/polygon.svg";
+import solanaIcon from "../images/solana.svg";
+import terraIcon from "../images/terra.svg";
+import terra2Icon from "../images/terra2.svg";
+import xplaIcon from "../images/xpla.svg";
+import moonbeamIcon from "../images/moonbeam.svg";
+import pythnetIcon from "../images/pyth_logomark_white.svg";
 
 require("dotenv").config();
 
@@ -25,11 +55,8 @@ export type CHAIN_INFO = {
   evm: boolean;
   chainId: ChainId;
   endpointUrl: any;
-  platform: string;
-  covalentChain: number;
   explorerStem: string;
-  apiKey: string;
-  urlStem: string;
+  icon?: string;
 };
 
 export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
@@ -37,35 +64,26 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     name: "solana",
     evm: false,
     chainId: CHAIN_ID_SOLANA,
-    urlStem: `https://public-api.solscan.io`,
     endpointUrl:
       process.env.REACT_APP_SOLANA_RPC || "https://api.mainnet-beta.solana.com",
-    apiKey: "",
-    platform: "solana",
-    covalentChain: 1399811149,
     explorerStem: `https://solscan.io`,
+    icon: solanaIcon,
   },
   2: {
     name: "eth",
     evm: true,
     chainId: CHAIN_ID_ETH,
     endpointUrl: process.env.REACT_APP_ETH_RPC || "https://rpc.ankr.com/eth",
-    apiKey: "",
-    urlStem: `https://api.etherscan.io`,
-    platform: "ethereum",
-    covalentChain: 1,
     explorerStem: `https://etherscan.io`,
+    icon: ethIcon,
   },
   3: {
     name: "terra",
     evm: false,
     chainId: CHAIN_ID_TERRA,
     endpointUrl: "",
-    apiKey: "",
-    urlStem: "https://columbus-fcd.terra.dev",
-    platform: "terra",
-    covalentChain: 3,
     explorerStem: `https://finder.terra.money/classic`,
+    icon: terraIcon,
   },
   4: {
     name: "bsc",
@@ -73,22 +91,16 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     chainId: CHAIN_ID_BSC,
     endpointUrl:
       process.env.REACT_APP_BSC_RPC || "https://bsc-dataseed2.defibit.io",
-    apiKey: "",
-    urlStem: `https://api.bscscan.com`,
-    platform: "binance-smart-chain",
-    covalentChain: 56,
     explorerStem: `https://bscscan.com`,
+    icon: bscIcon,
   },
   5: {
     name: "polygon",
     evm: true,
     chainId: CHAIN_ID_POLYGON,
     endpointUrl: process.env.REACT_APP_POLYGON_RPC || "https://polygon-rpc.com",
-    apiKey: "",
-    urlStem: `https://api.polygonscan.com`,
-    platform: "polygon-pos", //coingecko?,
-    covalentChain: 137,
     explorerStem: `https://polygonscan.com`,
+    icon: polygonIcon,
   },
   6: {
     name: "avalanche",
@@ -96,121 +108,144 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     chainId: CHAIN_ID_AVAX,
     endpointUrl:
       process.env.REACT_APP_AVAX_RPC || "https://api.avax.network/ext/bc/C/rpc",
-    apiKey: "",
-    urlStem: `https://api.snowtrace.io`,
-    platform: "avalanche", //coingecko?
-    covalentChain: 43114,
     explorerStem: `https://snowtrace.io`,
+    icon: avaxIcon,
   },
   7: {
     name: "oasis",
     evm: true,
     chainId: CHAIN_ID_OASIS,
     endpointUrl: "https://emerald.oasis.dev",
-    apiKey: "",
-    urlStem: `https://explorer.emerald.oasis.dev`,
-    platform: "oasis", //coingecko?
-    covalentChain: 0,
     explorerStem: `https://explorer.emerald.oasis.dev`,
+    icon: oasisIcon,
   },
   8: {
     name: "algorand",
     evm: false,
     chainId: CHAIN_ID_ALGORAND,
     endpointUrl: "https://node.algoexplorerapi.io",
-    apiKey: "",
-    urlStem: `https://algoexplorer.io`,
-    platform: "algorand", //coingecko?
-    covalentChain: 0,
     explorerStem: `https://algoexplorer.io`,
+    icon: algorandIcon,
   },
   9: {
     name: "aurora",
     evm: true,
     chainId: CHAIN_ID_AURORA,
     endpointUrl: "https://mainnet.aurora.dev",
-    apiKey: "",
-    urlStem: `https://api.aurorascan.dev`, //?module=account&action=txlist&address={addressHash}
-    covalentChain: 1313161554,
-    platform: "aurora", //coingecko?
     explorerStem: `https://aurorascan.dev`,
+    icon: auroraIcon,
   },
   10: {
     name: "fantom",
     evm: true,
     chainId: CHAIN_ID_FANTOM,
     endpointUrl: "https://rpc.ftm.tools",
-    apiKey: "",
-    urlStem: `https://api.FtmScan.com`,
-    platform: "fantom", //coingecko?
-    covalentChain: 250,
     explorerStem: `https://ftmscan.com`,
+    icon: fantomIcon,
   },
   11: {
     name: "karura",
     evm: true,
     chainId: CHAIN_ID_KARURA,
     endpointUrl: "https://eth-rpc-karura.aca-api.network",
-    apiKey: "",
-    urlStem: `https://blockscout.karura.network`,
-    platform: "karura", //coingecko?
-    covalentChain: 0,
     explorerStem: `https://blockscout.karura.network`,
+    icon: karuraIcon,
   },
   12: {
     name: "acala",
     evm: true,
     chainId: CHAIN_ID_ACALA,
     endpointUrl: "https://eth-rpc-acala.aca-api.network",
-    apiKey: "",
-    urlStem: `https://blockscout.acala.network`,
-    platform: "acala", //coingecko?
-    covalentChain: 0,
     explorerStem: `https://blockscout.acala.network`,
+    icon: acalaIcon,
   },
   13: {
     name: "klaytn",
     evm: true,
     chainId: CHAIN_ID_KLAYTN,
     endpointUrl: "https://klaytn-mainnet-rpc.allthatnode.com:8551",
-    apiKey: "",
-    urlStem: "https://api-cypress-v2.scope.klaytn.com/v2" || "",
-    platform: "klay-token", //coingecko?
-    covalentChain: 8217,
     explorerStem: `https://scope.klaytn.com`,
+    icon: klaytnIcon,
   },
   14: {
     name: "celo",
     evm: true,
     chainId: CHAIN_ID_CELO,
     endpointUrl: "https://forno.celo.org",
-    apiKey: "",
-    urlStem: `https://explorer.celo.org`,
-    platform: "celo", //coingecko?
-    covalentChain: 0,
     explorerStem: `https://explorer.celo.org`,
+    icon: celoIcon,
   },
   15: {
     name: "near",
     evm: false,
     chainId: CHAIN_ID_NEAR,
     endpointUrl: "",
-    apiKey: "",
-    urlStem: `https://explorer.near.org`,
-    platform: "near", //coingecko?
-    covalentChain: 0,
     explorerStem: `https://explorer.near.org`,
+    icon: nearIcon,
+  },
+  16: {
+    name: "moonbeam",
+    evm: true,
+    chainId: CHAIN_ID_MOONBEAM,
+    endpointUrl: "https://rpc.ankr.com/moonbeam",
+    explorerStem: `https://moonscan.io`,
+    icon: moonbeamIcon,
   },
   18: {
     name: "terra2",
     evm: false,
     chainId: CHAIN_ID_TERRA2,
     endpointUrl: "",
-    apiKey: "",
-    urlStem: "https://phoenix-fcd.terra.dev",
-    platform: "terra",
-    covalentChain: 3,
     explorerStem: `https://finder.terra.money/mainnet`,
+    icon: terra2Icon,
+  },
+  19: {
+    name: "injective",
+    evm: false,
+    chainId: CHAIN_ID_INJECTIVE,
+    endpointUrl: "",
+    explorerStem: `https://explorer.injective.network`,
+    icon: injectiveIcon,
+  },
+  22: {
+    name: "aptos",
+    evm: false,
+    chainId: CHAIN_ID_APTOS,
+    endpointUrl: "https://fullnode.mainnet.aptoslabs.com/v1",
+    explorerStem: `https://explorer.aptoslabs.com`,
+    icon: aptosIcon,
+  },
+  23: {
+    name: "arbitrum",
+    evm: true,
+    chainId: CHAIN_ID_ARBITRUM,
+    endpointUrl: "https://arb1.arbitrum.io/rpc",
+    explorerStem: `https://arbiscan.io`,
+    icon: arbitrumIcon,
+  },
+  24: {
+    name: "optimism",
+    evm: true,
+    chainId: CHAIN_ID_OPTIMISM,
+    endpointUrl: "https://rpc.ankr.com/optimism",
+    explorerStem: `https://optimistic.etherscan.io`,
+    icon: optimismIcon,
+  },
+  26: {
+    name: "pythnet",
+    evm: false,
+    chainId: CHAIN_ID_PYTHNET,
+    endpointUrl: "",
+    explorerStem: "",
+    icon: pythnetIcon,
+  },
+  28: {
+    name: "xpla",
+    evm: false,
+    chainId: CHAIN_ID_XPLA,
+    endpointUrl: "https://dimension-lcd.xpla.dev",
+    explorerStem: `https://explorer.xpla.io`,
+    icon: xplaIcon,
   },
 };
 

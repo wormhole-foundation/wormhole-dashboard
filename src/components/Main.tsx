@@ -21,6 +21,8 @@ function Main() {
         chainIdsToHeartbeats={chainIdsToHeartbeats}
       />
       <Divider />
+      <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} />
+      <Divider />
       <CollapsibleSection header="Guardians">
         <Guardians heartbeats={heartbeats} />
       </CollapsibleSection>
@@ -35,10 +37,6 @@ function Main() {
       ) : null}
       <CollapsibleSection header="Governor">
         {currentNetwork.name === "Mainnet" ? <MainnetGovernor /> : <Governor />}
-      </CollapsibleSection>
-      <Divider />
-      <CollapsibleSection header="Chains">
-        <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} />
       </CollapsibleSection>
     </>
   );

@@ -24,6 +24,7 @@ import { useMemo } from "react";
 import { ChainIdToHeartbeats } from "../hooks/useChainHeartbeats";
 import useLatestRelease from "../hooks/useLatestRelease";
 import chainIdToName from "../utils/chainIdToName";
+import { GUARDIAN_SET_3 } from "../utils/consts";
 import { Heartbeat } from "../utils/getLastHeartbeats";
 import CollapsibleSection from "./CollapsibleSection";
 
@@ -32,6 +33,9 @@ export const getBehindDiffForChain = (chainId: number) =>
   chainId === CHAIN_ID_ARBITRUM || chainId === CHAIN_ID_OPTIMISM
     ? BEHIND_DIFF * 2
     : BEHIND_DIFF;
+
+export const QUORUM_COUNT = Math.floor((GUARDIAN_SET_3.length * 2) / 3 + 1);
+export const QUORUM_LOSS_COUNT = GUARDIAN_SET_3.length - QUORUM_COUNT + 1;
 
 type AlertEntry = {
   severity: AlertColor;
@@ -99,7 +103,7 @@ function chainDownAlerts(
       });
     });
   return Object.entries(downChains).map(([chainId, names]) => ({
-    severity: names.length >= 7 ? "error" : "warning",
+    severity: names.length >= QUORUM_LOSS_COUNT ? "error" : "warning",
     text: `${names.length} guardian${names.length > 1 ? "s" : ""} [${names.join(
       ", "
     )}] ${names.length > 1 ? "are" : "is"} down on ${chainIdToName(

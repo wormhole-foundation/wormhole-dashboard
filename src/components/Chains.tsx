@@ -12,7 +12,7 @@ import {
   HeartbeatInfo,
 } from "../hooks/useChainHeartbeats";
 import chainIdToName from "../utils/chainIdToName";
-import { BEHIND_DIFF } from "./Alerts";
+import { getBehindDiffForChain } from "./Alerts";
 import Table from "./Table";
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
@@ -67,7 +67,8 @@ function Chain({
   const conditionalRowStyle = useCallback(
     (heartbeat: HeartbeatInfo) =>
       heartbeat.network.height === "0" ||
-      highest - BigInt(heartbeat.network.height) > BEHIND_DIFF
+      highest - BigInt(heartbeat.network.height) >
+        getBehindDiffForChain(heartbeat.network.id)
         ? { backgroundColor: "rgba(100,0,0,.2)" }
         : {},
     [highest]
@@ -79,7 +80,6 @@ function Chain({
           <Typography variant="h5" gutterBottom>
             {chainIdToName(Number(chainId))} ({chainId})
           </Typography>
-          <Typography>Guardians Listed: {heartbeats.length}</Typography>
         </Box>
         <Table<HeartbeatInfo>
           table={table}

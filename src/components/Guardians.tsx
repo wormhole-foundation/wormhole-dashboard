@@ -65,7 +65,7 @@ function Guardians({ heartbeats }: { heartbeats: Heartbeat[] }) {
   });
   return (
     <Card>
-      <Table<Heartbeat> table={table} />
+      <Table<Heartbeat> table={table} showRowCount />
     </Card>
   );
 }

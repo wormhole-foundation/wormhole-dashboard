@@ -60,6 +60,7 @@ const guardianSigningColumnHelper = createColumnHelper<GuardianSigningStat>();
 const guardianSigningColumns = [
   guardianSigningColumnHelper.accessor("name", {
     header: () => "Guardian",
+    sortingFn: `text`,
   }),
   guardianSigningColumnHelper.accessor("numSigned", {
     header: () => <Box order="1">Signed</Box>,

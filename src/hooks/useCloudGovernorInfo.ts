@@ -178,6 +178,9 @@ const useCloudGovernorInfo = (): CloudGovernorInfo => {
       while (!cancelled) {
         try {
           const info = await getInfo(currentNetwork.endpoint);
+          info.notionals.sort((a, b) =>
+            a.chainId < b.chainId ? -1 : a.chainId > b.chainId ? 1 : 0
+          );
           if (!cancelled) {
             setGovernorInfo(info);
           }

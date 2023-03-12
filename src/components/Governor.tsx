@@ -62,7 +62,6 @@ const notionalColumns = [
   notionalColumnHelper.accessor("chainId", {
     header: () => "Chain",
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
-    sortingFn: `text`,
   }),
   notionalColumnHelper.accessor("notionalLimit", {
     header: () => <Box order="1">Limit</Box>,
@@ -298,7 +297,10 @@ function Governor() {
       </Box>
       <Box my={2}>
         <Card>
-          <Table<GovernorGetEnqueuedVAAsResponse_Entry> table={enqueuedTable} />
+          <Table<GovernorGetEnqueuedVAAsResponse_Entry>
+            table={enqueuedTable}
+            showRowCount
+          />
           {governorInfo.enqueued.length === 0 ? (
             <Typography variant="body2" sx={{ py: 1, textAlign: "center" }}>
               No enqueued VAAs

@@ -10,13 +10,15 @@ import { ReactNode } from "react";
 function CollapsibleSection({
   header,
   children,
+  defaultExpanded = true,
 }: {
   header: ReactNode;
   children: ReactNode;
+  defaultExpanded?: boolean;
 }) {
   return (
     <Accordion
-      defaultExpanded
+      defaultExpanded={defaultExpanded}
       disableGutters
       sx={{
         background: "transparent",

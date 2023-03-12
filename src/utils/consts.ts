@@ -265,7 +265,7 @@ export const GUARDIAN_SET_3 = [
   },
   {
     pubkey: "0xf93124b7c738843CBB89E864c862c38cddCccF95",
-    name: "P2P.ORG Validator",
+    name: "P2P Validator",
   },
   {
     pubkey: "0xD2CC37A4dc036a8D232b48f62cDD4731412f4890",

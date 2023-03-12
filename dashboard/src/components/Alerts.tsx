@@ -1,4 +1,9 @@
 import {
+  CHAIN_ID_ARBITRUM,
+  CHAIN_ID_AURORA,
+  CHAIN_ID_OPTIMISM,
+} from "@certusone/wormhole-sdk";
+import {
   ErrorOutline,
   InfoOutlined,
   WarningAmberOutlined,
@@ -22,7 +27,11 @@ import chainIdToName from "../utils/chainIdToName";
 import { Heartbeat } from "../utils/getLastHeartbeats";
 import CollapsibleSection from "./CollapsibleSection";
 
-export const BEHIND_DIFF = 1000;
+const BEHIND_DIFF = 1000;
+export const getBehindDiffForChain = (chainId: number) =>
+  chainId === CHAIN_ID_ARBITRUM || chainId === CHAIN_ID_OPTIMISM
+    ? BEHIND_DIFF * 2
+    : BEHIND_DIFF;
 
 type AlertEntry = {
   severity: AlertColor;
@@ -41,51 +50,54 @@ function chainDownAlerts(
   chainIdsToHeartbeats: ChainIdToHeartbeats
 ): AlertEntry[] {
   const downChains: { [chainId: string]: string[] } = {};
-  Object.entries(chainIdsToHeartbeats).forEach(([chainId, chainHeartbeats]) => {
-    // Search for known guardians without heartbeats
-    const missingGuardians = heartbeats.filter(
-      (guardianHeartbeat) =>
-        chainHeartbeats.findIndex(
-          (chainHeartbeat) =>
-            chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
-        ) === -1
-    );
-    missingGuardians.forEach((guardianHeartbeat) => {
-      if (!downChains[chainId]) {
-        downChains[chainId] = [];
-      }
-      downChains[chainId].push(guardianHeartbeat.nodeName);
-    });
-    // Search for guardians with heartbeats but who are not picking up a height
-    // Could be disconnected or erroring post initial checks
-    // Track highest height to check for lagging guardians
-    let highest = BigInt(0);
-    chainHeartbeats.forEach((chainHeartbeat) => {
-      const height = BigInt(chainHeartbeat.network.height);
-      if (height > highest) {
-        highest = height;
-      }
-      if (chainHeartbeat.network.height === "0") {
+  Object.entries(chainIdsToHeartbeats)
+    // Aurora is known to be disabled, no need to alert on it
+    .filter(([chainId]) => chainId !== CHAIN_ID_AURORA.toString())
+    .forEach(([chainId, chainHeartbeats]) => {
+      // Search for known guardians without heartbeats
+      const missingGuardians = heartbeats.filter(
+        (guardianHeartbeat) =>
+          chainHeartbeats.findIndex(
+            (chainHeartbeat) =>
+              chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
+          ) === -1
+      );
+      missingGuardians.forEach((guardianHeartbeat) => {
         if (!downChains[chainId]) {
           downChains[chainId] = [];
         }
-        downChains[chainId].push(chainHeartbeat.name);
-      }
-    });
-    // Search for guardians which are lagging significantly behind
-    chainHeartbeats.forEach((chainHeartbeat) => {
-      if (chainHeartbeat.network.height !== "0") {
+        downChains[chainId].push(guardianHeartbeat.nodeName);
+      });
+      // Search for guardians with heartbeats but who are not picking up a height
+      // Could be disconnected or erroring post initial checks
+      // Track highest height to check for lagging guardians
+      let highest = BigInt(0);
+      chainHeartbeats.forEach((chainHeartbeat) => {
         const height = BigInt(chainHeartbeat.network.height);
-        const diff = highest - height;
-        if (diff > BEHIND_DIFF) {
+        if (height > highest) {
+          highest = height;
+        }
+        if (chainHeartbeat.network.height === "0") {
           if (!downChains[chainId]) {
             downChains[chainId] = [];
           }
           downChains[chainId].push(chainHeartbeat.name);
         }
-      }
+      });
+      // Search for guardians which are lagging significantly behind
+      chainHeartbeats.forEach((chainHeartbeat) => {
+        if (chainHeartbeat.network.height !== "0") {
+          const height = BigInt(chainHeartbeat.network.height);
+          const diff = highest - height;
+          if (diff > getBehindDiffForChain(chainHeartbeat.network.id)) {
+            if (!downChains[chainId]) {
+              downChains[chainId] = [];
+            }
+            downChains[chainId].push(chainHeartbeat.name);
+          }
+        }
+      });
     });
-  });
   return Object.entries(downChains).map(([chainId, names]) => ({
     severity: names.length >= 7 ? "error" : "warning",
     text: `${names.length} guardian${names.length > 1 ? "s" : ""} [${names.join(
@@ -150,6 +162,7 @@ function Alerts({
   );
   return (
     <CollapsibleSection
+      defaultExpanded={false}
       header={
         <Box
           sx={{

@@ -26,9 +26,12 @@ function Main() {
       </CollapsibleSection>
       <Divider />
       {currentNetwork.name === "Mainnet" ? (
-        <CollapsibleSection header="Accountant">
-          <Accountant />
-        </CollapsibleSection>
+        <>
+          <CollapsibleSection header="Accountant">
+            <Accountant />
+          </CollapsibleSection>
+          <Divider />
+        </>
       ) : null}
       <CollapsibleSection header="Governor">
         {currentNetwork.name === "Mainnet" ? <MainnetGovernor /> : <Governor />}

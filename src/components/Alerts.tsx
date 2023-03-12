@@ -5,6 +5,7 @@ import {
   CHAIN_ID_POLYGON,
 } from "@certusone/wormhole-sdk";
 import {
+  CheckCircleOutline,
   ErrorOutline,
   InfoOutlined,
   WarningAmberOutlined,
@@ -249,7 +250,7 @@ function Alerts({
           ) : null}
           {numSuccess > 0 ? (
             <>
-              <InfoOutlined color="success" sx={{ ml: 2 }} />
+              <CheckCircleOutline color="success" sx={{ ml: 2 }} />
               <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
                 {numSuccess}
               </Typography>

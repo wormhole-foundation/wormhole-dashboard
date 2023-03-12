@@ -2,6 +2,7 @@ import {
   CHAIN_ID_ARBITRUM,
   CHAIN_ID_AURORA,
   CHAIN_ID_OPTIMISM,
+  CHAIN_ID_POLYGON,
 } from "@certusone/wormhole-sdk";
 import {
   ErrorOutline,
@@ -29,10 +30,12 @@ import { Heartbeat } from "../utils/getLastHeartbeats";
 import CollapsibleSection from "./CollapsibleSection";
 
 const BEHIND_DIFF = 1000;
+const isLayer2 = (chainId: number) =>
+  chainId === CHAIN_ID_POLYGON ||
+  chainId === CHAIN_ID_ARBITRUM ||
+  chainId === CHAIN_ID_OPTIMISM;
 export const getBehindDiffForChain = (chainId: number) =>
-  chainId === CHAIN_ID_ARBITRUM || chainId === CHAIN_ID_OPTIMISM
-    ? BEHIND_DIFF * 2
-    : BEHIND_DIFF;
+  isLayer2(chainId) ? BEHIND_DIFF * 2 : BEHIND_DIFF;
 
 export const QUORUM_COUNT = Math.floor((GUARDIAN_SET_3.length * 2) / 3 + 1);
 export const QUORUM_LOSS_COUNT = GUARDIAN_SET_3.length - QUORUM_COUNT + 1;

@@ -35,9 +35,7 @@ function Main() {
           <Divider />
         </>
       ) : null}
-      <CollapsibleSection header="Governor">
-        {currentNetwork.name === "Mainnet" ? <MainnetGovernor /> : <Governor />}
-      </CollapsibleSection>
+      {currentNetwork.name === "Mainnet" ? <MainnetGovernor /> : <Governor />}
     </>
   );
 }

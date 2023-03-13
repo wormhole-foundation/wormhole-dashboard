@@ -2,7 +2,6 @@ import { CHAIN_ID_AURORA } from "@certusone/wormhole-sdk";
 import {
   CheckCircleOutline,
   ErrorOutline,
-  InfoOutlined,
   WarningAmberOutlined,
 } from "@mui/icons-material";
 import {

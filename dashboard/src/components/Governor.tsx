@@ -37,6 +37,7 @@ import useGovernorInfo from "../hooks/useGovernorInfo";
 import useSymbolInfo from "../hooks/useSymbolInfo";
 import chainIdToName from "../utils/chainIdToName";
 import { CHAIN_INFO_MAP } from "../utils/consts";
+import CollapsibleSection from "./CollapsibleSection";
 import EnqueuedVAAChecker from "./EnqueuedVAAChecker";
 import Table from "./Table";
 
@@ -234,6 +235,8 @@ const tokenColumns = [
   }),
 ];
 
+type ChainIdToEnqueuedCount = { [chainId: number]: number };
+
 function Governor() {
   const governorInfo = useGovernorInfo();
   const tokenSymbols = useSymbolInfo(governorInfo.tokens);
@@ -286,8 +289,61 @@ function Governor() {
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setTokenSorting,
   });
+  const enqueuedByChain: ChainIdToEnqueuedCount = useMemo(
+    () =>
+      governorInfo.enqueued.reduce((counts, v) => {
+        if (!counts[v.emitterChain]) {
+          counts[v.emitterChain] = 1;
+        } else {
+          counts[v.emitterChain]++;
+        }
+        return counts;
+      }, {} as ChainIdToEnqueuedCount),
+    [governorInfo.enqueued]
+  );
   return (
-    <>
+    <CollapsibleSection
+      defaultExpanded={false}
+      header={
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            paddingRight: 1,
+          }}
+        >
+          <Box>Governor</Box>
+          <Box flexGrow={1} />
+          {Object.keys(enqueuedByChain)
+            .sort()
+            .map((chainId) => (
+              <>
+                <Box
+                  ml={2}
+                  display="flex"
+                  alignItems="center"
+                  borderRadius="50%"
+                  sx={{ p: 0.5, backgroundColor: "rgba(0,0,0,0.5)" }}
+                >
+                  {CHAIN_INFO_MAP[chainId]?.icon ? (
+                    <img
+                      src={CHAIN_INFO_MAP[chainId].icon}
+                      alt={CHAIN_INFO_MAP[chainId].name}
+                      width={24}
+                      height={24}
+                    />
+                  ) : (
+                    <Typography variant="body2">{chainId}</Typography>
+                  )}
+                </Box>
+                <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                  {enqueuedByChain[Number(chainId)]}
+                </Typography>
+              </>
+            ))}
+        </Box>
+      }
+    >
       <Box mb={2}>
         <Card>
           <Table<GovernorGetAvailableNotionalByChainResponse_Entry>
@@ -322,7 +378,7 @@ function Governor() {
           </Accordion>
         </Card>
       </Box>
-    </>
+    </CollapsibleSection>
   );
 }
 export default Governor;

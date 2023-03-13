@@ -355,7 +355,7 @@ function Governor() {
         <Card>
           <Table<GovernorGetEnqueuedVAAsResponse_Entry>
             table={enqueuedTable}
-            showRowCount
+            showRowCount={!!governorInfo.enqueued.length}
           />
           {governorInfo.enqueued.length === 0 ? (
             <Typography variant="body2" sx={{ py: 1, textAlign: "center" }}>

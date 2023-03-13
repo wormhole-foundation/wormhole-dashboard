@@ -350,22 +350,22 @@ function MainnetGovernor() {
         </Box>
       }
     >
-      <Box mb={2}>
-        <Card>
-          <Table<AvailableNotionalByChain> table={notionalTable} />
-        </Card>
-      </Box>
       <Box my={2}>
         <Card>
           <Table<GovernorGetEnqueuedVAAsResponse_Entry>
             table={enqueuedTable}
-            showRowCount
+            showRowCount={!!governorInfo.enqueuedVAAs.length}
           />
           {governorInfo.enqueuedVAAs.length === 0 ? (
             <Typography variant="body2" sx={{ py: 1, textAlign: "center" }}>
               No enqueued VAAs
             </Typography>
           ) : null}
+        </Card>
+      </Box>
+      <Box mb={2}>
+        <Card>
+          <Table<AvailableNotionalByChain> table={notionalTable} />
         </Card>
       </Box>
       <Box mt={2}>

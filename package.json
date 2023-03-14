@@ -11,6 +11,7 @@
     "common",
     "watcher",
     "web",
+    "dashboard",
     "cloud_functions"
   ],
   "dependencies": {

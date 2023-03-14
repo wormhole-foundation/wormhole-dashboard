@@ -1,4 +1,4 @@
-import { SvgIcon } from "@mui/material";
+import { SvgIcon } from '@mui/material';
 
 // paths taken from wormhole-symbol.inline.svg
 

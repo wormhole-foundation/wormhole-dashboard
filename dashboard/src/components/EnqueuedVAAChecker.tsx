@@ -1,17 +1,13 @@
-import {
-  ChainId,
-  getSignedVAA,
-  getSignedVAAWithRetry,
-} from "@certusone/wormhole-sdk";
-import { GovernorGetEnqueuedVAAsResponse_Entry } from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
-import { useEffect, useState } from "react";
-import { useNetworkContext } from "../contexts/NetworkContext";
+import { ChainId, getSignedVAA, getSignedVAAWithRetry } from '@certusone/wormhole-sdk';
+import { GovernorGetEnqueuedVAAsResponse_Entry } from '@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc';
+import { useEffect, useState } from 'react';
+import { useNetworkContext } from '../contexts/NetworkContext';
 
 const VAA_CHECK_TIMEOUT = 60000;
 const WORMHOLE_RPC_HOSTS = [
-  "https://wormhole-v2-mainnet-api.certus.one",
-  "https://wormhole.inotel.ro",
-  "https://wormhole-v2-mainnet-api.mcf.rocks",
+  'https://wormhole-v2-mainnet-api.certus.one',
+  'https://wormhole.inotel.ro',
+  'https://wormhole-v2-mainnet-api.mcf.rocks',
 ];
 
 function EnqueuedVAAChecker({
@@ -30,7 +26,7 @@ function EnqueuedVAAChecker({
         setVaaHasQuorum(null);
         let result = false;
 
-        if (type === "cloudfunction") {
+        if (type === 'cloudfunction') {
           try {
             const response = await getSignedVAAWithRetry(
               WORMHOLE_RPC_HOSTS,
@@ -61,9 +57,7 @@ function EnqueuedVAAChecker({
             cancelled = true;
             return;
           }
-          await new Promise((resolve) =>
-            setTimeout(resolve, VAA_CHECK_TIMEOUT)
-          );
+          await new Promise((resolve) => setTimeout(resolve, VAA_CHECK_TIMEOUT));
         }
       }
     })();
@@ -71,11 +65,7 @@ function EnqueuedVAAChecker({
       cancelled = true;
     };
   }, [endpoint, type, emitterChain, emitterAddress, sequence]);
-  return (
-    <span role="img">
-      {vaaHasQuorum === null ? "⏳" : vaaHasQuorum ? "✅" : "❌"}
-    </span>
-  );
+  return <span role="img">{vaaHasQuorum === null ? '⏳' : vaaHasQuorum ? '✅' : '❌'}</span>;
 }
 
 export default EnqueuedVAAChecker;

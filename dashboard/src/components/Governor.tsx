@@ -6,13 +6,13 @@ import {
   isEVMChain,
   tryHexToNativeAssetString,
   tryHexToNativeString,
-} from "@certusone/wormhole-sdk";
+} from '@certusone/wormhole-sdk';
 import {
   GovernorGetAvailableNotionalByChainResponse_Entry,
   GovernorGetEnqueuedVAAsResponse_Entry,
   GovernorGetTokenListResponse_Entry,
-} from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
-import { ExpandMore } from "@mui/icons-material";
+} from '@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc';
+import { ExpandMore } from '@mui/icons-material';
 import {
   Accordion,
   AccordionDetails,
@@ -23,31 +23,28 @@ import {
   Link,
   Tooltip,
   Typography,
-} from "@mui/material";
+} from '@mui/material';
 import {
   createColumnHelper,
   getCoreRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
-} from "@tanstack/react-table";
-import numeral from "numeral";
-import { useMemo, useState } from "react";
-import useGovernorInfo from "../hooks/useGovernorInfo";
-import useSymbolInfo from "../hooks/useSymbolInfo";
-import chainIdToName from "../utils/chainIdToName";
-import { CHAIN_INFO_MAP } from "../utils/consts";
-import CollapsibleSection from "./CollapsibleSection";
-import EnqueuedVAAChecker from "./EnqueuedVAAChecker";
-import Table from "./Table";
+} from '@tanstack/react-table';
+import numeral from 'numeral';
+import { useMemo, useState } from 'react';
+import useGovernorInfo from '../hooks/useGovernorInfo';
+import useSymbolInfo from '../hooks/useSymbolInfo';
+import chainIdToName from '../utils/chainIdToName';
+import { CHAIN_INFO_MAP } from '../utils/consts';
+import CollapsibleSection from './CollapsibleSection';
+import EnqueuedVAAChecker from './EnqueuedVAAChecker';
+import Table from './Table';
 
-const calculatePercent = (
-  notional: GovernorGetAvailableNotionalByChainResponse_Entry
-): number => {
+const calculatePercent = (notional: GovernorGetAvailableNotionalByChainResponse_Entry): number => {
   try {
     return (
-      ((Number(notional.notionalLimit) -
-        Number(notional.remainingAvailableNotional)) /
+      ((Number(notional.notionalLimit) - Number(notional.remainingAvailableNotional)) /
         Number(notional.notionalLimit)) *
       100
     );
@@ -60,63 +57,50 @@ const notionalColumnHelper =
   createColumnHelper<GovernorGetAvailableNotionalByChainResponse_Entry>();
 
 const notionalColumns = [
-  notionalColumnHelper.accessor("chainId", {
-    header: () => "Chain",
+  notionalColumnHelper.accessor('chainId', {
+    header: () => 'Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
   }),
-  notionalColumnHelper.accessor("notionalLimit", {
+  notionalColumnHelper.accessor('notionalLimit', {
     header: () => <Box order="1">Limit</Box>,
-    cell: (info) => (
-      <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
-    ),
+    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
   }),
-  notionalColumnHelper.accessor("bigTransactionSize", {
+  notionalColumnHelper.accessor('bigTransactionSize', {
     header: () => <Box order="1">Big Transaction</Box>,
-    cell: (info) => (
-      <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
-    ),
+    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
   }),
-  notionalColumnHelper.accessor("remainingAvailableNotional", {
+  notionalColumnHelper.accessor('remainingAvailableNotional', {
     header: () => <Box order="1">Remaining</Box>,
-    cell: (info) => (
-      <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
-    ),
+    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
   }),
   notionalColumnHelper.accessor(calculatePercent, {
-    id: "progress",
-    header: () => "Progress",
+    id: 'progress',
+    header: () => 'Progress',
     cell: (info) => (
       <Tooltip title={`${info.getValue().toFixed(2)}%`} arrow>
         <LinearProgress
           variant="determinate"
           value={info.getValue()}
-          color={
-            info.getValue() > 80
-              ? "error"
-              : info.getValue() > 50
-              ? "warning"
-              : "success"
-          }
+          color={info.getValue() > 80 ? 'error' : info.getValue() > 50 ? 'warning' : 'success'}
         />
       </Tooltip>
     ),
   }),
 ];
 
-const enqueuedColumnHelper =
-  createColumnHelper<GovernorGetEnqueuedVAAsResponse_Entry>();
+const enqueuedColumnHelper = createColumnHelper<GovernorGetEnqueuedVAAsResponse_Entry>();
 
 const enqueuedColumns = [
-  enqueuedColumnHelper.accessor("emitterChain", {
-    header: () => "Chain",
+  enqueuedColumnHelper.accessor('emitterChain', {
+    header: () => 'Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
   }),
-  enqueuedColumnHelper.accessor("emitterAddress", {
-    header: () => "Emitter",
+  enqueuedColumnHelper.accessor('emitterAddress', {
+    header: () => 'Emitter',
   }),
-  enqueuedColumnHelper.accessor("sequence", {
-    header: () => "Sequence",
+  enqueuedColumnHelper.accessor('sequence', {
+    header: () => 'Sequence',
     cell: (info) => (
       <Link
         href={`https://wormhole-v2-mainnet-api.certus.one/v1/signed_vaa/${info.row.original.emitterChain}/${info.row.original.emitterAddress}/${info.row.original.sequence}`}
@@ -128,23 +112,20 @@ const enqueuedColumns = [
     ),
   }),
   enqueuedColumnHelper.display({
-    id: "hasQuorum",
-    header: () => "Has Quorum?",
+    id: 'hasQuorum',
+    header: () => 'Has Quorum?',
     cell: (info) => <EnqueuedVAAChecker vaa={info.row.original} />,
   }),
-  enqueuedColumnHelper.accessor("txHash", {
-    header: () => "Transaction Hash",
+  enqueuedColumnHelper.accessor('txHash', {
+    header: () => 'Transaction Hash',
     cell: (info) => {
       const chain = info.row.original.emitterChain;
       const chainInfo = CHAIN_INFO_MAP[chain];
       if (!chainInfo) return info.getValue();
-      var txHash: string = "";
+      var txHash: string = '';
       if (!isEVMChain(chainInfo.chainId)) {
         try {
-          txHash = tryHexToNativeString(
-            info.getValue().slice(2),
-            CHAIN_INFO_MAP[chain].chainId
-          );
+          txHash = tryHexToNativeString(info.getValue().slice(2), CHAIN_INFO_MAP[chain].chainId);
         } catch (e) {
           return info.getValue();
         }
@@ -160,40 +141,36 @@ const enqueuedColumns = [
       );
     },
   }),
-  enqueuedColumnHelper.accessor("releaseTime", {
-    header: () => "Release Time",
+  enqueuedColumnHelper.accessor('releaseTime', {
+    header: () => 'Release Time',
     cell: (info) => new Date(info.getValue() * 1000).toLocaleString(),
   }),
-  enqueuedColumnHelper.accessor("notionalValue", {
+  enqueuedColumnHelper.accessor('notionalValue', {
     header: () => <Box order="1">Notional Value</Box>,
-    cell: (info) => (
-      <Box textAlign="right">${numeral(info.getValue()).format("0,0")}</Box>
-    ),
+    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
   }),
 ];
 
-interface GovernorGetTokenListResponse_Entry_ext
-  extends GovernorGetTokenListResponse_Entry {
+interface GovernorGetTokenListResponse_Entry_ext extends GovernorGetTokenListResponse_Entry {
   symbol: string;
 }
 
-const tokenColumnHelper =
-  createColumnHelper<GovernorGetTokenListResponse_Entry_ext>();
+const tokenColumnHelper = createColumnHelper<GovernorGetTokenListResponse_Entry_ext>();
 
 const tokenColumns = [
-  tokenColumnHelper.accessor("originChainId", {
-    header: () => "Chain",
+  tokenColumnHelper.accessor('originChainId', {
+    header: () => 'Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
   }),
-  tokenColumnHelper.accessor("originAddress", {
-    header: () => "Token",
+  tokenColumnHelper.accessor('originAddress', {
+    header: () => 'Token',
     cell: (info) => {
       const chain = info.row.original.originChainId;
       const chainInfo = CHAIN_INFO_MAP[chain];
       if (!chainInfo) return info.getValue();
       const chainId: ChainId = chainInfo.chainId;
-      var tokenAddress: string = "";
+      var tokenAddress: string = '';
       if (
         chainId === CHAIN_ID_ALGORAND ||
         chainId === CHAIN_ID_NEAR ||
@@ -221,17 +198,13 @@ const tokenColumns = [
     },
   }),
   tokenColumnHelper.display({
-    id: "Symbol",
-    header: () => "Symbol",
+    id: 'Symbol',
+    header: () => 'Symbol',
     cell: (info) => `${info.row.original?.symbol}`,
   }),
-  tokenColumnHelper.accessor("price", {
+  tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
-    cell: (info) => (
-      <Box textAlign="right">
-        ${numeral(info.getValue()).format("0,0.0000")}
-      </Box>
-    ),
+    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0.0000')}</Box>,
   }),
 ];
 
@@ -246,9 +219,7 @@ function Governor() {
     () =>
       governorInfo.tokens.map((tk) => ({
         ...tk,
-        symbol:
-          tokenSymbols.get([tk.originChainId, tk.originAddress].join("_"))
-            ?.symbol || "",
+        symbol: tokenSymbols.get([tk.originChainId, tk.originAddress].join('_'))?.symbol || '',
       })),
     [governorInfo.tokens, tokenSymbols]
   );
@@ -307,8 +278,8 @@ function Governor() {
       header={
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
+            display: 'flex',
+            alignItems: 'center',
             paddingRight: 1,
           }}
         >
@@ -323,7 +294,7 @@ function Governor() {
                   display="flex"
                   alignItems="center"
                   borderRadius="50%"
-                  sx={{ p: 0.5, backgroundColor: "rgba(0,0,0,0.5)" }}
+                  sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
                 >
                   {CHAIN_INFO_MAP[chainId]?.icon ? (
                     <img
@@ -346,9 +317,7 @@ function Governor() {
     >
       <Box mb={2}>
         <Card>
-          <Table<GovernorGetAvailableNotionalByChainResponse_Entry>
-            table={notionalTable}
-          />
+          <Table<GovernorGetAvailableNotionalByChainResponse_Entry> table={notionalTable} />
         </Card>
       </Box>
       <Box my={2}>
@@ -358,7 +327,7 @@ function Governor() {
             showRowCount={!!governorInfo.enqueued.length}
           />
           {governorInfo.enqueued.length === 0 ? (
-            <Typography variant="body2" sx={{ py: 1, textAlign: "center" }}>
+            <Typography variant="body2" sx={{ py: 1, textAlign: 'center' }}>
               No enqueued VAAs
             </Typography>
           ) : null}
@@ -371,9 +340,7 @@ function Governor() {
               <Typography>Tokens ({governorInfo.tokens.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table<GovernorGetTokenListResponse_Entry_ext>
-                table={tokenTable}
-              />
+              <Table<GovernorGetTokenListResponse_Entry_ext> table={tokenTable} />
             </AccordionDetails>
           </Accordion>
         </Card>

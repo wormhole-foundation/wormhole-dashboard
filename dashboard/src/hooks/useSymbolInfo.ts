@@ -6,15 +6,15 @@ import {
   isHexNativeTerra,
   tryHexToNativeAssetString,
   tryNativeToHexString,
-} from "@certusone/wormhole-sdk";
-import { GovernorGetTokenListResponse_Entry } from "@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc";
-import { LCDClient } from "@terra-money/terra.js";
-import axios from "axios";
-import { ethers } from "ethers";
-import { useEffect, useMemo } from "react";
-import { CHAIN_INFO_MAP } from "../utils/consts";
+} from '@certusone/wormhole-sdk';
+import { GovernorGetTokenListResponse_Entry } from '@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc';
+import { LCDClient } from '@terra-money/terra.js';
+import axios from 'axios';
+import { ethers } from 'ethers';
+import { useEffect, useMemo } from 'react';
+import { CHAIN_INFO_MAP } from '../utils/consts';
 
-require("dotenv").config();
+require('dotenv').config();
 
 function newProvider(
   url: string,
@@ -22,27 +22,25 @@ function newProvider(
 ): ethers.providers.JsonRpcProvider | ethers.providers.JsonRpcBatchProvider {
   // only support http(s), not ws(s) as the websocket constructor can blow up the entire process
   // it uses a nasty setTimeout(()=>{},0) so we are unable to cleanly catch its errors
-  if (url.startsWith("http")) {
+  if (url.startsWith('http')) {
     if (batch) {
       return new ethers.providers.JsonRpcBatchProvider(url);
     }
     return new ethers.providers.JsonRpcProvider(url);
   }
-  throw new Error("url does not start with http/https!");
+  throw new Error('url does not start with http/https!');
 }
 
 const ERC20_BASIC_ABI = [
-  "function name() view returns (string name)",
-  "function symbol() view returns (string symbol)",
-  "function decimals() view returns (uint8 decimals)",
+  'function name() view returns (string name)',
+  'function symbol() view returns (string symbol)',
+  'function decimals() view returns (uint8 decimals)',
 ];
 
 //for evm chains
 async function getTokenContract(
   address: string,
-  provider:
-    | ethers.providers.JsonRpcProvider
-    | ethers.providers.JsonRpcBatchProvider
+  provider: ethers.providers.JsonRpcProvider | ethers.providers.JsonRpcBatchProvider
 ) {
   const contract = new ethers.Contract(address, ERC20_BASIC_ABI, provider);
   return contract;
@@ -67,7 +65,7 @@ async function getEvmTokenMetaData(
       .filter(
         (g) =>
           g.originChainId === chainInfo.chainId &&
-          !TOKEN_CACHE.get([chain, g.originAddress].join("_"))
+          !TOKEN_CACHE.get([chain, g.originAddress].join('_'))
       )
       .map((tk) => tk.originAddress);
     tokenListByChain.forEach((tk) => {
@@ -82,9 +80,7 @@ async function getEvmTokenMetaData(
     ) as ethers.providers.JsonRpcBatchProvider;
 
     const tokenContracts = await Promise.all(
-      formattedTokens.map((tokenAddress) =>
-        getTokenContract(tokenAddress, provider)
-      )
+      formattedTokens.map((tokenAddress) => getTokenContract(tokenAddress, provider))
     );
     const tokenInfos = await Promise.all(
       tokenContracts.map((tokenContract) =>
@@ -99,7 +95,7 @@ async function getEvmTokenMetaData(
     );
 
     tokenInfos.forEach((tk) => {
-      TOKEN_CACHE.set([chain, formattedAddressMap[tk[0]]].join("_"), {
+      TOKEN_CACHE.set([chain, formattedAddressMap[tk[0]]].join('_'), {
         address: tk[0],
         name: tk[1],
         decimals: tk[2],
@@ -113,20 +109,18 @@ async function getEvmTokenMetaData(
   return;
 }
 
-async function loadTokenListSolana(
-  url = "https://token-list.solana.com/solana.tokenlist.json"
-) {
+async function loadTokenListSolana(url = 'https://token-list.solana.com/solana.tokenlist.json') {
   const response: any = await axios.get(url).catch(function (error) {
     if (error.response) {
-      console.log("could not load token list", error.response.status);
+      console.log('could not load token list', error.response.status);
     }
   });
-  if (response["status"] === 200) {
-    const data = response["data"];
+  if (response['status'] === 200) {
+    const data = response['data'];
     const token_list = data.tokens;
     return token_list;
   } else {
-    console.log("bad response for token list");
+    console.log('bad response for token list');
     return [];
   }
 }
@@ -143,7 +137,7 @@ async function getSolanaTokenMetaData(
       .filter(
         (g) =>
           g.originChainId === chainInfo.chainId &&
-          !TOKEN_CACHE.get([chain, g.originAddress].join("_"))
+          !TOKEN_CACHE.get([chain, g.originAddress].join('_'))
       )
       .map((tk) => tk.originAddress);
 
@@ -167,15 +161,12 @@ async function getSolanaTokenMetaData(
       }
     });
     tokenContracts.forEach((tokenContract) => {
-      TOKEN_CACHE.set(
-        [chain, formattedAddressMap[tokenContract.address]].join("_"),
-        {
-          address: tokenContract.address,
-          name: tokenContract.name,
-          decimals: tokenContract.decimals,
-          symbol: tokenContract.symbol,
-        }
-      );
+      TOKEN_CACHE.set([chain, formattedAddressMap[tokenContract.address]].join('_'), {
+        address: tokenContract.address,
+        name: tokenContract.name,
+        decimals: tokenContract.decimals,
+        symbol: tokenContract.symbol,
+      });
     });
   } catch (e) {
     console.log(e);
@@ -202,40 +193,37 @@ const fetchSingleTerraMetadata = async (address: string, lcd: LCDClient) =>
         ({ address: address, symbol, name, decimals } as TerraMetadata)
     );
 
-async function getSingleTerraMetaData(
-  originAddress: string,
-  originChain: ChainId
-) {
+async function getSingleTerraMetaData(originAddress: string, originChain: ChainId) {
   const TERRA_HOST = {
     URL:
       originChain === CHAIN_ID_TERRA
-        ? "https://columbus-fcd.terra.dev"
-        : "https://phoenix-fcd.terra.dev",
-    chainID: originChain === CHAIN_ID_TERRA ? "columbus-5" : "phoenix-1",
-    name: "mainnet",
+        ? 'https://columbus-fcd.terra.dev'
+        : 'https://phoenix-fcd.terra.dev',
+    chainID: originChain === CHAIN_ID_TERRA ? 'columbus-5' : 'phoenix-1',
+    name: 'mainnet',
   };
   const lcd = new LCDClient(TERRA_HOST);
 
   if (isHexNativeTerra(tryNativeToHexString(originAddress, originChain))) {
-    if (originAddress === "uusd") {
+    if (originAddress === 'uusd') {
       return {
         address: originAddress,
-        name: "UST Classic",
-        symbol: "USTC",
+        name: 'UST Classic',
+        symbol: 'USTC',
         decimals: 6,
       };
-    } else if (originAddress === "uluna") {
+    } else if (originAddress === 'uluna') {
       return {
         address: originAddress,
-        name: "Luna Classic",
-        symbol: "LUNC",
+        name: 'Luna Classic',
+        symbol: 'LUNC',
         decimals: 6,
       };
     } else {
       return {
         address: originAddress,
-        name: "",
-        symbol: "",
+        name: '',
+        symbol: '',
         decimals: 8,
       };
     }
@@ -256,7 +244,7 @@ async function getTerraTokenMetaData(
       .filter(
         (g) =>
           g.originChainId === chainInfo.chainId &&
-          !TOKEN_CACHE.get([chain, g.originAddress].join("_"))
+          !TOKEN_CACHE.get([chain, g.originAddress].join('_'))
       )
       .map((tk) => tk.originAddress);
 
@@ -274,15 +262,12 @@ async function getTerraTokenMetaData(
     }
 
     tokenContracts.forEach((tokenContract) => {
-      TOKEN_CACHE.set(
-        [chain, formattedAddressMap[tokenContract.address]].join("_"),
-        {
-          address: tokenContract.address,
-          name: tokenContract.name,
-          decimals: tokenContract.decimals,
-          symbol: tokenContract.symbol,
-        }
-      );
+      TOKEN_CACHE.set([chain, formattedAddressMap[tokenContract.address]].join('_'), {
+        address: tokenContract.address,
+        name: tokenContract.name,
+        decimals: tokenContract.decimals,
+        symbol: tokenContract.symbol,
+      });
     });
   } catch (e) {
     console.log(e);
@@ -296,34 +281,34 @@ const MISC_TOKEN_META_DATA: {
     [key: string]: { name: string; symbol: string; decimals: number };
   };
 } = {
-  "8": {
-    "0x0000000000000000000000000000000000000000000000000000000000000000": {
-      name: "ALGO",
-      symbol: "ALGO",
+  '8': {
+    '0x0000000000000000000000000000000000000000000000000000000000000000': {
+      name: 'ALGO',
+      symbol: 'ALGO',
       decimals: 6,
     },
-    "0x000000000000000000000000000000000000000000000000000000000004c5c1": {
-      name: "USDT",
-      symbol: "USDT",
+    '0x000000000000000000000000000000000000000000000000000000000004c5c1': {
+      name: 'USDT',
+      symbol: 'USDT',
       decimals: 6,
     },
-    "0x0000000000000000000000000000000000000000000000000000000001e1ab70": {
-      name: "USDC",
-      symbol: "USDC",
+    '0x0000000000000000000000000000000000000000000000000000000001e1ab70': {
+      name: 'USDC',
+      symbol: 'USDC',
       decimals: 6,
     },
   },
-  "15": {
-    "0x0000000000000000000000000000000000000000000000000000000000000000": {
-      name: "NEAR",
-      symbol: "NEAR",
+  '15': {
+    '0x0000000000000000000000000000000000000000000000000000000000000000': {
+      name: 'NEAR',
+      symbol: 'NEAR',
       decimals: 24,
     },
   },
-  "18": {
-    "0x01fa6c6fbc36d8c245b0a852a43eb5d644e8b4c477b27bfab9537c10945939da": {
-      name: "LUNA",
-      symbol: "LUNA",
+  '18': {
+    '0x01fa6c6fbc36d8c245b0a852a43eb5d644e8b4c477b27bfab9537c10945939da': {
+      name: 'LUNA',
+      symbol: 'LUNA',
       decimals: 6,
     },
   },
@@ -340,13 +325,13 @@ async function getMiscTokenMetaData(
       .filter(
         (g) =>
           g.originChainId === chainInfo.chainId &&
-          !TOKEN_CACHE.get([chain, g.originAddress].join("_"))
+          !TOKEN_CACHE.get([chain, g.originAddress].join('_'))
       )
       .map((tk) => tk.originAddress);
 
     tokenListByChain.forEach((tk) => {
       const metaData = tokenMetaDataByChain[tk];
-      TOKEN_CACHE.set([chain, tk].join("_"), {
+      TOKEN_CACHE.set([chain, tk].join('_'), {
         address: tk,
         name: metaData?.name,
         decimals: metaData?.decimals,
@@ -362,9 +347,7 @@ async function getMiscTokenMetaData(
 
 const TOKEN_CACHE = new Map<string, TokenInfo>();
 
-async function getTokenMetaData(
-  governorTokenList: GovernorGetTokenListResponse_Entry[]
-) {
+async function getTokenMetaData(governorTokenList: GovernorGetTokenListResponse_Entry[]) {
   const chains = Object.keys(CHAIN_INFO_MAP);
   for (let i = 0; i < chains.length; i++) {
     const chain = chains[i];

@@ -1,5 +1,5 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 // https://docs.github.com/en/rest/releases/releases#get-the-latest-release
 function useLatestRelease(): string | null {
@@ -9,7 +9,7 @@ function useLatestRelease(): string | null {
     (async () => {
       while (!cancelled) {
         const response = await axios.get(
-          "https://api.github.com/repos/wormhole-foundation/wormhole/releases/latest"
+          'https://api.github.com/repos/wormhole-foundation/wormhole/releases/latest'
         );
         if (!cancelled) {
           setLatestRelease(response.data?.tag_name || null);

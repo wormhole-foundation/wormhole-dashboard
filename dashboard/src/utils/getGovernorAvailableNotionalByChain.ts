@@ -1,5 +1,5 @@
-import { publicrpc } from "@certusone/wormhole-sdk-proto-web";
-import { Network } from "../contexts/NetworkContext";
+import { publicrpc } from '@certusone/wormhole-sdk-proto-web';
+import { Network } from '../contexts/NetworkContext';
 const { GrpcWebImpl, PublicRPCServiceClientImpl } = publicrpc;
 
 export async function getGovernorAvailableNotionalByChain(network: Network) {

@@ -3,7 +3,7 @@ import {
   DarkModeOutlined,
   LightModeOutlined,
   SettingsOutlined,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
 import {
   Box,
   Dialog,
@@ -13,9 +13,9 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Typography,
-} from "@mui/material";
-import { useCallback, useState } from "react";
-import { Theme, useSettingsContext } from "../contexts/SettingsContext";
+} from '@mui/material';
+import { useCallback, useState } from 'react';
+import { Theme, useSettingsContext } from '../contexts/SettingsContext';
 
 function SettingsContent() {
   const {
@@ -52,11 +52,7 @@ function SettingsContent() {
   return (
     <>
       <Box mt={2} mx={2} textAlign="center">
-        <ToggleButtonGroup
-          value={settings.theme}
-          exclusive
-          onChange={handleThemeChange}
-        >
+        <ToggleButtonGroup value={settings.theme} exclusive onChange={handleThemeChange}>
           <ToggleButton value="light">
             <LightModeOutlined />
           </ToggleButton>
@@ -70,7 +66,7 @@ function SettingsContent() {
       </Box>
       <Box m={2}>
         <TextField
-          value={settings.backgroundUrl || ""}
+          value={settings.backgroundUrl || ''}
           onChange={handleBackgroundUrlChange}
           label="Background URL"
           margin="dense"
@@ -91,7 +87,7 @@ function SettingsContent() {
       </Box>
       <Box m={2}>
         <TextField
-          value={settings.wormchainUrl || ""}
+          value={settings.wormchainUrl || ''}
           onChange={handleWormchainUrlChange}
           label="Wormchain URL"
           margin="dense"

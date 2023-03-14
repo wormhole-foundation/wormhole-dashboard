@@ -1,15 +1,9 @@
-import {
-  Box,
-  createTheme,
-  responsiveFontSizes,
-  ThemeProvider,
-} from "@mui/material";
-import { grey } from "@mui/material/colors";
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { useSettingsContext } from "../contexts/SettingsContext";
+import { Box, createTheme, responsiveFontSizes, ThemeProvider } from '@mui/material';
+import { grey } from '@mui/material/colors';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSettingsContext } from '../contexts/SettingsContext';
 
-const mediaQueryList =
-  window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+const mediaQueryList = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
 
 function CustomThemeProvider({ children }: { children: ReactNode }) {
   const {
@@ -18,28 +12,21 @@ function CustomThemeProvider({ children }: { children: ReactNode }) {
   const [userPrefersDark, setUserPrefersDark] = useState<boolean>(
     mediaQueryList && mediaQueryList.matches ? true : false
   );
-  const handleUserPreferenceChange = useCallback(
-    (event: MediaQueryListEvent) => {
-      setUserPrefersDark(event.matches ? true : false);
-    },
-    []
-  );
+  const handleUserPreferenceChange = useCallback((event: MediaQueryListEvent) => {
+    setUserPrefersDark(event.matches ? true : false);
+  }, []);
   useEffect(() => {
-    if (themePreference === "auto") {
-      mediaQueryList.addEventListener("change", handleUserPreferenceChange);
+    if (themePreference === 'auto') {
+      mediaQueryList.addEventListener('change', handleUserPreferenceChange);
       return () => {
-        mediaQueryList.removeEventListener(
-          "change",
-          handleUserPreferenceChange
-        );
+        mediaQueryList.removeEventListener('change', handleUserPreferenceChange);
       };
     }
   }, [themePreference, handleUserPreferenceChange]);
   const mode =
-    themePreference === "dark" ||
-    (themePreference === "auto" && userPrefersDark)
-      ? "dark"
-      : "light";
+    themePreference === 'dark' || (themePreference === 'auto' && userPrefersDark)
+      ? 'dark'
+      : 'light';
   const theme = useMemo(
     () =>
       responsiveFontSizes(
@@ -51,28 +38,25 @@ function CustomThemeProvider({ children }: { children: ReactNode }) {
             MuiCssBaseline: {
               styleOverrides: {
                 body: {
-                  overflowY: "scroll",
+                  overflowY: 'scroll',
                 },
-                "*": {
-                  scrollbarWidth: "thin",
+                '*': {
+                  scrollbarWidth: 'thin',
                   scrollbarColor:
-                    mode === "dark"
-                      ? `${grey[700]} ${grey[900]}`
-                      : `${grey[400]} rgb(255,255,255)`,
+                    mode === 'dark' ? `${grey[700]} ${grey[900]}` : `${grey[400]} rgb(255,255,255)`,
                 },
-                "*::-webkit-scrollbar": {
-                  width: "8px",
-                  height: "8px",
-                  backgroundColor:
-                    mode === "dark" ? grey[900] : "rgb(255,255,255)",
+                '*::-webkit-scrollbar': {
+                  width: '8px',
+                  height: '8px',
+                  backgroundColor: mode === 'dark' ? grey[900] : 'rgb(255,255,255)',
                 },
-                "*::-webkit-scrollbar-thumb": {
-                  backgroundColor: mode === "dark" ? grey[700] : grey[400],
-                  borderRadius: "4px",
+                '*::-webkit-scrollbar-thumb': {
+                  backgroundColor: mode === 'dark' ? grey[700] : grey[400],
+                  borderRadius: '4px',
                 },
-                "*::-webkit-scrollbar-corner": {
+                '*::-webkit-scrollbar-corner': {
                   // this hides an annoying white box which appears when both scrollbars are present
-                  backgroundColor: "transparent",
+                  backgroundColor: 'transparent',
                 },
               },
             },
@@ -88,10 +72,10 @@ function CustomThemeProvider({ children }: { children: ReactNode }) {
         <Box
           sx={{
             backgroundImage: `url(${backgroundUrl})`,
-            backgroundPosition: "center",
-            backgroundSize: "cover",
+            backgroundPosition: 'center',
+            backgroundSize: 'cover',
             opacity: backgroundOpacity || 0.1,
-            position: "fixed",
+            position: 'fixed',
             top: 0,
             left: 0,
             right: 0,

@@ -3,13 +3,13 @@ import {
   CHAIN_ID_AURORA,
   CHAIN_ID_OPTIMISM,
   CHAIN_ID_POLYGON,
-} from "@certusone/wormhole-sdk";
+} from '@certusone/wormhole-sdk';
 import {
   CheckCircleOutline,
   ErrorOutline,
   InfoOutlined,
   WarningAmberOutlined,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
 import {
   Alert,
   AlertColor,
@@ -21,20 +21,18 @@ import {
   ListItemText,
   Tooltip,
   Typography,
-} from "@mui/material";
-import { useMemo } from "react";
-import { ChainIdToHeartbeats } from "../hooks/useChainHeartbeats";
-import useLatestRelease from "../hooks/useLatestRelease";
-import chainIdToName from "../utils/chainIdToName";
-import { GUARDIAN_SET_3 } from "../utils/consts";
-import { Heartbeat } from "../utils/getLastHeartbeats";
-import CollapsibleSection from "./CollapsibleSection";
+} from '@mui/material';
+import { useMemo } from 'react';
+import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
+import useLatestRelease from '../hooks/useLatestRelease';
+import chainIdToName from '../utils/chainIdToName';
+import { GUARDIAN_SET_3 } from '../utils/consts';
+import { Heartbeat } from '../utils/getLastHeartbeats';
+import CollapsibleSection from './CollapsibleSection';
 
 const BEHIND_DIFF = 1000;
 const isLayer2 = (chainId: number) =>
-  chainId === CHAIN_ID_POLYGON ||
-  chainId === CHAIN_ID_ARBITRUM ||
-  chainId === CHAIN_ID_OPTIMISM;
+  chainId === CHAIN_ID_POLYGON || chainId === CHAIN_ID_ARBITRUM || chainId === CHAIN_ID_OPTIMISM;
 export const getBehindDiffForChain = (chainId: number) =>
   isLayer2(chainId) ? BEHIND_DIFF * 2 : BEHIND_DIFF;
 
@@ -46,12 +44,7 @@ type AlertEntry = {
   text: string;
 };
 
-const alertSeverityOrder: AlertColor[] = [
-  "error",
-  "warning",
-  "success",
-  "info",
-];
+const alertSeverityOrder: AlertColor[] = ['error', 'warning', 'success', 'info'];
 
 function chainDownAlerts(
   heartbeats: Heartbeat[],
@@ -66,8 +59,7 @@ function chainDownAlerts(
       const missingGuardians = heartbeats.filter(
         (guardianHeartbeat) =>
           chainHeartbeats.findIndex(
-            (chainHeartbeat) =>
-              chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
+            (chainHeartbeat) => chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
           ) === -1
       );
       missingGuardians.forEach((guardianHeartbeat) => {
@@ -85,7 +77,7 @@ function chainDownAlerts(
         if (height > highest) {
           highest = height;
         }
-        if (chainHeartbeat.network.height === "0") {
+        if (chainHeartbeat.network.height === '0') {
           if (!downChains[chainId]) {
             downChains[chainId] = [];
           }
@@ -94,7 +86,7 @@ function chainDownAlerts(
       });
       // Search for guardians which are lagging significantly behind
       chainHeartbeats.forEach((chainHeartbeat) => {
-        if (chainHeartbeat.network.height !== "0") {
+        if (chainHeartbeat.network.height !== '0') {
           const height = BigInt(chainHeartbeat.network.height);
           const diff = highest - height;
           if (diff > getBehindDiffForChain(chainHeartbeat.network.id)) {
@@ -107,25 +99,20 @@ function chainDownAlerts(
       });
     });
   return Object.entries(downChains).map(([chainId, names]) => ({
-    severity: names.length >= QUORUM_LOSS_COUNT ? "error" : "warning",
-    text: `${names.length} guardian${names.length > 1 ? "s" : ""} [${names.join(
-      ", "
-    )}] ${names.length > 1 ? "are" : "is"} down on ${chainIdToName(
-      Number(chainId)
-    )} (${chainId})!`,
+    severity: names.length >= QUORUM_LOSS_COUNT ? 'error' : 'warning',
+    text: `${names.length} guardian${names.length > 1 ? 's' : ''} [${names.join(', ')}] ${
+      names.length > 1 ? 'are' : 'is'
+    } down on ${chainIdToName(Number(chainId))} (${chainId})!`,
   }));
 }
 
-const releaseChecker = (
-  release: string | null,
-  heartbeats: Heartbeat[]
-): AlertEntry[] =>
+const releaseChecker = (release: string | null, heartbeats: Heartbeat[]): AlertEntry[] =>
   release === null
     ? []
     : heartbeats
         .filter((heartbeat) => heartbeat.version !== release)
         .map((heartbeat) => ({
-          severity: "info",
+          severity: 'info',
           text: `${heartbeat.nodeName} is not running the latest release (${heartbeat.version} !== ${release})`,
         }));
 
@@ -143,29 +130,27 @@ function Alerts({
       ...releaseChecker(latestRelease, heartbeats),
     ];
     return alerts.sort((a, b) =>
-      alertSeverityOrder.indexOf(a.severity) <
-      alertSeverityOrder.indexOf(b.severity)
+      alertSeverityOrder.indexOf(a.severity) < alertSeverityOrder.indexOf(b.severity)
         ? -1
-        : alertSeverityOrder.indexOf(a.severity) >
-          alertSeverityOrder.indexOf(b.severity)
+        : alertSeverityOrder.indexOf(a.severity) > alertSeverityOrder.indexOf(b.severity)
         ? 1
         : 0
     );
   }, [latestRelease, heartbeats, chainIdsToHeartbeats]);
   const numErrors = useMemo(
-    () => alerts.filter((alert) => alert.severity === "error").length,
+    () => alerts.filter((alert) => alert.severity === 'error').length,
     [alerts]
   );
   const numInfos = useMemo(
-    () => alerts.filter((alert) => alert.severity === "info").length,
+    () => alerts.filter((alert) => alert.severity === 'info').length,
     [alerts]
   );
   const numSuccess = useMemo(
-    () => alerts.filter((alert) => alert.severity === "success").length,
+    () => alerts.filter((alert) => alert.severity === 'success').length,
     [alerts]
   );
   const numWarnings = useMemo(
-    () => alerts.filter((alert) => alert.severity === "warning").length,
+    () => alerts.filter((alert) => alert.severity === 'warning').length,
     [alerts]
   );
   return (
@@ -174,8 +159,8 @@ function Alerts({
       header={
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
+            display: 'flex',
+            alignItems: 'center',
             paddingRight: 1,
           }}
         >
@@ -216,8 +201,7 @@ function Alerts({
                       primary="Guardians not running the latest release"
                       secondary={
                         <>
-                          The guardian version is compared to the latest release
-                          from{" "}
+                          The guardian version is compared to the latest release from{' '}
                           <Link
                             href="https://github.com/wormhole-foundation/wormhole/releases"
                             target="_blank"
@@ -232,11 +216,11 @@ function Alerts({
                 </List>
               </>
             }
-            componentsProps={{ tooltip: { sx: { maxWidth: "100%" } } }}
+            componentsProps={{ tooltip: { sx: { maxWidth: '100%' } } }}
           >
             <Box>
               Alerts
-              <InfoOutlined sx={{ fontSize: ".8em", ml: 0.5 }} />
+              <InfoOutlined sx={{ fontSize: '.8em', ml: 0.5 }} />
             </Box>
           </Tooltip>
           <Box flexGrow={1} />

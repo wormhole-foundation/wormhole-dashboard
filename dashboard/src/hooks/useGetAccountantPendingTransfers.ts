@@ -1,8 +1,8 @@
-import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { useEffect, useState } from "react";
-import { useNetworkContext } from "../contexts/NetworkContext";
-import { useSettingsContext } from "../contexts/SettingsContext";
-import { ACCOUNTANT_CONTRACT_ADDRESS } from "../utils/consts";
+import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { useEffect, useState } from 'react';
+import { useNetworkContext } from '../contexts/NetworkContext';
+import { useSettingsContext } from '../contexts/SettingsContext';
+import { ACCOUNTANT_CONTRACT_ADDRESS } from '../utils/consts';
 
 const POLL_INTERVAL_MS = 10 * 1000;
 const PAGE_LIMIT = 2000; // throws a gas limit error over this
@@ -32,7 +32,7 @@ const useGetAccountantPendingTransfers = (): PendingTransfer[] => {
   const [accountantInfo, setAccountantInfo] = useState<PendingTransfer[]>([]);
 
   useEffect(() => {
-    if (currentNetwork.name !== "Mainnet" || !wormchainUrl) {
+    if (currentNetwork.name !== 'Mainnet' || !wormchainUrl) {
       return;
     }
     let cancelled = false;
@@ -44,19 +44,15 @@ const useGetAccountantPendingTransfers = (): PendingTransfer[] => {
           let response;
           let start_after = undefined;
           do {
-            response = await cosmWasmClient.queryContractSmart(
-              ACCOUNTANT_CONTRACT_ADDRESS,
-              {
-                all_pending_transfers: {
-                  limit: PAGE_LIMIT,
-                  start_after,
-                },
-              }
-            );
+            response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
+              all_pending_transfers: {
+                limit: PAGE_LIMIT,
+                start_after,
+              },
+            });
             pending = [...pending, ...response.pending];
             start_after =
-              response.pending.length &&
-              response.pending[response.pending.length - 1].key;
+              response.pending.length && response.pending[response.pending.length - 1].key;
           } while (response.pending.length === PAGE_LIMIT);
           if (!cancelled) {
             setAccountantInfo(pending);

@@ -1,7 +1,7 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { useNetworkContext } from "../contexts/NetworkContext";
-import { JUMP_GUARDIAN_ADDRESS } from "../utils/consts";
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNetworkContext } from '../contexts/NetworkContext';
+import { JUMP_GUARDIAN_ADDRESS } from '../utils/consts';
 
 export interface AvailableNotionalByChain {
   chainId: number;
@@ -101,8 +101,7 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
   const notionalsByChain = configs.data.governorConfigs.reduce<{
     [chainId: number]: bigint[];
   }>((notionalsByChain, config) => {
-    if (config.guardianAddress.toLowerCase() === JUMP_GUARDIAN_ADDRESS)
-      jumpConfig = config;
+    if (config.guardianAddress.toLowerCase() === JUMP_GUARDIAN_ADDRESS) jumpConfig = config;
     config.chains.forEach(({ chainId, availableNotional }) => {
       if (notionalsByChain[chainId] === undefined) {
         notionalsByChain[chainId] = [];
@@ -132,9 +131,7 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
             jump: chain.availableNotional,
             min: stats.min.toString(),
             max: stats.max.toString(),
-            avg: (
-              stats.sum / BigInt(notionalsByChain[chain.chainId]?.length || 1)
-            ).toString(),
+            avg: (stats.sum / BigInt(notionalsByChain[chain.chainId]?.length || 1)).toString(),
           },
         };
       })
@@ -167,9 +164,7 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
 
 const useCloudGovernorInfo = (): CloudGovernorInfo => {
   const { currentNetwork } = useNetworkContext();
-  const [governorInfo, setGovernorInfo] = useState<CloudGovernorInfo>(
-    createEmptyInfo()
-  );
+  const [governorInfo, setGovernorInfo] = useState<CloudGovernorInfo>(createEmptyInfo());
 
   useEffect(() => {
     setGovernorInfo(createEmptyInfo());

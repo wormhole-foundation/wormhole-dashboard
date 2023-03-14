@@ -1,14 +1,14 @@
-import { Divider } from "@mui/material";
-import { useNetworkContext } from "../contexts/NetworkContext";
-import useChainHeartbeats from "../hooks/useChainHeartbeats";
-import useHeartbeats from "../hooks/useHeartbeats";
-import Accountant from "./Accountant";
-import Alerts from "./Alerts";
-import Chains from "./Chains";
-import CollapsibleSection from "./CollapsibleSection";
-import Governor from "./Governor";
-import Guardians from "./Guardians";
-import MainnetGovernor from "./MainnetGovernor";
+import { Divider } from '@mui/material';
+import { useNetworkContext } from '../contexts/NetworkContext';
+import useChainHeartbeats from '../hooks/useChainHeartbeats';
+import useHeartbeats from '../hooks/useHeartbeats';
+import Accountant from './Accountant';
+import Alerts from './Alerts';
+import Chains from './Chains';
+import CollapsibleSection from './CollapsibleSection';
+import Governor from './Governor';
+import Guardians from './Guardians';
+import MainnetGovernor from './MainnetGovernor';
 
 function Main() {
   const heartbeats = useHeartbeats();
@@ -16,10 +16,7 @@ function Main() {
   const { currentNetwork } = useNetworkContext();
   return (
     <>
-      <Alerts
-        heartbeats={heartbeats}
-        chainIdsToHeartbeats={chainIdsToHeartbeats}
-      />
+      <Alerts heartbeats={heartbeats} chainIdsToHeartbeats={chainIdsToHeartbeats} />
       <Divider />
       <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} />
       <Divider />
@@ -27,7 +24,7 @@ function Main() {
         <Guardians heartbeats={heartbeats} />
       </CollapsibleSection>
       <Divider />
-      {currentNetwork.name === "Mainnet" ? (
+      {currentNetwork.name === 'Mainnet' ? (
         <>
           <CollapsibleSection header="Accountant">
             <Accountant />
@@ -35,7 +32,7 @@ function Main() {
           <Divider />
         </>
       ) : null}
-      {currentNetwork.name === "Mainnet" ? <MainnetGovernor /> : <Governor />}
+      {currentNetwork.name === 'Mainnet' ? <MainnetGovernor /> : <Governor />}
     </>
   );
 }

@@ -1,6 +1,6 @@
-import { publicrpc } from "@certusone/wormhole-sdk-proto-web";
-import axios from "axios";
-import { Network } from "../contexts/NetworkContext";
+import { publicrpc } from '@certusone/wormhole-sdk-proto-web';
+import axios from 'axios';
+import { Network } from '../contexts/NetworkContext';
 const { GrpcWebImpl, PublicRPCServiceClientImpl } = publicrpc;
 
 export interface Heartbeat {
@@ -21,10 +21,8 @@ export interface HeartbeatNetwork {
   errorCount: string;
 }
 
-export async function getLastHeartbeats(
-  network: Network
-): Promise<Heartbeat[]> {
-  if (network.type === "guardian") {
+export async function getLastHeartbeats(network: Network): Promise<Heartbeat[]> {
+  if (network.type === 'guardian') {
     const rpc = new GrpcWebImpl(network.endpoint, {});
     const api = new PublicRPCServiceClientImpl(rpc);
     const lastHeartbeats = await api.GetLastHeartbeats({});
@@ -34,11 +32,11 @@ export async function getLastHeartbeats(
       }
       return heartbeats;
     }, []);
-  } else if (network.type === "cloudfunction") {
+  } else if (network.type === 'cloudfunction') {
     const response = await axios.get<{
       heartbeats: Heartbeat[];
     }>(`${network.endpoint}/guardian-heartbeats`);
     return response.data.heartbeats || [];
   }
-  throw new Error("Unsupported network");
+  throw new Error('Unsupported network');
 }

@@ -1,4 +1,4 @@
-import { Heartbeat, HeartbeatNetwork } from "../utils/getLastHeartbeats";
+import { Heartbeat, HeartbeatNetwork } from '../utils/getLastHeartbeats';
 
 export type HeartbeatInfo = {
   guardian: string;
@@ -21,9 +21,9 @@ function useChainHeartbeats(heartbeats: Heartbeat[]) {
           name: heartbeat.nodeName,
           network: {
             ...network,
-            contractAddress: "",
-            errorCount: "0",
-            height: "0",
+            contractAddress: '',
+            errorCount: '0',
+            height: '0',
           },
         }));
       }

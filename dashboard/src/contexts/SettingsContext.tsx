@@ -1,15 +1,8 @@
-import React, {
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-const STORAGE_KEY = "settings";
+const STORAGE_KEY = 'settings';
 
-export type Theme = "light" | "dark" | "auto";
+export type Theme = 'light' | 'dark' | 'auto';
 
 type Settings = {
   backgroundUrl?: string;
@@ -29,7 +22,7 @@ type SettingsContextValue = {
 };
 
 const isTheme = (arg: any): arg is Theme => {
-  return arg && (arg === "light" || arg === "dark" || arg === "auto");
+  return arg && (arg === 'light' || arg === 'dark' || arg === 'auto');
 };
 
 const isSettings = (arg: any): arg is Settings => {
@@ -47,7 +40,7 @@ try {
   }
 } catch (e) {}
 
-const initialSettings: Settings = localStorageSettings || { theme: "auto" };
+const initialSettings: Settings = localStorageSettings || { theme: 'auto' };
 
 const saveSettings = (settings: Settings) => {
   try {
@@ -64,11 +57,7 @@ const SettingsContext = React.createContext<SettingsContextValue>({
   updateWormchainUrl: (value: string) => {},
 });
 
-export const SettingsContextProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+export const SettingsContextProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const updateBackgroundOpacity = useCallback((value: number) => {
     setSettings((settings) => ({ ...settings, backgroundOpacity: value }));
@@ -107,11 +96,7 @@ export const SettingsContextProvider = ({
       updateWormchainUrl,
     ]
   );
-  return (
-    <SettingsContext.Provider value={value}>
-      {children}
-    </SettingsContext.Provider>
-  );
+  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };
 
 export const useSettingsContext = () => {

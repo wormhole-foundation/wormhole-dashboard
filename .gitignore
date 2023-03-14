@@ -1,0 +1,11 @@
+node_modules/
+lib/
+dist/
+*.log
+db.json
+lastBlockByChain.json
+.env
+serviceAccountKey.json
+bigtableAccountKey.json
+tsconfig.tsbuildinfo
+serviceAccount.json

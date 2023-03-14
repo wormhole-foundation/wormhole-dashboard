@@ -1,6 +1,6 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk';
+import { ChainId, CHAIN_ID_SOLANA, coalesceChainName } from '@certusone/wormhole-sdk';
 import {
   Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
@@ -26,10 +26,20 @@ import { Watcher } from '../src/watchers/Watcher';
   const messageTable = instance.table(bt.msgTableId);
   try {
     // Find gaps in sequence numbers with the same chain and emitter
+    // Filter known bad emitters
     // Sort by ascending sequence number
-    const observedMessages = (await messageTable.getRows())[0].sort((a, b) =>
-      Number(parseMessageId(a.id).sequence - parseMessageId(b.id).sequence)
-    );
+    const observedMessages = (await messageTable.getRows())[0]
+      .filter((m) => {
+        const { chain, emitter } = parseMessageId(m.id);
+        if (
+          chain === CHAIN_ID_SOLANA &&
+          emitter === '6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25'
+        ) {
+          return false;
+        }
+        return true;
+      })
+      .sort((a, b) => Number(parseMessageId(a.id).sequence - parseMessageId(b.id).sequence));
     const total = observedMessages.length;
     console.log(`processing ${total} messages`);
     const gaps = [];

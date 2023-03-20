@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigtable"
+	"cloud.google.com/go/pubsub"
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/p2p"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
@@ -35,13 +37,14 @@ var (
 )
 
 var (
-	p2pNetworkID  string
-	p2pPort       uint
-	p2pBootstrap  string
-	nodeKeyPath   string
-	logLevel      string
-	gcpProjectID  string
-	gcpInstanceID string
+	p2pNetworkID       string
+	p2pPort            uint
+	p2pBootstrap       string
+	nodeKeyPath        string
+	logLevel           string
+	gcpProjectID       string
+	bigtableInstanceID string
+	signedVAATopicName string
 )
 
 // Make a bigtable row key from a VAA
@@ -71,21 +74,41 @@ func writeSignedVAAsToBigtable(ctx context.Context, client *bigtable.Client, sig
 		logger.Error("Could not apply bulk row mutation", zap.Error(err))
 	}
 	if rowErrs != nil {
-		for _, rowErr := range rowErrs {
-			logger.Error("Error writing row", zap.Error(rowErr))
-		}
 		logger.Error("Could not write some rows")
+	}
+	if err == nil && rowErrs == nil {
+		logger.Info("Wrote signedVAAs rows", zap.Int("count", len(rowKeys)))
+	}
+}
+
+func publishSignedVAAs(ctx context.Context, topic *pubsub.Topic, signedVAAs map[string][]byte, logger *zap.Logger) {
+	for key := range signedVAAs {
+		result := topic.Publish(ctx, &pubsub.Message{
+			Data: []byte(key),
+		})
+		_, err := result.Get(ctx)
+		if err != nil {
+			logger.Error("pubsub error", zap.Error(err))
+		}
 	}
 }
 
 func main() {
+	// TODO: pass in config instead of hard-coding it
 	p2pNetworkID = "/wormhole/mainnet/2"
-	p2pBootstrap = "/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7"
+	p2pBootstrap = "/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7,/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC"
 	p2pPort = 8999
 	nodeKeyPath = "/tmp/node.key"
 	logLevel = "warn"
-	gcpProjectID = "wormhole-315720"
-	gcpInstanceID = "wormhole-mainnet"
+	gcpProjectID = "wormhole-message-db-mainnet"
+	bigtableInstanceID = "wormhole-mainnet"
+	signedVAATopicName = "signed-vaa"
+
+	credentialsFile := flag.String("credentialsFile", "", "GCP service account or refresh token JSON credentials file")
+	flag.Parse()
+	if *credentialsFile == "" {
+		log.Fatalf("gcpCredentialsFile must be specified")
+	}
 
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
@@ -97,17 +120,8 @@ func main() {
 
 	ipfslog.SetAllLoggers(lvl)
 
-	// Verify flags
-	if nodeKeyPath == "" {
-		logger.Fatal("Please specify --nodeKey")
-	}
-	if p2pBootstrap == "" {
-		logger.Fatal("Please specify --bootstrap")
-	}
-
-	// Use the application default credentials
 	ctx := context.Background()
-	sa := option.WithCredentialsFile("./serviceAccount.json")
+	sa := option.WithCredentialsFile(*credentialsFile)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -119,11 +133,18 @@ func main() {
 	}
 	defer client.Close()
 
-	btClient, err := bigtable.NewClient(ctx, gcpProjectID, gcpInstanceID, sa)
+	btClient, err := bigtable.NewClient(ctx, gcpProjectID, bigtableInstanceID, sa)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer btClient.Close()
+
+	pubsubClient, err := pubsub.NewClient(ctx, gcpProjectID, sa)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer pubsubClient.Close()
+	signedVAATopic := pubsubClient.Topic(signedVAATopicName)
 
 	// Node's main lifecycle context.
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
@@ -206,6 +227,7 @@ func main() {
 					wg.Add(1)
 					go func(signedVAAs map[string][]byte) {
 						writeSignedVAAsToBigtable(rootCtx, btClient, signedVAAs, logger)
+						publishSignedVAAs(rootCtx, signedVAATopic, signedVAAs, logger)
 						defer wg.Done()
 					}(signedVAAs)
 					signedVAAs = map[string][]byte{}

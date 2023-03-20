@@ -6,7 +6,7 @@ import { ObservedMessage } from './types';
 
 // Read/write to cloud storage
 const storage = new Storage();
-const bucketName = 'observed-blocks-cache';
+const bucketName = 'wormhole-observed-blocks-cache';
 const cacheBucket = storage.bucket(bucketName);
 const cacheFileName = 'missing-vaas-cache.json';
 // The ID of your GCS bucket
@@ -24,10 +24,6 @@ async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<Mis
   const bigtable = new Bigtable();
   const instance = bigtable.instance(assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'));
   const table = instance.table(assertEnvironmentVariable('BIGTABLE_TABLE_ID'));
-  console.log(
-    assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'),
-    assertEnvironmentVariable('BIGTABLE_TABLE_ID')
-  );
   // build range values for each chain based on first missing vaa row key
   let missingVaaRanges: { ranges: { start: string; end: string }[] } = {
     ranges: [],
@@ -45,7 +41,6 @@ async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<Mis
   let missingMessages: MissingVaasByChain = {};
   const [missingVaaObservedMessages] = await table.getRows(missingVaaRanges);
   for (const [chainName, chainId] of Object.entries(CHAINS)) {
-    console.log(chainName, chainId);
     let lastRowKey = '';
     let missingMessagesByChain: ObservedMessage[] = [];
     const messagesByChain = missingVaaObservedMessages.filter(
@@ -75,8 +70,6 @@ async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<Mis
       }
 
       lastRowKey = missingVaaMessagesByChain[missingVaaMessagesByChain.length - 1]?.id;
-    } else {
-      console.log('no missing vaas');
     }
     // update counts
     if (lastRowKey === '') {
@@ -119,10 +112,8 @@ export async function computeMissingVaas(req: any, res: any) {
   let cache = { messages: {} as MissingVaasByChain };
 
   if (reloadCache === 'true' || reloadCache === '1') {
-    console.log('emptying the caches');
     cache = { messages: {} as MissingVaasByChain };
   } else {
-    console.log('loading from cache bucket');
     const [csCache] = await cloudStorageCache.download();
     cache = { messages: JSON.parse(csCache.toString()) };
   }

@@ -27,7 +27,7 @@ export async function getMessageCounts(req: any, res: any) {
   let messages: CountsByChain = {};
   try {
     // The ID of your GCS bucket
-    const bucketName = 'observed-blocks-cache';
+    const bucketName = 'wormhole-observed-blocks-cache';
     const cacheBucket = storage.bucket(bucketName);
     const cacheFileName = 'message-counts-cache.json';
     const cloudStorageCache = cacheBucket.file(cacheFileName);

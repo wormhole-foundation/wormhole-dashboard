@@ -79,6 +79,7 @@ var (
 const ourGuardianIndex = 0 // Certus One
 
 func main() {
+	// TODO: pass in config instead of hard-coding it
 	// main
 	p2pNetworkID = "/wormhole/mainnet/2"
 	p2pBootstrap = "/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7"

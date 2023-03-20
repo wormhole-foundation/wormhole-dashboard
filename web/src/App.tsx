@@ -137,7 +137,7 @@ function DetailBlocks({ chain }: { chain: string }) {
       setMessagesWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
         const response = await axios.get<ObservedMessage[]>(
-          `https://europe-west3-wormhole-315720.cloudfunctions.net/messages/${chain}${
+          `https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/messages/${chain}${
             fromId ? `?fromId=${fromId}` : ''
           }`
         );
@@ -286,7 +286,7 @@ function Misses() {
       setMissesWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
         const response = await axios.get<MissesByChain>(
-          'https://europe-west3-wormhole-315720.cloudfunctions.net/missing-vaas'
+          'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/missing-vaas'
         );
         if (response.data && !cancelled) {
           setMissesWrapper(receiveDataWrapper(response.data));
@@ -391,7 +391,7 @@ function App() {
       setLastBlockByChainWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
         const response = await axios.get<LastBlockByChain>(
-          'https://europe-west3-wormhole-315720.cloudfunctions.net/latest-blocks'
+          'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/latest-blocks'
         );
         if (response.data && !cancelled) {
           setLastBlockByChainWrapper(receiveDataWrapper(response.data));
@@ -420,7 +420,7 @@ function App() {
       setMessageCountsWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
         const response = await axios.get<CountsByChain>(
-          'https://europe-west3-wormhole-315720.cloudfunctions.net/message-counts'
+          'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/message-counts'
         );
         if (response.data && !cancelled) {
           setMessageCountsWrapper(receiveDataWrapper(response.data));

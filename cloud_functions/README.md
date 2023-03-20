@@ -1,7 +1,7 @@
 to run cloud functions locally: https://cloud.google.com/functions/docs/running/function-frameworks
 
 To deploy: see scripts/deploy.sh
-Be sure to first export env variables: BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, CLOUD_FUNCTIONS_NUM_ROWS, CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL, CLOUD_FUNCTIONS_BLOCK_INCREMENT (see .env.sample)
+Be sure to first export env variables (see .env.sample)
 
 > format of a deploy command:
 
@@ -13,6 +13,6 @@ Be sure to first export env variables: BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, 
 
 gcloud functions deploy <name of cloud function> --entry-point <name of function> --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 1GB --region <location> --set-env-vars LIST_OF_ENV_VARS
 
-Note: these cloud functions are managed in conjunction with cloud storage (caches) and cloud scheduler (cron job to perdiodically compute cloud functions)
+Note: these cloud functions are managed in conjunction with cloud storage (caches) and cloud scheduler (cron job to periodically compute cloud functions)
 The compute CFs are currently deployed with --allow-unauthenticated flag so the cache can be reloaded manually, but then anyone can refresh the cache.
 TODO: figure out how to allow the cloud schedular to run the cache reload and remove the --allow-unauthenticated flag

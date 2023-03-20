@@ -139,21 +139,24 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
 
   const tokens = jumpConfig?.tokens || [];
 
-  const jumpStatus = status.data.governorStatus.find(
-    (status) => status.guardianAddress.toLowerCase() === JUMP_GUARDIAN_ADDRESS
-  );
-  const enqueuedVAAs: EnqueuedVAA[] = [];
-  (jumpStatus?.chains || []).forEach((chain) => {
-    chain.emitters.forEach((emitter) => {
-      emitter.enqueuedVaas.forEach((vaa) => {
-        enqueuedVAAs.push({
-          ...vaa,
-          emitterChain: chain.chainId,
-          emitterAddress: emitter.emitterAddress.slice(2),
-        });
-      });
-    });
-  });
+  const vaaById = status.data.governorStatus.reduce<{
+    [key: string]: EnqueuedVAA;
+  }>((vaaById, status) => {
+    for (const chain of status.chains) {
+      for (const emitter of chain.emitters) {
+        for (const vaa of emitter.enqueuedVaas) {
+          const vaaId = `${chain.chainId}/${emitter}/${vaa.sequence}`;
+          vaaById[vaaId] = {
+            ...vaa,
+            emitterChain: chain.chainId,
+            emitterAddress: emitter.emitterAddress.slice(2),
+          };
+        }
+      }
+    }
+    return vaaById;
+  }, {});
+  const enqueuedVAAs = Object.values(vaaById);
 
   return {
     notionals,

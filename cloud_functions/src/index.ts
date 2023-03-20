@@ -9,6 +9,7 @@ export const { getMissingVaas } = require('./getMissingVaas');
 export const { computeMissingVaas } = require('./computeMissingVaas');
 export const { computeMessageCounts } = require('./computeMessageCounts');
 export const { getVaasByTxHash } = require('./getVaasByTxHash');
+export const { processVaa } = require('./processVaa');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.

@@ -31,12 +31,15 @@ test('getMessagesForSequenceNumbers', async () => {
   // test that block number, timestamp, and sequence number are all strictly increasing
   const latestSequenceNumber = await watcher.getFinalizedBlockNumber();
   const messageKeys = Object.keys(
-    await watcher.getMessagesForBlocks(latestSequenceNumber - 50, latestSequenceNumber)
+    await watcher.getMessagesForBlocks(
+      latestSequenceNumber - watcher.maximumBatchSize + 1,
+      latestSequenceNumber
+    )
   ).sort();
   expect(messageKeys.length).toBe(watcher.maximumBatchSize);
   expect(Date.parse(messageKeys.at(-1)!.split('/')[1])).toBeLessThan(Date.now());
   let prevKey = messageKeys[0];
-  for (let i = 1; i < 25; i++) {
+  for (let i = 1; i < watcher.maximumBatchSize; i++) {
     const currKey = messageKeys[i];
     const [prevBlockNumber, prevTimestamp, prevEventSequenceNumber] = prevKey.split('/');
     const [blockNumber, timestamp, eventSequenceNumber] = currKey.split('/');

@@ -20,7 +20,7 @@ type NetworkContextValue = {
 export const networkOptions: Network[] = [
   {
     env: 'mainnet',
-    endpoint: 'https://europe-west3-wormhole-315720.cloudfunctions.net',
+    endpoint: 'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net',
     name: 'Mainnet',
     logo: '',
     type: 'cloudfunction',

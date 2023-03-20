@@ -24,6 +24,7 @@ import {
   parseMessageId,
 } from './utils';
 import { getSignedVAA } from '../utils/getSignedVAA';
+import { PubSub } from '@google-cloud/pubsub';
 
 const WATCH_MISSING_TIMEOUT = 5 * 60 * 1000;
 
@@ -35,6 +36,8 @@ export class BigtableDatabase extends Database {
   bigtable: Bigtable;
   firestoreDb: FirebaseFirestore.Firestore;
   latestCollectionName: string;
+  pubsubSignedVAATopic: string;
+  pubsub: PubSub;
   constructor() {
     super();
     this.msgTableId = assertEnvironmentVariable('BIGTABLE_TABLE_ID');
@@ -42,6 +45,7 @@ export class BigtableDatabase extends Database {
     this.vaasByTxHashTableId = assertEnvironmentVariable('BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID');
     this.instanceId = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
+    this.pubsubSignedVAATopic = assertEnvironmentVariable('PUBSUB_SIGNED_VAA_TOPIC');
     try {
       this.bigtable = new Bigtable();
       const serviceAccount = require(assertEnvironmentVariable('FIRESTORE_ACCOUNT_KEY_PATH'));
@@ -49,6 +53,7 @@ export class BigtableDatabase extends Database {
         credential: cert(serviceAccount),
       });
       this.firestoreDb = getFirestore();
+      this.pubsub = new PubSub();
     } catch (e) {
       throw new Error('Could not load bigtable db');
     }
@@ -262,6 +267,7 @@ export class BigtableDatabase extends Database {
           }
         }
         this.storeSignedVAAs(missingSignedVAARows);
+        this.publishSignedVAAs(missingSignedVAARows.map((r) => r.key));
         // TODO: add slack message alerts
       } catch (e) {
         this.logger.error(e);
@@ -277,6 +283,27 @@ export class BigtableDatabase extends Database {
     for (const chunk of chunks) {
       await table.insert(chunk);
       this.logger.info(`wrote ${chunk.length} signed VAAs to the ${this.signedVAAsTableId} table`);
+    }
+  }
+
+  async publishSignedVAAs(keys: string[]): Promise<void> {
+    if (keys.length === 0) {
+      return;
+    }
+    try {
+      const topic = this.pubsub.topic(this.pubsubSignedVAATopic);
+      if (!(await topic.exists())) {
+        this.logger.error(`pubsub topic doesn't exist: ${this.publishSignedVAAs}`);
+        return;
+      }
+      for (const key of keys) {
+        await topic.publishMessage({ data: Buffer.from(key) });
+      }
+      this.logger.info(
+        `published ${keys.length} signed VAAs to pubsub topic: ${this.pubsubSignedVAATopic}`
+      );
+    } catch (e) {
+      this.logger.error(`pubsub error - ${e}`);
     }
   }
 }

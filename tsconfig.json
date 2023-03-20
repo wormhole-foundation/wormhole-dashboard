@@ -1,4 +1,9 @@
 {
   "files": [],
-  "references": [{ "path": "common" }, { "path": "watcher" }, { "path": "cloud_functions" }]
+  "references": [
+    { "path": "common" },
+    { "path": "watcher" },
+    { "path": "cloud_functions" },
+    { "path": "database" }
+  ]
 }

@@ -1,12 +1,22 @@
-import { Bigtable } from '@google-cloud/bigtable';
+import { Bigtable, Instance, Table } from '@google-cloud/bigtable';
 import { assertEnvironmentVariable } from './utils';
 
-const bigtable = new Bigtable();
-const instance = bigtable.instance(assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'));
-const vaasByTxHashTable = instance.table(
-  assertEnvironmentVariable('BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID')
-);
-const signedVAAsTable = instance.table(assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID'));
+let initialized = false;
+let bigtable: Bigtable;
+let instance: Instance;
+let vaasByTxHashTable: Table;
+let signedVAAsTable: Table;
+
+function initialize() {
+  bigtable = new Bigtable();
+  instance = bigtable.instance(assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'));
+  vaasByTxHashTable = instance.table(
+    assertEnvironmentVariable('BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID')
+  );
+  signedVAAsTable = instance.table(assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID'));
+  console.log('initialized global variables');
+  initialized = true;
+}
 
 export async function getVaasByTxHash(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -19,6 +29,9 @@ export async function getVaasByTxHash(req: any, res: any) {
     return;
   }
   try {
+    if (!initialized) {
+      initialize();
+    }
     const txHash = req.query.tx;
     if (!txHash) {
       res.status(400);

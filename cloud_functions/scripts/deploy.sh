@@ -2,10 +2,10 @@
 source .env
 set -e
 
+# Install and authorize the gcloud CLI: https://cloud.google.com/sdk/docs/install
+
 # SET ENV VARIABLES
-# note: load the service account key for either bigtable or firestore before running their respective CFs
-# e.g., EXPORT GOOGLE_APPLICATION_CREDENTIALS=<path-to-credentials>
-# export env variables: BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, CLOUD_FUNCTIONS_NUM_ROWS, BIGTABLE_SIGNED_VAAS_TABLE_ID, BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID
+# export env variables required below
 # or source .env
 # make sure you npm run build in the root folder before trying to deploy :D
 
@@ -29,16 +29,75 @@ if [ -z "$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID" ]; then
     exit 1
 fi
 
-# note CLOUD_FUNCTIONS_NUM_ROWS isn't required and defaults to 100 if not provided
+if [ -z "$CLOUD_FUNCTIONS_NUM_ROWS" ]; then
+    echo "CLOUD_FUNCTIONS_NUM_ROWS must be specified"
+    exit 1
+fi
 
-# for initial deployment
-# echo "gcloud functions deploy messages  --entry-point getMessages  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 1GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_NUM_ROWS=$CLOUD_FUNCTIONS_NUM_ROWS,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,CLOUD_FUNCTIONS_BLOCK_INCREMENT=$CLOUD_FUNCTIONS_BLOCK_INCREMENT"
+if [ -z "$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL" ]; then
+    echo "CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL be specified"
+    exit 1
+fi
 
-gcloud functions deploy messages  --entry-point getMessages  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 1GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_NUM_ROWS=$CLOUD_FUNCTIONS_NUM_ROWS,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,CLOUD_FUNCTIONS_BLOCK_INCREMENT=$CLOUD_FUNCTIONS_BLOCK_INCREMENT
-gcloud functions deploy message-counts  --entry-point getMessageCounts  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3
-gcloud functions deploy compute-message-counts  --entry-point computeMessageCounts  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 4GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL
-gcloud functions deploy latest-blocks  --entry-point getLatestBlocks  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,FIRESTORE_LATEST_COLLECTION=$FIRESTORE_LATEST_COLLECTION
-gcloud functions deploy compute-missing-vaas  --entry-point computeMissingVaas  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 2GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL
-gcloud functions deploy missing-vaas  --entry-point getMissingVaas  --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3
-gcloud functions deploy vaas-by-tx-hash  --entry-point getVaasByTxHash --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3  --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID=$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID
+if [ -z "$CLOUD_FUNCTIONS_BLOCK_INCREMENT" ]; then
+    echo "CLOUD_FUNCTIONS_BLOCK_INCREMENT must be specified"
+    exit 1
+fi
 
+if [ -z "$PG_USER" ]; then
+    echo "PG_USER must be specified"
+    exit 1
+fi
+
+if [ -z "$PG_PASSWORD" ]; then
+    echo "PG_PASSWORD must be specified"
+    exit 1
+fi
+
+if [ -z "$PG_DATABASE" ]; then
+    echo "PG_DATABASE must be specified"
+    exit 1
+fi
+
+if [ -z "$PG_HOST" ]; then
+    echo "PG_HOST must be specified"
+    exit 1
+fi
+
+if [ -z "$PG_TOKEN_TRANSFER_TABLE" ]; then
+    echo "PG_TOKEN_TRANSFER_TABLE must be specified"
+    exit 1
+fi
+
+if [ -z "$PG_ATTEST_MESSAGE_TABLE" ]; then
+    echo "PG_ATTEST_MESSAGE_TABLE must be specified"
+    exit 1
+fi
+
+if [ -z "$PG_TOKEN_METADATA_TABLE" ]; then
+    echo "PG_TOKEN_METADATA_TABLE must be specified"
+    exit 1
+fi
+
+if [ -z "$PUBSUB_SIGNED_VAA_TOPIC" ]; then
+    echo "PUBSUB_SIGNED_VAA_TOPIC must be specified"
+    exit 1
+fi
+
+if [ -z "$FIRESTORE_LATEST_COLLECTION" ]; then
+    echo "FIRESTORE_LATEST_COLLECTION must be specified"
+    exit 1
+fi
+
+# Hack to make these packages available in the GCP build until they're published
+npm pack --silent --workspace @wormhole-foundation/wormhole-monitor-common --pack-destination ./dist/src
+npm pack --silent --workspace @wormhole-foundation/wormhole-monitor-database --pack-destination ./dist/src
+
+gcloud functions deploy messages --entry-point getMessages --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 1GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_NUM_ROWS=$CLOUD_FUNCTIONS_NUM_ROWS,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,CLOUD_FUNCTIONS_BLOCK_INCREMENT=$CLOUD_FUNCTIONS_BLOCK_INCREMENT
+gcloud functions deploy message-counts --entry-point getMessageCounts --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3
+gcloud functions deploy compute-message-counts --entry-point computeMessageCounts --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 4GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL
+gcloud functions deploy latest-blocks --entry-point getLatestBlocks --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,FIRESTORE_LATEST_COLLECTION=$FIRESTORE_LATEST_COLLECTION
+gcloud functions deploy compute-missing-vaas --entry-point computeMissingVaas --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 2GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL
+gcloud functions deploy missing-vaas --entry-point getMissingVaas --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3
+gcloud functions deploy vaas-by-tx-hash --entry-point getVaasByTxHash --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID=$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID
+gcloud functions deploy process-vaa --entry-point processVaa --runtime nodejs16 --timeout 300 --memory 256MB --region europe-west3 --trigger-topic $PUBSUB_SIGNED_VAA_TOPIC --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID=$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID,PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_TOKEN_TRANSFER_TABLE=$PG_TOKEN_TRANSFER_TABLE,PG_ATTEST_MESSAGE_TABLE=$PG_ATTEST_MESSAGE_TABLE,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE

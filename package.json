@@ -12,7 +12,8 @@
     "watcher",
     "web",
     "dashboard",
-    "cloud_functions"
+    "cloud_functions",
+    "database"
   ],
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.9.8"

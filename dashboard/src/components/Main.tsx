@@ -1,4 +1,5 @@
 import { Divider } from '@mui/material';
+import { MonitorSettingsProvider } from '../contexts/MonitorSettingsContext';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';
 import useHeartbeats from '../hooks/useHeartbeats';
@@ -9,6 +10,7 @@ import CollapsibleSection from './CollapsibleSection';
 import Governor from './Governor';
 import Guardians from './Guardians';
 import MainnetGovernor from './MainnetGovernor';
+import Monitor from './Monitor';
 
 function Main() {
   const heartbeats = useHeartbeats();
@@ -33,6 +35,12 @@ function Main() {
         </>
       ) : null}
       {currentNetwork.name === 'Mainnet' ? <MainnetGovernor /> : <Governor />}
+      <Divider />
+      <MonitorSettingsProvider>
+        <CollapsibleSection header="Monitor">
+          <Monitor />
+        </CollapsibleSection>
+      </MonitorSettingsProvider>
     </>
   );
 }

@@ -1,4 +1,14 @@
-import { Box, Card, LinearProgress, Tooltip, Typography } from '@mui/material';
+import { ExpandMore } from '@mui/icons-material';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Card,
+  LinearProgress,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -9,6 +19,7 @@ import {
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 import { useSettingsContext } from '../contexts/SettingsContext';
+import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
 } from '../hooks/useGetAccountantPendingTransfers';
@@ -120,11 +131,33 @@ const pendingTransferColumns = [
   }),
 ];
 
+const accountsColumnHelper = createColumnHelper<Account>();
+
+const accountsColumns = [
+  accountsColumnHelper.accessor('key.chain_id', {
+    header: () => 'Chain',
+    cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
+    sortingFn: `text`,
+  }),
+  accountsColumnHelper.accessor('key.token_chain', {
+    header: () => 'Token Chain',
+    cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
+    sortingFn: `text`,
+  }),
+  accountsColumnHelper.accessor('key.token_address', {
+    header: () => 'Token Address',
+  }),
+  accountsColumnHelper.accessor('balance', {
+    header: () => 'Balance',
+  }),
+];
+
 function Accountant() {
   const {
     settings: { wormchainUrl },
   } = useSettingsContext();
   const pendingTransferInfo = useGetAccountantPendingTransfers();
+  const accountsInfo = useGetAccountantAccounts();
   const guardianSigningStats: GuardianSigningStat[] = useMemo(() => {
     const stats: GuardianSigningStat[] = GUARDIAN_SET_3.map((g) => ({
       name: g.name,
@@ -167,6 +200,20 @@ function Accountant() {
     autoResetPageIndex: false,
     onSortingChange: setPendingTransferSorting,
   });
+  const [accountsSorting, setAccountsSorting] = useState<SortingState>([]);
+  const accounts = useReactTable({
+    columns: accountsColumns,
+    data: accountsInfo,
+    state: {
+      sorting: accountsSorting,
+    },
+    getRowId: (key) => JSON.stringify(key),
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    autoResetPageIndex: false,
+    onSortingChange: setAccountsSorting,
+  });
   return !wormchainUrl ? (
     <Typography sx={{ p: 2 }}>
       Wormchain URL unset. Please configure in the settings to enable accountant info.
@@ -182,7 +229,28 @@ function Accountant() {
       ) : null}
       <Box mb={2}>
         <Card>
-          <Table<PendingTransfer> table={pendingTransfer} paginated />
+          <Table<PendingTransfer>
+            table={pendingTransfer}
+            paginated={!!pendingTransferInfo.length}
+            showRowCount={!!pendingTransferInfo.length}
+          />
+          {pendingTransferInfo.length === 0 ? (
+            <Typography variant="body2" sx={{ py: 1, textAlign: 'center' }}>
+              No pending transfers
+            </Typography>
+          ) : null}
+        </Card>
+      </Box>
+      <Box mt={2}>
+        <Card>
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography>Accounts ({accountsInfo.length})</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Table<Account> table={accounts} paginated />
+            </AccordionDetails>
+          </Accordion>
         </Card>
       </Box>
     </>

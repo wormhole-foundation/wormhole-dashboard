@@ -10,7 +10,6 @@
   "workspaces": [
     "common",
     "watcher",
-    "web",
     "dashboard",
     "cloud_functions",
     "database"

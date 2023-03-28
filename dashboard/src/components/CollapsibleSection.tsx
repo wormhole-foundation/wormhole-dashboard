@@ -15,6 +15,7 @@ function CollapsibleSection({
     <Accordion
       defaultExpanded={defaultExpanded}
       disableGutters
+      TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
       sx={{
         background: 'transparent',
         my: 0.5,

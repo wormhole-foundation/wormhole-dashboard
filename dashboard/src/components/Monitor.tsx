@@ -3,6 +3,7 @@ import { ArrowDownward, ArrowUpward, Code, Launch, Settings } from '@mui/icons-m
 import {
   Box,
   Button,
+  Card,
   CircularProgress,
   Dialog,
   DialogContent,
@@ -16,9 +17,9 @@ import {
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CollapsibleSection from './CollapsibleSection';
-import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from './DataWrapper';
-import { useSettings } from './SettingsContext';
-import { explorerBlock, explorerTx, explorerVaa } from './utils';
+import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
+import { useSettings } from '../contexts/MonitorSettingsContext';
+import { explorerBlock, explorerTx, explorerVaa } from '../utils/explorer';
 
 type LastBlockByChain = { [chainId: string]: string };
 type CountsByChain = {
@@ -83,8 +84,11 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
         VAA
       </Typography>
       <Box sx={{ mb: 1 }}>
-        <Typography variant="body2" sx={{ fontFamily: 'monospace' }} gutterBottom>
-          {message.txHash}{' '}
+        <Typography
+          variant="body2"
+          sx={{ fontFamily: 'monospace', wordBreak: 'break-all' }}
+          gutterBottom
+        >
           <IconButton
             href={explorerTx(Number(chain) as ChainId, message.txHash)}
             target="_blank"
@@ -92,10 +96,14 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
             sx={inlineIconButtonSx}
           >
             <Launch fontSize="inherit" />
-          </IconButton>
+          </IconButton>{' '}
+          {message.txHash}
         </Typography>
-        <Typography variant="body2" sx={{ fontFamily: 'monospace', ml: 1 }} gutterBottom>
-          {vaaId}{' '}
+        <Typography
+          variant="body2"
+          sx={{ fontFamily: 'monospace', ml: 1, wordBreak: 'break-all' }}
+          gutterBottom
+        >
           <IconButton
             href={explorerVaa(vaaId)}
             target="_blank"
@@ -103,7 +111,8 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
             sx={inlineIconButtonSx}
           >
             <Launch fontSize="inherit" />
-          </IconButton>
+          </IconButton>{' '}
+          {vaaId}
         </Typography>
       </Box>
       <Typography gutterBottom>
@@ -308,34 +317,9 @@ function Misses() {
   const now = new Date();
   now.setHours(now.getHours() - 2);
   const twoHoursAgo = now.toISOString();
-  return (
-    <>
-      <Box display="flex" alignItems="center">
-        <Typography variant="h2">Misses {showAllMisses ? '' : '> 2 Hours'}</Typography>
-        <Box flexGrow="1" />
-        <ReobserveCode misses={misses} />
-      </Box>
-      <Box pl={0.5}>
-        {missesWrapper.receivedAt ? (
-          <Typography variant="body2">
-            Last retrieved misses at{' '}
-            <Box component="span" sx={{ display: 'inline-block' }}>
-              {new Date(missesWrapper.receivedAt).toLocaleString()}
-            </Box>{' '}
-            {missesWrapper.error ? (
-              <Typography component="span" color="error" variant="body2">
-                {missesWrapper.error}
-              </Typography>
-            ) : null}
-          </Typography>
-        ) : (
-          <Typography variant="body2">Loading message counts by chain...</Typography>
-        )}
-      </Box>
-      {missesWrapper.isFetching ? (
-        <CircularProgress />
-      ) : misses ? (
-        Object.entries(misses).map(([chain, info]) => {
+  const missesElements = misses
+    ? Object.entries(misses)
+        .map(([chain, info]) => {
           const filteredMisses = showAllMisses
             ? info.messages
             : info.messages.filter((message) => message.timestamp < twoHoursAgo);
@@ -364,8 +348,38 @@ function Misses() {
             </CollapsibleSection>
           );
         })
+        .filter((el) => !!el)
+    : [];
+  return (
+    <>
+      <Box display="flex" alignItems="center">
+        <Typography variant="h4">Misses</Typography>
+        <Box flexGrow="1" />
+        <ReobserveCode misses={misses} />
+      </Box>
+      <Box pl={0.5}>
+        {missesWrapper.receivedAt ? (
+          <Typography variant="body2">
+            Last retrieved misses at{' '}
+            <Box component="span" sx={{ display: 'inline-block' }}>
+              {new Date(missesWrapper.receivedAt).toLocaleString()}
+            </Box>{' '}
+            {missesWrapper.error ? (
+              <Typography component="span" color="error" variant="body2">
+                {missesWrapper.error}
+              </Typography>
+            ) : null}
+          </Typography>
+        ) : (
+          <Typography variant="body2">Loading message counts by chain...</Typography>
+        )}
+      </Box>
+      {missesWrapper.isFetching ? (
+        <CircularProgress />
+      ) : missesElements.length ? (
+        missesElements
       ) : (
-        <Typography>No misses!</Typography>
+        <Typography pl={0.5}>No misses{showAllMisses ? '' : ' > 2 Hours'}!</Typography>
       )}
     </>
   );
@@ -380,7 +394,7 @@ function SettingsButton() {
   );
 }
 
-function App() {
+function Monitor() {
   const [lastBlockByChainWrapper, setLastBlockByChainWrapper] = useState<
     DataWrapper<LastBlockByChain>
   >(getEmptyDataWrapper());
@@ -440,14 +454,16 @@ function App() {
     };
   }, []);
   return (
-    <Box sx={{ m: { xs: 1, md: 2 } }}>
+    <Card sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', mb: 1, alignItems: 'center' }}>
         <div></div>
         <Box sx={{ flexGrow: 1 }} />
         <SettingsButton />
       </Box>
-      <Misses />
-      <Typography variant="h2">Chains</Typography>
+      <Box mb={2}>
+        <Misses />
+      </Box>
+      <Typography variant="h4">Chains</Typography>
       <Box pl={0.5}>
         {lastBlockByChainWrapper.receivedAt ? (
           <Typography variant="body2">
@@ -487,6 +503,7 @@ function App() {
         Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
           <CollapsibleSection
             key={chain}
+            defaultExpanded={false}
             header={
               <div>
                 <Typography variant="h5" sx={{ mb: 0.5 }}>
@@ -521,8 +538,8 @@ function App() {
           </CollapsibleSection>
         ))
       )}
-    </Box>
+    </Card>
   );
 }
 
-export default App;
+export default Monitor;

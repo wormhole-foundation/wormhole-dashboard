@@ -11,9 +11,9 @@ const initialSettings: Settings = {
   showDetails: false,
   open: () => {},
 };
-const SettingsContext = createContext<Settings>(initialSettings);
+const MonitorSettingsContext = createContext<Settings>(initialSettings);
 
-export function SettingsProvider({ children }: { children: JSX.Element }) {
+export function MonitorSettingsProvider({ children }: { children: JSX.Element }) {
   const [isOpen, setOpen] = useState<boolean>(false);
   const [value, setValue] = useState<Settings>({
     ...initialSettings,
@@ -31,7 +31,7 @@ export function SettingsProvider({ children }: { children: JSX.Element }) {
     setValue((value) => ({ ...value, showDetails: checked }));
   }, []);
   return (
-    <SettingsContext.Provider value={value}>
+    <MonitorSettingsContext.Provider value={value}>
       {children}
       <Dialog open={isOpen} onClose={handleClose}>
         <DialogTitle>Settings</DialogTitle>
@@ -49,8 +49,8 @@ export function SettingsProvider({ children }: { children: JSX.Element }) {
           />
         </DialogContent>
       </Dialog>
-    </SettingsContext.Provider>
+    </MonitorSettingsContext.Provider>
   );
 }
 
-export const useSettings = () => useContext(SettingsContext);
+export const useSettings = () => useContext(MonitorSettingsContext);

@@ -110,7 +110,7 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     : chainId === CHAIN_ID_ARBITRUM
     ? `https://arbiscan.io/tx/${tx}`
     : chainId === CHAIN_ID_INJECTIVE
-    ? `https://explorer.injective.network/tx/${tx}`
+    ? `https://explorer.injective.network/transaction/${tx}`
     : '';
 
 export const explorerVaa = (key: string) =>

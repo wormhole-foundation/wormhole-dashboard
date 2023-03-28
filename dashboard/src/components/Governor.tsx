@@ -3,6 +3,7 @@ import {
   CHAIN_ID_ALGORAND,
   CHAIN_ID_NEAR,
   CHAIN_ID_TERRA2,
+  isCosmWasmChain,
   isEVMChain,
   tryHexToNativeAssetString,
   tryHexToNativeString,
@@ -37,6 +38,7 @@ import useGovernorInfo from '../hooks/useGovernorInfo';
 import useSymbolInfo from '../hooks/useSymbolInfo';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP } from '../utils/consts';
+import { explorerTx } from '../utils/explorer';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import Table from './Table';
@@ -123,7 +125,9 @@ const enqueuedColumns = [
       const chainInfo = CHAIN_INFO_MAP[chain];
       if (!chainInfo) return info.getValue();
       var txHash: string = '';
-      if (!isEVMChain(chainInfo.chainId)) {
+      if (isCosmWasmChain(chainInfo.chainId)) {
+        txHash = info.getValue().slice(2);
+      } else if (!isEVMChain(chainInfo.chainId)) {
         try {
           txHash = tryHexToNativeString(info.getValue().slice(2), CHAIN_INFO_MAP[chain].chainId);
         } catch (e) {
@@ -132,10 +136,12 @@ const enqueuedColumns = [
       } else {
         txHash = info.getValue();
       }
-      const explorerString = chainInfo.explorerStem;
-      const url = `${explorerString}/tx/${txHash}`;
       return (
-        <Link href={url} target="_blank" rel="noopener noreferrer">
+        <Link
+          href={explorerTx(chainInfo.chainId, txHash)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {txHash}
         </Link>
       );

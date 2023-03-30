@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.f9a5e608.js",
+    "main.js": "/wormhole-dashboard/static/js/main.613b125e.js",
     "static/js/538.9fe840fe.chunk.js": "/wormhole-dashboard/static/js/538.9fe840fe.chunk.js",
     "static/js/670.fe15ddc0.chunk.js": "/wormhole-dashboard/static/js/670.fe15ddc0.chunk.js",
     "static/js/70.07ec0895.chunk.js": "/wormhole-dashboard/static/js/70.07ec0895.chunk.js",
@@ -35,7 +35,7 @@
     "static/media/xpla.svg": "/wormhole-dashboard/static/media/xpla.39d25b51bf8a5b7f6aeb01cd57c5ec61.svg",
     "static/media/algorand.svg": "/wormhole-dashboard/static/media/algorand.699bf008d7073523b8edd75d8f3b38ac.svg",
     "static/media/eth.svg": "/wormhole-dashboard/static/media/eth.5a5de20bf3808241fc61ed9ad7680ab5.svg",
-    "main.f9a5e608.js.map": "/wormhole-dashboard/static/js/main.f9a5e608.js.map",
+    "main.613b125e.js.map": "/wormhole-dashboard/static/js/main.613b125e.js.map",
     "538.9fe840fe.chunk.js.map": "/wormhole-dashboard/static/js/538.9fe840fe.chunk.js.map",
     "670.fe15ddc0.chunk.js.map": "/wormhole-dashboard/static/js/670.fe15ddc0.chunk.js.map",
     "70.07ec0895.chunk.js.map": "/wormhole-dashboard/static/js/70.07ec0895.chunk.js.map",
@@ -47,6 +47,6 @@
     "915.accd1d9d.chunk.js.map": "/wormhole-dashboard/static/js/915.accd1d9d.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.f9a5e608.js"
+    "static/js/main.613b125e.js"
   ]
 }

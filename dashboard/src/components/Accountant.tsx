@@ -18,7 +18,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
-import { useSettingsContext } from '../contexts/SettingsContext';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
@@ -153,9 +152,6 @@ const accountsColumns = [
 ];
 
 function Accountant() {
-  const {
-    settings: { wormchainUrl },
-  } = useSettingsContext();
   const pendingTransferInfo = useGetAccountantPendingTransfers();
   const accountsInfo = useGetAccountantAccounts();
   const guardianSigningStats: GuardianSigningStat[] = useMemo(() => {
@@ -214,11 +210,7 @@ function Accountant() {
     autoResetPageIndex: false,
     onSortingChange: setAccountsSorting,
   });
-  return !wormchainUrl ? (
-    <Typography sx={{ p: 2 }}>
-      Wormchain URL unset. Please configure in the settings to enable accountant info.
-    </Typography>
-  ) : (
+  return (
     <>
       {pendingTransferInfo.length ? (
         <Box mb={2}>

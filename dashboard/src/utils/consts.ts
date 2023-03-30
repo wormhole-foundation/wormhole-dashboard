@@ -50,6 +50,8 @@ import pythnetIcon from '../images/pyth_logomark_white.svg';
 
 require('dotenv').config();
 
+export const WORMCHAIN_URL = 'https://wormchain.jumpisolated.com';
+
 export type CHAIN_INFO = {
   name: string;
   evm: boolean;

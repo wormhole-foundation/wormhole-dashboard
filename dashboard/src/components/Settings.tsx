@@ -18,13 +18,8 @@ import { useCallback, useState } from 'react';
 import { Theme, useSettingsContext } from '../contexts/SettingsContext';
 
 function SettingsContent() {
-  const {
-    settings,
-    updateBackgroundOpacity,
-    updateBackgroundUrl,
-    updateTheme,
-    updateWormchainUrl,
-  } = useSettingsContext();
+  const { settings, updateBackgroundOpacity, updateBackgroundUrl, updateTheme } =
+    useSettingsContext();
   const handleThemeChange = useCallback(
     (event: any, newTheme: Theme) => {
       updateTheme(newTheme);
@@ -42,12 +37,6 @@ function SettingsContent() {
       updateBackgroundUrl(event.target.value);
     },
     [updateBackgroundUrl]
-  );
-  const handleWormchainUrlChange = useCallback(
-    (event: any) => {
-      updateWormchainUrl(event.target.value);
-    },
-    [updateWormchainUrl]
   );
   return (
     <>
@@ -84,15 +73,6 @@ function SettingsContent() {
             onChange={handleBackgroundOpacityChange}
           />
         </Box>
-      </Box>
-      <Box m={2}>
-        <TextField
-          value={settings.wormchainUrl || ''}
-          onChange={handleWormchainUrlChange}
-          label="Wormchain URL"
-          margin="dense"
-          fullWidth
-        />
       </Box>
     </>
   );

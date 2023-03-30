@@ -9,7 +9,6 @@ type Settings = {
   backgroundOpacity?: number;
   defaultEndpoint?: string;
   theme: Theme;
-  wormchainUrl?: string;
 };
 
 type SettingsContextValue = {
@@ -18,7 +17,6 @@ type SettingsContextValue = {
   updateBackgroundUrl(value: string): void;
   updateDefaultEndpoint(value: string): void;
   updateTheme(value: Theme): void;
-  updateWormchainUrl(value: string): void;
 };
 
 const isTheme = (arg: any): arg is Theme => {
@@ -54,7 +52,6 @@ const SettingsContext = React.createContext<SettingsContextValue>({
   updateBackgroundUrl: (value: string) => {},
   updateDefaultEndpoint: (value: string) => {},
   updateTheme: (value: Theme) => {},
-  updateWormchainUrl: (value: string) => {},
 });
 
 export const SettingsContextProvider = ({ children }: { children: ReactNode }) => {
@@ -71,9 +68,6 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
   const updateTheme = useCallback((value: Theme) => {
     setSettings((settings) => ({ ...settings, theme: value }));
   }, []);
-  const updateWormchainUrl = useCallback((value: string) => {
-    setSettings((settings) => ({ ...settings, wormchainUrl: value }));
-  }, []);
   // sync settings to state
   useEffect(() => {
     saveSettings(settings);
@@ -85,16 +79,8 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateBackgroundUrl,
       updateDefaultEndpoint,
       updateTheme,
-      updateWormchainUrl,
     }),
-    [
-      settings,
-      updateBackgroundOpacity,
-      updateBackgroundUrl,
-      updateDefaultEndpoint,
-      updateTheme,
-      updateWormchainUrl,
-    ]
+    [settings, updateBackgroundOpacity, updateBackgroundUrl, updateDefaultEndpoint, updateTheme]
   );
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };

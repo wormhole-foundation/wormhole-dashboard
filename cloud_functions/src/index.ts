@@ -10,6 +10,13 @@ export const { computeMissingVaas } = require('./computeMissingVaas');
 export const { computeMessageCounts } = require('./computeMessageCounts');
 export const { getVaasByTxHash } = require('./getVaasByTxHash');
 export const { processVaa } = require('./processVaa');
+export const { refreshTodaysTokenPrices } = require('./refreshTodaysTokenPrices');
+export const { computeTVL } = require('./computeTVL');
+export const { getTVL } = require('./getTVL');
+export const { computeTVLHistory } = require('./computeTVLHistory');
+export const { getTVLHistory } = require('./getTVLHistory');
+export const { getMessageCountHistory } = require('./getMessageCountHistory');
+export const { computeMessageCountHistory } = require('./computeMessageCountHistory');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.
@@ -21,3 +28,10 @@ functions.http('latestBlocks', getLatestBlocks);
 functions.http('missingVaas', getMissingVaas);
 functions.http('computeMissingVaas', computeMissingVaas);
 functions.http('getVaasByTxHash', getVaasByTxHash);
+functions.http('refreshTodaysTokenPrices', refreshTodaysTokenPrices);
+functions.http('computeTVL', computeTVL);
+functions.http('getTVL', getTVL);
+functions.http('computeTVLHistory', computeTVLHistory);
+functions.http('getTVLHistory', getTVLHistory);
+functions.http('getMessageCountHistory', getMessageCountHistory);
+functions.http('computeMessageCountHistory', computeMessageCountHistory);

@@ -6,7 +6,8 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "backfill-transfer-data": "ts-node scripts/backfillTransferData.ts",
-    "backfill-metadata": "ts-node scripts/backfillMetadata.ts"
+    "update-token-metadata": "ts-node scripts/updateTokenMetadata.ts",
+    "backfill-price-history": "ts-node scripts/backfillPriceHistory.ts"
   },
   "dependencies": {
     "@google-cloud/bigtable": "^4.4.0",

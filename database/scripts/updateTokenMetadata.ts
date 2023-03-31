@@ -1,6 +1,9 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  assertEnvironmentVariable,
+  chunkArray,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import {
   CHAIN_ID_ALGORAND,
   CHAIN_ID_APTOS,
@@ -14,7 +17,6 @@ import {
   ChainId,
   ChainName,
   assertChain,
-  coalesceChainId,
   getTypeFromExternalAddress,
   isEVMChain,
   queryExternalId,
@@ -23,14 +25,13 @@ import {
   tryHexToNativeAssetString,
   tryHexToNativeStringNear,
 } from '@certusone/wormhole-sdk';
-import { TokenMetadata } from '../src';
+import { CoinGeckoCoin, TokenMetadata, fetchCoins } from '../src';
 import knex from 'knex';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
 import { Network, getNetworkInfo } from '@injectivelabs/networks';
 import { LCDClient } from '@xpla/xpla.js';
 import { connect } from 'near-api-js';
 import { AptosClient } from 'aptos';
-import axios from 'axios';
 
 const PG_USER = assertEnvironmentVariable('PG_USER');
 const PG_PASSWORD = assertEnvironmentVariable('PG_PASSWORD');
@@ -104,22 +105,6 @@ const getNativeAddress = async (
   return null;
 };
 
-const COIN_GECKO_API_BASE_URL = 'https://api.coingecko.com/api/v3';
-
-interface CoinGeckoCoin {
-  id: string;
-  symbol: string;
-  name: string;
-  platforms: {
-    [platform: string]: string;
-  };
-}
-const getCoinGeckoCoins = async () => {
-  return (
-    await axios.get<CoinGeckoCoin[]>(`${COIN_GECKO_API_BASE_URL}/coins/list?include_platform=true`)
-  ).data;
-};
-
 // https://api.coingecko.com/api/v3/asset_platforms
 const COINGECKO_PLATFORM_BY_CHAIN: { [key in ChainName]?: string } = {
   solana: 'solana',
@@ -146,30 +131,7 @@ const COINGECKO_PLATFORM_BY_CHAIN: { [key in ChainName]?: string } = {
   injective: undefined,
 };
 
-const COINGECKO_COIN_ID_OVERRIDES: { [key in ChainName]?: { [nativeAddress: string]: string } } = {
-  xpla: {
-    axpla: 'xpla',
-  },
-  injective: {
-    inj: 'injective-protocol',
-  },
-  algorand: {
-    0: 'algorand',
-    31566704: 'usd-coin',
-  },
-  near: {
-    near: 'near',
-  },
-};
-
 const coinGeckoCoinIdCache = new Map<string, string>();
-// add overrides to the cache
-for (const [chain, overrides] of Object.entries(COINGECKO_COIN_ID_OVERRIDES)) {
-  for (const [nativeAddress, coinId] of Object.entries(overrides)) {
-    assertChain(chain);
-    coinGeckoCoinIdCache.set(`${coalesceChainId(chain)}/${nativeAddress}`, coinId);
-  }
-}
 
 const findCoinGeckoCoinId = (
   chainId: ChainId,
@@ -189,7 +151,6 @@ const findCoinGeckoCoinId = (
     return null;
   }
   for (const coin of coinGeckoCoins) {
-    // TODO: case match?
     if (coin.platforms[platform] === nativeAddress) {
       coinGeckoCoinIdCache.set(key, coin.id);
       return coin.id;
@@ -220,31 +181,40 @@ const findCoinGeckoCoinId = (
       .select()
       .whereNull('native_address')
       .orWhereNull('coin_gecko_coin_id');
-    const coinGeckoCoins = await getCoinGeckoCoins();
+    const coinGeckoCoins = await fetchCoins();
+    const toUpdate: TokenMetadata[] = [];
     for (let { token_chain, token_address, native_address, coin_gecko_coin_id } of result) {
       assertChain(token_chain);
-      native_address = await getNativeAddress(token_chain, token_address);
-      coin_gecko_coin_id =
-        native_address !== null
-          ? findCoinGeckoCoinId(token_chain, native_address, coinGeckoCoins)
-          : null;
-      const tokenMetadata: TokenMetadata = {
-        token_chain,
-        token_address,
-        native_address,
-        coin_gecko_coin_id,
-      };
-      console.log(tokenMetadata);
-      try {
-        // TODO: batch insert
-        await pg<TokenMetadata>(TOKEN_METADATA_TABLE)
-          .insert(tokenMetadata)
-          .onConflict(['token_chain', 'token_address'])
-          .merge();
-      } catch (e) {
-        console.error(e);
+      let shouldUpdate = false;
+      if (native_address === null) {
+        native_address = await getNativeAddress(token_chain, token_address);
+        shouldUpdate ||= native_address !== null;
+      }
+      if (coin_gecko_coin_id === null && native_address !== null) {
+        coin_gecko_coin_id = findCoinGeckoCoinId(token_chain, native_address, coinGeckoCoins);
+        shouldUpdate ||= coin_gecko_coin_id !== null;
+      }
+      if (shouldUpdate) {
+        const tokenMetadata: TokenMetadata = {
+          token_chain,
+          token_address,
+          native_address,
+          coin_gecko_coin_id,
+        };
+        toUpdate.push(tokenMetadata);
+        console.log('will update', tokenMetadata);
       }
     }
+    const chunks = chunkArray(toUpdate, 100);
+    let numUpdated = 0;
+    for (const chunk of chunks) {
+      const result: any = await pg<TokenMetadata>(TOKEN_METADATA_TABLE)
+        .insert(chunk)
+        .onConflict(['token_chain', 'token_address'])
+        .merge();
+      numUpdated += result.rowCount;
+    }
+    console.log(`updated ${numUpdated} rows`);
   } catch (e) {
     console.error(e);
   }

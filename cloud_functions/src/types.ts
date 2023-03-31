@@ -213,3 +213,41 @@ export function makeCache() {
   };
   return cache;
 }
+
+export interface LockedAsset {
+  Address: string;
+  Amount: number;
+  CoinGeckoId: string;
+  Name: string;
+  Notional: number;
+  Symbol: string;
+  TokenDecimals: number;
+  TokenPrice: number;
+}
+
+export interface LockedAssets {
+  [tokenAddress: string]: LockedAsset;
+}
+
+export interface ChainsAssets {
+  [chain: string]: LockedAssets;
+}
+
+export interface NotionalTVL {
+  Last24HoursChange: ChainsAssets;
+  AllTime: ChainsAssets;
+}
+
+export interface NotionalByDate {
+  [date: string]: { [chainId: string]: { [address: string]: { Notional: number } } };
+}
+
+export interface TVLHistory {
+  DailyLocked: NotionalByDate;
+}
+
+export interface MessageCountsHistory {
+  DailyTotals: {
+    [date: string]: { [chainId: string]: number };
+  };
+}

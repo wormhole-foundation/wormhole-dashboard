@@ -26,6 +26,7 @@ import (
 
 	"log"
 
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
 	"google.golang.org/protobuf/proto"
@@ -55,6 +56,9 @@ func makeRowKey(v *vaa.VAA) string {
 }
 
 func writeSignedVAAsToBigtable(ctx context.Context, client *bigtable.Client, signedVAAs map[string][]byte, logger *zap.Logger) {
+	if len(signedVAAs) == 0 {
+		return
+	}
 	tbl := client.Open("signedVAAs")
 	muts := make([]*bigtable.Mutation, len(signedVAAs))
 	rowKeys := make([]string, len(signedVAAs))
@@ -90,6 +94,16 @@ func publishSignedVAAs(ctx context.Context, topic *pubsub.Topic, signedVAAs map[
 		if err != nil {
 			logger.Error("pubsub error", zap.Error(err))
 		}
+	}
+}
+
+func incrementPythNetMsgCount(ctx context.Context, client *firestore.Client, count int, logger *zap.Logger) {
+	date := time.Now().UTC().Format("2006-01-02")
+	_, err := client.Collection("messageCountHistory").Doc(date).Set(ctx, map[string]interface{}{
+		strconv.Itoa(int(vaa.ChainIDPythNet)): firestore.Increment(count),
+	}, firestore.MergeAll)
+	if err != nil {
+		logger.Error("Failed to write message counts", zap.Error(err))
 	}
 }
 
@@ -188,6 +202,9 @@ func main() {
 	notionalByChainMu := sync.Mutex{}
 	availableNotionalByChain := map[string]map[uint32]uint64{}
 
+	mu := sync.Mutex{}
+	pythNetSeqs := map[string]map[uint64]time.Time{}
+
 	// Ignore observations
 	go func() {
 		for {
@@ -214,6 +231,7 @@ func main() {
 	// Write signed VAAs to bigtable periodically
 	go func() {
 		signedVAAs := map[string][]byte{}
+		pythNetMsgCount := 0
 		ticker := time.NewTicker(time.Minute)
 		var wg sync.WaitGroup
 		defer ticker.Stop()
@@ -223,15 +241,25 @@ func main() {
 				wg.Wait()
 				return
 			case <-ticker.C:
-				if len(signedVAAs) > 0 {
-					wg.Add(1)
-					go func(signedVAAs map[string][]byte) {
-						writeSignedVAAsToBigtable(rootCtx, btClient, signedVAAs, logger)
-						publishSignedVAAs(rootCtx, signedVAATopic, signedVAAs, logger)
-						defer wg.Done()
-					}(signedVAAs)
-					signedVAAs = map[string][]byte{}
+				mu.Lock()
+				// copy data so it's not modified by another thread
+				// while writing it to the db
+				signedVAAsCopy := map[string][]byte{}
+				for key, bytes := range signedVAAs {
+					signedVAAsCopy[key] = bytes
 				}
+				signedVAAs = map[string][]byte{}
+				pythNetMsgCountCopy := pythNetMsgCount
+				pythNetMsgCount = 0
+				mu.Unlock()
+				go func() {
+					wg.Add(1)
+					// write and publish data
+					writeSignedVAAsToBigtable(rootCtx, btClient, signedVAAsCopy, logger)
+					publishSignedVAAs(rootCtx, signedVAATopic, signedVAAsCopy, logger)
+					incrementPythNetMsgCount(rootCtx, client, pythNetMsgCountCopy, logger)
+					wg.Done()
+				}()
 			case m := <-signedInC:
 				v, err := vaa.Unmarshal(m.Vaa)
 				if err != nil {
@@ -239,11 +267,48 @@ func main() {
 						zap.Error(err), zap.Any("message", m))
 					continue
 				}
-				if v.EmitterChain == vaa.ChainIDPythNet {
-					continue
+				mu.Lock()
+				// don't write pythnet VAAs to bigtable
+				if v.EmitterChain != vaa.ChainIDPythNet {
+					rowKey := makeRowKey(v)
+					signedVAAs[rowKey] = m.Vaa
 				}
-				rowKey := makeRowKey(v)
-				signedVAAs[rowKey] = m.Vaa
+				// increment pythnet message counter
+				if v.EmitterChain == vaa.ChainIDPythNet {
+					emitterAddress := v.EmitterAddress.String()
+					if _, ok := pythNetSeqs[emitterAddress]; !ok {
+						pythNetSeqs[emitterAddress] = map[uint64]time.Time{}
+					}
+					if _, ok := pythNetSeqs[emitterAddress][v.Sequence]; !ok {
+						pythNetSeqs[emitterAddress][v.Sequence] = time.Now()
+						pythNetMsgCount += 1
+					}
+				}
+				mu.Unlock()
+			}
+		}
+	}()
+
+	// Periodically clear the pythnet emitter sequences set
+	go func() {
+		ticker := time.NewTicker(15 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-rootCtx.Done():
+				return
+			case <-ticker.C:
+				fifteenMinutesAgo := time.Now().Add(-15 * time.Minute)
+				mu.Lock()
+				// clear entries with timestamps older than 15 min ago
+				for _, seqs := range pythNetSeqs {
+					for seq, t := range seqs {
+						if t.Before(fifteenMinutesAgo) {
+							delete(seqs, seq)
+						}
+					}
+				}
+				mu.Unlock()
 			}
 		}
 	}()

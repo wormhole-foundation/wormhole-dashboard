@@ -21,7 +21,7 @@ const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
 
 export class SolanaWatcher extends Watcher {
-  connection: Connection;
+  rpc: string;
   // this is set as a class field so we can modify it in tests
   getSignaturesLimit = GET_SIGNATURES_LIMIT;
   // The Solana watcher uses the `getSignaturesForAddress` RPC endpoint to fetch all transactions
@@ -33,14 +33,16 @@ export class SolanaWatcher extends Watcher {
 
   constructor() {
     super('solana');
-    this.connection = new Connection(RPCS_BY_CHAIN.solana!, COMMITMENT);
+    this.rpc = RPCS_BY_CHAIN.solana!;
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
-    return this.connection.getSlot();
+    const connection = new Connection(this.rpc, COMMITMENT);
+    return connection.getSlot();
   }
 
   async getMessagesForBlocks(fromSlot: number, toSlot: number): Promise<VaasByBlock> {
+    const connection = new Connection(this.rpc, COMMITMENT);
     // in the rare case of maximumBatchSize skipped blocks in a row,
     // you might hit this error due to the recursion below
     if (fromSlot > toSlot) throw new Error('solana: invalid block range');
@@ -51,7 +53,7 @@ export class SolanaWatcher extends Watcher {
     // getSignaturesForAddress walks backwards so fromSignature occurs after toSignature
     let toBlock: VersionedBlockResponse | null = null;
     try {
-      toBlock = await this.connection.getBlock(toSlot, { maxSupportedTransactionVersion: 0 });
+      toBlock = await connection.getBlock(toSlot, { maxSupportedTransactionVersion: 0 });
     } catch (e) {
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
@@ -68,7 +70,7 @@ export class SolanaWatcher extends Watcher {
 
     let fromBlock: VersionedBlockResponse | null = null;
     try {
-      fromBlock = await this.connection.getBlock(fromSlot, { maxSupportedTransactionVersion: 0 });
+      fromBlock = await connection.getBlock(fromSlot, { maxSupportedTransactionVersion: 0 });
     } catch (e) {
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
@@ -86,7 +88,7 @@ export class SolanaWatcher extends Watcher {
     let numSignatures = this.getSignaturesLimit;
     let currSignature: string | undefined = fromSignature;
     while (numSignatures === this.getSignaturesLimit) {
-      const signatures: ConfirmedSignatureInfo[] = await this.connection.getSignaturesForAddress(
+      const signatures: ConfirmedSignatureInfo[] = await connection.getSignaturesForAddress(
         new PublicKey(WORMHOLE_PROGRAM_ID),
         {
           before: currSignature,
@@ -104,7 +106,7 @@ export class SolanaWatcher extends Watcher {
       // reused, overwriting previous data). Then, the message account is the account given by
       // the second index in the instruction's account key indices. From here, we can fetch the
       // message data from the account and parse out the emitter and sequence.
-      const results = await this.connection.getTransactions(
+      const results = await connection.getTransactions(
         signatures.map((s) => s.signature),
         {
           maxSupportedTransactionVersion: 0,
@@ -147,7 +149,7 @@ export class SolanaWatcher extends Watcher {
           const accountId = accountKeys[instruction.accountKeyIndexes[1]];
           const {
             message: { emitterAddress, sequence },
-          } = await getPostedMessage(this.connection, accountId.toBase58(), COMMITMENT);
+          } = await getPostedMessage(connection, accountId.toBase58(), COMMITMENT);
           const blockKey = makeBlockKey(
             res.slot.toString(),
             new Date(res.blockTime * 1000).toISOString()

@@ -28,19 +28,21 @@ function Main() {
       <Divider />
       {currentNetwork.name === 'Mainnet' ? (
         <>
+          <MainnetGovernor />
+          <Divider />
           <CollapsibleSection header="Accountant">
             <Accountant />
           </CollapsibleSection>
           <Divider />
+          <MonitorSettingsProvider>
+            <CollapsibleSection header="Monitor">
+              <Monitor />
+            </CollapsibleSection>
+          </MonitorSettingsProvider>
         </>
-      ) : null}
-      {currentNetwork.name === 'Mainnet' ? <MainnetGovernor /> : <Governor />}
-      <Divider />
-      <MonitorSettingsProvider>
-        <CollapsibleSection header="Monitor">
-          <Monitor />
-        </CollapsibleSection>
-      </MonitorSettingsProvider>
+      ) : (
+        <Governor />
+      )}
     </>
   );
 }

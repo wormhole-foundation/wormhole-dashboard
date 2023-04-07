@@ -22,9 +22,7 @@ function Main() {
       <Divider />
       <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} />
       <Divider />
-      <CollapsibleSection header="Guardians">
-        <Guardians heartbeats={heartbeats} />
-      </CollapsibleSection>
+      <Guardians heartbeats={heartbeats} chainIdsToHeartbeats={chainIdsToHeartbeats} />
       <Divider />
       {currentNetwork.name === 'Mainnet' ? (
         <>

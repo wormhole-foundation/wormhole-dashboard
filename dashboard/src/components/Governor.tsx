@@ -33,7 +33,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import numeral from 'numeral';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import useGovernorInfo from '../hooks/useGovernorInfo';
 import useSymbolInfo from '../hooks/useSymbolInfo';
 import chainIdToName from '../utils/chainIdToName';
@@ -294,7 +294,7 @@ function Governor() {
           {Object.keys(enqueuedByChain)
             .sort()
             .map((chainId) => (
-              <>
+              <React.Fragment key={chainId}>
                 <Box
                   ml={2}
                   display="flex"
@@ -316,7 +316,7 @@ function Governor() {
                 <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
                   {enqueuedByChain[Number(chainId)]}
                 </Typography>
-              </>
+              </React.Fragment>
             ))}
         </Box>
       }

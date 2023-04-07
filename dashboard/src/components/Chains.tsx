@@ -69,7 +69,7 @@ function ChainDetails({
   return <Table<HeartbeatInfo> table={table} conditionalRowStyle={conditionalRowStyle} />;
 }
 
-const isHeartbeatUnhealthy = (heartbeat: HeartbeatInfo, highest: bigint) =>
+export const isHeartbeatUnhealthy = (heartbeat: HeartbeatInfo, highest: bigint) =>
   heartbeat.network.height === '0' ||
   highest - BigInt(heartbeat.network.height) > getBehindDiffForChain(heartbeat.network.id);
 

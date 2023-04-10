@@ -51,6 +51,17 @@ function getGuardiansFromSignatures(signatures: string) {
   return guardians.reverse().join(', ');
 }
 
+function getMissingGuardiansFromSignatures(signatures: string) {
+  const guardians: string[] = [];
+  const bitString = getSignatureBits(signatures);
+  for (let idx = 0; idx < bitString.length; idx++) {
+    if (bitString[idx] === '0') {
+      guardians.push(GUARDIAN_SET_3[bitString.length - 1 - idx].name);
+    }
+  }
+  return guardians.reverse().join(', ');
+}
+
 type GuardianSigningStat = {
   name: string;
   numSigned: number;
@@ -119,8 +130,20 @@ const pendingTransferColumns = [
       <Tooltip
         title={
           <Box>
-            <Typography gutterBottom>{getGuardiansFromSignatures(info.getValue())}</Typography>
-            <Typography gutterBottom>{getSignatureBits(info.getValue())}</Typography>
+            <Typography gutterBottom sx={{ mb: 0.5 }}>
+              Signed
+            </Typography>
+            <Typography variant="body2">{getGuardiansFromSignatures(info.getValue())}</Typography>
+            <Typography gutterBottom sx={{ mt: 1.5, mb: 0.5 }}>
+              Missing
+            </Typography>
+            <Typography variant="body2">
+              {getMissingGuardiansFromSignatures(info.getValue())}
+            </Typography>
+            <Typography gutterBottom sx={{ mt: 1.5, mb: 0.5 }}>
+              Bits
+            </Typography>
+            <Typography variant="body2">{getSignatureBits(info.getValue())}</Typography>
           </Box>
         }
       >

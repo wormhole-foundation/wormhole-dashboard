@@ -25,6 +25,7 @@ import useGetAccountantPendingTransfers, {
 import chainIdToName from '../utils/chainIdToName';
 import { GUARDIAN_SET_3 } from '../utils/consts';
 import Table from './Table';
+import EnqueuedInGovChecker from './EnqueuedInGovChecker';
 
 function getNumSignatures(signatures: string) {
   let bitfield = Number(signatures);
@@ -150,6 +151,11 @@ const pendingTransferColumns = [
         <Box>{getNumSignatures(info.getValue())}</Box>
       </Tooltip>
     ),
+  }),
+  pendingTransferColumnHelper.display({
+    id: 'govEnqueued',
+    header: () => 'Governed',
+    cell: (info) => <EnqueuedInGovChecker transferKey={info.row.original.key} />,
   }),
 ];
 

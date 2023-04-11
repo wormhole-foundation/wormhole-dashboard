@@ -6,12 +6,14 @@ import { ACCOUNTANT_CONTRACT_ADDRESS, WORMCHAIN_URL } from '../utils/consts';
 const POLL_INTERVAL_MS = 10 * 1000;
 const PAGE_LIMIT = 2000; // throws a gas limit error over this
 
+export type PendingTransferKey = {
+  emitter_chain: number;
+  emitter_address: string;
+  sequence: number;
+};
+
 export type PendingTransfer = {
-  key: {
-    emitter_chain: number;
-    emitter_address: string;
-    sequence: number;
-  };
+  key: PendingTransferKey;
   data: [
     {
       digest: string;

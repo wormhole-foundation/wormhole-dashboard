@@ -1,16 +1,7 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.6f6af800.js",
-    "static/js/538.9fe840fe.chunk.js": "/wormhole-dashboard/static/js/538.9fe840fe.chunk.js",
-    "static/js/670.fe15ddc0.chunk.js": "/wormhole-dashboard/static/js/670.fe15ddc0.chunk.js",
-    "static/js/70.07ec0895.chunk.js": "/wormhole-dashboard/static/js/70.07ec0895.chunk.js",
-    "static/js/390.502177c5.chunk.js": "/wormhole-dashboard/static/js/390.502177c5.chunk.js",
-    "static/js/693.88dd9819.chunk.js": "/wormhole-dashboard/static/js/693.88dd9819.chunk.js",
-    "static/js/685.6e0d03d5.chunk.js": "/wormhole-dashboard/static/js/685.6e0d03d5.chunk.js",
-    "static/js/9.49dc34b3.chunk.js": "/wormhole-dashboard/static/js/9.49dc34b3.chunk.js",
-    "static/js/994.a5166d24.chunk.js": "/wormhole-dashboard/static/js/994.a5166d24.chunk.js",
+    "main.js": "/wormhole-dashboard/static/js/main.e2f6f342.js",
     "static/js/915.accd1d9d.chunk.js": "/wormhole-dashboard/static/js/915.accd1d9d.chunk.js",
-    "module.wasm": "/wormhole-dashboard/6b68f06d3f274c0d75fa.module.wasm",
     "static/media/moonbeam.svg": "/wormhole-dashboard/static/media/moonbeam.d537e3282e2645ee2f1df9f7c3711f5a.svg",
     "static/media/terra2.svg": "/wormhole-dashboard/static/media/terra2.3b8a4497121229ac69ab6afa1c4e9317.svg",
     "static/media/arbitrum.svg": "/wormhole-dashboard/static/media/arbitrum.c9ada05fe5facf49a5f1ef9ba1c1578c.svg",
@@ -35,18 +26,10 @@
     "static/media/xpla.svg": "/wormhole-dashboard/static/media/xpla.39d25b51bf8a5b7f6aeb01cd57c5ec61.svg",
     "static/media/algorand.svg": "/wormhole-dashboard/static/media/algorand.699bf008d7073523b8edd75d8f3b38ac.svg",
     "static/media/eth.svg": "/wormhole-dashboard/static/media/eth.5a5de20bf3808241fc61ed9ad7680ab5.svg",
-    "main.6f6af800.js.map": "/wormhole-dashboard/static/js/main.6f6af800.js.map",
-    "538.9fe840fe.chunk.js.map": "/wormhole-dashboard/static/js/538.9fe840fe.chunk.js.map",
-    "670.fe15ddc0.chunk.js.map": "/wormhole-dashboard/static/js/670.fe15ddc0.chunk.js.map",
-    "70.07ec0895.chunk.js.map": "/wormhole-dashboard/static/js/70.07ec0895.chunk.js.map",
-    "390.502177c5.chunk.js.map": "/wormhole-dashboard/static/js/390.502177c5.chunk.js.map",
-    "693.88dd9819.chunk.js.map": "/wormhole-dashboard/static/js/693.88dd9819.chunk.js.map",
-    "685.6e0d03d5.chunk.js.map": "/wormhole-dashboard/static/js/685.6e0d03d5.chunk.js.map",
-    "9.49dc34b3.chunk.js.map": "/wormhole-dashboard/static/js/9.49dc34b3.chunk.js.map",
-    "994.a5166d24.chunk.js.map": "/wormhole-dashboard/static/js/994.a5166d24.chunk.js.map",
+    "main.e2f6f342.js.map": "/wormhole-dashboard/static/js/main.e2f6f342.js.map",
     "915.accd1d9d.chunk.js.map": "/wormhole-dashboard/static/js/915.accd1d9d.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.6f6af800.js"
+    "static/js/main.e2f6f342.js"
   ]
 }

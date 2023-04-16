@@ -9,7 +9,6 @@
     "backfill-metadata": "ts-node scripts/backfillMetadata.ts"
   },
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.9.11",
     "@google-cloud/bigtable": "^4.4.0",
     "@google-cloud/pubsub": "^3.4.1",
     "@injectivelabs/networks": "^1.0.73",

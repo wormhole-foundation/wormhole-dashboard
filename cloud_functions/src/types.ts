@@ -200,6 +200,11 @@ export function makeCache() {
       lastUpdated: 0,
       lastRowKey: '',
     },
+    10002: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
   };
   return cache;
 }

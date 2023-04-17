@@ -171,6 +171,9 @@ const useCloudGovernorInfo = (): CloudGovernorInfo => {
 
   useEffect(() => {
     setGovernorInfo(createEmptyInfo());
+    if (currentNetwork.name !== 'Mainnet') {
+      return
+    }
     let cancelled = false;
     (async () => {
       while (!cancelled) {

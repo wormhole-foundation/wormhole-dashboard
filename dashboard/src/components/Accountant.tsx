@@ -18,6 +18,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
+import {CloudGovernorInfo} from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
@@ -25,7 +26,9 @@ import useGetAccountantPendingTransfers, {
 import chainIdToName from '../utils/chainIdToName';
 import { GUARDIAN_SET_3 } from '../utils/consts';
 import Table from './Table';
-import EnqueuedInGovChecker from './EnqueuedInGovChecker';
+import { ethers } from "ethers";
+
+type PendingTransferForAcct = PendingTransfer & {isEnqueuedInGov: boolean}
 
 function getNumSignatures(signatures: string) {
   let bitfield = Number(signatures);
@@ -107,7 +110,7 @@ const guardianSigningColumns = [
   }),
 ];
 
-const pendingTransferColumnHelper = createColumnHelper<PendingTransfer>();
+const pendingTransferColumnHelper = createColumnHelper<PendingTransferForAcct>();
 
 const pendingTransferColumns = [
   pendingTransferColumnHelper.accessor('key.emitter_chain', {
@@ -155,9 +158,17 @@ const pendingTransferColumns = [
   pendingTransferColumnHelper.display({
     id: 'govEnqueued',
     header: () => 'Governed',
-    cell: (info) => <EnqueuedInGovChecker transferKey={info.row.original.key} />,
+    cell: (info) => <EnqueuedInGovChecker isEnqueuedInGov={info.row.original.isEnqueuedInGov} />,
   }),
 ];
+
+function EnqueuedInGovChecker({
+  isEnqueuedInGov,
+}: {
+  isEnqueuedInGov: boolean;
+}) {
+  return <span role="img">{isEnqueuedInGov ? '✅' : '❌'}</span>;
+}
 
 const accountsColumnHelper = createColumnHelper<Account>();
 
@@ -180,9 +191,31 @@ const accountsColumns = [
   }),
 ];
 
-function Accountant() {
+function Accountant({
+  governorInfo,
+}: {
+  governorInfo: CloudGovernorInfo;
+}) {
   const pendingTransferInfo = useGetAccountantPendingTransfers();
   const accountsInfo = useGetAccountantAccounts();
+
+  let pendingTransfersForAcct: PendingTransferForAcct[] = [];
+  for (const transfer of pendingTransferInfo) {
+    let pt = transfer as PendingTransferForAcct;
+    pt.isEnqueuedInGov = false;
+    for (const vaa of governorInfo.enqueuedVAAs) {
+      let ea = vaa.emitterAddress;
+      if (ea.startsWith("0x")) {
+        ea = ethers.utils.hexlify(ea, { allowMissingPrefix: true }).substring(2).padStart(64, "0");
+      }
+      if (vaa.emitterChain === pt.key.emitter_chain && ea === pt.key.emitter_address && vaa.sequence === pt.key.sequence.toString()) {
+        pt.isEnqueuedInGov = true;
+        break;
+      }
+    }
+    pendingTransfersForAcct.push(pt);
+  }
+
   const guardianSigningStats: GuardianSigningStat[] = useMemo(() => {
     const stats: GuardianSigningStat[] = GUARDIAN_SET_3.map((g) => ({
       name: g.name,
@@ -214,7 +247,7 @@ function Accountant() {
   const [pendingTransferSorting, setPendingTransferSorting] = useState<SortingState>([]);
   const pendingTransfer = useReactTable({
     columns: pendingTransferColumns,
-    data: pendingTransferInfo,
+    data: pendingTransfersForAcct,
     state: {
       sorting: pendingTransferSorting,
     },
@@ -250,7 +283,7 @@ function Accountant() {
       ) : null}
       <Box mb={2}>
         <Card>
-          <Table<PendingTransfer>
+          <Table<PendingTransferForAcct>
             table={pendingTransfer}
             paginated={!!pendingTransferInfo.length}
             showRowCount={!!pendingTransferInfo.length}

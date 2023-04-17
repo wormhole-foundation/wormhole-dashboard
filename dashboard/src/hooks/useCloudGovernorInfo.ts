@@ -139,6 +139,8 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
 
   const tokens = jumpConfig?.tokens || [];
 
+  let releaseTimes = new Map<string, number>();
+
   const vaaById = status.data.governorStatus.reduce<{
     [key: string]: EnqueuedVAA;
   }>((vaaById, status) => {
@@ -146,11 +148,15 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
       for (const emitter of chain.emitters) {
         for (const vaa of emitter.enqueuedVaas) {
           const vaaId = `${chain.chainId}/${emitter}/${vaa.sequence}`;
-          vaaById[vaaId] = {
-            ...vaa,
-            emitterChain: chain.chainId,
-            emitterAddress: emitter.emitterAddress.slice(2),
-          };
+          let prevReleaseTime = releaseTimes.get(vaaId);
+          if ((prevReleaseTime === undefined) || (vaa.releaseTime > prevReleaseTime)) {
+            releaseTimes.set(vaaId, vaa.releaseTime);
+            vaaById[vaaId] = {
+              ...vaa,
+              emitterChain: chain.chainId,
+              emitterAddress: emitter.emitterAddress.slice(2),
+            };
+          }
         }
       }
     }

@@ -30,8 +30,9 @@ import {
 } from '@tanstack/react-table';
 import numeral from 'numeral';
 import React, { useMemo, useState } from 'react';
-import useCloudGovernorInfo, {
+import {
   AvailableNotionalByChain,
+  CloudGovernorInfo,
   GovernorToken,
 } from '../hooks/useCloudGovernorInfo';
 import useSymbolInfo from '../hooks/useSymbolInfo';
@@ -222,8 +223,11 @@ const tokenColumns = [
 
 type ChainIdToEnqueuedCount = { [chainId: number]: number };
 
-function MainnetGovernor() {
-  const governorInfo = useCloudGovernorInfo();
+function MainnetGovernor({
+  governorInfo,
+}: {
+  governorInfo: CloudGovernorInfo;
+}) {
   const tokenSymbols = useSymbolInfo(governorInfo.tokens);
   // TODO: governorInfo.tokens triggers updates to displayTokens, not tokenSymbols
   // Should fix this

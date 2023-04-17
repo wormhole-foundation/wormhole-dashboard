@@ -2,6 +2,7 @@ import { Divider } from '@mui/material';
 import { MonitorSettingsProvider } from '../contexts/MonitorSettingsContext';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';
+import useCloudGovernorInfo from '../hooks/useCloudGovernorInfo';
 import useHeartbeats from '../hooks/useHeartbeats';
 import Accountant from './Accountant';
 import Alerts from './Alerts';
@@ -16,6 +17,7 @@ function Main() {
   const heartbeats = useHeartbeats();
   const chainIdsToHeartbeats = useChainHeartbeats(heartbeats);
   const { currentNetwork } = useNetworkContext();
+  const governorInfo = useCloudGovernorInfo();
   return (
     <>
       <Alerts heartbeats={heartbeats} chainIdsToHeartbeats={chainIdsToHeartbeats} />
@@ -26,10 +28,10 @@ function Main() {
       <Divider />
       {currentNetwork.name === 'Mainnet' ? (
         <>
-          <MainnetGovernor />
+          <MainnetGovernor governorInfo={governorInfo} />
           <Divider />
           <CollapsibleSection header="Accountant">
-            <Accountant />
+            <Accountant governorInfo={governorInfo} />
           </CollapsibleSection>
           <Divider />
           <MonitorSettingsProvider>

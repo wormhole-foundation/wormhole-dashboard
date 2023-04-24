@@ -223,11 +223,7 @@ const tokenColumns = [
 
 type ChainIdToEnqueuedCount = { [chainId: number]: number };
 
-function MainnetGovernor({
-  governorInfo,
-}: {
-  governorInfo: CloudGovernorInfo;
-}) {
+function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
   const tokenSymbols = useSymbolInfo(governorInfo.tokens);
   // TODO: governorInfo.tokens triggers updates to displayTokens, not tokenSymbols
   // Should fix this

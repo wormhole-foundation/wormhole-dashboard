@@ -37,7 +37,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   klaytn: 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
   celo: 'https://forno.celo.org',
   moonbeam: 'https://rpc.ankr.com/moonbeam',
-  arbitrum: 'https://rpc.ankr.com/arbitrum',
+  arbitrum: 'https://arb1.arbitrum.io/rpc',
   optimism: 'https://rpc.ankr.com/optimism',
   aptos: 'https://fullnode.mainnet.aptoslabs.com/',
   near: 'https://rpc.mainnet.near.org',

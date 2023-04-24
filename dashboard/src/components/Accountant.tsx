@@ -18,7 +18,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
-import {CloudGovernorInfo} from '../hooks/useCloudGovernorInfo';
+import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
@@ -26,9 +26,9 @@ import useGetAccountantPendingTransfers, {
 import chainIdToName from '../utils/chainIdToName';
 import { GUARDIAN_SET_3 } from '../utils/consts';
 import Table from './Table';
-import { ethers } from "ethers";
+import { ethers } from 'ethers';
 
-type PendingTransferForAcct = PendingTransfer & {isEnqueuedInGov: boolean}
+type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 
 function getNumSignatures(signatures: string) {
   let bitfield = Number(signatures);
@@ -162,11 +162,7 @@ const pendingTransferColumns = [
   }),
 ];
 
-function EnqueuedInGovChecker({
-  isEnqueuedInGov,
-}: {
-  isEnqueuedInGov: boolean;
-}) {
+function EnqueuedInGovChecker({ isEnqueuedInGov }: { isEnqueuedInGov: boolean }) {
   return <span role="img">{isEnqueuedInGov ? '✅' : '❌'}</span>;
 }
 
@@ -191,11 +187,7 @@ const accountsColumns = [
   }),
 ];
 
-function Accountant({
-  governorInfo,
-}: {
-  governorInfo: CloudGovernorInfo;
-}) {
+function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
   const pendingTransferInfo = useGetAccountantPendingTransfers();
   const accountsInfo = useGetAccountantAccounts();
 
@@ -205,10 +197,14 @@ function Accountant({
     pt.isEnqueuedInGov = false;
     for (const vaa of governorInfo.enqueuedVAAs) {
       let ea = vaa.emitterAddress;
-      if (ea.startsWith("0x")) {
-        ea = ethers.utils.hexlify(ea, { allowMissingPrefix: true }).substring(2).padStart(64, "0");
+      if (ea.startsWith('0x')) {
+        ea = ethers.utils.hexlify(ea, { allowMissingPrefix: true }).substring(2).padStart(64, '0');
       }
-      if (vaa.emitterChain === pt.key.emitter_chain && ea === pt.key.emitter_address && vaa.sequence === pt.key.sequence.toString()) {
+      if (
+        vaa.emitterChain === pt.key.emitter_chain &&
+        ea === pt.key.emitter_address &&
+        vaa.sequence === pt.key.sequence.toString()
+      ) {
         pt.isEnqueuedInGov = true;
         break;
       }

@@ -20,7 +20,7 @@ export class ArbitrumWatcher extends EVMWatcher {
     this.latestL2Finalized = 0;
     this.l1L2Map = new Map<number, number>();
     this.lastEthTime = 0;
-    this.maximumBatchSize = 10;
+    this.maximumBatchSize = 25;
   }
 
   async getFinalizedBlockNumber(): Promise<number> {

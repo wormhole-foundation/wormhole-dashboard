@@ -23,9 +23,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP } from '../utils/consts';
-import { getBehindDiffForChain, QUORUM_COUNT } from './Alerts';
+import { getBehindDiffForChain, getQuorumCount } from './Alerts';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
+import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
 
@@ -78,11 +79,13 @@ function Chain({
   heartbeats,
   healthyCount,
   conditionalRowStyle,
+  environment,
 }: {
   chainId: string;
   heartbeats: HeartbeatInfo[];
   healthyCount: number;
   conditionalRowStyle?: ((a: HeartbeatInfo) => SxProps<Theme> | undefined) | undefined;
+  environment: Environment;
 }) {
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback(() => {
@@ -112,7 +115,7 @@ function Chain({
                 variant="determinate"
                 value={healthyCount === 0 ? 100 : (healthyCount / heartbeats.length) * 100}
                 color={
-                  healthyCount < QUORUM_COUNT
+                  healthyCount < getQuorumCount(environment)
                     ? 'error'
                     : healthyCount < heartbeats.length
                     ? 'warning'
@@ -179,6 +182,7 @@ type ChainHelpers = {
 };
 
 function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeartbeats }) {
+  const environment = useCurrentEnvironment();
   const {
     helpers,
     numSuccess,
@@ -208,7 +212,7 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
         0
       );
       if (Number(chainId) !== CHAIN_ID_AURORA)
-        if (healthyCount < QUORUM_COUNT) {
+        if (healthyCount < getQuorumCount(environment)) {
           numErrors++;
         } else if (healthyCount < heartbeats.length) {
           numWarnings++;
@@ -224,7 +228,7 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
       numWarnings,
       numErrors,
     };
-  }, [chainIdsToHeartbeats]);
+  }, [chainIdsToHeartbeats, environment]);
   return (
     <CollapsibleSection
       header={
@@ -272,6 +276,7 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
             heartbeats={chainIdsToHeartbeats[Number(chainId)]}
             healthyCount={helpers[Number(chainId)].healthyCount}
             conditionalRowStyle={helpers[Number(chainId)].conditionalRowStyle}
+            environment={environment}
           />
         ))}
       </Box>

@@ -108,6 +108,6 @@ export const NetworkContextProvider = ({ children }: { children: ReactNode }) =>
   return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;
 };
 
-export const useNetworkContext = () => {
-  return useContext(NetworkContext);
-};
+export const useNetworkContext = () => useContext(NetworkContext);
+
+export const useCurrentEnvironment = () => useContext(NetworkContext).currentNetwork.env;

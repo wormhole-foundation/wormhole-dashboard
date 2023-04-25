@@ -23,6 +23,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useMemo } from 'react';
+import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import useLatestRelease from '../hooks/useLatestRelease';
 import chainIdToName from '../utils/chainIdToName';
@@ -36,8 +37,16 @@ const isLayer2 = (chainId: number) =>
 export const getBehindDiffForChain = (chainId: number) =>
   isLayer2(chainId) ? BEHIND_DIFF * 2 : BEHIND_DIFF;
 
-export const QUORUM_COUNT = Math.floor((GUARDIAN_SET_3.length * 2) / 3 + 1);
-export const QUORUM_LOSS_COUNT = GUARDIAN_SET_3.length - QUORUM_COUNT + 1;
+export const getNumGuardians = (environment: Environment) =>
+  environment === 'mainnet' ? GUARDIAN_SET_3.length : 1;
+
+export function getQuorumCount(environment: Environment): number {
+  return Math.floor((getNumGuardians(environment) * 2) / 3 + 1);
+}
+
+function getQuorumLossCount(environment: Environment): number {
+  return getNumGuardians(environment) - getQuorumCount(environment) + 1;
+}
 
 type AlertEntry = {
   severity: AlertColor;
@@ -48,7 +57,8 @@ const alertSeverityOrder: AlertColor[] = ['error', 'warning', 'success', 'info']
 
 function chainDownAlerts(
   heartbeats: Heartbeat[],
-  chainIdsToHeartbeats: ChainIdToHeartbeats
+  chainIdsToHeartbeats: ChainIdToHeartbeats,
+  environment: Environment
 ): AlertEntry[] {
   const downChains: { [chainId: string]: string[] } = {};
   Object.entries(chainIdsToHeartbeats)
@@ -99,7 +109,7 @@ function chainDownAlerts(
       });
     });
   return Object.entries(downChains).map(([chainId, names]) => ({
-    severity: names.length >= QUORUM_LOSS_COUNT ? 'error' : 'warning',
+    severity: names.length >= getQuorumLossCount(environment) ? 'error' : 'warning',
     text: `${names.length} guardian${names.length > 1 ? 's' : ''} [${names.join(', ')}] ${
       names.length > 1 ? 'are' : 'is'
     } down on ${chainIdToName(Number(chainId))} (${chainId})!`,
@@ -124,9 +134,10 @@ function Alerts({
   chainIdsToHeartbeats: ChainIdToHeartbeats;
 }) {
   const latestRelease = useLatestRelease();
+  const environment = useCurrentEnvironment();
   const alerts = useMemo(() => {
     const alerts: AlertEntry[] = [
-      ...chainDownAlerts(heartbeats, chainIdsToHeartbeats),
+      ...chainDownAlerts(heartbeats, chainIdsToHeartbeats, environment),
       ...releaseChecker(latestRelease, heartbeats),
     ];
     return alerts.sort((a, b) =>
@@ -136,7 +147,7 @@ function Alerts({
         ? 1
         : 0
     );
-  }, [latestRelease, heartbeats, chainIdsToHeartbeats]);
+  }, [latestRelease, heartbeats, chainIdsToHeartbeats, environment]);
   const numErrors = useMemo(
     () => alerts.filter((alert) => alert.severity === 'error').length,
     [alerts]

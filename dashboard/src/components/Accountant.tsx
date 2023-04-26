@@ -10,11 +10,11 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  SortingState,
   createColumnHelper,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
@@ -26,7 +26,6 @@ import useGetAccountantPendingTransfers, {
 import chainIdToName from '../utils/chainIdToName';
 import { GUARDIAN_SET_3 } from '../utils/consts';
 import Table from './Table';
-import { ethers } from 'ethers';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 
@@ -155,16 +154,11 @@ const pendingTransferColumns = [
       </Tooltip>
     ),
   }),
-  pendingTransferColumnHelper.display({
-    id: 'govEnqueued',
+  pendingTransferColumnHelper.accessor('isEnqueuedInGov', {
     header: () => 'Governed',
-    cell: (info) => <EnqueuedInGovChecker isEnqueuedInGov={info.row.original.isEnqueuedInGov} />,
+    cell: (info) => (info.getValue() ? <span role="img">✅</span> : null),
   }),
 ];
-
-function EnqueuedInGovChecker({ isEnqueuedInGov }: { isEnqueuedInGov: boolean }) {
-  return <span role="img">{isEnqueuedInGov ? '✅' : '❌'}</span>;
-}
 
 const accountsColumnHelper = createColumnHelper<Account>();
 
@@ -189,28 +183,22 @@ const accountsColumns = [
 
 function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
   const pendingTransferInfo = useGetAccountantPendingTransfers();
+
   const accountsInfo = useGetAccountantAccounts();
 
-  let pendingTransfersForAcct: PendingTransferForAcct[] = [];
-  for (const transfer of pendingTransferInfo) {
-    let pt = transfer as PendingTransferForAcct;
-    pt.isEnqueuedInGov = false;
-    for (const vaa of governorInfo.enqueuedVAAs) {
-      let ea = vaa.emitterAddress;
-      if (ea.startsWith('0x')) {
-        ea = ethers.utils.hexlify(ea, { allowMissingPrefix: true }).substring(2).padStart(64, '0');
-      }
-      if (
-        vaa.emitterChain === pt.key.emitter_chain &&
-        ea === pt.key.emitter_address &&
-        vaa.sequence === pt.key.sequence.toString()
-      ) {
-        pt.isEnqueuedInGov = true;
-        break;
-      }
-    }
-    pendingTransfersForAcct.push(pt);
-  }
+  const pendingTransfersForAcct: PendingTransferForAcct[] = useMemo(
+    () =>
+      pendingTransferInfo.map((transfer) => ({
+        ...transfer,
+        isEnqueuedInGov: !!governorInfo.enqueuedVAAs.find(
+          (vaa) =>
+            vaa.emitterChain === transfer.key.emitter_chain &&
+            vaa.emitterAddress === transfer.key.emitter_address &&
+            vaa.sequence === transfer.key.sequence.toString()
+        ),
+      })),
+    [pendingTransferInfo, governorInfo.enqueuedVAAs]
+  );
 
   const guardianSigningStats: GuardianSigningStat[] = useMemo(() => {
     const stats: GuardianSigningStat[] = GUARDIAN_SET_3.map((g) => ({

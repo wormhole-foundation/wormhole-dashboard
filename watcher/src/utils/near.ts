@@ -10,8 +10,10 @@ import {
   WormholePublishEventLog,
 } from '../types/near';
 
+// The following is obtained by going to: https://explorer.near.org/accounts/contract.wormhole_crypto.near
+// and watching the network tab in the browser to see where the explorer is going.
 const NEAR_EXPLORER_TRANSACTION_URL =
-  'https://backend-mainnet-1713.onrender.com/trpc/transaction.listByAccountId';
+  'https://explorer-backend-mainnet-prod-24ktefolwq-uc.a.run.app/trpc/transaction.listByAccountId';
 export const NEAR_ARCHIVE_RPC = 'https://archival-rpc.mainnet.near.org';
 
 export const getNearProvider = async (rpc: string): Promise<Provider> => {

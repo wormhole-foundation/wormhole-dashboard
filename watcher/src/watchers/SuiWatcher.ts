@@ -98,7 +98,7 @@ export class SuiWatcher extends Watcher {
           )
         ).checkpoint!;
         const msg = event.parsedJson as PublishMessageEvent;
-        const timestamp = new Date(Number(msg.timestamp)).toISOString();
+        const timestamp = new Date(Number(msg.timestamp) * 1000).toISOString();
         const vaaKey = makeVaaKey(
           event.id.txDigest,
           CHAIN_ID_SUI,

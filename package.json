@@ -15,7 +15,7 @@
     "database"
   ],
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.9.13"
+    "@certusone/wormhole-sdk": "^0.9.15-beta.4"
   },
   "devDependencies": {
     "typescript": "^4.9.4"

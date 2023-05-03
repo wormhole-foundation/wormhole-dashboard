@@ -13,6 +13,7 @@ import { PolygonWatcher } from './PolygonWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
 import { TerraExplorerWatcher } from './TerraExplorerWatcher';
 import { Watcher } from './Watcher';
+import { SuiWatcher } from './SuiWatcher';
 
 export function makeFinalizedWatcher(chainName: ChainName): Watcher {
   if (chainName === 'solana') {
@@ -49,6 +50,8 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     return new TerraExplorerWatcher('terra');
   } else if (chainName === 'terra2' || chainName === 'xpla') {
     return new CosmwasmWatcher(chainName);
+  } else if (chainName === 'sui') {
+    return new SuiWatcher();
   } else {
     throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
   }

@@ -195,6 +195,11 @@ export function makeCache() {
       lastUpdated: 0,
       lastRowKey: '',
     },
+    32: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
     3104: {
       messages: [],
       lastUpdated: 0,

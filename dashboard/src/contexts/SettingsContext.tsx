@@ -9,6 +9,7 @@ type Settings = {
   backgroundOpacity?: number;
   defaultEndpoint?: string;
   theme: Theme;
+  showChainName?: boolean;
 };
 
 type SettingsContextValue = {
@@ -17,6 +18,7 @@ type SettingsContextValue = {
   updateBackgroundUrl(value: string): void;
   updateDefaultEndpoint(value: string): void;
   updateTheme(value: Theme): void;
+  updateShowChainName(value: boolean): void;
 };
 
 const isTheme = (arg: any): arg is Theme => {
@@ -52,6 +54,7 @@ const SettingsContext = React.createContext<SettingsContextValue>({
   updateBackgroundUrl: (value: string) => {},
   updateDefaultEndpoint: (value: string) => {},
   updateTheme: (value: Theme) => {},
+  updateShowChainName: (value: boolean) => {},
 });
 
 export const SettingsContextProvider = ({ children }: { children: ReactNode }) => {
@@ -68,6 +71,9 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
   const updateTheme = useCallback((value: Theme) => {
     setSettings((settings) => ({ ...settings, theme: value }));
   }, []);
+  const updateShowChainName = useCallback((value: boolean) => {
+    setSettings((settings) => ({ ...settings, showChainName: value }));
+  }, []);
   // sync settings to state
   useEffect(() => {
     saveSettings(settings);
@@ -79,8 +85,16 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateBackgroundUrl,
       updateDefaultEndpoint,
       updateTheme,
+      updateShowChainName,
     }),
-    [settings, updateBackgroundOpacity, updateBackgroundUrl, updateDefaultEndpoint, updateTheme]
+    [
+      settings,
+      updateBackgroundOpacity,
+      updateBackgroundUrl,
+      updateDefaultEndpoint,
+      updateTheme,
+      updateShowChainName,
+    ]
   );
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 };

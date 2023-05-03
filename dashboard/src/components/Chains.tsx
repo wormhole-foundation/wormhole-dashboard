@@ -3,6 +3,7 @@ import { CheckCircleOutline, ErrorOutline, WarningAmberOutlined } from '@mui/ico
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ import { getBehindDiffForChain, getQuorumCount } from './Alerts';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
+import { useSettingsContext } from '../contexts/SettingsContext';
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
 
@@ -87,6 +89,9 @@ function Chain({
   conditionalRowStyle?: ((a: HeartbeatInfo) => SxProps<Theme> | undefined) | undefined;
   environment: Environment;
 }) {
+  const {
+    settings: { showChainName },
+  } = useSettingsContext();
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback(() => {
     setOpen(true);
@@ -96,7 +101,7 @@ function Chain({
   }, []);
   return (
     <>
-      <Box width="80px" m={2} textAlign={'center'}>
+      <Box my={2} mx={1} textAlign={'center'}>
         <Tooltip
           title={
             <Box textAlign="center">
@@ -109,7 +114,16 @@ function Chain({
             </Box>
           }
         >
-          <Button onClick={handleOpen} sx={{ borderRadius: '50%' }}>
+          <Button
+            onClick={handleOpen}
+            sx={{
+              borderRadius: showChainName ? undefined : '50%',
+              flexDirection: 'column',
+              minWidth: showChainName ? '102px' : '86px',
+              maxWidth: showChainName ? '102px' : '86px',
+              textTransform: 'none',
+            }}
+          >
             <Box sx={{ position: 'relative', display: 'inline-flex' }}>
               <CircularProgress
                 variant="determinate"
@@ -159,6 +173,9 @@ function Chain({
                 </Typography>
               </Box>
             </Box>
+            {showChainName ? (
+              <Chip sx={{ mt: 1.5 }} label={chainIdToName(Number(chainId))} size="small" />
+            ) : null}
           </Button>
         </Tooltip>
       </Box>

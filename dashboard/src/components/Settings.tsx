@@ -6,7 +6,9 @@ import {
 } from '@mui/icons-material';
 import {
   Box,
+  Checkbox,
   Dialog,
+  FormControlLabel,
   IconButton,
   Slider,
   TextField,
@@ -18,8 +20,13 @@ import { useCallback, useState } from 'react';
 import { Theme, useSettingsContext } from '../contexts/SettingsContext';
 
 function SettingsContent() {
-  const { settings, updateBackgroundOpacity, updateBackgroundUrl, updateTheme } =
-    useSettingsContext();
+  const {
+    settings,
+    updateBackgroundOpacity,
+    updateBackgroundUrl,
+    updateTheme,
+    updateShowChainName,
+  } = useSettingsContext();
   const handleThemeChange = useCallback(
     (event: any, newTheme: Theme) => {
       updateTheme(newTheme);
@@ -37,6 +44,12 @@ function SettingsContent() {
       updateBackgroundUrl(event.target.value);
     },
     [updateBackgroundUrl]
+  );
+  const handleShowChainNameChange = useCallback(
+    (event: any) => {
+      updateShowChainName(event.target.checked);
+    },
+    [updateShowChainName]
   );
   return (
     <>
@@ -73,6 +86,14 @@ function SettingsContent() {
             onChange={handleBackgroundOpacityChange}
           />
         </Box>
+      </Box>
+      <Box m={2}>
+        <FormControlLabel
+          control={
+            <Checkbox checked={!!settings.showChainName} onChange={handleShowChainNameChange} />
+          }
+          label="Show chain names"
+        />
       </Box>
     </>
   );

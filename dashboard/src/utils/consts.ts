@@ -20,6 +20,7 @@ import {
   CHAIN_ID_POLYGON,
   CHAIN_ID_PYTHNET,
   CHAIN_ID_SOLANA,
+  CHAIN_ID_SUI,
   CHAIN_ID_TERRA,
   CHAIN_ID_TERRA2,
   CHAIN_ID_XPLA,
@@ -42,6 +43,7 @@ import oasisIcon from '../images/oasis-network-rose-logo.svg';
 import optimismIcon from '../images/optimism.svg';
 import polygonIcon from '../images/polygon.svg';
 import solanaIcon from '../images/solana.svg';
+import suiIcon from '../images/sui.svg';
 import terraIcon from '../images/terra.svg';
 import terra2Icon from '../images/terra2.svg';
 import xplaIcon from '../images/xpla.svg';
@@ -205,6 +207,14 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     endpointUrl: '',
     explorerStem: `https://explorer.injective.network`,
     icon: injectiveIcon,
+  },
+  21: {
+    name: 'sui',
+    evm: false,
+    chainId: CHAIN_ID_SUI,
+    endpointUrl: 'https://rpc.mainnet.sui.io',
+    explorerStem: `https://explorer.sui.io`,
+    icon: suiIcon,
   },
   22: {
     name: 'aptos',

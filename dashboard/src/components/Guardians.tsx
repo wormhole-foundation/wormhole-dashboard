@@ -91,11 +91,11 @@ function GuardianCard({
   );
   const healthyPercent = (healthyCount / chainCount) * 100;
   return (
-    <Box width={260} m={1} height="100%">
+    <Box width={232} m={1} height="100%">
       <Card sx={{ display: 'flex', p: 1, height: '100%', alignItems: 'center' }}>
-        <Box flexBasis="100px" height="100%" textAlign="center">
+        <Box flexBasis="72px" height="100%" textAlign="center">
           <Typography variant="body2" sx={{ flexGrow: 1 }}>
-            {heartbeat.nodeName}
+            {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
           </Typography>
         </Box>
         <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />

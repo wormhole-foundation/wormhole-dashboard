@@ -1,6 +1,7 @@
 import {
   GridView,
-  Link,
+  InfoOutlined,
+  Link as LinkIcon,
   MonitorHeartOutlined,
   PlayCircleOutline,
   ViewList,
@@ -10,25 +11,30 @@ import {
   Card,
   Divider,
   LinearProgress,
+  Link,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
   Typography,
 } from '@mui/material';
 import {
+  SortingState,
   createColumnHelper,
   getCoreRowModel,
   getSortedRowModel,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import { useCallback, useMemo, useState } from 'react';
-import { Heartbeat } from '../utils/getLastHeartbeats';
-import CollapsibleSection from './CollapsibleSection';
-import Table from './Table';
 import TimeAgo from 'react-timeago';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
+import { Heartbeat } from '../utils/getLastHeartbeats';
 import { isHeartbeatUnhealthy } from './Chains';
+import CollapsibleSection from './CollapsibleSection';
+import Table from './Table';
 
 const columnHelper = createColumnHelper<Heartbeat>();
 
@@ -70,9 +76,11 @@ type HighestByChain = { [chainId: string]: bigint };
 function GuardianCard({
   heartbeat,
   highestByChain,
+  latestRelease,
 }: {
   heartbeat: Heartbeat;
   highestByChain: HighestByChain;
+  latestRelease: string | null;
 }) {
   const chainCount = Object.keys(highestByChain).length;
   const healthyCount = useMemo(
@@ -90,9 +98,19 @@ function GuardianCard({
     [heartbeat, highestByChain]
   );
   const healthyPercent = (healthyCount / chainCount) * 100;
+  const hasLatestRelease = latestRelease && heartbeat.version !== latestRelease;
   return (
     <Box width={232} m={1} height="100%">
-      <Card sx={{ display: 'flex', p: 1, height: '100%', alignItems: 'center' }}>
+      <Card
+        sx={{
+          display: 'flex',
+          p: 1,
+          height: '100%',
+          alignItems: 'center',
+          position: 'relative',
+          overflow: 'visible',
+        }}
+      >
         <Box flexBasis="72px" height="100%" textAlign="center">
           <Typography variant="body2" sx={{ flexGrow: 1 }}>
             {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
@@ -101,11 +119,14 @@ function GuardianCard({
         <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
         <Box flexGrow={1} my={-0.5}>
           <Tooltip
-            title={`Last Heartbeat: ${
-              heartbeat.timestamp
-                ? new Date(Number(heartbeat.timestamp) / 1000000).toLocaleString()
-                : null
-            }`}
+            title={
+              <Typography variant="body2">
+                Last Heartbeat:{' '}
+                {heartbeat.timestamp
+                  ? new Date(Number(heartbeat.timestamp) / 1000000).toLocaleString()
+                  : null}
+              </Typography>
+            }
           >
             <Box display="flex" alignItems="center" my={0.25}>
               <MonitorHeartOutlined fontSize="inherit" sx={{ mr: 0.5 }} />
@@ -117,14 +138,32 @@ function GuardianCard({
             </Box>
           </Tooltip>
           <Tooltip
-            title={`Boot Time: ${
-              heartbeat.bootTimestamp
-                ? new Date(Number(heartbeat.bootTimestamp) / 1000000).toLocaleString()
-                : null
-            }`}
+            title={
+              <>
+                <Typography variant="body2" gutterBottom>
+                  Boot Time:{' '}
+                  {heartbeat.bootTimestamp
+                    ? new Date(Number(heartbeat.bootTimestamp) / 1000000).toLocaleString()
+                    : null}
+                </Typography>
+                {hasLatestRelease ? (
+                  <>
+                    <Typography variant="body2" gutterBottom>
+                      {heartbeat.nodeName} is not running the latest release.
+                    </Typography>
+                    <Typography variant="body2">Theirs: {heartbeat.version}</Typography>
+                    <Typography variant="body2">Latest: {latestRelease}</Typography>
+                  </>
+                ) : null}
+              </>
+            }
           >
             <Box display="flex" alignItems="center" my={0.25}>
-              <PlayCircleOutline fontSize="inherit" sx={{ mr: 0.5 }} />
+              <PlayCircleOutline
+                color={hasLatestRelease ? 'primary' : 'inherit'}
+                fontSize="inherit"
+                sx={{ mr: 0.5 }}
+              />
               <Typography variant="caption">
                 {heartbeat.bootTimestamp ? (
                   <TimeAgo date={Number(heartbeat.bootTimestamp) / 1000000} />
@@ -132,9 +171,15 @@ function GuardianCard({
               </Typography>
             </Box>
           </Tooltip>
-          <Tooltip title={`Healthy Chains: ${healthyCount} / ${chainCount}`}>
+          <Tooltip
+            title={
+              <Typography variant="body2">
+                Healthy Chains: {healthyCount} / {chainCount}
+              </Typography>
+            }
+          >
             <Box display="flex" alignItems="center" my={0.25}>
-              <Link fontSize="inherit" sx={{ mr: 0.5 }} />
+              <LinkIcon fontSize="inherit" sx={{ mr: 0.5 }} />
               <LinearProgress
                 variant="determinate"
                 value={healthyPercent}
@@ -156,9 +201,11 @@ type Displays = 'cards' | 'table';
 function Guardians({
   heartbeats,
   chainIdsToHeartbeats,
+  latestRelease,
 }: {
   heartbeats: Heartbeat[];
   chainIdsToHeartbeats: ChainIdToHeartbeats;
+  latestRelease: string | null;
 }) {
   const highestByChain = useMemo(
     () =>
@@ -207,13 +254,49 @@ function Guardians({
             paddingRight: 1,
           }}
         >
-          <Box pr={2}>Guardians</Box>
+          <Box>Guardians</Box>
+          <Tooltip
+            title={
+              <>
+                <Typography variant="body1">
+                  This section shows alerts for the following conditions:
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemIcon>
+                      <InfoOutlined color="info" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Guardians not running the latest release"
+                      secondary={
+                        <>
+                          The guardian version is compared to the latest release from{' '}
+                          <Link
+                            href="https://github.com/wormhole-foundation/wormhole/releases"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            https://github.com/wormhole-foundation/wormhole/releases
+                          </Link>
+                        </>
+                      }
+                    />
+                  </ListItem>
+                </List>
+              </>
+            }
+            componentsProps={{ tooltip: { sx: { maxWidth: '100%' } } }}
+          >
+            <Box>
+              <InfoOutlined sx={{ fontSize: '.8em', ml: 0.5 }} />
+            </Box>
+          </Tooltip>
           <ToggleButtonGroup
             value={display}
             exclusive
             onChange={handleDisplay}
             size="small"
-            sx={{ my: -1 }}
+            sx={{ my: -1, ml: 1 }}
           >
             <ToggleButton value="cards">
               <GridView fontSize="small" />
@@ -229,7 +312,12 @@ function Guardians({
       {display === 'cards' ? (
         <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
           {heartbeats.map((hb) => (
-            <GuardianCard key={hb.guardianAddr} heartbeat={hb} highestByChain={highestByChain} />
+            <GuardianCard
+              key={hb.guardianAddr}
+              heartbeat={hb}
+              highestByChain={highestByChain}
+              latestRelease={latestRelease}
+            />
           ))}
         </Box>
       ) : (

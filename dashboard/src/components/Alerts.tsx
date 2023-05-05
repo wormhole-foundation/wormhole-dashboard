@@ -13,25 +13,21 @@ import {
 import {
   Alert,
   AlertColor,
-  Box,
-  Link,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Tooltip,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Typography,
 } from '@mui/material';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
-import useLatestRelease from '../hooks/useLatestRelease';
 import chainIdToName from '../utils/chainIdToName';
 import { GUARDIAN_SET_3 } from '../utils/consts';
 import { Heartbeat } from '../utils/getLastHeartbeats';
-import CollapsibleSection from './CollapsibleSection';
 
-const BEHIND_DIFF = 1000;
+export const BEHIND_DIFF = 1000;
+export const CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD = 2;
 const isLayer2 = (chainId: number) =>
   chainId === CHAIN_ID_POLYGON || chainId === CHAIN_ID_ARBITRUM || chainId === CHAIN_ID_OPTIMISM;
 export const getBehindDiffForChain = (chainId: number) =>
@@ -42,6 +38,10 @@ export const getNumGuardians = (environment: Environment) =>
 
 export function getQuorumCount(environment: Environment): number {
   return Math.floor((getNumGuardians(environment) * 2) / 3 + 1);
+}
+
+export function getWarningCount(environment: Environment): number {
+  return Math.max(getNumGuardians(environment) - CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD + 1, 1);
 }
 
 function getQuorumLossCount(environment: Environment): number {
@@ -129,11 +129,19 @@ const releaseChecker = (release: string | null, heartbeats: Heartbeat[]): AlertE
 function Alerts({
   heartbeats,
   chainIdsToHeartbeats,
+  latestRelease,
 }: {
   heartbeats: Heartbeat[];
   chainIdsToHeartbeats: ChainIdToHeartbeats;
+  latestRelease: string | null;
 }) {
-  const latestRelease = useLatestRelease();
+  const [open, setOpen] = useState(false);
+  const handleOpen = useCallback(() => {
+    setOpen(true);
+  }, []);
+  const handleClose = useCallback(() => {
+    setOpen(false);
+  }, []);
   const environment = useCurrentEnvironment();
   const alerts = useMemo(() => {
     const alerts: AlertEntry[] = [
@@ -165,117 +173,61 @@ function Alerts({
     [alerts]
   );
   return (
-    <CollapsibleSection
-      defaultExpanded={false}
-      header={
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            paddingRight: 1,
-          }}
-        >
-          <Tooltip
-            title={
-              <>
-                <Typography variant="body1">
-                  This section shows alerts for the following conditions:
-                </Typography>
-                <List dense>
-                  <ListItem>
-                    <ListItemIcon>
-                      <ErrorOutline color="error" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Chains with a quorum of guardians down"
-                      secondary={`A guardian is considered down if it is
-                      reporting a height of 0, more than ${BEHIND_DIFF} behind the highest height, or missing from the list of
-                      heartbeats`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <WarningAmberOutlined color="warning" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Chains with one or more guardians down"
-                      secondary={`A guardian is considered down if it is
-                      reporting a height of 0, more than ${BEHIND_DIFF} behind the highest height, or missing from the list of
-                      heartbeats`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon>
-                      <InfoOutlined color="info" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Guardians not running the latest release"
-                      secondary={
-                        <>
-                          The guardian version is compared to the latest release from{' '}
-                          <Link
-                            href="https://github.com/wormhole-foundation/wormhole/releases"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            https://github.com/wormhole-foundation/wormhole/releases
-                          </Link>
-                        </>
-                      }
-                    />
-                  </ListItem>
-                </List>
-              </>
-            }
-            componentsProps={{ tooltip: { sx: { maxWidth: '100%' } } }}
-          >
-            <Box>
-              Alerts
-              <InfoOutlined sx={{ fontSize: '.8em', ml: 0.5 }} />
-            </Box>
-          </Tooltip>
-          <Box flexGrow={1} />
-          {numInfos > 0 ? (
-            <>
-              <InfoOutlined color="info" sx={{ ml: 2 }} />
-              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                {numInfos}
-              </Typography>
-            </>
-          ) : null}
-          {numSuccess > 0 ? (
-            <>
-              <CheckCircleOutline color="success" sx={{ ml: 2 }} />
-              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                {numSuccess}
-              </Typography>
-            </>
-          ) : null}
-          {numWarnings > 0 ? (
-            <>
-              <WarningAmberOutlined color="warning" sx={{ ml: 2 }} />
-              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                {numWarnings}
-              </Typography>
-            </>
-          ) : null}
-          {numErrors > 0 ? (
-            <>
-              <ErrorOutline color="error" sx={{ ml: 2 }} />
-              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                {numErrors}
-              </Typography>
-            </>
-          ) : null}
-        </Box>
-      }
-    >
-      {alerts.map((alert) => (
-        <Alert key={alert.text} severity={alert.severity}>
-          {alert.text}
-        </Alert>
-      ))}
-    </CollapsibleSection>
+    <>
+      <Button
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          mx: 2,
+          '& svg:not(:first-of-type)': { ml: 1 },
+        }}
+        color="inherit"
+        onClick={handleOpen}
+      >
+        {numInfos > 0 ? (
+          <>
+            <InfoOutlined color="info" />
+            <Typography component="strong" sx={{ ml: 0.5 }}>
+              {numInfos}
+            </Typography>
+          </>
+        ) : null}
+        {numSuccess > 0 ? (
+          <>
+            <CheckCircleOutline color="success" />
+            <Typography component="strong" sx={{ ml: 0.5 }}>
+              {numSuccess}
+            </Typography>
+          </>
+        ) : null}
+        {numWarnings > 0 ? (
+          <>
+            <WarningAmberOutlined color="warning" />
+            <Typography component="strong" sx={{ ml: 0.5 }}>
+              {numWarnings}
+            </Typography>
+          </>
+        ) : null}
+        {numErrors > 0 ? (
+          <>
+            <ErrorOutline color="error" />
+            <Typography component="strong" sx={{ ml: 0.5 }}>
+              {numErrors}
+            </Typography>
+          </>
+        ) : null}
+      </Button>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Alerts</DialogTitle>
+        <DialogContent>
+          {alerts.map((alert) => (
+            <Alert key={alert.text} severity={alert.severity}>
+              {alert.text}
+            </Alert>
+          ))}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 export default Alerts;

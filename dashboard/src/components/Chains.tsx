@@ -1,5 +1,10 @@
 import { CHAIN_ID_AURORA } from '@certusone/wormhole-sdk';
-import { CheckCircleOutline, ErrorOutline, WarningAmberOutlined } from '@mui/icons-material';
+import {
+  CheckCircleOutline,
+  ErrorOutline,
+  InfoOutlined,
+  WarningAmberOutlined,
+} from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -8,27 +13,37 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   SxProps,
   Theme,
   Tooltip,
   Typography,
 } from '@mui/material';
 import {
+  SortingState,
   createColumnHelper,
   getCoreRowModel,
   getSortedRowModel,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import { useCallback, useMemo, useState } from 'react';
+import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
+import { useSettingsContext } from '../contexts/SettingsContext';
 import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP } from '../utils/consts';
-import { getBehindDiffForChain, getQuorumCount } from './Alerts';
+import {
+  BEHIND_DIFF,
+  CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD,
+  getBehindDiffForChain,
+  getQuorumCount,
+  getWarningCount,
+} from './Alerts';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
-import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
-import { useSettingsContext } from '../contexts/SettingsContext';
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
 
@@ -131,7 +146,7 @@ function Chain({
                 color={
                   healthyCount < getQuorumCount(environment)
                     ? 'error'
-                    : healthyCount < heartbeats.length
+                    : healthyCount < getWarningCount(environment)
                     ? 'warning'
                     : 'success'
                 }
@@ -231,7 +246,7 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
       if (Number(chainId) !== CHAIN_ID_AURORA)
         if (healthyCount < getQuorumCount(environment)) {
           numErrors++;
-        } else if (healthyCount < heartbeats.length) {
+        } else if (healthyCount < getWarningCount(environment)) {
           numWarnings++;
         } else {
           numSuccess++;
@@ -257,6 +272,44 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
           }}
         >
           <Box>Chains</Box>
+          <Tooltip
+            title={
+              <>
+                <Typography variant="body1">
+                  This section shows alerts for the following conditions:
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemIcon>
+                      <ErrorOutline color="error" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Chains with a quorum of guardians down"
+                      secondary={`A guardian is considered down if it is
+                      reporting a height of 0, more than ${BEHIND_DIFF} behind the highest height, or missing from the list of
+                      heartbeats`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon>
+                      <WarningAmberOutlined color="warning" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`Chains with ${CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD} or more guardians down`}
+                      secondary={`A guardian is considered down if it is
+                      reporting a height of 0, more than ${BEHIND_DIFF} behind the highest height, or missing from the list of
+                      heartbeats`}
+                    />
+                  </ListItem>
+                </List>
+              </>
+            }
+            componentsProps={{ tooltip: { sx: { maxWidth: '100%' } } }}
+          >
+            <Box>
+              <InfoOutlined sx={{ fontSize: '.8em', ml: 0.5 }} />
+            </Box>
+          </Tooltip>
           <Box flexGrow={1} />
           {numSuccess > 0 ? (
             <>

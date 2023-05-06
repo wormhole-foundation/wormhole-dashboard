@@ -10,6 +10,7 @@ import {
   Box,
   Card,
   Divider,
+  Hidden,
   LinearProgress,
   Link,
   List,
@@ -100,7 +101,7 @@ function GuardianCard({
   const healthyPercent = (healthyCount / chainCount) * 100;
   const hasLatestRelease = latestRelease && heartbeat.version !== latestRelease;
   return (
-    <Box width={232} m={1} height="100%">
+    <Box m={1} height="100%" sx={{ width: { sm: 232, xs: 142 } }}>
       <Card
         sx={{
           display: 'flex',
@@ -111,13 +112,20 @@ function GuardianCard({
           overflow: 'visible',
         }}
       >
-        <Box flexBasis="72px" height="100%" textAlign="center">
-          <Typography variant="body2" sx={{ flexGrow: 1 }}>
-            {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
-          </Typography>
-        </Box>
-        <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+        <Hidden smDown>
+          <Box flexBasis="72px" height="100%" textAlign="center">
+            <Typography variant="body2" sx={{ flexGrow: 1 }}>
+              {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
+            </Typography>
+          </Box>
+          <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+        </Hidden>
         <Box flexGrow={1} my={-0.5}>
+          <Hidden smUp>
+            <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
+              {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
+            </Typography>
+          </Hidden>
           <Tooltip
             title={
               <Typography variant="body2">

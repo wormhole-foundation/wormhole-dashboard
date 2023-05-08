@@ -17,15 +17,16 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
 } from '../hooks/useGetAccountantPendingTransfers';
 import chainIdToName from '../utils/chainIdToName';
-import { GUARDIAN_SET_3 } from '../utils/consts';
+import { CHAIN_INFO_MAP, GUARDIAN_SET_3 } from '../utils/consts';
 import Table from './Table';
+import CollapsibleSection from './CollapsibleSection';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 
@@ -256,8 +257,57 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
     autoResetPageIndex: false,
     onSortingChange: setAccountsSorting,
   });
+  const pendingByChain = useMemo(
+    () =>
+      pendingTransferInfo.reduce((obj, cur) => {
+        obj[cur.key.emitter_chain] = (obj[cur.key.emitter_chain] || 0) + 1;
+        return obj;
+      }, {} as { [chainId: number]: number }),
+    [pendingTransferInfo]
+  );
   return (
-    <>
+    <CollapsibleSection
+      defaultExpanded={false}
+      header={
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            paddingRight: 1,
+          }}
+        >
+          <Box>Accountant</Box>
+          <Box flexGrow={1} />
+          {Object.keys(pendingByChain)
+            .sort()
+            .map((chainId) => (
+              <Fragment key={chainId}>
+                <Box
+                  ml={2}
+                  display="flex"
+                  alignItems="center"
+                  borderRadius="50%"
+                  sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
+                >
+                  {CHAIN_INFO_MAP[chainId]?.icon ? (
+                    <img
+                      src={CHAIN_INFO_MAP[chainId].icon}
+                      alt={CHAIN_INFO_MAP[chainId].name}
+                      width={24}
+                      height={24}
+                    />
+                  ) : (
+                    <Typography variant="body2">{chainId}</Typography>
+                  )}
+                </Box>
+                <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                  {pendingByChain[Number(chainId)]}
+                </Typography>
+              </Fragment>
+            ))}
+        </Box>
+      }
+    >
       {pendingTransferInfo.length ? (
         <Box mb={2}>
           <Card>
@@ -291,7 +341,7 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
           </Accordion>
         </Card>
       </Box>
-    </>
+    </CollapsibleSection>
   );
 }
 export default Accountant;

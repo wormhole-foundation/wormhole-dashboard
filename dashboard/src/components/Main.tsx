@@ -65,9 +65,7 @@ function Main() {
         <>
           <MainnetGovernor governorInfo={governorInfo} />
           <Divider />
-          <CollapsibleSection header="Accountant">
-            <Accountant governorInfo={governorInfo} />
-          </CollapsibleSection>
+          <Accountant governorInfo={governorInfo} />
           <Divider />
           <MonitorSettingsProvider>
             <CollapsibleSection header="Monitor">

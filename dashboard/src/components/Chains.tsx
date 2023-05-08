@@ -21,6 +21,7 @@ import {
   Theme,
   Tooltip,
   Typography,
+  useMediaQuery,
 } from '@mui/material';
 import {
   SortingState,
@@ -104,6 +105,7 @@ function Chain({
   conditionalRowStyle?: ((a: HeartbeatInfo) => SxProps<Theme> | undefined) | undefined;
   environment: Environment;
 }) {
+  const smUp = useMediaQuery((theme: any) => theme.breakpoints.up('sm'));
   const {
     settings: { showChainName },
   } = useSettingsContext();
@@ -116,7 +118,7 @@ function Chain({
   }, []);
   return (
     <>
-      <Box my={2} mx={1} textAlign={'center'}>
+      <Box my={smUp ? 2 : 0.25} mx={1} textAlign={'center'}>
         <Tooltip
           title={
             <Box textAlign="center">
@@ -134,8 +136,8 @@ function Chain({
             sx={{
               borderRadius: showChainName ? undefined : '50%',
               flexDirection: 'column',
-              minWidth: showChainName ? '102px' : '86px',
-              maxWidth: showChainName ? '102px' : '86px',
+              minWidth: showChainName ? '102px' : { xs: '59px', sm: '86px' },
+              maxWidth: showChainName ? '102px' : { xs: '59px', sm: '86px' },
               textTransform: 'none',
             }}
           >
@@ -150,8 +152,8 @@ function Chain({
                     ? 'warning'
                     : 'success'
                 }
-                thickness={6}
-                size={74}
+                thickness={smUp ? 6 : 4}
+                size={smUp ? 74 : 47}
               />
               <Box
                 sx={{
@@ -173,14 +175,13 @@ function Chain({
                         display: 'flex',
                         p: 1.25,
                         backgroundColor: 'rgba(0,0,0,0.5)',
+                        '& > img': {
+                          width: { xs: 20, sm: 34 },
+                          height: { xs: 20, sm: 34 },
+                        },
                       }}
                     >
-                      <img
-                        src={CHAIN_INFO_MAP[chainId]?.icon}
-                        alt={chainId}
-                        width={34}
-                        height={34}
-                      />
+                      <img src={CHAIN_INFO_MAP[chainId]?.icon} alt={chainId} />
                     </Box>
                   ) : (
                     chainId

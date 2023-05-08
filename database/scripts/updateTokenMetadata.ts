@@ -10,6 +10,7 @@ import {
   CHAIN_ID_INJECTIVE,
   CHAIN_ID_NEAR,
   CHAIN_ID_SOLANA,
+  CHAIN_ID_SUI,
   CHAIN_ID_TERRA,
   CHAIN_ID_TERRA2,
   CHAIN_ID_XPLA,
@@ -18,6 +19,7 @@ import {
   ChainName,
   assertChain,
   getTypeFromExternalAddress,
+  hexToUint8Array,
   isEVMChain,
   queryExternalId,
   queryExternalIdInjective,
@@ -32,6 +34,8 @@ import { Network, getNetworkInfo } from '@injectivelabs/networks';
 import { LCDClient } from '@xpla/xpla.js';
 import { connect } from 'near-api-js';
 import { AptosClient } from 'aptos';
+import { Connection, JsonRpcProvider } from '@mysten/sui.js';
+import { getTokenCoinType } from '@certusone/wormhole-sdk/lib/cjs/sui';
 
 const PG_USER = assertEnvironmentVariable('PG_USER');
 const PG_PASSWORD = assertEnvironmentVariable('PG_PASSWORD');
@@ -98,6 +102,16 @@ const getNativeAddress = async (
           tokenAddress
         );
       }
+    } else if (tokenChain === CHAIN_ID_SUI) {
+      const provider = new JsonRpcProvider(
+        new Connection({ fullnode: 'https://fullnode.mainnet.sui.io' })
+      );
+      return await getTokenCoinType(
+        provider,
+        CONTRACTS.MAINNET.sui.token_bridge,
+        hexToUint8Array(tokenAddress),
+        CHAIN_ID_SUI
+      );
     }
   } catch (e) {
     console.error(e);
@@ -129,6 +143,7 @@ const COINGECKO_PLATFORM_BY_CHAIN: { [key in ChainName]?: string } = {
   optimism: 'optimistic-ethereum',
   xpla: undefined,
   injective: undefined,
+  sui: 'sui',
 };
 
 const coinGeckoCoinIdCache = new Map<string, string>();

@@ -198,7 +198,15 @@ const findCoinGeckoCoinId = (
       .orWhereNull('coin_gecko_coin_id');
     const coinGeckoCoins = await fetchCoins();
     const toUpdate: TokenMetadata[] = [];
-    for (let { token_chain, token_address, native_address, coin_gecko_coin_id } of result) {
+    for (let {
+      token_chain,
+      token_address,
+      native_address,
+      coin_gecko_coin_id,
+      name,
+      symbol,
+      decimals,
+    } of result) {
       assertChain(token_chain);
       let shouldUpdate = false;
       if (native_address === null) {
@@ -213,8 +221,11 @@ const findCoinGeckoCoinId = (
         const tokenMetadata: TokenMetadata = {
           token_chain,
           token_address,
-          native_address,
+          native_address: native_address?.replace('\x00', '') || null, // postgres complains about invalid utf8 byte sequence
           coin_gecko_coin_id,
+          name,
+          symbol,
+          decimals,
         };
         toUpdate.push(tokenMetadata);
         console.log('will update', tokenMetadata);
@@ -226,7 +237,7 @@ const findCoinGeckoCoinId = (
       const result: any = await pg<TokenMetadata>(TOKEN_METADATA_TABLE)
         .insert(chunk)
         .onConflict(['token_chain', 'token_address'])
-        .merge();
+        .merge(['native_address', 'coin_gecko_coin_id']);
       numUpdated += result.rowCount;
     }
     console.log(`updated ${numUpdated} rows`);

@@ -7,6 +7,9 @@ export interface TokenMetadata {
   token_address: string;
   native_address: string | null;
   coin_gecko_coin_id: string | null;
+  decimals: number;
+  symbol: string;
+  name: string;
 }
 
 export interface TokenTransfer {
@@ -47,6 +50,9 @@ export const createTokenMetadata = (vaa: ParsedAttestMetaVaa): TokenMetadata => 
   token_address: vaa.tokenAddress.toString('hex'),
   native_address: null,
   coin_gecko_coin_id: null,
+  decimals: vaa.decimals,
+  symbol: vaa.symbol,
+  name: vaa.name,
 });
 
 export const createTokenTransfer = (vaa: ParsedTokenTransferVaa): TokenTransfer => ({

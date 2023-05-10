@@ -3,6 +3,12 @@ CREATE TABLE token_metadata (
   token_address CHAR(64) NOT NULL,
   native_address TEXT,
   coin_gecko_coin_id TEXT,
+  -- these fields are from the latest attest_message
+  -- to make joins simpler at the cost of a little duplication
+  decimals INTEGER NOT NULL,
+  symbol TEXT NOT NULL,
+  name TEXT NOT NULL,
+  -- 
   PRIMARY KEY (token_chain, token_address)
 );
 

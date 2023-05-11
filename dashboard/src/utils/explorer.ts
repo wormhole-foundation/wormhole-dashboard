@@ -1,4 +1,10 @@
 import {
+  CHAIN_ID_SUI,
+  isCosmWasmChain,
+  isEVMChain,
+  tryHexToNativeString,
+} from '@certusone/wormhole-sdk';
+import {
   ChainId,
   CHAIN_ID_ACALA,
   CHAIN_ID_ALGORAND,
@@ -22,6 +28,8 @@ import {
   CHAIN_ID_TERRA2,
   CHAIN_ID_XPLA,
 } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
+import { base58 } from 'ethers/lib/utils';
+import { CHAIN_INFO_MAP } from './consts';
 
 export const explorerBlock = (chainId: ChainId, block: string) =>
   chainId === CHAIN_ID_ETH
@@ -66,6 +74,8 @@ export const explorerBlock = (chainId: ChainId, block: string) =>
     ? `https://arbiscan.io/block/${block}`
     : chainId === CHAIN_ID_INJECTIVE
     ? `https://explorer.injective.network/block/${block}`
+    : chainId === CHAIN_ID_SUI
+    ? `https://suiexplorer.com/txblock/${block}`
     : '';
 
 export const explorerTx = (chainId: ChainId, tx: string) =>
@@ -111,9 +121,30 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     ? `https://arbiscan.io/tx/${tx}`
     : chainId === CHAIN_ID_INJECTIVE
     ? `https://explorer.injective.network/transaction/${tx}`
+    : chainId === CHAIN_ID_SUI
+    ? `https://suiexplorer.com/txblock/${tx}`
     : '';
 
 export const explorerVaa = (key: string) =>
   `https://wormhole.com/explorer/?emitterChain=${key.split('/')[0]}&emitterAddress=${
     key.split('/')[1]
   }&sequence=${key.split('/')[2]}`;
+
+export const getExplorerTxHash = (chain: ChainId, txHash: string) => {
+  let explorerTxHash = '';
+  if (isCosmWasmChain(chain)) {
+    explorerTxHash = txHash.slice(2);
+  } else if (chain === CHAIN_ID_SUI) {
+    const txHashBytes = Buffer.from(txHash.slice(2), 'hex');
+    explorerTxHash = base58.encode(txHashBytes);
+  } else if (!isEVMChain(chain)) {
+    try {
+      explorerTxHash = tryHexToNativeString(txHash.slice(2), CHAIN_INFO_MAP[chain].chainId);
+    } catch (e) {
+      return txHash;
+    }
+  } else {
+    explorerTxHash = txHash;
+  }
+  return explorerTxHash;
+};

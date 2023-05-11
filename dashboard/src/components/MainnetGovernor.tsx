@@ -3,10 +3,7 @@ import {
   CHAIN_ID_ALGORAND,
   CHAIN_ID_NEAR,
   CHAIN_ID_TERRA2,
-  isCosmWasmChain,
-  isEVMChain,
   tryHexToNativeAssetString,
-  tryHexToNativeString,
 } from '@certusone/wormhole-sdk';
 import { GovernorGetEnqueuedVAAsResponse_Entry } from '@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc';
 import { ExpandMore } from '@mui/icons-material';
@@ -38,7 +35,7 @@ import {
 import useSymbolInfo from '../hooks/useSymbolInfo';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP } from '../utils/consts';
-import { explorerTx } from '../utils/explorer';
+import { explorerTx, getExplorerTxHash } from '../utils/explorer';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import Table from './Table';
@@ -131,18 +128,7 @@ const enqueuedColumns = [
       const chain = info.row.original.emitterChain;
       const chainInfo = CHAIN_INFO_MAP[chain];
       if (!chainInfo) return info.getValue();
-      var txHash: string = '';
-      if (isCosmWasmChain(chainInfo.chainId)) {
-        txHash = info.getValue().slice(2);
-      } else if (!isEVMChain(chainInfo.chainId)) {
-        try {
-          txHash = tryHexToNativeString(info.getValue().slice(2), CHAIN_INFO_MAP[chain].chainId);
-        } catch (e) {
-          return info.getValue();
-        }
-      } else {
-        txHash = info.getValue();
-      }
+      const txHash = getExplorerTxHash(chainInfo.chainId, info.getValue());
       return (
         <Link
           href={explorerTx(chainInfo.chainId, txHash)}
@@ -197,7 +183,6 @@ const tokenColumns = [
           CHAIN_INFO_MAP[chain]?.chainId
         );
       } catch (e) {
-        console.log(e);
         tokenAddress = info.getValue();
       }
 

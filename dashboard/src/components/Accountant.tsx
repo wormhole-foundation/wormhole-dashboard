@@ -6,6 +6,7 @@ import {
   Box,
   Card,
   LinearProgress,
+  Link,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -27,6 +28,7 @@ import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP, GUARDIAN_SET_3 } from '../utils/consts';
 import Table from './Table';
 import CollapsibleSection from './CollapsibleSection';
+import { explorerTx, getExplorerTxHash } from '../utils/explorer';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 
@@ -126,7 +128,22 @@ const pendingTransferColumns = [
   }),
   pendingTransferColumnHelper.accessor('data.0.tx_hash', {
     header: () => 'Tx',
-    cell: (info) => Buffer.from(info.getValue(), 'base64').toString('hex'),
+    cell: (info) => {
+      const tx = '0x' + Buffer.from(info.getValue(), 'base64').toString('hex');
+      const chain = info.row.original.key.emitter_chain;
+      const chainInfo = CHAIN_INFO_MAP[chain];
+      if (!chainInfo) return tx;
+      const txHash = getExplorerTxHash(chainInfo.chainId, tx);
+      return (
+        <Link
+          href={explorerTx(chainInfo.chainId, txHash)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {txHash}
+        </Link>
+      );
+    },
   }),
   pendingTransferColumnHelper.accessor('data.0.signatures', {
     header: () => 'Signatures',

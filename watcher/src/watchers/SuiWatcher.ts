@@ -5,6 +5,7 @@ import {
   PaginatedEvents,
   SuiTransactionBlockResponse,
 } from '@mysten/sui.js';
+import { array } from 'superstruct';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { Watcher } from './Watcher';
@@ -88,15 +89,23 @@ export class SuiWatcher extends Watcher {
         : null;
       cursor = response.nextCursor;
       hasNextPage = response.hasNextPage;
+      const txBlocks = await this.client.requestWithType(
+        'sui_multiGetTransactionBlocks',
+        { digests: response.data.map((e) => e.id.txDigest) },
+        array(SuiTransactionBlockResponse)
+      );
+      const checkpointByTxDigest = txBlocks.reduce<Record<string, string | undefined>>(
+        (value, { digest, checkpoint }) => {
+          value[digest] = checkpoint;
+          return value;
+        },
+        {}
+      );
       for (const event of response.data) {
-        // TODO: https://docs.sui.io/sui-jsonrpc#sui_multiGetTransactionBlocks
-        const checkpoint = (
-          await this.client.requestWithType(
-            'sui_getTransactionBlock',
-            { digest: event.id.txDigest },
-            SuiTransactionBlockResponse
-          )
-        ).checkpoint!;
+        const checkpoint = checkpointByTxDigest[event.id.txDigest];
+        if (!checkpoint) continue;
+        const checkpointNum = Number(checkpoint);
+        if (checkpointNum < fromCheckpoint || checkpointNum > toCheckpoint) continue;
         const msg = event.parsedJson as PublishMessageEvent;
         const timestamp = new Date(Number(msg.timestamp) * 1000).toISOString();
         const vaaKey = makeVaaKey(

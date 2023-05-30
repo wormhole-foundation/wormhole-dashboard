@@ -24,6 +24,7 @@ import {
   CHAIN_ID_TERRA,
   CHAIN_ID_TERRA2,
   CHAIN_ID_XPLA,
+  CHAIN_ID_SEI,
 } from '@certusone/wormhole-sdk';
 import acalaIcon from '../images/acala.svg';
 import algorandIcon from '../images/algorand.svg';
@@ -42,6 +43,7 @@ import nearIcon from '../images/near.svg';
 import oasisIcon from '../images/oasis-network-rose-logo.svg';
 import optimismIcon from '../images/optimism.svg';
 import polygonIcon from '../images/polygon.svg';
+import seiIcon from '../images/sei.svg';
 import solanaIcon from '../images/solana.svg';
 import suiIcon from '../images/sui.svg';
 import terraIcon from '../images/terra.svg';
@@ -255,6 +257,14 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     endpointUrl: 'https://dimension-lcd.xpla.dev',
     explorerStem: `https://explorer.xpla.io`,
     icon: xplaIcon,
+  },
+  32: {
+    name: 'sei',
+    evm: false,
+    chainId: CHAIN_ID_SEI,
+    endpointUrl: '',
+    explorerStem: '',
+    icon: seiIcon,
   },
 };
 

@@ -1,6 +1,6 @@
 import { CONTRACTS, CosmWasmChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
-import { RPCS_BY_CHAIN } from '../consts';
+import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
@@ -28,7 +28,7 @@ export class TerraExplorerWatcher extends Watcher {
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
-    const result = (await axios.get(`${this.rpc}/${this.latestBlockTag}`)).data;
+    const result = (await axios.get(`${this.rpc}/${this.latestBlockTag}`, AXIOS_CONFIG_JSON)).data;
     if (result && result.block.header.height) {
       let blockHeight: number = parseInt(result.block.header.height);
       if (blockHeight !== this.latestBlockHeight) {
@@ -64,6 +64,7 @@ export class TerraExplorerWatcher extends Watcher {
         await axios.get(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0',
+            'Accept-Encoding': 'application/json',
           },
         })
       ).data;
@@ -148,7 +149,7 @@ export class TerraExplorerWatcher extends Watcher {
       // become the new starting point for subsequent calls.
       this.logger.debug(`Adding filler for block ${toBlock}`);
       const blkUrl = `${this.rpc}/${this.getBlockTag}${toBlock}`;
-      const result: CosmwasmBlockResult = (await axios.get(blkUrl)).data;
+      const result: CosmwasmBlockResult = (await axios.get(blkUrl, AXIOS_CONFIG_JSON)).data;
       if (!result) {
         throw new Error(`Unable to get block information for block ${toBlock}`);
       }

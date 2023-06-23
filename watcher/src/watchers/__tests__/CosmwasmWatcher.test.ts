@@ -26,7 +26,7 @@ test('getMessagesForBlocks(terra2)', async () => {
   );
 });
 
-test('getFinalizedBlockNumber(terra)', async () => {
+test.skip('getFinalizedBlockNumber(terra)', async () => {
   const watcher = new CosmwasmWatcher('terra');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(10980872);

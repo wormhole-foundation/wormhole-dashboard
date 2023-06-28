@@ -8,7 +8,6 @@ import { EVMWatcher } from './EVMWatcher';
 import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
 import { MoonbeamWatcher } from './MoonbeamWatcher';
 import { NearWatcher } from './NearWatcher';
-import { OptimismWatcher } from './OptimismWatcher';
 import { PolygonWatcher } from './PolygonWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
 import { TerraExplorerWatcher } from './TerraExplorerWatcher';
@@ -29,7 +28,8 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     chainName === 'oasis' ||
     chainName === 'fantom' ||
     chainName === 'klaytn' ||
-    chainName === 'celo'
+    chainName === 'celo' ||
+    chainName === 'optimism'
   ) {
     return new EVMWatcher(chainName);
   } else if (chainName === 'algorand') {
@@ -38,8 +38,6 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     return new MoonbeamWatcher();
   } else if (chainName === 'arbitrum') {
     return new ArbitrumWatcher();
-  } else if (chainName === 'optimism') {
-    return new OptimismWatcher();
   } else if (chainName === 'aptos') {
     return new AptosWatcher();
   } else if (chainName === 'near') {

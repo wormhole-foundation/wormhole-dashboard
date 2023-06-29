@@ -1,6 +1,6 @@
 import { CONTRACTS, CosmWasmChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
-import { RPCS_BY_CHAIN } from '../consts';
+import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
@@ -91,46 +91,61 @@ export class CosmwasmWatcher extends Watcher {
         }
         let hash: string = this.hexToHash(blockResult.block.data.txs[i]);
         this.logger.debug('blockNumber = ' + blockNumber + ', txHash[' + i + '] = ' + hash);
-        const hashResult: CosmwasmHashResult = (
-          await axios.get(`${this.rpc}/${this.hashTag}${hash}`)
-        ).data;
-        if (hashResult && hashResult.tx_response.events) {
-          const numEvents = hashResult.tx_response.events.length;
-          for (let j = 0; j < numEvents; j++) {
-            let type: string = hashResult.tx_response.events[j].type;
-            if (type === 'wasm') {
-              if (hashResult.tx_response.events[j].attributes) {
-                let attrs = hashResult.tx_response.events[j].attributes;
-                let emitter: string = '';
-                let sequence: string = '';
-                let coreContract: boolean = false;
-                // only care about _contract_address, message.sender and message.sequence
-                const numAttrs = attrs.length;
-                for (let k = 0; k < numAttrs; k++) {
-                  const key = Buffer.from(attrs[k].key, 'base64').toString().toLowerCase();
-                  this.logger.debug('Encoded Key = ' + attrs[k].key + ', decoded = ' + key);
-                  if (key === 'message.sender') {
-                    emitter = Buffer.from(attrs[k].value, 'base64').toString();
-                  } else if (key === 'message.sequence') {
-                    sequence = Buffer.from(attrs[k].value, 'base64').toString();
-                  } else if (key === '_contract_address' || key === 'contract_address') {
-                    let addr = Buffer.from(attrs[k].value, 'base64').toString();
-                    if (addr === address) {
-                      coreContract = true;
+        // console.log('Attempting to get hash', `${this.rpc}/${this.hashTag}${hash}`);
+        try {
+          const hashResult: CosmwasmHashResult = (
+            await axios.get(`${this.rpc}/${this.hashTag}${hash}`, AXIOS_CONFIG_JSON)
+          ).data;
+          if (hashResult && hashResult.tx_response.events) {
+            const numEvents = hashResult.tx_response.events.length;
+            for (let j = 0; j < numEvents; j++) {
+              let type: string = hashResult.tx_response.events[j].type;
+              if (type === 'wasm') {
+                if (hashResult.tx_response.events[j].attributes) {
+                  let attrs = hashResult.tx_response.events[j].attributes;
+                  let emitter: string = '';
+                  let sequence: string = '';
+                  let coreContract: boolean = false;
+                  // only care about _contract_address, message.sender and message.sequence
+                  const numAttrs = attrs.length;
+                  for (let k = 0; k < numAttrs; k++) {
+                    const key = Buffer.from(attrs[k].key, 'base64').toString().toLowerCase();
+                    this.logger.debug('Encoded Key = ' + attrs[k].key + ', decoded = ' + key);
+                    if (key === 'message.sender') {
+                      emitter = Buffer.from(attrs[k].value, 'base64').toString();
+                    } else if (key === 'message.sequence') {
+                      sequence = Buffer.from(attrs[k].value, 'base64').toString();
+                    } else if (key === '_contract_address' || key === 'contract_address') {
+                      let addr = Buffer.from(attrs[k].value, 'base64').toString();
+                      if (addr === address) {
+                        coreContract = true;
+                      }
                     }
                   }
-                }
-                if (coreContract && emitter !== '' && sequence !== '') {
-                  vaaKey = makeVaaKey(hash, this.chain, emitter, sequence);
-                  this.logger.debug('blockKey: ' + blockKey);
-                  this.logger.debug('Making vaaKey: ' + vaaKey);
-                  vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+                  if (coreContract && emitter !== '' && sequence !== '') {
+                    vaaKey = makeVaaKey(hash, this.chain, emitter, sequence);
+                    this.logger.debug('blockKey: ' + blockKey);
+                    this.logger.debug('Making vaaKey: ' + vaaKey);
+                    vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+                  }
                 }
               }
             }
+          } else {
+            this.logger.error('There were no hashResults');
           }
-        } else {
-          this.logger.error('There were no hashResults');
+        } catch (e: any) {
+          // console.error(e);
+          if (
+            e?.response?.status === 500 &&
+            e?.response?.data?.code === 2 &&
+            e?.response?.data?.message.startsWith('json: error calling MarshalJSON')
+          ) {
+            // Just skip this one...
+          } else {
+            // Rethrow the error because we only want to catch the above error
+            throw e;
+          }
         }
       }
     }

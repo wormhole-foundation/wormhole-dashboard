@@ -20,12 +20,18 @@ export type Block = {
   number: number;
   timestamp: number;
 };
+export type ErrorBlock = {
+  code: number; //6969,
+  message: string; //'Error: No response received from RPC endpoint in 60s'
+};
 
 export class EVMWatcher extends Watcher {
   finalizedBlockTag: BlockTag;
+  lastTimestamp: number;
 
   constructor(chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
     super(chain);
+    this.lastTimestamp = 0;
     this.finalizedBlockTag = finalizedBlockTag;
     if (chain === 'acala' || chain === 'karura') {
       this.maximumBatchSize = 50;
@@ -37,7 +43,7 @@ export class EVMWatcher extends Watcher {
     if (!rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
-    const result = (
+    let result = (
       await axios.post(
         rpc,
         [
@@ -55,9 +61,18 @@ export class EVMWatcher extends Watcher {
         ],
         AXIOS_CONFIG_JSON
       )
-    )?.data?.[0]?.result;
+    )?.data?.[0];
+    if (result && result.error && result.error.code === 6969) {
+      return {
+        hash: '',
+        number: BigNumber.from(blockNumberOrTag).toNumber(),
+        timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
+      };
+    }
+    result = result?.result;
     if (result && result.hash && result.number && result.timestamp) {
       // Convert to Ethers compatible type
+      this.lastTimestamp = result.timestamp;
       return {
         hash: result.hash,
         number: BigNumber.from(result.number).toNumber(),
@@ -85,23 +100,36 @@ export class EVMWatcher extends Watcher {
     const results = (await axios.post(rpc, reqs, AXIOS_CONFIG_JSON))?.data;
     if (results && results.length) {
       // Convert to Ethers compatible type
-      return results.map((response: undefined | { result?: Block }, idx: number) => {
-        if (
-          response?.result &&
-          response.result.hash &&
-          response.result.number &&
-          response.result.timestamp
-        ) {
-          return {
-            hash: response.result.hash,
-            number: BigNumber.from(response.result.number).toNumber(),
-            timestamp: BigNumber.from(response.result.timestamp).toNumber(),
-          };
+      return results.map(
+        (response: undefined | { result?: Block; error?: ErrorBlock }, idx: number) => {
+          // Karura is getting 6969 errors for some blocks, so we'll just return empty blocks for those instead of throwing an error.
+          // We take the timestamp from the previous block, which is not ideal but should be fine.
+          if (response?.error && response.error?.code && response.error.code === 6969) {
+            return {
+              hash: '',
+              number: BigNumber.from(fromBlock + idx).toNumber(),
+              timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
+            };
+          }
+          if (
+            response?.result &&
+            response.result?.hash &&
+            response.result.number &&
+            response.result.timestamp
+          ) {
+            this.lastTimestamp = response.result.timestamp;
+            return {
+              hash: response.result.hash,
+              number: BigNumber.from(response.result.number).toNumber(),
+              timestamp: BigNumber.from(response.result.timestamp).toNumber(),
+            };
+          }
+          console.error(response, idx);
+          throw new Error(
+            `Unable to parse result of eth_getBlockByNumber for ${fromBlock + idx} on ${rpc}`
+          );
         }
-        throw new Error(
-          `Unable to parse result of eth_getBlockByNumber for ${fromBlock + idx} on ${rpc}`
-        );
-      });
+      );
     }
     throw new Error(
       `Unable to parse result of eth_getBlockByNumber for range ${fromBlock}-${toBlock} on ${rpc}`
@@ -149,11 +177,13 @@ export class EVMWatcher extends Watcher {
     }
     throw new Error(`Unable to parse result of eth_getLogs for ${fromBlock}-${toBlock} on ${rpc}`);
   }
+
   async getFinalizedBlockNumber(): Promise<number> {
     this.logger.info(`fetching block ${this.finalizedBlockTag}`);
-    const block = await this.getBlock(this.finalizedBlockTag);
+    const block: Block = await this.getBlock(this.finalizedBlockTag);
     return block.number;
   }
+
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
     const address = CONTRACTS.MAINNET[this.chain].core;
     if (!address) {

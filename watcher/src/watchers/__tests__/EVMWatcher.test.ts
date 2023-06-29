@@ -6,6 +6,7 @@ import { EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 const initialAvalancheBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.avalanche);
 const initialCeloBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.celo);
 const initialOasisBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.oasis);
+const initialKaruraBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.karura);
 
 test('getBlock by tag', async () => {
   const watcher = new EVMWatcher('avalanche');
@@ -115,4 +116,31 @@ test('getMessagesForBlocks (Celo compatibility)', async () => {
   expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z'][0]).toEqual(
     '0xd73c03b0d59ecae473d50b61e8756bc19b54314869e9b11d0fda6f89dbcf3918:14/000000000000000000000000796dff6d74f3e27060b71255fe517bfb23c93eed/5'
   );
+});
+
+test('getBlock by number (Karura compatibility)', async () => {
+  const watcher = new EVMWatcher('karura');
+  const latestBlock = await watcher.getFinalizedBlockNumber();
+  const moreRecentBlockNumber = 4646601;
+  //   block {
+  //   hash: '0xe370a794f27fc49d1e468c78e4f92f9aeefc949a62f919cea8d2bd81904840b5',
+  //   number: 4646601,
+  //   timestamp: 1687963290
+  // }
+  expect(latestBlock).toBeGreaterThan(moreRecentBlockNumber);
+  const block = await watcher.getBlock(moreRecentBlockNumber);
+  expect(block.number).toEqual(moreRecentBlockNumber);
+  expect(block.timestamp).toEqual(1687963290);
+  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2023-06-28T14:41:30.000Z');
+});
+
+test('getMessagesForBlocks (Karura compatibility)', async () => {
+  const watcher = new EVMWatcher('karura');
+  const vaasByBlock = await watcher.getMessagesForBlocks(4582511, 4582513);
+  const entries = Object.entries(vaasByBlock);
+  console.log('entries', entries);
+  expect(entries.length).toEqual(3);
+  expect(entries[0][0]).toEqual('4582511/2023-06-19T15:54:48.000Z');
+  // 4582512 is the error block.  Make sure it has the same timestamp as the previous block
+  expect(entries[1][0]).toEqual('4582512/2023-06-19T15:54:48.000Z');
 });

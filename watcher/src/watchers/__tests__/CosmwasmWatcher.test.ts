@@ -26,6 +26,20 @@ test('getMessagesForBlocks(terra2)', async () => {
   );
 });
 
+test('getMessagesForBlocks(terra2)', async () => {
+  const watcher = new CosmwasmWatcher('terra2');
+  const vaasByBlock = await watcher.getMessagesForBlocks(5635710, 5635712);
+  const entries = Object.entries(vaasByBlock);
+  console.log(entries);
+  expect(entries.length).toEqual(3);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(3);
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(vaasByBlock['5635710/2023-06-23T12:54:10.949Z']).toBeDefined();
+  expect(vaasByBlock['5635711/2023-06-23T12:54:16.979Z']).toBeDefined();
+  expect(vaasByBlock['5635712/2023-06-23T12:54:23.010Z']).toBeDefined();
+});
+
 test.skip('getFinalizedBlockNumber(terra)', async () => {
   const watcher = new CosmwasmWatcher('terra');
   const blockNumber = await watcher.getFinalizedBlockNumber();

@@ -28,10 +28,12 @@ export type ErrorBlock = {
 export class EVMWatcher extends Watcher {
   finalizedBlockTag: BlockTag;
   lastTimestamp: number;
+  latestFinalizedBlockNumber: number;
 
   constructor(chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
     super(chain);
     this.lastTimestamp = 0;
+    this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
     if (chain === 'acala' || chain === 'karura') {
       this.maximumBatchSize = 50;
@@ -62,7 +64,19 @@ export class EVMWatcher extends Watcher {
         AXIOS_CONFIG_JSON
       )
     )?.data?.[0];
-    if (result && result.error && result.error.code === 6969) {
+    if (result && result.result === null) {
+      // Found null block
+      if (
+        typeof blockNumberOrTag === 'number' &&
+        blockNumberOrTag < this.latestFinalizedBlockNumber - 1000
+      ) {
+        return {
+          hash: '',
+          number: BigNumber.from(blockNumberOrTag).toNumber(),
+          timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
+        };
+      }
+    } else if (result && result.error && result.error.code === 6969) {
       return {
         hash: '',
         number: BigNumber.from(blockNumberOrTag).toNumber(),
@@ -88,7 +102,7 @@ export class EVMWatcher extends Watcher {
     if (!rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
-    const reqs = [];
+    const reqs: any[] = [];
     for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
       reqs.push({
         jsonrpc: '2.0',
@@ -104,7 +118,12 @@ export class EVMWatcher extends Watcher {
         (response: undefined | { result?: Block; error?: ErrorBlock }, idx: number) => {
           // Karura is getting 6969 errors for some blocks, so we'll just return empty blocks for those instead of throwing an error.
           // We take the timestamp from the previous block, which is not ideal but should be fine.
-          if (response?.error && response.error?.code && response.error.code === 6969) {
+          if (
+            (response &&
+              response.result === null &&
+              fromBlock + idx < this.latestFinalizedBlockNumber - 1000) ||
+            (response?.error && response.error?.code && response.error.code === 6969)
+          ) {
             return {
               hash: '',
               number: BigNumber.from(fromBlock + idx).toNumber(),
@@ -124,7 +143,7 @@ export class EVMWatcher extends Watcher {
               timestamp: BigNumber.from(response.result.timestamp).toNumber(),
             };
           }
-          console.error(response, idx);
+          console.error(reqs[idx], response, idx);
           throw new Error(
             `Unable to parse result of eth_getBlockByNumber for ${fromBlock + idx} on ${rpc}`
           );
@@ -181,6 +200,7 @@ export class EVMWatcher extends Watcher {
   async getFinalizedBlockNumber(): Promise<number> {
     this.logger.info(`fetching block ${this.finalizedBlockTag}`);
     const block: Block = await this.getBlock(this.finalizedBlockTag);
+    this.latestFinalizedBlockNumber = block.number;
     return block.number;
   }
 

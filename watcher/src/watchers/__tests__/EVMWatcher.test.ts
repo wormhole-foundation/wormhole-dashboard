@@ -1,7 +1,7 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { expect, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
-import { EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
+import { Block, EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 
 const initialAvalancheBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.avalanche);
 const initialCeloBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.celo);
@@ -143,4 +143,26 @@ test('getMessagesForBlocks (Karura compatibility)', async () => {
   expect(entries[0][0]).toEqual('4582511/2023-06-19T15:54:48.000Z');
   // 4582512 is the error block.  Make sure it has the same timestamp as the previous block
   expect(entries[1][0]).toEqual('4582512/2023-06-19T15:54:48.000Z');
+});
+
+test('getMessagesForBlocks (Karura compatibility 2)', async () => {
+  const watcher = new EVMWatcher('karura');
+  await watcher.getFinalizedBlockNumber(); // This has the side effect of initializing the latestFinalizedBlockNumber
+  const vaasByBlock = await watcher.getMessagesForBlocks(4595356, 4595358);
+  const entries = Object.entries(vaasByBlock);
+  console.log('entries', entries);
+  expect(entries.length).toEqual(3);
+});
+
+test('getBlock (Karura compatibility)', async () => {
+  const watcher = new EVMWatcher('karura');
+  await watcher.getFinalizedBlockNumber(); // This has the side effect of initializing the latestFinalizedBlockNumber
+  let block: Block = await watcher.getBlock(4582512); // 6969 block
+  console.log('block', block);
+  block = await watcher.getBlock(4595357); // Null block
+  console.log('block', block);
+  block = await watcher.getBlock(4595358); // good block
+  console.log('block', block);
+  block = await watcher.getBlock(4619551); // good luck
+  console.log('block', block);
 });

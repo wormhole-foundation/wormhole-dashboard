@@ -9,7 +9,9 @@ export type BlocksByChain = {
 };
 
 async function getLatestBlocks_() {
-  const firestoreCollection = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
+  const firestoreCollection = assertEnvironmentVariable(
+    'FIRESTORE_LATEST_COLLECTION'
+  );
   let messages: BlocksByChain = {};
   const firestoreDb = new Firestore({
     // projectId: assertEnvironmentVariable('PROJECT_ID'),
@@ -57,7 +59,9 @@ export async function getLatestBlocks(req: any, res: any) {
       if (Object.keys(cache['messages']).length === 0) {
         console.log(`cache is empty, setting cache['messages] ${new Date()}`);
       } else {
-        console.log(`cache is older than ${REFRESH_TIME_INTERVAL} ms, refreshing ${new Date()}`);
+        console.log(
+          `cache is older than ${REFRESH_TIME_INTERVAL} ms, refreshing ${new Date()}`
+        );
       }
       let prevDate = Date.now();
       messages = await getLatestBlocks_();

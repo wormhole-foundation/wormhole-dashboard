@@ -1,4 +1,7 @@
-import { Context, EventFunction } from '@google-cloud/functions-framework/build/src/functions';
+import {
+  Context,
+  EventFunction,
+} from '@google-cloud/functions-framework/build/src/functions';
 import { PubsubMessage } from '@google-cloud/pubsub/build/src/publisher';
 import { Bigtable, Instance, Table } from '@google-cloud/bigtable';
 import knex, { Knex } from 'knex';
@@ -31,8 +34,12 @@ const signedVAAsRowKeyRegex = /^\d{5}\/\w{64}\/\d{20}$/;
 
 function initialize() {
   bigtable = new Bigtable();
-  instance = bigtable.instance(assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'));
-  signedVAAsTable = instance.table(assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID'));
+  instance = bigtable.instance(
+    assertEnvironmentVariable('BIGTABLE_INSTANCE_ID')
+  );
+  signedVAAsTable = instance.table(
+    assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID')
+  );
   tokenTransferTable = assertEnvironmentVariable('PG_TOKEN_TRANSFER_TABLE');
   attestMessageTable = assertEnvironmentVariable('PG_ATTEST_MESSAGE_TABLE');
   tokenMetadataTable = assertEnvironmentVariable('PG_TOKEN_METADATA_TABLE');
@@ -49,7 +56,10 @@ function initialize() {
   initialized = true;
 }
 
-export const processVaa: EventFunction = async (message: PubsubMessage, context: Context) => {
+export const processVaa: EventFunction = async (
+  message: PubsubMessage,
+  context: Context
+) => {
   if (!initialized) {
     initialize();
   }
@@ -77,15 +87,24 @@ export const processVaa: EventFunction = async (message: PubsubMessage, context:
         const payload = parseTokenTransferPayload(vaa.payload);
         const tokenTransferVaa: ParsedTokenTransferVaa = { ...vaa, ...payload };
         const tokenTransfer = createTokenTransfer(tokenTransferVaa);
-        await pg(tokenTransferTable).insert(tokenTransfer).onConflict().ignore();
+        await pg(tokenTransferTable)
+          .insert(tokenTransfer)
+          .onConflict()
+          .ignore();
       } else if (payloadType === TokenBridgePayload.AttestMeta) {
         const payload = parseAttestMetaPayload(vaa.payload);
         const attestMetaVaa: ParsedAttestMetaVaa = { ...vaa, ...payload };
         const attestMessage = createAttestMessage(attestMetaVaa);
         const tokenMetadata = createTokenMetadata(attestMetaVaa);
         await pg.transaction(async (trx) => {
-          await trx(attestMessageTable).insert(attestMessage).onConflict().ignore();
-          await trx(tokenMetadataTable).insert(tokenMetadata).onConflict().ignore();
+          await trx(attestMessageTable)
+            .insert(attestMessage)
+            .onConflict()
+            .ignore();
+          await trx(tokenMetadataTable)
+            .insert(tokenMetadata)
+            .onConflict()
+            .ignore();
         });
       }
     }

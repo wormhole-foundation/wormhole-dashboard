@@ -1,6 +1,11 @@
 import { Bigtable } from '@google-cloud/bigtable';
 import { ChainId, CHAINS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { padUint16, assertEnvironmentVariable, padUint64, parseMessageId } from './utils';
+import {
+  padUint16,
+  assertEnvironmentVariable,
+  padUint64,
+  parseMessageId,
+} from './utils';
 import { pathToRegexp } from 'path-to-regexp';
 import {
   ObservedEvent,
@@ -30,7 +35,9 @@ async function getMessages_(
   fromKey: string
 ): Promise<ObservedMessageResponse> {
   const bigtable = new Bigtable();
-  const instance = bigtable.instance(assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'));
+  const instance = bigtable.instance(
+    assertEnvironmentVariable('BIGTABLE_INSTANCE_ID')
+  );
   const table = instance.table(assertEnvironmentVariable('BIGTABLE_TABLE_ID'));
   let messages: ObservedMessage[] = [];
   let lastRowKey = fromKey;
@@ -48,7 +55,9 @@ async function getMessages_(
       ],
     });
 
-    const filteredMessages: ObservedEvent[] = observedMessages.filter((o) => o?.id !== start);
+    const filteredMessages: ObservedEvent[] = observedMessages.filter(
+      (o) => o?.id !== start
+    );
 
     for (const message of filteredMessages.slice(0, numMessages)) {
       if (message) {
@@ -85,7 +94,9 @@ async function getMessagesNoSignedVaa_(
   prevMissingVaaKey: string
 ): Promise<ObservedMessageResponse> {
   const bigtable = new Bigtable();
-  const instance = bigtable.instance(assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'));
+  const instance = bigtable.instance(
+    assertEnvironmentVariable('BIGTABLE_INSTANCE_ID')
+  );
   const table = instance.table(assertEnvironmentVariable('BIGTABLE_TABLE_ID'));
   let blockIncrement = BLOCK_INCREMENT;
   let messages: ObservedMessage[] = [];
@@ -95,7 +106,9 @@ async function getMessagesNoSignedVaa_(
     // if lastKey is empty, start with prefix
     let start = prefix;
     let end =
-      firstMissingVaaKey === '' ? `${padUint16((chainId + 1).toString())}/` : firstMissingVaaKey;
+      firstMissingVaaKey === ''
+        ? `${padUint16((chainId + 1).toString())}/`
+        : firstMissingVaaKey;
     // retrieve rows starting from lastKey to the start of the next chain's rows
     do {
       var [observedMessages] = await table.getRows({
@@ -112,7 +125,9 @@ async function getMessagesNoSignedVaa_(
       );
       for (const message of filteredMessages.slice(0, numMessages)) {
         if (message) {
-          const { chain, block, emitter, sequence } = parseMessageId(message.id);
+          const { chain, block, emitter, sequence } = parseMessageId(
+            message.id
+          );
           const { timestamp, txHash, hasSignedVaa } = message.data.info;
           messages.push({
             id: message.id,
@@ -132,7 +147,9 @@ async function getMessagesNoSignedVaa_(
         // firstMissingVaaKey is the earliest message without a vaa, the most recent observedMessage, or if both
         // are undefined, use the prevMissingVaaKey
         firstMissingVaaKey =
-          messages[messages.length - 1]?.id || observedMessages[0]?.id || prevMissingVaaKey;
+          messages[messages.length - 1]?.id ||
+          observedMessages[0]?.id ||
+          prevMissingVaaKey;
         break;
       } else {
         // loop backwards if there aren't enough missing vaas found
@@ -140,10 +157,14 @@ async function getMessagesNoSignedVaa_(
           BigInt(startBlock) - BigInt(blockIncrement) >= 0
             ? BigInt(startBlock) - BigInt(blockIncrement)
             : '0';
-        start = `${padUint16(chainId.toString())}/${padUint64(prevBlock.toString())}`;
+        start = `${padUint16(chainId.toString())}/${padUint64(
+          prevBlock.toString()
+        )}`;
         console.log(start);
         firstMissingVaaKey =
-          messages[messages.length - 1]?.id || observedMessages[0]?.id || prevMissingVaaKey;
+          messages[messages.length - 1]?.id ||
+          observedMessages[0]?.id ||
+          prevMissingVaaKey;
       }
       // try increasing block increment each pass
       blockIncrement *= 2;
@@ -164,7 +185,8 @@ const REFRESH_TIME_INTERVAL =
   Number(process.env.CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL) || 1000 * 60 * 1;
 // default to return 100 latest messages by chain
 const NUM_ROWS = Number(process.env.CLOUD_FUNCTIONS_NUM_ROWS) || 100;
-const BLOCK_INCREMENT = Number(process.env.CLOUD_FUNCTIONS_BLOCK_INCREMENT) || 10_000;
+const BLOCK_INCREMENT =
+  Number(process.env.CLOUD_FUNCTIONS_BLOCK_INCREMENT) || 10_000;
 /*
   The getMessages endpoint has 1 path param: chain id - required and multiple query params: 
     (1) missingVaa - true/false
@@ -249,10 +271,13 @@ export async function getMessages(req: any, res: any) {
       if (missingVaa === 'true' || missingVaa === '1') {
         if (
           noVaaCache[chainId]['messages'].length === 0 ||
-          Date.now() - noVaaCache[chainId]['lastUpdated'] > REFRESH_TIME_INTERVAL
+          Date.now() - noVaaCache[chainId]['lastUpdated'] >
+            REFRESH_TIME_INTERVAL
         ) {
           if (noVaaCache[chainId]['messages'].length === 0) {
-            console.log(`noVaaCache is empty, setting cache['messages] ${new Date()}`);
+            console.log(
+              `noVaaCache is empty, setting cache['messages] ${new Date()}`
+            );
           } else {
             console.log(
               `noVaaCache is older than ${REFRESH_TIME_INTERVAL} ms, refreshing ${new Date()}`
@@ -260,8 +285,15 @@ export async function getMessages(req: any, res: any) {
           }
           let prevDate = Date.now();
           lastRowKey = noVaaCache[chainId]['lastRowKey'];
-          messageResponse = await getMessagesNoSignedVaa_(chainId, NUM_ROWS, lastRowKey);
-          console.log('In noVaaCache, after getMessages_=', Date.now() - prevDate);
+          messageResponse = await getMessagesNoSignedVaa_(
+            chainId,
+            NUM_ROWS,
+            lastRowKey
+          );
+          console.log(
+            'In noVaaCache, after getMessages_=',
+            Date.now() - prevDate
+          );
           messages = messageResponse['messages'];
           noVaaCache[chainId] = messageResponse;
         } else {

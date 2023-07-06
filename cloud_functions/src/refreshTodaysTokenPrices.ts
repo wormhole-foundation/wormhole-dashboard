@@ -2,7 +2,10 @@ import {
   assertEnvironmentVariable,
   chunkArray,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { TokenPrice, fetchPrices } from '@wormhole-foundation/wormhole-monitor-database';
+import {
+  TokenPrice,
+  fetchPrices,
+} from '@wormhole-foundation/wormhole-monitor-database';
 import knex from 'knex';
 
 // This function looks up today's prices for tokens
@@ -36,21 +39,26 @@ export async function refreshTodaysTokenPrices(req: any, res: any) {
     // look up today's prices
     const prices = await fetchPrices(coinIds);
     const today = new Date(Date.now()).toISOString().slice(0, 10);
-    const tokenPrices = Object.entries(prices).reduce<TokenPrice[]>((arr, [coinId, price]) => {
-      if (price.usd) {
-        arr.push({
-          date: today,
-          coin_gecko_coin_id: coinId,
-          price_usd: price.usd,
-        });
-      }
-      return arr;
-    }, []);
+    const tokenPrices = Object.entries(prices).reduce<TokenPrice[]>(
+      (arr, [coinId, price]) => {
+        if (price.usd) {
+          arr.push({
+            date: today,
+            coin_gecko_coin_id: coinId,
+            price_usd: price.usd,
+          });
+        }
+        return arr;
+      },
+      []
+    );
     // write them to the table
     const chunks = chunkArray(tokenPrices, 1000);
     let insertedCount = 0;
     for (const chunk of chunks) {
-      const result: any = await pg(assertEnvironmentVariable('PG_TOKEN_PRICE_HISTORY_TABLE'))
+      const result: any = await pg(
+        assertEnvironmentVariable('PG_TOKEN_PRICE_HISTORY_TABLE')
+      )
         .insert(chunk)
         .onConflict(['date', 'coin_gecko_coin_id'])
         .merge();

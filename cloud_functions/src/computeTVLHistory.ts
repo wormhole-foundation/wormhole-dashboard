@@ -104,40 +104,46 @@ export async function computeTVLHistory(req: any, res: any) {
     const prices = await pg<TokenPrice>(
       assertEnvironmentVariable('PG_TOKEN_PRICE_HISTORY_TABLE')
     ).select('*');
-    const pricesByDate = prices.reduce<{ [date: string]: { [coinId: string]: number } }>(
-      (result, price) => {
-        const date = new Date(price.date).toISOString().slice(0, 10);
-        result[date] = {
-          ...result[date],
-          [price.coin_gecko_coin_id]: price.price_usd,
+    const pricesByDate = prices.reduce<{
+      [date: string]: { [coinId: string]: number };
+    }>((result, price) => {
+      const date = new Date(price.date).toISOString().slice(0, 10);
+      result[date] = {
+        ...result[date],
+        [price.coin_gecko_coin_id]: price.price_usd,
+      };
+      return result;
+    }, {});
+    const allChains = new Set<number>();
+    const lockedTokensByDate = lockedTokens.reduce<LockedTokensByDate>(
+      (result, lockedToken) => {
+        const { date, token_chain, token_address } = lockedToken;
+        result = {
+          ...result,
+          [date]: {
+            ...result[date],
+            [token_chain]: {
+              ...result[date]?.[token_chain],
+              [token_address]: {
+                ...lockedToken,
+              },
+            },
+          },
         };
+        allChains.add(token_chain);
         return result;
       },
       {}
     );
-    const allChains = new Set<number>();
-    const lockedTokensByDate = lockedTokens.reduce<LockedTokensByDate>((result, lockedToken) => {
-      const { date, token_chain, token_address } = lockedToken;
-      result = {
-        ...result,
-        [date]: {
-          ...result[date],
-          [token_chain]: {
-            ...result[date]?.[token_chain],
-            [token_address]: {
-              ...lockedToken,
-            },
-          },
-        },
-      };
-      allChains.add(token_chain);
-      return result;
-    }, {});
     const tvlHistory: TVLHistory = {
       DailyLocked: {},
     };
     const today = new Date(Date.now());
-    for (let date = new Date('2021-09-13'); date <= today; date = addDays(date, 1)) {
+    for (
+      let date = new Date('2021-09-13');
+      date <= today;
+      date = addDays(date, 1)
+    ) {
       const dateString = date.toISOString().slice(0, 10);
       // compute locked token cumulative amounts
       // TODO: do this in the SQL query
@@ -145,7 +151,9 @@ export async function computeTVLHistory(req: any, res: any) {
         lockedTokensByDate[dateString] = {};
       }
       const prevDateString = addDays(date, -1).toISOString().slice(0, 10);
-      for (const lockedTokensByAddress of Object.values(lockedTokensByDate[prevDateString] || {})) {
+      for (const lockedTokensByAddress of Object.values(
+        lockedTokensByDate[prevDateString] || {}
+      )) {
         for (const lockedToken of Object.values(lockedTokensByAddress)) {
           const { token_chain, token_address, amount_locked } = lockedToken;
           if (lockedTokensByDate[dateString][token_chain] === undefined) {
@@ -156,7 +164,10 @@ export async function computeTVLHistory(req: any, res: any) {
             date: dateString,
             amount_locked: (
               BigInt(amount_locked) +
-              BigInt(lockedTokensByDate[dateString][token_chain][token_address]?.amount_locked || 0)
+              BigInt(
+                lockedTokensByDate[dateString][token_chain][token_address]
+                  ?.amount_locked || 0
+              )
             ).toString(),
           };
         }
@@ -174,11 +185,14 @@ export async function computeTVLHistory(req: any, res: any) {
             Notional: 0,
           },
         };
-        for (const lockedToken of Object.values(lockedTokensByDate[dateString][chain] || {})) {
+        for (const lockedToken of Object.values(
+          lockedTokensByDate[dateString][chain] || {}
+        )) {
           const { amount_locked, decimals, coin_gecko_coin_id } = lockedToken;
           const scaledAmountLocked =
             Number(amount_locked) / 10 ** Math.min(MAX_VAA_DECIMALS, decimals);
-          const tokenPrice = pricesByDate[dateString]?.[coin_gecko_coin_id] || 0;
+          const tokenPrice =
+            pricesByDate[dateString]?.[coin_gecko_coin_id] || 0;
           const notional = scaledAmountLocked * tokenPrice;
           tvlHistory.DailyLocked[dateString][chain]['*'].Notional += notional;
           tvlHistory.DailyLocked[dateString]['*']['*'].Notional += notional;

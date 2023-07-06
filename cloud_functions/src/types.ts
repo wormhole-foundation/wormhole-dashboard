@@ -239,7 +239,9 @@ export interface NotionalTVL {
 }
 
 export interface NotionalByDate {
-  [date: string]: { [chainId: string]: { [address: string]: { Notional: number } } };
+  [date: string]: {
+    [chainId: string]: { [address: string]: { Notional: number } };
+  };
 }
 
 export interface TVLHistory {

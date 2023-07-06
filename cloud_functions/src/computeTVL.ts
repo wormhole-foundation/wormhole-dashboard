@@ -116,7 +116,8 @@ export async function computeTVL(req: any, res: any) {
         console.error(`No price for coin ID: ${coin_gecko_coin_id}`);
         continue;
       }
-      const scaledAmountLocked = Number(amount_locked) / 10 ** Math.min(MAX_VAA_DECIMALS, decimals);
+      const scaledAmountLocked =
+        Number(amount_locked) / 10 ** Math.min(MAX_VAA_DECIMALS, decimals);
       const notional = scaledAmountLocked * tokenPrice;
       notionalTvl.AllTime['*']['*'].Notional += notional;
       if (notionalTvl.AllTime[token_chain] === undefined) {
@@ -146,7 +147,9 @@ export async function computeTVL(req: any, res: any) {
       };
     }
     const firestore = new Firestore();
-    const collection = firestore.collection(assertEnvironmentVariable('FIRESTORE_TVL_COLLECTION'));
+    const collection = firestore.collection(
+      assertEnvironmentVariable('FIRESTORE_TVL_COLLECTION')
+    );
     await collection.doc('tvl').set(notionalTvl);
     console.log('Computed TVL');
     res.sendStatus('200');

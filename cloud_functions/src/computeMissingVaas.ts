@@ -20,9 +20,13 @@ export type MissingVaasByChain = {
   };
 };
 
-async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<MissingVaasByChain> {
+async function getMissingVaas_(
+  prevMissingVaas: MissingVaasByChain
+): Promise<MissingVaasByChain> {
   const bigtable = new Bigtable();
-  const instance = bigtable.instance(assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'));
+  const instance = bigtable.instance(
+    assertEnvironmentVariable('BIGTABLE_INSTANCE_ID')
+  );
   const table = instance.table(assertEnvironmentVariable('BIGTABLE_TABLE_ID'));
   // build range values for each chain based on first missing vaa row key
   let missingVaaRanges: { ranges: { start: string; end: string }[] } = {
@@ -33,10 +37,14 @@ async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<Mis
     //(const [prevChain, prevData] of Object.entries(prevMissingVaas)) {
     const prevData = prevMissingVaas[chainId];
     const startRowKey = `${padUint16(Number(chainId).toString())}/`;
-    const endMissingVaaRowKey = prevData?.lastRowKey || padUint16((Number(chainId) + 1).toString());
+    const endMissingVaaRowKey =
+      prevData?.lastRowKey || padUint16((Number(chainId) + 1).toString());
 
     // TODO: use inclusive/exclusive?
-    missingVaaRanges['ranges'].push({ start: startRowKey, end: endMissingVaaRowKey });
+    missingVaaRanges['ranges'].push({
+      start: startRowKey,
+      end: endMissingVaaRowKey,
+    });
   }
   let missingMessages: MissingVaasByChain = {};
   const [missingVaaObservedMessages] = await table.getRows(missingVaaRanges);
@@ -54,7 +62,9 @@ async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<Mis
     if (missingVaaMessagesByChain.length !== 0) {
       for (const message of missingVaaMessagesByChain) {
         if (message) {
-          const { chain, block, emitter, sequence } = parseMessageId(message.id);
+          const { chain, block, emitter, sequence } = parseMessageId(
+            message.id
+          );
           const { timestamp, txHash, hasSignedVaa } = message.data.info;
           missingMessagesByChain.push({
             id: message.id,
@@ -69,7 +79,8 @@ async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<Mis
         }
       }
 
-      lastRowKey = missingVaaMessagesByChain[missingVaaMessagesByChain.length - 1]?.id;
+      lastRowKey =
+        missingVaaMessagesByChain[missingVaaMessagesByChain.length - 1]?.id;
     }
     // update counts
     if (lastRowKey === '') {

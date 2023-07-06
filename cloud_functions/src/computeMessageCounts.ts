@@ -20,9 +20,13 @@ export type CountsByChain = {
   };
 };
 
-async function getMessageCounts_(prevMessageCounts: CountsByChain): Promise<CountsByChain> {
+async function getMessageCounts_(
+  prevMessageCounts: CountsByChain
+): Promise<CountsByChain> {
   const bigtable = new Bigtable();
-  const instance = bigtable.instance(assertEnvironmentVariable('BIGTABLE_INSTANCE_ID'));
+  const instance = bigtable.instance(
+    assertEnvironmentVariable('BIGTABLE_INSTANCE_ID')
+  );
   const table = instance.table(assertEnvironmentVariable('BIGTABLE_TABLE_ID'));
 
   // build range values for each chain based on last row key
@@ -38,12 +42,17 @@ async function getMessageCounts_(prevMessageCounts: CountsByChain): Promise<Coun
   for (const [prevChain, prevData] of Object.entries(prevMessageCounts)) {
     const startRowKey = `${padUint16(Number(prevChain).toString())}/`;
     const endMissingVaaRowKey =
-      prevData.firstMissingVaaRowKey || padUint16((Number(prevChain) + 1).toString());
-    const endRowKey = prevData.lastRowKey || padUint16((Number(prevChain) + 1).toString());
+      prevData.firstMissingVaaRowKey ||
+      padUint16((Number(prevChain) + 1).toString());
+    const endRowKey =
+      prevData.lastRowKey || padUint16((Number(prevChain) + 1).toString());
 
     // TODO: use inclusive/exclusive?
     ranges['ranges'].push({ start: startRowKey, end: endRowKey });
-    missingVaaRanges['ranges'].push({ start: startRowKey, end: endMissingVaaRowKey });
+    missingVaaRanges['ranges'].push({
+      start: startRowKey,
+      end: endMissingVaaRowKey,
+    });
   }
 
   let messageCounts: CountsByChain = {};
@@ -64,10 +73,13 @@ async function getMessageCounts_(prevMessageCounts: CountsByChain): Promise<Coun
     const missingVaaMessagesByChain = missingVaaObservedMessages
       .filter((m) => m.id.split('/')[0] === padUint16(chainId.toString()))
       .filter((m) => m.data.info.hasSignedVaa[0].value === 0);
-    const lastRowKey = messagesByChain.length === 0 ? prevRowKey : messagesByChain[0].id;
+    const lastRowKey =
+      messagesByChain.length === 0 ? prevRowKey : messagesByChain[0].id;
 
     // don't double count last row key
-    const filteredMessagesByChain = messagesByChain.filter((m) => m.id !== prevRowKey);
+    const filteredMessagesByChain = messagesByChain.filter(
+      (m) => m.id !== prevRowKey
+    );
 
     const numTotalMessages = filteredMessagesByChain.length;
     const numMessagesWithoutVaas = missingVaaMessagesByChain.length;
@@ -77,7 +89,8 @@ async function getMessageCounts_(prevMessageCounts: CountsByChain): Promise<Coun
       numMessagesWithoutVaas: numMessagesWithoutVaas,
       lastRowKey: lastRowKey,
       firstMissingVaaRowKey:
-        missingVaaMessagesByChain[missingVaaMessagesByChain.length - 1]?.id || lastRowKey, // use lastRowKey if no missing vaas found
+        missingVaaMessagesByChain[missingVaaMessagesByChain.length - 1]?.id ||
+        lastRowKey, // use lastRowKey if no missing vaas found
     };
   }
   return messageCounts;

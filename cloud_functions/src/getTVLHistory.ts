@@ -21,7 +21,9 @@ export async function getTVLHistory(req: any, res: any) {
     if (!lastUpdated || now - lastUpdated >= updateIntervalMs) {
       const firestore = new Firestore();
       const collection = await firestore
-        .collection(assertEnvironmentVariable('FIRESTORE_TVL_HISTORY_COLLECTION'))
+        .collection(
+          assertEnvironmentVariable('FIRESTORE_TVL_HISTORY_COLLECTION')
+        )
         .get();
       const tmpTVLHistory: TVLHistory = { DailyLocked: {} };
       for (const doc of collection.docs) {

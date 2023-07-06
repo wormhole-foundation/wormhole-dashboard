@@ -37,7 +37,7 @@ export type GetTransactionsByAccountIdResponse = [
           path: string;
         };
       };
-    }
+    },
 ];
 
 export type Transaction = {

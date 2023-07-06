@@ -190,7 +190,7 @@ const fetchSingleTerraMetadata = async (address: string, lcd: LCDClient) =>
     })
     .then(
       ({ symbol, name, decimals }: any) =>
-        ({ address: address, symbol, name, decimals } as TerraMetadata)
+        ({ address: address, symbol, name, decimals }) as TerraMetadata
     );
 
 async function getSingleTerraMetaData(originAddress: string, originChain: ChainId) {

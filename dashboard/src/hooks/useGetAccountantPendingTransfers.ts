@@ -21,7 +21,7 @@ export type PendingTransfer = {
       signatures: string;
       guardian_set_index: number;
       emitter_chain: number;
-    }
+    },
   ];
 };
 

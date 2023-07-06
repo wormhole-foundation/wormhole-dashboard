@@ -276,10 +276,13 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
   });
   const pendingByChain = useMemo(
     () =>
-      pendingTransferInfo.reduce((obj, cur) => {
-        obj[cur.key.emitter_chain] = (obj[cur.key.emitter_chain] || 0) + 1;
-        return obj;
-      }, {} as { [chainId: number]: number }),
+      pendingTransferInfo.reduce(
+        (obj, cur) => {
+          obj[cur.key.emitter_chain] = (obj[cur.key.emitter_chain] || 0) + 1;
+          return obj;
+        },
+        {} as { [chainId: number]: number }
+      ),
     [pendingTransferInfo]
   );
   return (

@@ -1,5 +1,8 @@
 import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
-import { CONTRACTS, EVMChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import {
+  CONTRACTS,
+  EVMChainName,
+} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Log } from '@ethersproject/abstract-provider';
 import axios from 'axios';
 import { BigNumber } from 'ethers';
@@ -115,14 +118,19 @@ export class EVMWatcher extends Watcher {
     if (results && results.length) {
       // Convert to Ethers compatible type
       return results.map(
-        (response: undefined | { result?: Block; error?: ErrorBlock }, idx: number) => {
+        (
+          response: undefined | { result?: Block; error?: ErrorBlock },
+          idx: number
+        ) => {
           // Karura is getting 6969 errors for some blocks, so we'll just return empty blocks for those instead of throwing an error.
           // We take the timestamp from the previous block, which is not ideal but should be fine.
           if (
             (response &&
               response.result === null &&
               fromBlock + idx < this.latestFinalizedBlockNumber - 1000) ||
-            (response?.error && response.error?.code && response.error.code === 6969)
+            (response?.error &&
+              response.error?.code &&
+              response.error.code === 6969)
           ) {
             return {
               hash: '',
@@ -145,7 +153,9 @@ export class EVMWatcher extends Watcher {
           }
           console.error(reqs[idx], response, idx);
           throw new Error(
-            `Unable to parse result of eth_getBlockByNumber for ${fromBlock + idx} on ${rpc}`
+            `Unable to parse result of eth_getBlockByNumber for ${
+              fromBlock + idx
+            } on ${rpc}`
           );
         }
       );
@@ -194,7 +204,9 @@ export class EVMWatcher extends Watcher {
         logIndex: BigNumber.from(l.logIndex).toNumber(),
       }));
     }
-    throw new Error(`Unable to parse result of eth_getLogs for ${fromBlock}-${toBlock} on ${rpc}`);
+    throw new Error(
+      `Unable to parse result of eth_getLogs for ${fromBlock}-${toBlock} on ${rpc}`
+    );
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -204,12 +216,17 @@ export class EVMWatcher extends Watcher {
     return block.number;
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<VaasByBlock> {
     const address = CONTRACTS.MAINNET[this.chain].core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }
-    const logs = await this.getLogs(fromBlock, toBlock, address, [LOG_MESSAGE_PUBLISHED_TOPIC]);
+    const logs = await this.getLogs(fromBlock, toBlock, address, [
+      LOG_MESSAGE_PUBLISHED_TOPIC,
+    ]);
     const timestampsByBlock: { [block: number]: string } = {};
     // fetch timestamps for each block
     const vaasByBlock: VaasByBlock = {};
@@ -227,8 +244,16 @@ export class EVMWatcher extends Watcher {
       const {
         args: { sequence },
       } = wormholeInterface.parseLog(log);
-      const vaaKey = makeVaaKey(log.transactionHash, this.chain, emitter, sequence.toString());
-      const blockKey = makeBlockKey(blockNumber.toString(), timestampsByBlock[blockNumber]);
+      const vaaKey = makeVaaKey(
+        log.transactionHash,
+        this.chain,
+        emitter,
+        sequence.toString()
+      );
+      const blockKey = makeBlockKey(
+        blockNumber.toString(),
+        timestampsByBlock[blockNumber]
+      );
       vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
     }
     return vaasByBlock;

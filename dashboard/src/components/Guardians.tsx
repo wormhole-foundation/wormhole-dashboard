@@ -49,7 +49,8 @@ const columns = [
   }),
   columnHelper.accessor('features', {
     header: () => 'Features',
-    cell: (info) => (info.getValue()?.length > 0 ? info.getValue().join(', ') : 'none'),
+    cell: (info) =>
+      info.getValue()?.length > 0 ? info.getValue().join(', ') : 'none',
   }),
   columnHelper.accessor('counter', {
     header: () => 'Counter',
@@ -57,12 +58,16 @@ const columns = [
   columnHelper.accessor('bootTimestamp', {
     header: () => 'Boot',
     cell: (info) =>
-      info.getValue() ? new Date(Number(info.getValue()) / 1000000).toLocaleString() : null,
+      info.getValue()
+        ? new Date(Number(info.getValue()) / 1000000).toLocaleString()
+        : null,
   }),
   columnHelper.accessor('timestamp', {
     header: () => 'Timestamp',
     cell: (info) =>
-      info.getValue() ? new Date(Number(info.getValue()) / 1000000).toLocaleString() : null,
+      info.getValue()
+        ? new Date(Number(info.getValue()) / 1000000).toLocaleString()
+        : null,
   }),
   columnHelper.accessor('guardianAddr', {
     header: () => 'Address',
@@ -89,7 +94,11 @@ function GuardianCard({
       heartbeat.networks.reduce(
         (count, network) =>
           isHeartbeatUnhealthy(
-            { guardian: heartbeat.guardianAddr, name: heartbeat.nodeName, network },
+            {
+              guardian: heartbeat.guardianAddr,
+              name: heartbeat.nodeName,
+              network,
+            },
             highestByChain[network.id.toString()]
           )
             ? count
@@ -131,7 +140,9 @@ function GuardianCard({
               <Typography variant="body2">
                 Last Heartbeat:{' '}
                 {heartbeat.timestamp
-                  ? new Date(Number(heartbeat.timestamp) / 1000000).toLocaleString()
+                  ? new Date(
+                      Number(heartbeat.timestamp) / 1000000
+                    ).toLocaleString()
                   : null}
               </Typography>
             }
@@ -151,7 +162,9 @@ function GuardianCard({
                 <Typography variant="body2" gutterBottom>
                   Boot Time:{' '}
                   {heartbeat.bootTimestamp
-                    ? new Date(Number(heartbeat.bootTimestamp) / 1000000).toLocaleString()
+                    ? new Date(
+                        Number(heartbeat.bootTimestamp) / 1000000
+                      ).toLocaleString()
                     : null}
                 </Typography>
                 {hasLatestRelease ? (
@@ -159,8 +172,12 @@ function GuardianCard({
                     <Typography variant="body2" gutterBottom>
                       {heartbeat.nodeName} is not running the latest release.
                     </Typography>
-                    <Typography variant="body2">Theirs: {heartbeat.version}</Typography>
-                    <Typography variant="body2">Latest: {latestRelease}</Typography>
+                    <Typography variant="body2">
+                      Theirs: {heartbeat.version}
+                    </Typography>
+                    <Typography variant="body2">
+                      Latest: {latestRelease}
+                    </Typography>
                   </>
                 ) : null}
               </>
@@ -193,7 +210,11 @@ function GuardianCard({
                 value={healthyPercent}
                 sx={{ flexGrow: 1 }}
                 color={
-                  healthyPercent === 100 ? 'success' : healthyPercent > 80 ? 'warning' : 'error'
+                  healthyPercent === 100
+                    ? 'success'
+                    : healthyPercent > 80
+                    ? 'warning'
+                    : 'error'
                 }
               />
             </Box>
@@ -217,17 +238,20 @@ function Guardians({
 }) {
   const highestByChain = useMemo(
     () =>
-      Object.entries(chainIdsToHeartbeats).reduce((obj, [chainId, heartbeats]) => {
-        let highest = BigInt(0);
-        heartbeats.forEach((heartbeat) => {
-          const height = BigInt(heartbeat.network.height);
-          if (height > highest) {
-            highest = height;
-          }
-        });
-        obj[chainId] = highest;
-        return obj;
-      }, {} as HighestByChain),
+      Object.entries(chainIdsToHeartbeats).reduce(
+        (obj, [chainId, heartbeats]) => {
+          let highest = BigInt(0);
+          heartbeats.forEach((heartbeat) => {
+            const height = BigInt(heartbeat.network.height);
+            if (height > highest) {
+              highest = height;
+            }
+          });
+          obj[chainId] = highest;
+          return obj;
+        },
+        {} as HighestByChain
+      ),
     [chainIdsToHeartbeats]
   );
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -278,7 +302,8 @@ function Guardians({
                       primary="Guardians not running the latest release"
                       secondary={
                         <>
-                          The guardian version is compared to the latest release from{' '}
+                          The guardian version is compared to the latest release
+                          from{' '}
                           <Link
                             href="https://github.com/wormhole-foundation/wormhole/releases"
                             target="_blank"
@@ -318,7 +343,12 @@ function Guardians({
       }
     >
       {display === 'cards' ? (
-        <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
+        <Box
+          display="flex"
+          flexWrap="wrap"
+          alignItems="center"
+          justifyContent={'center'}
+        >
           {heartbeats.map((hb) => (
             <GuardianCard
               key={hb.guardianAddr}

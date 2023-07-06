@@ -6,7 +6,9 @@ import {
 } from '@solana/web3.js';
 import { decode } from 'bs58';
 
-export const isLegacyMessage = (message: Message | MessageV0): message is Message => {
+export const isLegacyMessage = (
+  message: Message | MessageV0
+): message is Message => {
   return message.version === 'legacy';
 };
 

@@ -32,15 +32,19 @@ const useGetAccountantAccounts = (): Account[] => {
           let response;
           let start_after = undefined;
           do {
-            response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
-              all_accounts: {
-                limit: PAGE_LIMIT,
-                start_after,
-              },
-            });
+            response = await cosmWasmClient.queryContractSmart(
+              ACCOUNTANT_CONTRACT_ADDRESS,
+              {
+                all_accounts: {
+                  limit: PAGE_LIMIT,
+                  start_after,
+                },
+              }
+            );
             accounts = [...accounts, ...response.accounts];
             start_after =
-              response.accounts.length && response.accounts[response.accounts.length - 1].key;
+              response.accounts.length &&
+              response.accounts[response.accounts.length - 1].key;
           } while (response.accounts.length === PAGE_LIMIT);
           if (!cancelled) {
             setAccountantInfo(accounts);

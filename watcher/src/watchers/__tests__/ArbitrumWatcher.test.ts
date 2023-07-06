@@ -22,9 +22,15 @@ test.skip('getMessagesForBlocks', async () => {
   const vaasByBlock = await watcher.getMessagesForBlocks(53473701, 53473701);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(0);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    0
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z']).toBeDefined();
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z'].length).toEqual(1);
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z'][0]).toEqual(

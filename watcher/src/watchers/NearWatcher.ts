@@ -1,7 +1,10 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { decode } from 'bs58';
 import { Provider, TypedError } from 'near-api-js/lib/providers';
-import { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
+import {
+  BlockResult,
+  ExecutionStatus,
+} from 'near-api-js/lib/providers/provider';
 import ora from 'ora';
 import { z } from 'zod';
 import { RPCS_BY_CHAIN } from '../consts';
@@ -25,7 +28,10 @@ export class NearWatcher extends Watcher {
     return block.header.height;
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<VaasByBlock> {
     // assume toBlock was retrieved from getFinalizedBlockNumber and is finalized
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
     const provider = await this.getProvider();
@@ -55,7 +61,8 @@ export class NearWatcher extends Watcher {
   }
 
   async getProvider(): Promise<Provider> {
-    return (this.provider = this.provider || (await getNearProvider(RPCS_BY_CHAIN.near!)));
+    return (this.provider =
+      this.provider || (await getNearProvider(RPCS_BY_CHAIN.near!)));
   }
 
   isValidVaaKey(key: string) {
@@ -81,11 +88,16 @@ export const getMessagesFromBlockResults = async (
 ): Promise<VaasByBlock> => {
   const vaasByBlock: VaasByBlock = {};
   let log: ora.Ora;
-  if (debug) log = ora(`Fetching messages from ${blocks.length} blocks...`).start();
+  if (debug)
+    log = ora(`Fetching messages from ${blocks.length} blocks...`).start();
   for (let i = 0; i < blocks.length; i++) {
-    if (debug) log!.text = `Fetching messages from block ${i + 1}/${blocks.length}...`;
+    if (debug)
+      log!.text = `Fetching messages from block ${i + 1}/${blocks.length}...`;
     const { height, timestamp } = blocks[i].header;
-    const blockKey = makeBlockKey(height.toString(), new Date(timestamp / 1_000_000).toISOString());
+    const blockKey = makeBlockKey(
+      height.toString(),
+      new Date(timestamp / 1_000_000).toISOString()
+    );
     vaasByBlock[blockKey] = [];
 
     const chunks = [];
@@ -95,7 +107,10 @@ export const getMessagesFromBlockResults = async (
 
     const transactions = chunks.flatMap(({ transactions }) => transactions);
     for (const tx of transactions) {
-      const outcome = await provider.txStatus(tx.hash, CONTRACTS.MAINNET.near.core);
+      const outcome = await provider.txStatus(
+        tx.hash,
+        CONTRACTS.MAINNET.near.core
+      );
       const logs = outcome.receipts_outcome
         .filter(
           ({ outcome }) =>
@@ -107,7 +122,12 @@ export const getMessagesFromBlockResults = async (
         .map((log) => JSON.parse(log.slice(11)) as EventLog)
         .filter(isWormholePublishEventLog);
       for (const log of logs) {
-        const vaaKey = makeVaaKey(tx.hash, 'near', log.emitter, log.seq.toString());
+        const vaaKey = makeVaaKey(
+          tx.hash,
+          'near',
+          log.emitter,
+          log.seq.toString()
+        );
         vaasByBlock[blockKey] = [...vaasByBlock[blockKey], vaaKey];
       }
     }
@@ -115,7 +135,9 @@ export const getMessagesFromBlockResults = async (
 
   if (debug) {
     const numMessages = Object.values(vaasByBlock).flat().length;
-    log!.succeed(`Fetched ${numMessages} messages from ${blocks.length} blocks`);
+    log!.succeed(
+      `Fetched ${numMessages} messages from ${blocks.length} blocks`
+    );
   }
 
   return vaasByBlock;

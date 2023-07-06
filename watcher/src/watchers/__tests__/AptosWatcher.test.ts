@@ -4,7 +4,9 @@ import { AptosWatcher } from '../AptosWatcher';
 
 jest.setTimeout(60000);
 
-const INITAL_SEQUENCE_NUMBER = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.aptos ?? 0);
+const INITAL_SEQUENCE_NUMBER = Number(
+  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.aptos ?? 0
+);
 
 test('getFinalizedSequenceNumber', async () => {
   const watcher = new AptosWatcher();
@@ -37,15 +39,20 @@ test('getMessagesForSequenceNumbers', async () => {
     )
   ).sort();
   expect(messageKeys.length).toBe(watcher.maximumBatchSize);
-  expect(Date.parse(messageKeys.at(-1)!.split('/')[1])).toBeLessThan(Date.now());
+  expect(Date.parse(messageKeys.at(-1)!.split('/')[1])).toBeLessThan(
+    Date.now()
+  );
   let prevKey = messageKeys[0];
   for (let i = 1; i < watcher.maximumBatchSize; i++) {
     const currKey = messageKeys[i];
-    const [prevBlockNumber, prevTimestamp, prevEventSequenceNumber] = prevKey.split('/');
+    const [prevBlockNumber, prevTimestamp, prevEventSequenceNumber] =
+      prevKey.split('/');
     const [blockNumber, timestamp, eventSequenceNumber] = currKey.split('/');
     expect(Number(blockNumber)).toBeGreaterThan(Number(prevBlockNumber));
     expect(Date.parse(timestamp)).toBeGreaterThan(Date.parse(prevTimestamp));
-    expect(Number(eventSequenceNumber)).toBeGreaterThan(Number(prevEventSequenceNumber));
+    expect(Number(eventSequenceNumber)).toBeGreaterThan(
+      Number(prevEventSequenceNumber)
+    );
     prevKey = currKey;
   }
 });

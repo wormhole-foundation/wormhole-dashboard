@@ -1,4 +1,10 @@
-import React, { ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useSettingsContext } from './SettingsContext';
 
 export type Environment = 'mainnet' | 'testnet' | 'devnet';
@@ -20,7 +26,8 @@ type NetworkContextValue = {
 export const networkOptions: Network[] = [
   {
     env: 'mainnet',
-    endpoint: 'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net',
+    endpoint:
+      'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net',
     name: 'Mainnet',
     logo: '',
     type: 'cloudfunction',
@@ -90,13 +97,18 @@ const NetworkContext = React.createContext<NetworkContextValue>({
   setCurrentNetwork: () => {},
 });
 
-export const NetworkContextProvider = ({ children }: { children: ReactNode }) => {
+export const NetworkContextProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const {
     settings: { defaultEndpoint },
     updateDefaultEndpoint,
   } = useSettingsContext();
   const [currentNetwork, setCurrentNetwork] = useState<Network>(
-    networkOptions.find((option) => option.endpoint === defaultEndpoint) || defaultNetwork
+    networkOptions.find((option) => option.endpoint === defaultEndpoint) ||
+      defaultNetwork
   );
   useEffect(() => {
     updateDefaultEndpoint(currentNetwork.endpoint);
@@ -105,9 +117,12 @@ export const NetworkContextProvider = ({ children }: { children: ReactNode }) =>
     () => ({ currentNetwork, setCurrentNetwork }),
     [currentNetwork, setCurrentNetwork]
   );
-  return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;
+  return (
+    <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>
+  );
 };
 
 export const useNetworkContext = () => useContext(NetworkContext);
 
-export const useCurrentEnvironment = () => useContext(NetworkContext).currentNetwork.env;
+export const useCurrentEnvironment = () =>
+  useContext(NetworkContext).currentNetwork.env;

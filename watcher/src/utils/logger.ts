@@ -1,4 +1,10 @@
-import { createLogger, format, Logger, LoggerOptions, transports } from 'winston';
+import {
+  createLogger,
+  format,
+  Logger,
+  LoggerOptions,
+  transports,
+} from 'winston';
 import { toArray } from './array';
 import { getEnvironment } from './environment';
 
@@ -49,8 +55,12 @@ export const getLogger = (
 
 const createBaseLogger = (): WormholeLogger => {
   const { logLevel, logDir } = getEnvironment();
-  const logPath = !!logDir ? `${logDir}/watcher.${new Date().toISOString()}.log` : null;
-  console.log(`watcher is logging to ${logPath ?? 'the console'} at level ${logLevel}`);
+  const logPath = !!logDir
+    ? `${logDir}/watcher.${new Date().toISOString()}.log`
+    : null;
+  console.log(
+    `watcher is logging to ${logPath ?? 'the console'} at level ${logLevel}`
+  );
 
   const loggerConfig: LoggerOptions = {
     level: logLevel,
@@ -62,7 +72,8 @@ const createBaseLogger = (): WormholeLogger => {
       }),
       printf((info) => {
         // log format: [YYYY-MM-DD HH:mm:ss.SSS A ZZ] [level] [labels] message
-        const labels = info.labels?.length > 0 ? info.labels.join(' | ') : 'main';
+        const labels =
+          info.labels?.length > 0 ? info.labels.join(' | ') : 'main';
         return `[${info.timestamp}] [${info.level}] [${labels}] ${info.message}`;
       })
     ),

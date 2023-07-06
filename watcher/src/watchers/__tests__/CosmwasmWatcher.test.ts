@@ -16,9 +16,15 @@ test('getMessagesForBlocks(terra2)', async () => {
   const vaasByBlock = await watcher.getMessagesForBlocks(3165191, 3165192);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['3165191/2023-01-03T12:12:54.922Z']).toBeDefined();
   expect(vaasByBlock['3165191/2023-01-03T12:12:54.922Z'].length).toEqual(1);
   expect(vaasByBlock['3165191/2023-01-03T12:12:54.922Z'][0]).toEqual(
@@ -32,9 +38,15 @@ test('getMessagesForBlocks(terra2)', async () => {
   const entries = Object.entries(vaasByBlock);
   console.log(entries);
   expect(entries.length).toEqual(3);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(3);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(0);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    3
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    0
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['5635710/2023-06-23T12:54:10.949Z']).toBeDefined();
   expect(vaasByBlock['5635711/2023-06-23T12:54:16.979Z']).toBeDefined();
   expect(vaasByBlock['5635712/2023-06-23T12:54:23.010Z']).toBeDefined();
@@ -52,9 +64,15 @@ test.skip('getMessagesForBlocks(terra)', async () => {
   const vaasByBlock = await watcher.getMessagesForBlocks(10974196, 10974197);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z']).toBeDefined();
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z'].length).toEqual(1);
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z'][0]).toEqual(
@@ -74,9 +92,15 @@ test.skip('getMessagesForBlocks(terra explorer)', async () => {
   const vaasByBlock = await watcher.getMessagesForBlocks(10974196, 10974197);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.000Z']).toBeDefined();
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.000Z'].length).toEqual(1);
   expect(vaasByBlock['10974196/2023-01-06T04:23:21.000Z'][0]).toEqual(
@@ -90,9 +114,15 @@ test.skip('getMessagesForBlocks(terra explorer, no useful info)', async () => {
   const vaasByBlock = await watcher.getMessagesForBlocks(10975000, 10975010);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(0);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    0
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
 });
 
 test('getFinalizedBlockNumber(xpla)', async () => {
@@ -106,9 +136,15 @@ test('getMessagesForBlocks(xpla)', async () => {
   const vaasByBlock = await watcher.getMessagesForBlocks(1645812, 1645813);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['1645812/2022-12-13T22:02:58.413Z']).toBeDefined();
   expect(vaasByBlock['1645812/2022-12-13T22:02:58.413Z'].length).toEqual(1);
   expect(vaasByBlock['1645812/2022-12-13T22:02:58.413Z'][0]).toEqual(
@@ -128,9 +164,15 @@ test('getMessagesForBlocks(injective)', async () => {
   // const vaasByBlock = await watcher.getMessagesForBlocks(4209642, 4209643); // Testnet
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['24905509/2023-01-27T19:11:35.174Z']).toBeDefined();
   expect(vaasByBlock['24905509/2023-01-27T19:11:35.174Z'].length).toEqual(1);
   expect(vaasByBlock['24905509/2023-01-27T19:11:35.174Z'][0]).toEqual(

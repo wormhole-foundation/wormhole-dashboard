@@ -38,7 +38,10 @@ export class AlgorandWatcher extends Watcher {
     return status['last-round'];
   }
 
-  async getApplicationLogTransactionIds(fromBlock: number, toBlock: number): Promise<string[]> {
+  async getApplicationLogTransactionIds(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<string[]> {
     // it is possible tihs may result in gaps if toBlock > response['current-round']
     // perhaps to avoid this, getFinalizedBlockNumber could use the indexer?
     let transactionIds: string[] = [];
@@ -68,7 +71,8 @@ export class AlgorandWatcher extends Watcher {
     let messages: Message[] = [];
     if (
       transaction['tx-type'] !== 'pay' &&
-      transaction['application-transaction']?.['application-id'] === ALGORAND_INFO.appid &&
+      transaction['application-transaction']?.['application-id'] ===
+        ALGORAND_INFO.appid &&
       transaction.logs?.length === 1
     ) {
       messages.push({
@@ -79,24 +83,40 @@ export class AlgorandWatcher extends Watcher {
         vaaKey: makeVaaKey(
           parentId || transaction.id,
           this.chain,
-          Buffer.from(algosdk.decodeAddress(transaction.sender).publicKey).toString('hex'),
-          BigInt(`0x${Buffer.from(transaction.logs[0], 'base64').toString('hex')}`).toString()
+          Buffer.from(
+            algosdk.decodeAddress(transaction.sender).publicKey
+          ).toString('hex'),
+          BigInt(
+            `0x${Buffer.from(transaction.logs[0], 'base64').toString('hex')}`
+          ).toString()
         ),
       });
     }
     if (transaction['inner-txns']) {
       for (const innerTransaction of transaction['inner-txns']) {
-        messages = [...messages, ...this.processTransaction(innerTransaction, transaction.id)];
+        messages = [
+          ...messages,
+          ...this.processTransaction(innerTransaction, transaction.id),
+        ];
       }
     }
     return messages;
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const txIds = await this.getApplicationLogTransactionIds(fromBlock, toBlock);
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<VaasByBlock> {
+    const txIds = await this.getApplicationLogTransactionIds(
+      fromBlock,
+      toBlock
+    );
     const transactions = [];
     for (const txId of txIds) {
-      const response = await this.indexerClient.searchForTransactions().txid(txId).do();
+      const response = await this.indexerClient
+        .searchForTransactions()
+        .txid(txId)
+        .do();
       if (response?.transactions?.[0]) {
         transactions.push(response.transactions[0]);
       }
@@ -113,7 +133,9 @@ export class AlgorandWatcher extends Watcher {
       return vaasByBlock;
     }, {} as VaasByBlock);
     const toBlockInfo = await this.indexerClient.lookupBlock(toBlock).do();
-    const toBlockTimestamp = new Date(toBlockInfo.timestamp * 1000).toISOString();
+    const toBlockTimestamp = new Date(
+      toBlockInfo.timestamp * 1000
+    ).toISOString();
     const toBlockKey = makeBlockKey(toBlock.toString(), toBlockTimestamp);
     if (!vaasByBlock[toBlockKey]) {
       vaasByBlock[toBlockKey] = [];

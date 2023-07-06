@@ -1,4 +1,10 @@
-import { Checkbox, Dialog, DialogContent, DialogTitle, FormControlLabel } from '@mui/material';
+import {
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+} from '@mui/material';
 import { createContext, useCallback, useContext, useState } from 'react';
 
 type Settings = {
@@ -13,7 +19,11 @@ const initialSettings: Settings = {
 };
 const MonitorSettingsContext = createContext<Settings>(initialSettings);
 
-export function MonitorSettingsProvider({ children }: { children: JSX.Element }) {
+export function MonitorSettingsProvider({
+  children,
+}: {
+  children: JSX.Element;
+}) {
   const [isOpen, setOpen] = useState<boolean>(false);
   const [value, setValue] = useState<Settings>({
     ...initialSettings,
@@ -38,13 +48,21 @@ export function MonitorSettingsProvider({ children }: { children: JSX.Element })
         <DialogContent>
           <FormControlLabel
             control={
-              <Checkbox checked={value.showAllMisses} onChange={handleShowAllMissesChange} />
+              <Checkbox
+                checked={value.showAllMisses}
+                onChange={handleShowAllMissesChange}
+              />
             }
             label="Show All Misses"
           />
           <br />
           <FormControlLabel
-            control={<Checkbox checked={value.showDetails} onChange={handleShowDetailsChange} />}
+            control={
+              <Checkbox
+                checked={value.showDetails}
+                onChange={handleShowDetailsChange}
+              />
+            }
             label="Show Details"
           />
         </DialogContent>

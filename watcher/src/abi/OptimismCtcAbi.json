@@ -1,10 +1,26 @@
 [
   {
     "inputs": [
-      { "internalType": "address", "name": "_libAddressManager", "type": "address" },
-      { "internalType": "uint256", "name": "_maxTransactionGasLimit", "type": "uint256" },
-      { "internalType": "uint256", "name": "_l2GasDiscountDivisor", "type": "uint256" },
-      { "internalType": "uint256", "name": "_enqueueGasCost", "type": "uint256" }
+      {
+        "internalType": "address",
+        "name": "_libAddressManager",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxTransactionGasLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_l2GasDiscountDivisor",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_enqueueGasCost",
+        "type": "uint256"
+      }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
@@ -18,7 +34,12 @@
         "name": "l2GasDiscountDivisor",
         "type": "uint256"
       },
-      { "indexed": false, "internalType": "uint256", "name": "enqueueGasCost", "type": "uint256" },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "enqueueGasCost",
+        "type": "uint256"
+      },
       {
         "indexed": false,
         "internalType": "uint256",
@@ -44,7 +65,12 @@
         "name": "_numQueueElements",
         "type": "uint256"
       },
-      { "indexed": false, "internalType": "uint256", "name": "_totalElements", "type": "uint256" }
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_totalElements",
+        "type": "uint256"
+      }
     ],
     "name": "QueueBatchAppended",
     "type": "event"
@@ -64,7 +90,12 @@
         "name": "_numQueueElements",
         "type": "uint256"
       },
-      { "indexed": false, "internalType": "uint256", "name": "_totalElements", "type": "uint256" }
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_totalElements",
+        "type": "uint256"
+      }
     ],
     "name": "SequencerBatchAppended",
     "type": "event"
@@ -72,16 +103,36 @@
   {
     "anonymous": false,
     "inputs": [
-      { "indexed": true, "internalType": "uint256", "name": "_batchIndex", "type": "uint256" },
-      { "indexed": false, "internalType": "bytes32", "name": "_batchRoot", "type": "bytes32" },
-      { "indexed": false, "internalType": "uint256", "name": "_batchSize", "type": "uint256" },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "_batchIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "_batchRoot",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_batchSize",
+        "type": "uint256"
+      },
       {
         "indexed": false,
         "internalType": "uint256",
         "name": "_prevTotalElements",
         "type": "uint256"
       },
-      { "indexed": false, "internalType": "bytes", "name": "_extraData", "type": "bytes" }
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "_extraData",
+        "type": "bytes"
+      }
     ],
     "name": "TransactionBatchAppended",
     "type": "event"
@@ -89,12 +140,42 @@
   {
     "anonymous": false,
     "inputs": [
-      { "indexed": true, "internalType": "address", "name": "_l1TxOrigin", "type": "address" },
-      { "indexed": true, "internalType": "address", "name": "_target", "type": "address" },
-      { "indexed": false, "internalType": "uint256", "name": "_gasLimit", "type": "uint256" },
-      { "indexed": false, "internalType": "bytes", "name": "_data", "type": "bytes" },
-      { "indexed": true, "internalType": "uint256", "name": "_queueIndex", "type": "uint256" },
-      { "indexed": false, "internalType": "uint256", "name": "_timestamp", "type": "uint256" }
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_l1TxOrigin",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_target",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_gasLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "_data",
+        "type": "bytes"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "_queueIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_timestamp",
+        "type": "uint256"
+      }
     ],
     "name": "TransactionEnqueued",
     "type": "event"
@@ -124,7 +205,11 @@
     "inputs": [],
     "name": "batches",
     "outputs": [
-      { "internalType": "contract IChainStorageContainer", "name": "", "type": "address" }
+      {
+        "internalType": "contract IChainStorageContainer",
+        "name": "",
+        "type": "address"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -183,12 +268,18 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "_index", "type": "uint256" }],
+    "inputs": [
+      { "internalType": "uint256", "name": "_index", "type": "uint256" }
+    ],
     "name": "getQueueElement",
     "outputs": [
       {
         "components": [
-          { "internalType": "bytes32", "name": "transactionHash", "type": "bytes32" },
+          {
+            "internalType": "bytes32",
+            "name": "transactionHash",
+            "type": "bytes32"
+          },
           { "internalType": "uint40", "name": "timestamp", "type": "uint40" },
           { "internalType": "uint40", "name": "blockNumber", "type": "uint40" }
         ],
@@ -210,14 +301,18 @@
   {
     "inputs": [],
     "name": "getTotalBatches",
-    "outputs": [{ "internalType": "uint256", "name": "_totalBatches", "type": "uint256" }],
+    "outputs": [
+      { "internalType": "uint256", "name": "_totalBatches", "type": "uint256" }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "getTotalElements",
-    "outputs": [{ "internalType": "uint256", "name": "_totalElements", "type": "uint256" }],
+    "outputs": [
+      { "internalType": "uint256", "name": "_totalElements", "type": "uint256" }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -231,7 +326,13 @@
   {
     "inputs": [],
     "name": "libAddressManager",
-    "outputs": [{ "internalType": "contract Lib_AddressManager", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "contract Lib_AddressManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -251,8 +352,16 @@
   },
   {
     "inputs": [
-      { "internalType": "uint256", "name": "_l2GasDiscountDivisor", "type": "uint256" },
-      { "internalType": "uint256", "name": "_enqueueGasCost", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "_l2GasDiscountDivisor",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_enqueueGasCost",
+        "type": "uint256"
+      }
     ],
     "name": "setGasParams",
     "outputs": [],

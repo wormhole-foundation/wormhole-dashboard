@@ -1,5 +1,13 @@
 import { GitHub } from '@mui/icons-material';
-import { AppBar, Box, Divider, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
+import {
+  AppBar,
+  Box,
+  Divider,
+  Hidden,
+  IconButton,
+  Toolbar,
+  Typography,
+} from '@mui/material';
 import { MonitorSettingsProvider } from '../contexts/MonitorSettingsContext';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';

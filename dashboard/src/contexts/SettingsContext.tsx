@@ -1,4 +1,11 @@
-import React, { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 const STORAGE_KEY = 'settings';
 
@@ -57,7 +64,11 @@ const SettingsContext = React.createContext<SettingsContextValue>({
   updateShowChainName: (value: boolean) => {},
 });
 
-export const SettingsContextProvider = ({ children }: { children: ReactNode }) => {
+export const SettingsContextProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
   const [settings, setSettings] = useState<Settings>(initialSettings);
   const updateBackgroundOpacity = useCallback((value: number) => {
     setSettings((settings) => ({ ...settings, backgroundOpacity: value }));
@@ -96,7 +107,11 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateShowChainName,
     ]
   );
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
+  return (
+    <SettingsContext.Provider value={value}>
+      {children}
+    </SettingsContext.Provider>
+  );
 };
 
 export const useSettingsContext = () => {

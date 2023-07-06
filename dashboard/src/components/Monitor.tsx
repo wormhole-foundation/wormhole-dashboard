@@ -1,5 +1,14 @@
-import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
-import { ArrowDownward, ArrowUpward, Code, Launch, Settings } from '@mui/icons-material';
+import {
+  ChainId,
+  coalesceChainName,
+} from '@certusone/wormhole-sdk/lib/esm/utils/consts';
+import {
+  ArrowDownward,
+  ArrowUpward,
+  Code,
+  Launch,
+  Settings,
+} from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -17,7 +26,11 @@ import {
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CollapsibleSection from './CollapsibleSection';
-import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
+import {
+  DataWrapper,
+  getEmptyDataWrapper,
+  receiveDataWrapper,
+} from '../utils/DataWrapper';
 import { useSettings } from '../contexts/MonitorSettingsContext';
 import { explorerBlock, explorerTx, explorerVaa } from '../utils/explorer';
 
@@ -76,7 +89,13 @@ const missingBlockSx: SxProps<Theme> = {
   backgroundColor: MISSING_COLOR,
 };
 
-function BlockDetail({ chain, message }: { chain: string; message: ObservedMessage }) {
+function BlockDetail({
+  chain,
+  message,
+}: {
+  chain: string;
+  message: ObservedMessage;
+}) {
   const vaaId = `${message.chain}/${message.emitter}/${message.seq}`;
   return (
     <Box>
@@ -118,7 +137,10 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
       <Typography gutterBottom>
         Block {message.block}{' '}
         <IconButton
-          href={explorerBlock(Number(chain) as ChainId, message.block.toString())}
+          href={explorerBlock(
+            Number(chain) as ChainId,
+            message.block.toString()
+          )}
           target="_blank"
           size="small"
           sx={inlineIconButtonSx}
@@ -135,9 +157,9 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
 
 function DetailBlocks({ chain }: { chain: string }) {
   const { showDetails } = useSettings();
-  const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
-    getEmptyDataWrapper()
-  );
+  const [messagesWrapper, setMessagesWrapper] = useState<
+    DataWrapper<ObservedMessage[]>
+  >(getEmptyDataWrapper());
   const [fromId, setFromId] = useState<string | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -152,7 +174,9 @@ function DetailBlocks({ chain }: { chain: string }) {
         );
         if (response.data && !cancelled) {
           response.data.reverse();
-          setMessagesWrapper((w) => receiveDataWrapper([...response.data, ...(w.data || [])]));
+          setMessagesWrapper((w) =>
+            receiveDataWrapper([...response.data, ...(w.data || [])])
+          );
         }
       } catch (e: any) {
         setMessagesWrapper((r) => ({
@@ -191,7 +215,12 @@ function DetailBlocks({ chain }: { chain: string }) {
     </Button>
   );
   return (
-    <Box textAlign="center" maxWidth={showDetails ? undefined : 16 * 20} mx="auto" my={2}>
+    <Box
+      textAlign="center"
+      maxWidth={showDetails ? undefined : 16 * 20}
+      mx="auto"
+      my={2}
+    >
       {' '}
       {messagesWrapper.isFetching && !messages ? (
         <CircularProgress />
@@ -204,7 +233,9 @@ function DetailBlocks({ chain }: { chain: string }) {
                 key={observedMessage.id}
                 textAlign="left"
                 borderLeft={'4px solid'}
-                borderColor={observedMessage.hasSignedVaa ? FOUND_COLOR : MISSING_COLOR}
+                borderColor={
+                  observedMessage.hasSignedVaa ? FOUND_COLOR : MISSING_COLOR
+                }
                 borderRadius="2px"
                 paddingLeft={1}
               >
@@ -221,9 +252,17 @@ function DetailBlocks({ chain }: { chain: string }) {
                   enterDelay={500}
                   enterNextDelay={100}
                   TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}
-                  title={<BlockDetail chain={chain} message={observedMessage} />}
+                  title={
+                    <BlockDetail chain={chain} message={observedMessage} />
+                  }
                 >
-                  <Box sx={observedMessage.hasSignedVaa ? doneBlockSx : missingBlockSx} />
+                  <Box
+                    sx={
+                      observedMessage.hasSignedVaa
+                        ? doneBlockSx
+                        : missingBlockSx
+                    }
+                  />
                 </Tooltip>
               ))}
             </Box>
@@ -248,11 +287,19 @@ function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
         .map(([chain, info]) => {
           const filteredMisses = showAllMisses
             ? info.messages
-            : info.messages.filter((message) => message.timestamp < twoHoursAgo);
+            : info.messages.filter(
+                (message) => message.timestamp < twoHoursAgo
+              );
           return filteredMisses.length === 0
             ? null
             : filteredMisses
-                .map((m) => `send-observation-request ${chain} ${m.txHash.replace('0x', '')}`)
+                .map(
+                  (m) =>
+                    `send-observation-request ${chain} ${m.txHash.replace(
+                      '0x',
+                      ''
+                    )}`
+                )
                 .join('\n');
         })
         .filter((c) => !!c)
@@ -285,9 +332,9 @@ function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
 
 function Misses() {
   const { showAllMisses } = useSettings();
-  const [missesWrapper, setMissesWrapper] = useState<DataWrapper<MissesByChain>>(
-    getEmptyDataWrapper()
-  );
+  const [missesWrapper, setMissesWrapper] = useState<
+    DataWrapper<MissesByChain>
+  >(getEmptyDataWrapper());
   const misses = missesWrapper.data;
   useEffect(() => {
     let cancelled = false;
@@ -305,7 +352,8 @@ function Misses() {
           setMissesWrapper((r) => ({
             ...r,
             isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
+            error:
+              e?.message || 'An error occurred while fetching the database',
           }));
         }
       }
@@ -322,13 +370,16 @@ function Misses() {
         .map(([chain, info]) => {
           const filteredMisses = showAllMisses
             ? info.messages
-            : info.messages.filter((message) => message.timestamp < twoHoursAgo);
+            : info.messages.filter(
+                (message) => message.timestamp < twoHoursAgo
+              );
           return filteredMisses.length === 0 ? null : (
             <CollapsibleSection
               key={chain}
               header={
                 <Typography variant="h5">
-                  {coalesceChainName(Number(chain) as ChainId)} ({chain}) - {filteredMisses.length}
+                  {coalesceChainName(Number(chain) as ChainId)} ({chain}) -{' '}
+                  {filteredMisses.length}
                 </Typography>
               }
             >
@@ -337,7 +388,9 @@ function Misses() {
                   key={message.id}
                   textAlign="left"
                   borderLeft={'4px solid'}
-                  borderColor={message.hasSignedVaa ? FOUND_COLOR : MISSING_COLOR}
+                  borderColor={
+                    message.hasSignedVaa ? FOUND_COLOR : MISSING_COLOR
+                  }
                   borderRadius="2px"
                   paddingLeft={1}
                 >
@@ -371,7 +424,9 @@ function Misses() {
             ) : null}
           </Typography>
         ) : (
-          <Typography variant="body2">Loading message counts by chain...</Typography>
+          <Typography variant="body2">
+            Loading message counts by chain...
+          </Typography>
         )}
       </Box>
       {missesWrapper.isFetching ? (
@@ -379,7 +434,9 @@ function Misses() {
       ) : missesElements.length ? (
         missesElements
       ) : (
-        <Typography pl={0.5}>No misses{showAllMisses ? '' : ' > 2 Hours'}!</Typography>
+        <Typography pl={0.5}>
+          No misses{showAllMisses ? '' : ' > 2 Hours'}!
+        </Typography>
       )}
     </>
   );
@@ -402,7 +459,11 @@ function Monitor() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLastBlockByChainWrapper((r) => ({ ...r, isFetching: true, error: null }));
+      setLastBlockByChainWrapper((r) => ({
+        ...r,
+        isFetching: true,
+        error: null,
+      }));
       try {
         const response = await axios.get<LastBlockByChain>(
           'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/latest-blocks'
@@ -415,7 +476,8 @@ function Monitor() {
           setLastBlockByChainWrapper((r) => ({
             ...r,
             isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
+            error:
+              e?.message || 'An error occurred while fetching the database',
           }));
         }
       }
@@ -424,9 +486,9 @@ function Monitor() {
       cancelled = true;
     };
   }, []);
-  const [messageCountsWrapper, setMessageCountsWrapper] = useState<DataWrapper<CountsByChain>>(
-    getEmptyDataWrapper()
-  );
+  const [messageCountsWrapper, setMessageCountsWrapper] = useState<
+    DataWrapper<CountsByChain>
+  >(getEmptyDataWrapper());
   const messageCounts = messageCountsWrapper.data;
   useEffect(() => {
     let cancelled = false;
@@ -444,7 +506,8 @@ function Monitor() {
           setMessageCountsWrapper((r) => ({
             ...r,
             isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
+            error:
+              e?.message || 'An error occurred while fetching the database',
           }));
         }
       }
@@ -478,7 +541,9 @@ function Monitor() {
             ) : null}
           </Typography>
         ) : (
-          <Typography variant="body2">Loading last block by chain...</Typography>
+          <Typography variant="body2">
+            Loading last block by chain...
+          </Typography>
         )}
         {messageCountsWrapper.receivedAt ? (
           <Typography variant="body2">
@@ -493,7 +558,9 @@ function Monitor() {
             ) : null}
           </Typography>
         ) : (
-          <Typography variant="body2">Loading message counts by chain...</Typography>
+          <Typography variant="body2">
+            Loading message counts by chain...
+          </Typography>
         )}
       </Box>
       {lastBlockByChainWrapper.isFetching ? (
@@ -523,12 +590,18 @@ function Monitor() {
                     }}
                   >
                     <Box sx={missingBlockSx} />
-                    &nbsp;= {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
+                    &nbsp;={' '}
+                    {
+                      messageCounts?.[Number(chain) as ChainId]
+                        ?.numMessagesWithoutVaas
+                    }
                     &nbsp;&nbsp;
                     <Box sx={doneBlockSx} />
                     &nbsp;={' '}
-                    {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
-                      (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas || 0)}
+                    {(messageCounts?.[Number(chain) as ChainId]
+                      ?.numTotalMessages || 0) -
+                      (messageCounts?.[Number(chain) as ChainId]
+                        ?.numMessagesWithoutVaas || 0)}
                   </Typography>
                 ) : null}
               </div>

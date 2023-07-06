@@ -20,7 +20,10 @@ test('getMessagesForBlocks', async () => {
 
 test('getMessagesForBlocks initial block', async () => {
   const watcher = new AlgorandWatcher();
-  const messages = await watcher.getMessagesForBlocks(initialAlgorandBlock, initialAlgorandBlock);
+  const messages = await watcher.getMessagesForBlocks(
+    initialAlgorandBlock,
+    initialAlgorandBlock
+  );
   expect(messages).toMatchObject({
     '22931277/2022-08-19T15:10:48.000Z': [
       '2RBQLCETCLFV4F3PQ7IHEWVWQV3MCP4UM5S5OFZM23XMC2O2DJ6A:8/67e93fa6c8ac5c819990aa7340c0c16b508abb1178be9b30d024b8ac25193d45/1',
@@ -30,7 +33,10 @@ test('getMessagesForBlocks initial block', async () => {
 
 test('getMessagesForBlocks indexer pagination support', async () => {
   const watcher = new AlgorandWatcher();
-  const messages = await watcher.getMessagesForBlocks(initialAlgorandBlock, 27069946);
+  const messages = await watcher.getMessagesForBlocks(
+    initialAlgorandBlock,
+    27069946
+  );
   expect(Object.keys(messages).length).toEqual(420);
 });
 

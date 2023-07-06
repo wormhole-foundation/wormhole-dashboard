@@ -2,7 +2,11 @@ import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { describe, expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
 import { RPCS_BY_CHAIN } from '../../consts';
-import { getNearProvider, getTransactionsByAccountId, NEAR_ARCHIVE_RPC } from '../../utils/near';
+import {
+  getNearProvider,
+  getTransactionsByAccountId,
+  NEAR_ARCHIVE_RPC,
+} from '../../utils/near';
 import { getMessagesFromBlockResults, NearWatcher } from '../NearWatcher';
 
 jest.setTimeout(60000);
@@ -18,7 +22,10 @@ test('getFinalizedBlockNumber', async () => {
 test('getMessagesForBlocks', async () => {
   // requests that are too old for rpc node should error, be caught, and return an empty object
   const watcher = new NearWatcher();
-  const messages = await watcher.getMessagesForBlocks(INITIAL_NEAR_BLOCK, INITIAL_NEAR_BLOCK);
+  const messages = await watcher.getMessagesForBlocks(
+    INITIAL_NEAR_BLOCK,
+    INITIAL_NEAR_BLOCK
+  );
   expect(Object.keys(messages).length).toEqual(0);
 });
 
@@ -33,7 +40,9 @@ describe('getNearProvider', () => {
     const provider = await getNearProvider(NEAR_ARCHIVE_RPC);
     // grab first block with activity from core contract
     expect(
-      await provider.block({ blockId: 'Asie8hpJFKaipvw8jh1wPfBwwbjP6JUfsQdCuQvwr3Sz' })
+      await provider.block({
+        blockId: 'Asie8hpJFKaipvw8jh1wPfBwwbjP6JUfsQdCuQvwr3Sz',
+      })
     ).toBeTruthy();
   });
 });
@@ -45,7 +54,9 @@ test('getTransactionsByAccountId', async () => {
     '1669732480649090392'
   );
   expect(transactions.length).toEqual(10);
-  expect(transactions[0].hash).toEqual('7jDrPnvErjbi3EHbQBcKT9wtiUPo77J9tpxXjE3KHcUp');
+  expect(transactions[0].hash).toEqual(
+    '7jDrPnvErjbi3EHbQBcKT9wtiUPo77J9tpxXjE3KHcUp'
+  );
 
   // test custom timestamp, filtering out non function call actions, and querying last page
   transactions = await getTransactionsByAccountId(
@@ -54,7 +65,9 @@ test('getTransactionsByAccountId', async () => {
     '1661429914932000000'
   );
   expect(transactions.length).toEqual(2);
-  expect(transactions[0].hash).toEqual('3VivTHp1W5ErWgsASUQvW1qwoTCsxYeke4498apDJsss');
+  expect(transactions[0].hash).toEqual(
+    '3VivTHp1W5ErWgsASUQvW1qwoTCsxYeke4498apDJsss'
+  );
 });
 
 describe('getMessagesFromBlockResults', () => {
@@ -70,9 +83,15 @@ describe('getMessagesFromBlockResults', () => {
   test('with ArchiveProvider', async () => {
     const provider = await getNearProvider(NEAR_ARCHIVE_RPC);
     const messages = await getMessagesFromBlockResults(provider, [
-      await provider.block({ blockId: 'Bzjemj99zxe1h8kVp8H2hwVifmbQL8HT34LyPHzEK5qp' }),
-      await provider.block({ blockId: '4SHFxSo8DdP8DhMauS5iFqfmdLwLET3W3e8Lg9PFvBSn' }),
-      await provider.block({ blockId: 'GtQYaYMhrDHgLJJTroUaUzSR24E29twewpkqyudrCyVN' }),
+      await provider.block({
+        blockId: 'Bzjemj99zxe1h8kVp8H2hwVifmbQL8HT34LyPHzEK5qp',
+      }),
+      await provider.block({
+        blockId: '4SHFxSo8DdP8DhMauS5iFqfmdLwLET3W3e8Lg9PFvBSn',
+      }),
+      await provider.block({
+        blockId: 'GtQYaYMhrDHgLJJTroUaUzSR24E29twewpkqyudrCyVN',
+      }),
     ]);
     expect(messages).toMatchObject({
       '72777217/2022-08-25T18:42:26.121Z': [],

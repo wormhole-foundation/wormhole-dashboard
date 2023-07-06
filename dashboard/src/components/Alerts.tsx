@@ -29,7 +29,9 @@ import { Heartbeat } from '../utils/getLastHeartbeats';
 export const BEHIND_DIFF = 1000;
 export const CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD = 2;
 const isLayer2 = (chainId: number) =>
-  chainId === CHAIN_ID_POLYGON || chainId === CHAIN_ID_ARBITRUM || chainId === CHAIN_ID_OPTIMISM;
+  chainId === CHAIN_ID_POLYGON ||
+  chainId === CHAIN_ID_ARBITRUM ||
+  chainId === CHAIN_ID_OPTIMISM;
 export const getBehindDiffForChain = (chainId: number) =>
   isLayer2(chainId) ? BEHIND_DIFF * 2 : BEHIND_DIFF;
 
@@ -41,7 +43,10 @@ export function getQuorumCount(environment: Environment): number {
 }
 
 export function getWarningCount(environment: Environment): number {
-  return Math.max(getNumGuardians(environment) - CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD + 1, 1);
+  return Math.max(
+    getNumGuardians(environment) - CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD + 1,
+    1
+  );
 }
 
 function getQuorumLossCount(environment: Environment): number {
@@ -53,7 +58,12 @@ type AlertEntry = {
   text: string;
 };
 
-const alertSeverityOrder: AlertColor[] = ['error', 'warning', 'success', 'info'];
+const alertSeverityOrder: AlertColor[] = [
+  'error',
+  'warning',
+  'success',
+  'info',
+];
 
 function chainDownAlerts(
   heartbeats: Heartbeat[],
@@ -69,7 +79,8 @@ function chainDownAlerts(
       const missingGuardians = heartbeats.filter(
         (guardianHeartbeat) =>
           chainHeartbeats.findIndex(
-            (chainHeartbeat) => chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
+            (chainHeartbeat) =>
+              chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
           ) === -1
       );
       missingGuardians.forEach((guardianHeartbeat) => {
@@ -109,14 +120,20 @@ function chainDownAlerts(
       });
     });
   return Object.entries(downChains).map(([chainId, names]) => ({
-    severity: names.length >= getQuorumLossCount(environment) ? 'error' : 'warning',
-    text: `${names.length} guardian${names.length > 1 ? 's' : ''} [${names.join(', ')}] ${
-      names.length > 1 ? 'are' : 'is'
-    } down on ${chainIdToName(Number(chainId))} (${chainId})!`,
+    severity:
+      names.length >= getQuorumLossCount(environment) ? 'error' : 'warning',
+    text: `${names.length} guardian${names.length > 1 ? 's' : ''} [${names.join(
+      ', '
+    )}] ${names.length > 1 ? 'are' : 'is'} down on ${chainIdToName(
+      Number(chainId)
+    )} (${chainId})!`,
   }));
 }
 
-const releaseChecker = (release: string | null, heartbeats: Heartbeat[]): AlertEntry[] =>
+const releaseChecker = (
+  release: string | null,
+  heartbeats: Heartbeat[]
+): AlertEntry[] =>
   release === null
     ? []
     : heartbeats
@@ -149,9 +166,11 @@ function Alerts({
       ...releaseChecker(latestRelease, heartbeats),
     ];
     return alerts.sort((a, b) =>
-      alertSeverityOrder.indexOf(a.severity) < alertSeverityOrder.indexOf(b.severity)
+      alertSeverityOrder.indexOf(a.severity) <
+      alertSeverityOrder.indexOf(b.severity)
         ? -1
-        : alertSeverityOrder.indexOf(a.severity) > alertSeverityOrder.indexOf(b.severity)
+        : alertSeverityOrder.indexOf(a.severity) >
+          alertSeverityOrder.indexOf(b.severity)
         ? 1
         : 0
     );

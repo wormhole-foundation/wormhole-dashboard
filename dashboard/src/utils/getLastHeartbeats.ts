@@ -21,7 +21,9 @@ export interface HeartbeatNetwork {
   errorCount: string;
 }
 
-export async function getLastHeartbeats(network: Network): Promise<Heartbeat[]> {
+export async function getLastHeartbeats(
+  network: Network
+): Promise<Heartbeat[]> {
   if (network.type === 'guardian') {
     const rpc = new GrpcWebImpl(network.endpoint, {});
     const api = new PublicRPCServiceClientImpl(rpc);

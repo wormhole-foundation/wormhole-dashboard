@@ -126,9 +126,9 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     : '';
 
 export const explorerVaa = (key: string) =>
-  `https://wormhole.com/explorer/?emitterChain=${key.split('/')[0]}&emitterAddress=${
-    key.split('/')[1]
-  }&sequence=${key.split('/')[2]}`;
+  `https://wormhole.com/explorer/?emitterChain=${
+    key.split('/')[0]
+  }&emitterAddress=${key.split('/')[1]}&sequence=${key.split('/')[2]}`;
 
 export const getExplorerTxHash = (chain: ChainId, txHash: string) => {
   let explorerTxHash = '';
@@ -139,7 +139,10 @@ export const getExplorerTxHash = (chain: ChainId, txHash: string) => {
     explorerTxHash = base58.encode(txHashBytes);
   } else if (!isEVMChain(chain)) {
     try {
-      explorerTxHash = tryHexToNativeString(txHash.slice(2), CHAIN_INFO_MAP[chain].chainId);
+      explorerTxHash = tryHexToNativeString(
+        txHash.slice(2),
+        CHAIN_INFO_MAP[chain].chainId
+      );
     } catch (e) {
       return txHash;
     }

@@ -1,4 +1,8 @@
-import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import {
+  ChainId,
+  ChainName,
+  coalesceChainId,
+} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
   INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
   MAX_UINT_64,
@@ -42,7 +46,8 @@ export function parseMessageId(id: string): {
 }
 
 // TODO: should this be a composite key or should the value become more complex
-export const makeBlockKey = (block: string, timestamp: string): string => `${block}/${timestamp}`;
+export const makeBlockKey = (block: string, timestamp: string): string =>
+  `${block}/${timestamp}`;
 
 export const makeVaaKey = (
   transactionHash: string,
@@ -56,8 +61,11 @@ export const makeVAAsByTxHashRowKey = (txHash: string, chain: number): string =>
   `${txHash}/${padUint16(chain.toString())}`;
 
 // make a bigtable row key for the `signedVAAs` table
-export const makeSignedVAAsRowKey = (chain: number, emitter: string, sequence: string): string =>
-  `${padUint16(chain.toString())}/${emitter}/${padUint64(sequence)}`;
+export const makeSignedVAAsRowKey = (
+  chain: number,
+  emitter: string,
+  sequence: string
+): string => `${padUint16(chain.toString())}/${emitter}/${padUint64(sequence)}`;
 
 let database: Database = new Database();
 export const initDb = (): Database => {
@@ -70,7 +78,9 @@ export const initDb = (): Database => {
   return database;
 };
 
-export const getResumeBlockByChain = async (chain: ChainName): Promise<number | null> => {
+export const getResumeBlockByChain = async (
+  chain: ChainName
+): Promise<number | null> => {
   const lastBlock = await database.getLastBlockByChain(chain);
   const initialBlock = INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain];
   return lastBlock !== null
@@ -99,7 +109,9 @@ export function printRow(rowkey: string, rowData: { [x: string]: any }) {
 
       for (const cell of col) {
         const labels = cell.labels.length ? ` [${cell.labels.join(',')}]` : '';
-        console.log(`\t${columnQualifier}: ${cell.value} @${cell.timestamp}${labels}`);
+        console.log(
+          `\t${columnQualifier}: ${cell.value} @${cell.timestamp}${labels}`
+        );
       }
     }
   }

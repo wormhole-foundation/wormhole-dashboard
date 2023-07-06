@@ -17,7 +17,11 @@ import { SuiWatcher } from './SuiWatcher';
 export function makeFinalizedWatcher(chainName: ChainName): Watcher {
   if (chainName === 'solana') {
     return new SolanaWatcher();
-  } else if (chainName === 'ethereum' || chainName === 'karura' || chainName === 'acala') {
+  } else if (
+    chainName === 'ethereum' ||
+    chainName === 'karura' ||
+    chainName === 'acala'
+  ) {
     return new EVMWatcher(chainName, 'finalized');
   } else if (chainName === 'bsc') {
     return new BSCWatcher();
@@ -51,6 +55,8 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
   } else if (chainName === 'sui') {
     return new SuiWatcher();
   } else {
-    throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
+    throw new Error(
+      `Attempted to create finalized watcher for unsupported chain ${chainName}`
+    );
   }
 }

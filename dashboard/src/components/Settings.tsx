@@ -54,7 +54,11 @@ function SettingsContent() {
   return (
     <>
       <Box mt={2} mx={2} textAlign="center">
-        <ToggleButtonGroup value={settings.theme} exclusive onChange={handleThemeChange}>
+        <ToggleButtonGroup
+          value={settings.theme}
+          exclusive
+          onChange={handleThemeChange}
+        >
           <ToggleButton value="light">
             <LightModeOutlined />
           </ToggleButton>
@@ -90,7 +94,10 @@ function SettingsContent() {
       <Box m={2}>
         <FormControlLabel
           control={
-            <Checkbox checked={!!settings.showChainName} onChange={handleShowChainNameChange} />
+            <Checkbox
+              checked={!!settings.showChainName}
+              onChange={handleShowChainNameChange}
+            />
           }
           label="Show chain names"
         />

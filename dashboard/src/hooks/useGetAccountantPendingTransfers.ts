@@ -42,15 +42,19 @@ const useGetAccountantPendingTransfers = (): PendingTransfer[] => {
           let response;
           let start_after = undefined;
           do {
-            response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
-              all_pending_transfers: {
-                limit: PAGE_LIMIT,
-                start_after,
-              },
-            });
+            response = await cosmWasmClient.queryContractSmart(
+              ACCOUNTANT_CONTRACT_ADDRESS,
+              {
+                all_pending_transfers: {
+                  limit: PAGE_LIMIT,
+                  start_after,
+                },
+              }
+            );
             pending = [...pending, ...response.pending];
             start_after =
-              response.pending.length && response.pending[response.pending.length - 1].key;
+              response.pending.length &&
+              response.pending[response.pending.length - 1].key;
           } while (response.pending.length === PAGE_LIMIT);
           if (!cancelled) {
             setAccountantInfo(pending);

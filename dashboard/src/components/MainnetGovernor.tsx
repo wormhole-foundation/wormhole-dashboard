@@ -43,7 +43,8 @@ import Table from './Table';
 const calculatePercent = (notional: AvailableNotionalByChain): number => {
   try {
     return (
-      ((Number(notional.notionalLimit) - Number(notional.remainingAvailableNotional.jump)) /
+      ((Number(notional.notionalLimit) -
+        Number(notional.remainingAvailableNotional.jump)) /
         Number(notional.notionalLimit)) *
       100
     );
@@ -61,23 +62,33 @@ const notionalColumns = [
   }),
   notionalColumnHelper.accessor('notionalLimit', {
     header: () => <Box order="1">Limit</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
   notionalColumnHelper.accessor('bigTransactionSize', {
     header: () => <Box order="1">Big Transaction</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
   notionalColumnHelper.accessor('remainingAvailableNotional.min', {
     header: () => <Box order="1">Min Remaining</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
   notionalColumnHelper.accessor('remainingAvailableNotional.avg', {
     header: () => <Box order="1">Avg Remaining</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
   notionalColumnHelper.accessor('remainingAvailableNotional.max', {
     header: () => <Box order="1">Max Remaining</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
   notionalColumnHelper.accessor(calculatePercent, {
     id: 'progress',
@@ -87,14 +98,21 @@ const notionalColumns = [
         <LinearProgress
           variant="determinate"
           value={info.getValue()}
-          color={info.getValue() > 80 ? 'error' : info.getValue() > 50 ? 'warning' : 'success'}
+          color={
+            info.getValue() > 80
+              ? 'error'
+              : info.getValue() > 50
+              ? 'warning'
+              : 'success'
+          }
         />
       </Tooltip>
     ),
   }),
 ];
 
-const enqueuedColumnHelper = createColumnHelper<GovernorGetEnqueuedVAAsResponse_Entry>();
+const enqueuedColumnHelper =
+  createColumnHelper<GovernorGetEnqueuedVAAsResponse_Entry>();
 
 const enqueuedColumns = [
   enqueuedColumnHelper.accessor('emitterChain', {
@@ -146,7 +164,9 @@ const enqueuedColumns = [
   }),
   enqueuedColumnHelper.accessor('notionalValue', {
     header: () => <Box order="1">Notional Value</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
 ];
 
@@ -202,13 +222,21 @@ const tokenColumns = [
   }),
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0.0000')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">
+        ${numeral(info.getValue()).format('0,0.0000')}
+      </Box>
+    ),
   }),
 ];
 
 type ChainIdToEnqueuedCount = { [chainId: number]: number };
 
-function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
+function MainnetGovernor({
+  governorInfo,
+}: {
+  governorInfo: CloudGovernorInfo;
+}) {
   const tokenSymbols = useSymbolInfo(governorInfo.tokens);
   // TODO: governorInfo.tokens triggers updates to displayTokens, not tokenSymbols
   // Should fix this
@@ -216,7 +244,9 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
     () =>
       governorInfo.tokens.map((tk) => ({
         ...tk,
-        symbol: tokenSymbols.get([tk.originChainId, tk.originAddress].join('_'))?.symbol || '',
+        symbol:
+          tokenSymbols.get([tk.originChainId, tk.originAddress].join('_'))
+            ?.symbol || '',
       })),
     [governorInfo.tokens, tokenSymbols]
   );

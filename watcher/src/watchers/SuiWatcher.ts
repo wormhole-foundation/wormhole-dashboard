@@ -34,13 +34,23 @@ export class SuiWatcher extends Watcher {
   // TODO: this might break using numbers, the whole service needs a refactor to use BigInt
   async getFinalizedBlockNumber(): Promise<number> {
     return Number(
-      (await this.client.request('sui_getLatestCheckpointSequenceNumber', undefined)).result
+      (
+        await this.client.request(
+          'sui_getLatestCheckpointSequenceNumber',
+          undefined
+        )
+      ).result
     );
   }
 
   // TODO: this might break using numbers, the whole service needs a refactor to use BigInt
-  async getMessagesForBlocks(fromCheckpoint: number, toCheckpoint: number): Promise<VaasByBlock> {
-    this.logger.info(`fetching info for checkpoints ${fromCheckpoint} to ${toCheckpoint}`);
+  async getMessagesForBlocks(
+    fromCheckpoint: number,
+    toCheckpoint: number
+  ): Promise<VaasByBlock> {
+    this.logger.info(
+      `fetching info for checkpoints ${fromCheckpoint} to ${toCheckpoint}`
+    );
     const vaasByBlock: VaasByBlock = {};
 
     {
@@ -56,7 +66,10 @@ export class SuiWatcher extends Watcher {
           ).timestampMs
         )
       ).toISOString();
-      const fromBlockKey = makeBlockKey(fromCheckpoint.toString(), fromCheckpointTimestamp);
+      const fromBlockKey = makeBlockKey(
+        fromCheckpoint.toString(),
+        fromCheckpointTimestamp
+      );
       vaasByBlock[fromBlockKey] = [];
     }
 
@@ -94,18 +107,18 @@ export class SuiWatcher extends Watcher {
         { digests: response.data.map((e) => e.id.txDigest) },
         array(SuiTransactionBlockResponse)
       );
-      const checkpointByTxDigest = txBlocks.reduce<Record<string, string | undefined>>(
-        (value, { digest, checkpoint }) => {
-          value[digest] = checkpoint;
-          return value;
-        },
-        {}
-      );
+      const checkpointByTxDigest = txBlocks.reduce<
+        Record<string, string | undefined>
+      >((value, { digest, checkpoint }) => {
+        value[digest] = checkpoint;
+        return value;
+      }, {});
       for (const event of response.data) {
         const checkpoint = checkpointByTxDigest[event.id.txDigest];
         if (!checkpoint) continue;
         const checkpointNum = Number(checkpoint);
-        if (checkpointNum < fromCheckpoint || checkpointNum > toCheckpoint) continue;
+        if (checkpointNum < fromCheckpoint || checkpointNum > toCheckpoint)
+          continue;
         const msg = event.parsedJson as PublishMessageEvent;
         const timestamp = new Date(Number(msg.timestamp) * 1000).toISOString();
         const vaaKey = makeVaaKey(

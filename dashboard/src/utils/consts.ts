@@ -70,7 +70,8 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     name: 'solana',
     evm: false,
     chainId: CHAIN_ID_SOLANA,
-    endpointUrl: process.env.REACT_APP_SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
+    endpointUrl:
+      process.env.REACT_APP_SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
     explorerStem: `https://solscan.io`,
     icon: solanaIcon,
   },
@@ -94,7 +95,8 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     name: 'bsc',
     evm: true,
     chainId: CHAIN_ID_BSC,
-    endpointUrl: process.env.REACT_APP_BSC_RPC || 'https://bsc-dataseed2.defibit.io',
+    endpointUrl:
+      process.env.REACT_APP_BSC_RPC || 'https://bsc-dataseed2.defibit.io',
     explorerStem: `https://bscscan.com`,
     icon: bscIcon,
   },
@@ -110,7 +112,8 @@ export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
     name: 'avalanche',
     evm: true,
     chainId: CHAIN_ID_AVAX,
-    endpointUrl: process.env.REACT_APP_AVAX_RPC || 'https://api.avax.network/ext/bc/C/rpc',
+    endpointUrl:
+      process.env.REACT_APP_AVAX_RPC || 'https://api.avax.network/ext/bc/C/rpc',
     explorerStem: `https://snowtrace.io`,
     icon: avaxIcon,
   },

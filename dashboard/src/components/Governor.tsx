@@ -40,10 +40,13 @@ import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import Table from './Table';
 
-const calculatePercent = (notional: GovernorGetAvailableNotionalByChainResponse_Entry): number => {
+const calculatePercent = (
+  notional: GovernorGetAvailableNotionalByChainResponse_Entry
+): number => {
   try {
     return (
-      ((Number(notional.notionalLimit) - Number(notional.remainingAvailableNotional)) /
+      ((Number(notional.notionalLimit) -
+        Number(notional.remainingAvailableNotional)) /
         Number(notional.notionalLimit)) *
       100
     );
@@ -62,15 +65,21 @@ const notionalColumns = [
   }),
   notionalColumnHelper.accessor('notionalLimit', {
     header: () => <Box order="1">Limit</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
   notionalColumnHelper.accessor('bigTransactionSize', {
     header: () => <Box order="1">Big Transaction</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
   notionalColumnHelper.accessor('remainingAvailableNotional', {
     header: () => <Box order="1">Remaining</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
   notionalColumnHelper.accessor(calculatePercent, {
     id: 'progress',
@@ -80,14 +89,21 @@ const notionalColumns = [
         <LinearProgress
           variant="determinate"
           value={info.getValue()}
-          color={info.getValue() > 80 ? 'error' : info.getValue() > 50 ? 'warning' : 'success'}
+          color={
+            info.getValue() > 80
+              ? 'error'
+              : info.getValue() > 50
+              ? 'warning'
+              : 'success'
+          }
         />
       </Tooltip>
     ),
   }),
 ];
 
-const enqueuedColumnHelper = createColumnHelper<GovernorGetEnqueuedVAAsResponse_Entry>();
+const enqueuedColumnHelper =
+  createColumnHelper<GovernorGetEnqueuedVAAsResponse_Entry>();
 
 const enqueuedColumns = [
   enqueuedColumnHelper.accessor('emitterChain', {
@@ -139,15 +155,19 @@ const enqueuedColumns = [
   }),
   enqueuedColumnHelper.accessor('notionalValue', {
     header: () => <Box order="1">Notional Value</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+    ),
   }),
 ];
 
-interface GovernorGetTokenListResponse_Entry_ext extends GovernorGetTokenListResponse_Entry {
+interface GovernorGetTokenListResponse_Entry_ext
+  extends GovernorGetTokenListResponse_Entry {
   symbol: string;
 }
 
-const tokenColumnHelper = createColumnHelper<GovernorGetTokenListResponse_Entry_ext>();
+const tokenColumnHelper =
+  createColumnHelper<GovernorGetTokenListResponse_Entry_ext>();
 
 const tokenColumns = [
   tokenColumnHelper.accessor('originChainId', {
@@ -196,7 +216,11 @@ const tokenColumns = [
   }),
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0.0000')}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">
+        ${numeral(info.getValue()).format('0,0.0000')}
+      </Box>
+    ),
   }),
 ];
 
@@ -211,7 +235,9 @@ function Governor() {
     () =>
       governorInfo.tokens.map((tk) => ({
         ...tk,
-        symbol: tokenSymbols.get([tk.originChainId, tk.originAddress].join('_'))?.symbol || '',
+        symbol:
+          tokenSymbols.get([tk.originChainId, tk.originAddress].join('_'))
+            ?.symbol || '',
       })),
     [governorInfo.tokens, tokenSymbols]
   );
@@ -309,7 +335,9 @@ function Governor() {
     >
       <Box mb={2}>
         <Card>
-          <Table<GovernorGetAvailableNotionalByChainResponse_Entry> table={notionalTable} />
+          <Table<GovernorGetAvailableNotionalByChainResponse_Entry>
+            table={notionalTable}
+          />
         </Card>
       </Box>
       <Box my={2}>
@@ -332,7 +360,9 @@ function Governor() {
               <Typography>Tokens ({governorInfo.tokens.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table<GovernorGetTokenListResponse_Entry_ext> table={tokenTable} />
+              <Table<GovernorGetTokenListResponse_Entry_ext>
+                table={tokenTable}
+              />
             </AccordionDetails>
           </Accordion>
         </Card>

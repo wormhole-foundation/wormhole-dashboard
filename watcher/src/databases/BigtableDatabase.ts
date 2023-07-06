@@ -1,4 +1,7 @@
-import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import {
+  ChainName,
+  coalesceChainId,
+} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { parseVaa } from '@certusone/wormhole-sdk/lib/cjs/vaa/wormhole';
 import { Bigtable } from '@google-cloud/bigtable';
 import {
@@ -41,14 +44,24 @@ export class BigtableDatabase extends Database {
   constructor() {
     super();
     this.msgTableId = assertEnvironmentVariable('BIGTABLE_TABLE_ID');
-    this.signedVAAsTableId = assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID');
-    this.vaasByTxHashTableId = assertEnvironmentVariable('BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID');
+    this.signedVAAsTableId = assertEnvironmentVariable(
+      'BIGTABLE_SIGNED_VAAS_TABLE_ID'
+    );
+    this.vaasByTxHashTableId = assertEnvironmentVariable(
+      'BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID'
+    );
     this.instanceId = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
-    this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
-    this.pubsubSignedVAATopic = assertEnvironmentVariable('PUBSUB_SIGNED_VAA_TOPIC');
+    this.latestCollectionName = assertEnvironmentVariable(
+      'FIRESTORE_LATEST_COLLECTION'
+    );
+    this.pubsubSignedVAATopic = assertEnvironmentVariable(
+      'PUBSUB_SIGNED_VAA_TOPIC'
+    );
     try {
       this.bigtable = new Bigtable();
-      const serviceAccount = require(assertEnvironmentVariable('FIRESTORE_ACCOUNT_KEY_PATH'));
+      const serviceAccount = require(assertEnvironmentVariable(
+        'FIRESTORE_ACCOUNT_KEY_PATH'
+      ));
       initializeApp({
         credential: cert(serviceAccount),
       });
@@ -68,14 +81,19 @@ export class BigtableDatabase extends Database {
     const blockKeyData = lastObservedBlockByChain.data();
     const lastBlockKey = blockKeyData?.lastBlockKey;
     if (lastBlockKey) {
-      this.logger.info(`for chain=${chain}, found most recent firestore block=${lastBlockKey}`);
+      this.logger.info(
+        `for chain=${chain}, found most recent firestore block=${lastBlockKey}`
+      );
       const tokens = lastBlockKey.split('/');
       return chain === 'aptos' ? tokens.at(-1) : tokens[0];
     }
     return null;
   }
 
-  async storeLatestBlock(chain: ChainName, lastBlockKey: string): Promise<void> {
+  async storeLatestBlock(
+    chain: ChainName,
+    lastBlockKey: string
+  ): Promise<void> {
     if (this.firestoreDb === undefined) {
       this.logger.error('no firestore db set');
       return;
@@ -132,20 +150,26 @@ export class BigtableDatabase extends Database {
         });
         const txHashRowKey = makeVAAsByTxHashRowKey(txHash, chainId);
         const vaaRowKey = makeSignedVAAsRowKey(chainId, emitter, seq);
-        vaasByTxHash[txHashRowKey] = [...(vaasByTxHash[txHashRowKey] || []), vaaRowKey];
+        vaasByTxHash[txHashRowKey] = [
+          ...(vaasByTxHash[txHashRowKey] || []),
+          vaaRowKey,
+        ];
       });
     });
-    const txHashRowsToInsert = Object.entries(vaasByTxHash).map<BigtableVAAsByTxHashRow>(
-      ([txHashRowKey, vaaRowKeys]) => ({
-        key: txHashRowKey,
-        data: {
-          info: {
-            vaaKeys: { value: JSON.stringify(vaaRowKeys), timestamp: '0' },
-          },
+    const txHashRowsToInsert = Object.entries(
+      vaasByTxHash
+    ).map<BigtableVAAsByTxHashRow>(([txHashRowKey, vaaRowKeys]) => ({
+      key: txHashRowKey,
+      data: {
+        info: {
+          vaaKeys: { value: JSON.stringify(vaaRowKeys), timestamp: '0' },
         },
-      })
-    );
-    await Promise.all([table.insert(rowsToInsert), vaasByTxHashTable.insert(txHashRowsToInsert)]);
+      },
+    }));
+    await Promise.all([
+      table.insert(rowsToInsert),
+      vaasByTxHashTable.insert(txHashRowsToInsert),
+    ]);
 
     if (updateLatestBlock) {
       // store latest vaasByBlock to firestore
@@ -154,13 +178,18 @@ export class BigtableDatabase extends Database {
       );
       if (blockKeys.length) {
         const lastBlockKey = blockKeys[blockKeys.length - 1];
-        this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlockKey}`);
+        this.logger.info(
+          `for chain=${chain}, storing last bigtable block=${lastBlockKey}`
+        );
         await this.storeLatestBlock(chain, lastBlockKey);
       }
     }
   }
 
-  async updateMessageStatuses(messageKeys: string[], value: number = 1): Promise<void> {
+  async updateMessageStatuses(
+    messageKeys: string[],
+    value: number = 1
+  ): Promise<void> {
     const instance = this.bigtable.instance(this.instanceId);
     const table = instance.table(this.msgTableId);
     const chunkedMessageKeys = chunkArray(messageKeys, 1000);
@@ -185,7 +214,9 @@ export class BigtableDatabase extends Database {
     const instance = this.bigtable.instance(this.instanceId);
     const messageTable = instance.table(this.msgTableId);
     // TODO: how to filter to only messages with hasSignedVaa === 0
-    const observedMessages = (await messageTable.getRows())[0] as BigtableMessagesResultRow[];
+    const observedMessages = (
+      await messageTable.getRows()
+    )[0] as BigtableMessagesResultRow[];
     const missingVaaMessages = observedMessages.filter(
       (x) => x.data.info.hasSignedVaa?.[0].value === 0
     );
@@ -206,7 +237,9 @@ export class BigtableDatabase extends Database {
         let found = 0;
         const chunkedVAAIds = chunkArray(
           missingVaaMessages.map((observedMessage) => {
-            const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
+            const { chain, emitter, sequence } = parseMessageId(
+              observedMessage.id
+            );
             return makeSignedVAAsRowKey(chain, emitter, sequence.toString());
           }),
           1000
@@ -214,7 +247,9 @@ export class BigtableDatabase extends Database {
         let chunkNum = 0;
         const foundKeys: string[] = [];
         for (const chunk of chunkedVAAIds) {
-          this.logger.info(`processing chunk ${++chunkNum} of ${chunkedVAAIds.length}`);
+          this.logger.info(
+            `processing chunk ${++chunkNum} of ${chunkedVAAIds.length}`
+          );
           const vaaRows = (
             await signedVAAsTable.getRows({
               keys: chunk,
@@ -225,16 +260,20 @@ export class BigtableDatabase extends Database {
             try {
               const vaaBytes = row.data.info.bytes[0].value;
               const parsed = parseVaa(vaaBytes);
-              const matchingIndex = missingVaaMessages.findIndex((observedMessage) => {
-                const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
-                if (
-                  parsed.emitterChain === chain &&
-                  parsed.emitterAddress.toString('hex') === emitter &&
-                  parsed.sequence === sequence
-                ) {
-                  return true;
+              const matchingIndex = missingVaaMessages.findIndex(
+                (observedMessage) => {
+                  const { chain, emitter, sequence } = parseMessageId(
+                    observedMessage.id
+                  );
+                  if (
+                    parsed.emitterChain === chain &&
+                    parsed.emitterAddress.toString('hex') === emitter &&
+                    parsed.sequence === sequence
+                  ) {
+                    return true;
+                  }
                 }
-              });
+              );
               if (matchingIndex !== -1) {
                 found++;
                 // remove matches to keep array lean
@@ -245,7 +284,11 @@ export class BigtableDatabase extends Database {
             } catch (e) {}
           }
         }
-        this.logger.info(`processed ${total} messages, found ${found}, missing ${total - found}`);
+        this.logger.info(
+          `processed ${total} messages, found ${found}, missing ${
+            total - found
+          }`
+        );
         this.updateMessageStatuses(foundKeys);
         // attempt to fetch VAAs missing from messages from the guardians and store them
         // this is useful for cases where the VAA doesn't exist in the `signedVAAsTable` (perhaps due to an outage) but is available
@@ -282,7 +325,9 @@ export class BigtableDatabase extends Database {
     const chunks = chunkArray(rows, 1000);
     for (const chunk of chunks) {
       await table.insert(chunk);
-      this.logger.info(`wrote ${chunk.length} signed VAAs to the ${this.signedVAAsTableId} table`);
+      this.logger.info(
+        `wrote ${chunk.length} signed VAAs to the ${this.signedVAAsTableId} table`
+      );
     }
   }
 
@@ -293,7 +338,9 @@ export class BigtableDatabase extends Database {
     try {
       const topic = this.pubsub.topic(this.pubsubSignedVAATopic);
       if (!(await topic.exists())) {
-        this.logger.error(`pubsub topic doesn't exist: ${this.publishSignedVAAs}`);
+        this.logger.error(
+          `pubsub topic doesn't exist: ${this.publishSignedVAAs}`
+        );
         return;
       }
       for (const key of keys) {

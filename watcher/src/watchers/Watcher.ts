@@ -23,7 +23,10 @@ export class Watcher {
     throw new Error('Not Implemented');
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<VaasByBlock> {
     throw new Error('Not Implemented');
   }
 
@@ -57,7 +60,10 @@ export class Watcher {
           // fetch logs for the block range, inclusive of toBlock
           toBlock = Math.min(fromBlock + this.maximumBatchSize - 1, toBlock);
           this.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
-          const vaasByBlock = await this.getMessagesForBlocks(fromBlock, toBlock);
+          const vaasByBlock = await this.getMessagesForBlocks(
+            fromBlock,
+            toBlock
+          );
           await storeVaasByBlock(this.chain, vaasByBlock);
           fromBlock = toBlock + 1;
         }

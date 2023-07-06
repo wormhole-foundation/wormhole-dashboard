@@ -3,7 +3,9 @@ import { expect, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { Block, EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 
-const initialAvalancheBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.avalanche);
+const initialAvalancheBlock = Number(
+  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.avalanche
+);
 const initialCeloBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.celo);
 const initialOasisBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.oasis);
 const initialKaruraBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.karura);
@@ -13,16 +15,22 @@ test('getBlock by tag', async () => {
   const block = await watcher.getBlock('latest');
   expect(block.number).toBeGreaterThan(initialAvalancheBlock);
   expect(block.timestamp).toBeGreaterThan(1671672811);
-  expect(new Date(block.timestamp * 1000).toISOString() > '2022-12-21').toBeTruthy();
+  expect(
+    new Date(block.timestamp * 1000).toISOString() > '2022-12-21'
+  ).toBeTruthy();
 });
 
 test('getBlock by number', async () => {
   const watcher = new EVMWatcher('avalanche');
   const block = await watcher.getBlock(initialAvalancheBlock);
   expect(block.number).toEqual(initialAvalancheBlock);
-  expect(block.hash).toEqual('0x33b358fe68a2a11b6a5a5969f29f9223001e36a5d719734ba542b238d397f14e');
+  expect(block.hash).toEqual(
+    '0x33b358fe68a2a11b6a5a5969f29f9223001e36a5d719734ba542b238d397f14e'
+  );
   expect(block.timestamp).toEqual(1639504758);
-  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2021-12-14T17:59:18.000Z');
+  expect(new Date(block.timestamp * 1000).toISOString()).toEqual(
+    '2021-12-14T17:59:18.000Z'
+  );
 });
 
 test('getBlocks', async () => {
@@ -37,7 +45,9 @@ test('getBlocks', async () => {
     '0x33b358fe68a2a11b6a5a5969f29f9223001e36a5d719734ba542b238d397f14e'
   );
   expect(blocks[0].timestamp).toEqual(1639504758);
-  expect(new Date(blocks[0].timestamp * 1000).toISOString()).toEqual('2021-12-14T17:59:18.000Z');
+  expect(new Date(blocks[0].timestamp * 1000).toISOString()).toEqual(
+    '2021-12-14T17:59:18.000Z'
+  );
   expect(blocks[99].number).toEqual(initialAvalancheBlock + 99);
   expect(blocks[99].hash).toEqual(
     '0x598080458a28e1241528d0d8c745425147179b86e353d5b0e5cc29e4154d13f6'
@@ -47,9 +57,12 @@ test('getBlocks', async () => {
 
 test('getLogs', async () => {
   const watcher = new EVMWatcher('avalanche');
-  const logs = await watcher.getLogs(9743300, 9743399, CONTRACTS.MAINNET.avalanche.core, [
-    LOG_MESSAGE_PUBLISHED_TOPIC,
-  ]);
+  const logs = await watcher.getLogs(
+    9743300,
+    9743399,
+    CONTRACTS.MAINNET.avalanche.core,
+    [LOG_MESSAGE_PUBLISHED_TOPIC]
+  );
   expect(logs.length).toEqual(2);
   expect(logs[0].topics[0]).toEqual(LOG_MESSAGE_PUBLISHED_TOPIC);
   expect(logs[0].blockNumber).toEqual(9743306);
@@ -69,9 +82,15 @@ test('getMessagesForBlocks', async () => {
   const vaasByBlock = await watcher.getMessagesForBlocks(9743300, 9743399);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(100);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(98);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    98
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    2
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['9743306/2022-01-18T17:59:33.000Z']).toBeDefined();
   expect(vaasByBlock['9743306/2022-01-18T17:59:33.000Z'].length).toEqual(1);
   expect(vaasByBlock['9743306/2022-01-18T17:59:33.000Z'][0]).toEqual(
@@ -84,7 +103,9 @@ test('getBlock by tag (Oasis compatibility)', async () => {
   const block = await watcher.getBlock('latest');
   expect(block.number).toBeGreaterThan(initialOasisBlock);
   expect(block.timestamp).toBeGreaterThan(3895665);
-  expect(new Date(block.timestamp * 1000).toISOString() > '2022-12-21').toBeTruthy();
+  expect(
+    new Date(block.timestamp * 1000).toISOString() > '2022-12-21'
+  ).toBeTruthy();
 });
 
 test('getBlock by tag (Celo compatibility)', async () => {
@@ -92,7 +113,9 @@ test('getBlock by tag (Celo compatibility)', async () => {
   const block = await watcher.getBlock('latest');
   expect(block.number).toBeGreaterThan(initialCeloBlock);
   expect(block.timestamp).toBeGreaterThan(1671672811);
-  expect(new Date(block.timestamp * 1000).toISOString() > '2022-12-21').toBeTruthy();
+  expect(
+    new Date(block.timestamp * 1000).toISOString() > '2022-12-21'
+  ).toBeTruthy();
 });
 
 test('getBlock by number (Celo compatibility)', async () => {
@@ -100,7 +123,9 @@ test('getBlock by number (Celo compatibility)', async () => {
   const block = await watcher.getBlock(initialCeloBlock);
   expect(block.number).toEqual(initialCeloBlock);
   expect(block.timestamp).toEqual(1652314820);
-  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2022-05-12T00:20:20.000Z');
+  expect(new Date(block.timestamp * 1000).toISOString()).toEqual(
+    '2022-05-12T00:20:20.000Z'
+  );
 });
 
 test('getMessagesForBlocks (Celo compatibility)', async () => {
@@ -108,9 +133,15 @@ test('getMessagesForBlocks (Celo compatibility)', async () => {
   const vaasByBlock = await watcher.getMessagesForBlocks(13322450, 13322549);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(100);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(98);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    98
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    2
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    0
+  );
   expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z']).toBeDefined();
   expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z'].length).toEqual(1);
   expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z'][0]).toEqual(
@@ -131,7 +162,9 @@ test('getBlock by number (Karura compatibility)', async () => {
   const block = await watcher.getBlock(moreRecentBlockNumber);
   expect(block.number).toEqual(moreRecentBlockNumber);
   expect(block.timestamp).toEqual(1687963290);
-  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2023-06-28T14:41:30.000Z');
+  expect(new Date(block.timestamp * 1000).toISOString()).toEqual(
+    '2023-06-28T14:41:30.000Z'
+  );
 });
 
 test('getMessagesForBlocks (Karura compatibility)', async () => {

@@ -25,7 +25,9 @@ const TIMEOUT = 10 * 1000;
 
 function useGovernorInfo(): GovernorInfo {
   const { currentNetwork } = useNetworkContext();
-  const [governorInfo, setGovernorInfo] = useState<GovernorInfo>(createEmptyInfo());
+  const [governorInfo, setGovernorInfo] = useState<GovernorInfo>(
+    createEmptyInfo()
+  );
   useEffect(() => {
     setGovernorInfo(createEmptyInfo());
   }, [currentNetwork]);
@@ -33,7 +35,9 @@ function useGovernorInfo(): GovernorInfo {
     let cancelled = false;
     (async () => {
       while (!cancelled && currentNetwork.type === 'guardian') {
-        const response = await getGovernorAvailableNotionalByChain(currentNetwork);
+        const response = await getGovernorAvailableNotionalByChain(
+          currentNetwork
+        );
         if (!cancelled) {
           setGovernorInfo((info) => ({ ...info, notionals: response.entries }));
           await new Promise((resolve) => setTimeout(resolve, TIMEOUT));

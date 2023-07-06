@@ -1,4 +1,7 @@
-import { ChainName, CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import {
+  ChainName,
+  CONTRACTS,
+} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { AxiosRequestConfig } from 'axios';
 
 export const TIMEOUT = 0.5 * 1000;
@@ -52,10 +55,12 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
 
 // Separating for now so if we max out infura we can keep Polygon going
 export const POLYGON_ROOT_CHAIN_RPC = 'https://rpc.ankr.com/eth';
-export const POLYGON_ROOT_CHAIN_ADDRESS = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287';
+export const POLYGON_ROOT_CHAIN_ADDRESS =
+  '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287';
 // Optimism watcher relies on finalized calls which don't work right on Ankr
 export const OPTIMISM_CTC_CHAIN_RPC = process.env.ETH_RPC;
-export const OPTIMISM_CTC_CHAIN_ADDRESS = '0x5E4e65926BA27467555EB562121fac00D24E9dD2';
+export const OPTIMISM_CTC_CHAIN_ADDRESS =
+  '0x5E4e65926BA27467555EB562121fac00D24E9dD2';
 
 export const ALGORAND_INFO = {
   appid: Number(CONTRACTS.MAINNET.algorand.core),
@@ -70,7 +75,8 @@ export const ALGORAND_INFO = {
 export const DB_SOURCE =
   process.env.NODE_ENV === 'test' ? 'local' : process.env.DB_SOURCE || 'local';
 export const JSON_DB_FILE = process.env.JSON_DB_FILE || './db.json';
-export const DB_LAST_BLOCK_FILE = process.env.DB_LAST_BLOCK_FILE || './lastBlockByChain.json';
+export const DB_LAST_BLOCK_FILE =
+  process.env.DB_LAST_BLOCK_FILE || './lastBlockByChain.json';
 
 // without this, axios request will error `Z_BUF_ERROR`: https://github.com/axios/axios/issues/5346
 export const AXIOS_CONFIG_JSON: AxiosRequestConfig = {

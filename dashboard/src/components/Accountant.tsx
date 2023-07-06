@@ -20,7 +20,9 @@ import {
 } from '@tanstack/react-table';
 import { Fragment, useMemo, useState } from 'react';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
-import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
+import useGetAccountantAccounts, {
+  Account,
+} from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
 } from '../hooks/useGetAccountantPendingTransfers';
@@ -105,14 +107,21 @@ const guardianSigningColumns = [
         <LinearProgress
           variant="determinate"
           value={info.getValue()}
-          color={info.getValue() > 90 ? 'success' : info.getValue() > 50 ? 'warning' : 'error'}
+          color={
+            info.getValue() > 90
+              ? 'success'
+              : info.getValue() > 50
+              ? 'warning'
+              : 'error'
+          }
         />
       </Tooltip>
     ),
   }),
 ];
 
-const pendingTransferColumnHelper = createColumnHelper<PendingTransferForAcct>();
+const pendingTransferColumnHelper =
+  createColumnHelper<PendingTransferForAcct>();
 
 const pendingTransferColumns = [
   pendingTransferColumnHelper.accessor('key.emitter_chain', {
@@ -154,7 +163,9 @@ const pendingTransferColumns = [
             <Typography gutterBottom sx={{ mb: 0.5 }}>
               Signed
             </Typography>
-            <Typography variant="body2">{getGuardiansFromSignatures(info.getValue())}</Typography>
+            <Typography variant="body2">
+              {getGuardiansFromSignatures(info.getValue())}
+            </Typography>
             <Typography gutterBottom sx={{ mt: 1.5, mb: 0.5 }}>
               Missing
             </Typography>
@@ -164,7 +175,9 @@ const pendingTransferColumns = [
             <Typography gutterBottom sx={{ mt: 1.5, mb: 0.5 }}>
               Bits
             </Typography>
-            <Typography variant="body2">{getSignatureBits(info.getValue())}</Typography>
+            <Typography variant="body2">
+              {getSignatureBits(info.getValue())}
+            </Typography>
           </Box>
         }
       >
@@ -234,7 +247,8 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
     }
     return stats;
   }, [pendingTransferInfo]);
-  const [guardianSigningSorting, setGuardianSigningSorting] = useState<SortingState>([]);
+  const [guardianSigningSorting, setGuardianSigningSorting] =
+    useState<SortingState>([]);
   const guardianSigning = useReactTable({
     columns: guardianSigningColumns,
     data: guardianSigningStats,
@@ -246,7 +260,8 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setGuardianSigningSorting,
   });
-  const [pendingTransferSorting, setPendingTransferSorting] = useState<SortingState>([]);
+  const [pendingTransferSorting, setPendingTransferSorting] =
+    useState<SortingState>([]);
   const pendingTransfer = useReactTable({
     columns: pendingTransferColumns,
     data: pendingTransfersForAcct,

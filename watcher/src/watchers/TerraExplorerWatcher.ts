@@ -1,4 +1,7 @@
-import { CONTRACTS, CosmWasmChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import {
+  CONTRACTS,
+  CosmWasmChainName,
+} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
@@ -28,7 +31,9 @@ export class TerraExplorerWatcher extends Watcher {
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
-    const result = (await axios.get(`${this.rpc}/${this.latestBlockTag}`, AXIOS_CONFIG_JSON)).data;
+    const result = (
+      await axios.get(`${this.rpc}/${this.latestBlockTag}`, AXIOS_CONFIG_JSON)
+    ).data;
     if (result && result.block.header.height) {
       let blockHeight: number = parseInt(result.block.header.height);
       if (blockHeight !== this.latestBlockHeight) {
@@ -37,13 +42,18 @@ export class TerraExplorerWatcher extends Watcher {
       }
       return blockHeight;
     }
-    throw new Error(`Unable to parse result of ${this.latestBlockTag} on ${this.rpc}`);
+    throw new Error(
+      `Unable to parse result of ${this.latestBlockTag} on ${this.rpc}`
+    );
   }
 
   // retrieve blocks for core contract.
   // use "next": as the pagination key
   // compare block height ("height":) with what is passed in.
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<VaasByBlock> {
     const address = CONTRACTS.MAINNET[this.chain].core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
@@ -83,7 +93,10 @@ export class TerraExplorerWatcher extends Watcher {
         if (height >= fromBlock && height <= toBlock) {
           // We only care about the transactions in the given block range
           this.logger.debug(`Found one: ${fromBlock}, ${height}, ${toBlock}`);
-          const blockKey = makeBlockKey(txn.height, new Date(txn.timestamp).toISOString());
+          const blockKey = makeBlockKey(
+            txn.height,
+            new Date(txn.timestamp).toISOString()
+          );
           vaasByBlock[blockKey] = [];
           lastBlockInserted = height;
           this.logger.debug(`lastBlockInserted = ${lastBlockInserted}`);
@@ -115,7 +128,10 @@ export class TerraExplorerWatcher extends Watcher {
                       emitter = attrs[l].value;
                     } else if (key === 'message.sequence') {
                       sequence = attrs[l].value;
-                    } else if (key === '_contract_address' || key === 'contract_address') {
+                    } else if (
+                      key === '_contract_address' ||
+                      key === 'contract_address'
+                    ) {
                       let addr = attrs[l].value;
                       if (addr === address) {
                         coreContract = true;
@@ -123,10 +139,18 @@ export class TerraExplorerWatcher extends Watcher {
                     }
                   }
                   if (coreContract && emitter !== '' && sequence !== '') {
-                    vaaKey = makeVaaKey(txn.txhash, this.chain, emitter, sequence);
+                    vaaKey = makeVaaKey(
+                      txn.txhash,
+                      this.chain,
+                      emitter,
+                      sequence
+                    );
                     this.logger.debug('blockKey: ' + blockKey);
                     this.logger.debug('Making vaaKey: ' + vaaKey);
-                    vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+                    vaasByBlock[blockKey] = [
+                      ...(vaasByBlock[blockKey] || []),
+                      vaaKey,
+                    ];
                   }
                 }
               }
@@ -149,7 +173,9 @@ export class TerraExplorerWatcher extends Watcher {
       // become the new starting point for subsequent calls.
       this.logger.debug(`Adding filler for block ${toBlock}`);
       const blkUrl = `${this.rpc}/${this.getBlockTag}${toBlock}`;
-      const result: CosmwasmBlockResult = (await axios.get(blkUrl, AXIOS_CONFIG_JSON)).data;
+      const result: CosmwasmBlockResult = (
+        await axios.get(blkUrl, AXIOS_CONFIG_JSON)
+      ).data;
       if (!result) {
         throw new Error(`Unable to get block information for block ${toBlock}`);
       }

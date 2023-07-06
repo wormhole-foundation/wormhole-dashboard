@@ -14,9 +14,14 @@ function useHeartbeats(): Heartbeat[] {
       while (!cancelled) {
         const heartbeats = await getLastHeartbeats(currentNetwork);
         if (!cancelled) {
-          setHeartbeats(heartbeats.sort((a, b) => a.nodeName.localeCompare(b.nodeName)));
+          setHeartbeats(
+            heartbeats.sort((a, b) => a.nodeName.localeCompare(b.nodeName))
+          );
           await new Promise((resolve) =>
-            setTimeout(resolve, currentNetwork.type === 'guardian' ? 1000 : 10000)
+            setTimeout(
+              resolve,
+              currentNetwork.type === 'guardian' ? 1000 : 10000
+            )
           );
         }
       }

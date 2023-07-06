@@ -1,4 +1,7 @@
-import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import {
+  ChainName,
+  coalesceChainId,
+} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { readFileSync, writeFileSync } from 'fs';
 import { DB_LAST_BLOCK_FILE, JSON_DB_FILE } from '../consts';
 import { Database } from './Database';
@@ -18,7 +21,9 @@ export class JsonDatabase extends Database {
       this.logger.info(`no db file set, using default path=${JSON_DB_FILE}`);
     }
     if (!process.env.DB_LAST_BLOCK_FILE) {
-      this.logger.info(`no db file set, using default path=${DB_LAST_BLOCK_FILE}`);
+      this.logger.info(
+        `no db file set, using default path=${DB_LAST_BLOCK_FILE}`
+      );
     }
     this.dbFile = JSON_DB_FILE;
     this.dbLastBlockFile = DB_LAST_BLOCK_FILE;
@@ -43,11 +48,17 @@ export class JsonDatabase extends Database {
     }
     return null;
   }
-  async storeVaasByBlock(chain: ChainName, vaasByBlock: VaasByBlock): Promise<void> {
+  async storeVaasByBlock(
+    chain: ChainName,
+    vaasByBlock: VaasByBlock
+  ): Promise<void> {
     const chainId = coalesceChainId(chain);
     const filteredVaasByBlock = Database.filterEmptyBlocks(vaasByBlock);
     if (Object.keys(filteredVaasByBlock).length) {
-      this.db[chainId] = { ...(this.db[chainId] || {}), ...filteredVaasByBlock };
+      this.db[chainId] = {
+        ...(this.db[chainId] || {}),
+        ...filteredVaasByBlock,
+      };
       writeFileSync(this.dbFile, JSON.stringify(this.db), ENCODING);
     }
 
@@ -57,7 +68,11 @@ export class JsonDatabase extends Database {
     );
     if (blockKeys.length) {
       this.lastBlockByChain[chainId] = blockKeys[blockKeys.length - 1];
-      writeFileSync(this.dbLastBlockFile, JSON.stringify(this.lastBlockByChain), ENCODING);
+      writeFileSync(
+        this.dbLastBlockFile,
+        JSON.stringify(this.lastBlockByChain),
+        ENCODING
+      );
     }
   }
 }

@@ -33,7 +33,10 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
-import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
+import {
+  ChainIdToHeartbeats,
+  HeartbeatInfo,
+} from '../hooks/useChainHeartbeats';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP } from '../utils/consts';
 import {
@@ -71,7 +74,9 @@ function ChainDetails({
   conditionalRowStyle,
 }: {
   heartbeats: HeartbeatInfo[];
-  conditionalRowStyle?: ((a: HeartbeatInfo) => SxProps<Theme> | undefined) | undefined;
+  conditionalRowStyle?:
+    | ((a: HeartbeatInfo) => SxProps<Theme> | undefined)
+    | undefined;
 }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
@@ -85,12 +90,21 @@ function ChainDetails({
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
   });
-  return <Table<HeartbeatInfo> table={table} conditionalRowStyle={conditionalRowStyle} />;
+  return (
+    <Table<HeartbeatInfo>
+      table={table}
+      conditionalRowStyle={conditionalRowStyle}
+    />
+  );
 }
 
-export const isHeartbeatUnhealthy = (heartbeat: HeartbeatInfo, highest: bigint) =>
+export const isHeartbeatUnhealthy = (
+  heartbeat: HeartbeatInfo,
+  highest: bigint
+) =>
   heartbeat.network.height === '0' ||
-  highest - BigInt(heartbeat.network.height) > getBehindDiffForChain(heartbeat.network.id);
+  highest - BigInt(heartbeat.network.height) >
+    getBehindDiffForChain(heartbeat.network.id);
 
 function Chain({
   chainId,
@@ -102,7 +116,9 @@ function Chain({
   chainId: string;
   heartbeats: HeartbeatInfo[];
   healthyCount: number;
-  conditionalRowStyle?: ((a: HeartbeatInfo) => SxProps<Theme> | undefined) | undefined;
+  conditionalRowStyle?:
+    | ((a: HeartbeatInfo) => SxProps<Theme> | undefined)
+    | undefined;
   environment: Environment;
 }) {
   const smUp = useMediaQuery((theme: any) => theme.breakpoints.up('sm'));
@@ -144,7 +160,11 @@ function Chain({
             <Box sx={{ position: 'relative', display: 'inline-flex' }}>
               <CircularProgress
                 variant="determinate"
-                value={healthyCount === 0 ? 100 : (healthyCount / heartbeats.length) * 100}
+                value={
+                  healthyCount === 0
+                    ? 100
+                    : (healthyCount / heartbeats.length) * 100
+                }
                 color={
                   healthyCount < getQuorumCount(environment)
                     ? 'error'
@@ -190,7 +210,11 @@ function Chain({
               </Box>
             </Box>
             {showChainName ? (
-              <Chip sx={{ mt: 1.5 }} label={chainIdToName(Number(chainId))} size="small" />
+              <Chip
+                sx={{ mt: 1.5 }}
+                label={chainIdToName(Number(chainId))}
+                size="small"
+              />
             ) : null}
           </Button>
         </Tooltip>
@@ -200,7 +224,10 @@ function Chain({
           {chainIdToName(Number(chainId))} ({chainId})
         </DialogTitle>
         <DialogContent>
-          <ChainDetails heartbeats={heartbeats} conditionalRowStyle={conditionalRowStyle} />
+          <ChainDetails
+            heartbeats={heartbeats}
+            conditionalRowStyle={conditionalRowStyle}
+          />
         </DialogContent>
       </Dialog>
     </>
@@ -210,11 +237,17 @@ function Chain({
 type ChainHelpers = {
   [chainId: string]: {
     healthyCount: number;
-    conditionalRowStyle?: ((a: HeartbeatInfo) => SxProps<Theme> | undefined) | undefined;
+    conditionalRowStyle?:
+      | ((a: HeartbeatInfo) => SxProps<Theme> | undefined)
+      | undefined;
   };
 };
 
-function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeartbeats }) {
+function Chains({
+  chainIdsToHeartbeats,
+}: {
+  chainIdsToHeartbeats: ChainIdToHeartbeats;
+}) {
   const environment = useCurrentEnvironment();
   const {
     helpers,
@@ -230,31 +263,37 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
     let numSuccess = 0;
     let numWarnings = 0;
     let numErrors = 0;
-    const helpers = Object.entries(chainIdsToHeartbeats).reduce((obj, [chainId, heartbeats]) => {
-      let highest = BigInt(0);
-      heartbeats.forEach((heartbeat) => {
-        const height = BigInt(heartbeat.network.height);
-        if (height > highest) {
-          highest = height;
-        }
-      });
-      const conditionalRowStyle = (heartbeat: HeartbeatInfo) =>
-        isHeartbeatUnhealthy(heartbeat, highest) ? { backgroundColor: 'rgba(100,0,0,.2)' } : {};
-      const healthyCount = heartbeats.reduce(
-        (count, heartbeat) => count + (isHeartbeatUnhealthy(heartbeat, highest) ? 0 : 1),
-        0
-      );
-      if (Number(chainId) !== CHAIN_ID_AURORA)
-        if (healthyCount < getQuorumCount(environment)) {
-          numErrors++;
-        } else if (healthyCount < getWarningCount(environment)) {
-          numWarnings++;
-        } else {
-          numSuccess++;
-        }
-      obj[chainId] = { healthyCount, conditionalRowStyle };
-      return obj;
-    }, {} as ChainHelpers);
+    const helpers = Object.entries(chainIdsToHeartbeats).reduce(
+      (obj, [chainId, heartbeats]) => {
+        let highest = BigInt(0);
+        heartbeats.forEach((heartbeat) => {
+          const height = BigInt(heartbeat.network.height);
+          if (height > highest) {
+            highest = height;
+          }
+        });
+        const conditionalRowStyle = (heartbeat: HeartbeatInfo) =>
+          isHeartbeatUnhealthy(heartbeat, highest)
+            ? { backgroundColor: 'rgba(100,0,0,.2)' }
+            : {};
+        const healthyCount = heartbeats.reduce(
+          (count, heartbeat) =>
+            count + (isHeartbeatUnhealthy(heartbeat, highest) ? 0 : 1),
+          0
+        );
+        if (Number(chainId) !== CHAIN_ID_AURORA)
+          if (healthyCount < getQuorumCount(environment)) {
+            numErrors++;
+          } else if (healthyCount < getWarningCount(environment)) {
+            numWarnings++;
+          } else {
+            numSuccess++;
+          }
+        obj[chainId] = { healthyCount, conditionalRowStyle };
+        return obj;
+      },
+      {} as ChainHelpers
+    );
     return {
       helpers,
       numSuccess,
@@ -339,7 +378,12 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
         </Box>
       }
     >
-      <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
+      <Box
+        display="flex"
+        flexWrap="wrap"
+        alignItems="center"
+        justifyContent={'center'}
+      >
         {Object.keys(chainIdsToHeartbeats).map((chainId) => (
           <Chain
             key={chainId}

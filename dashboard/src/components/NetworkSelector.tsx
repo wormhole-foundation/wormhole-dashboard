@@ -22,13 +22,16 @@ function NetworkSelector() {
         // theme fixes
         '& img': { filter: 'invert(0)!important' },
         '& .MuiOutlinedInput-notchedOutline': {
-          borderColor: theme.palette.mode === 'light' ? 'rgba(255,255,255,.6)' : null,
+          borderColor:
+            theme.palette.mode === 'light' ? 'rgba(255,255,255,.6)' : null,
         },
         '&:hover .MuiOutlinedInput-notchedOutline': {
-          borderColor: theme.palette.mode === 'light' ? 'rgba(255,255,255,.8)' : null,
+          borderColor:
+            theme.palette.mode === 'light' ? 'rgba(255,255,255,.8)' : null,
         },
         '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-          borderColor: theme.palette.mode === 'light' ? 'rgba(255,255,255,.8)' : null,
+          borderColor:
+            theme.palette.mode === 'light' ? 'rgba(255,255,255,.8)' : null,
         },
         '& .MuiSvgIcon-root': {
           fill: theme.palette.mode === 'light' ? 'white' : null,
@@ -49,7 +52,9 @@ function NetworkSelector() {
                 maxHeight: 20,
                 verticalAlign: 'middle',
                 // theme fixes
-                ...(theme.palette.mode === 'light' ? { filter: 'invert(1)' } : {}),
+                ...(theme.palette.mode === 'light'
+                  ? { filter: 'invert(1)' }
+                  : {}),
               }}
             />
           ) : (

@@ -40,7 +40,9 @@ const ERC20_BASIC_ABI = [
 //for evm chains
 async function getTokenContract(
   address: string,
-  provider: ethers.providers.JsonRpcProvider | ethers.providers.JsonRpcBatchProvider
+  provider:
+    | ethers.providers.JsonRpcProvider
+    | ethers.providers.JsonRpcBatchProvider
 ) {
   const contract = new ethers.Contract(address, ERC20_BASIC_ABI, provider);
   return contract;
@@ -80,7 +82,9 @@ async function getEvmTokenMetaData(
     ) as ethers.providers.JsonRpcBatchProvider;
 
     const tokenContracts = await Promise.all(
-      formattedTokens.map((tokenAddress) => getTokenContract(tokenAddress, provider))
+      formattedTokens.map((tokenAddress) =>
+        getTokenContract(tokenAddress, provider)
+      )
     );
     const tokenInfos = await Promise.all(
       tokenContracts.map((tokenContract) =>
@@ -109,7 +113,9 @@ async function getEvmTokenMetaData(
   return;
 }
 
-async function loadTokenListSolana(url = 'https://token-list.solana.com/solana.tokenlist.json') {
+async function loadTokenListSolana(
+  url = 'https://token-list.solana.com/solana.tokenlist.json'
+) {
   const response: any = await axios.get(url).catch(function (error) {
     if (error.response) {
       console.log('could not load token list', error.response.status);
@@ -161,12 +167,15 @@ async function getSolanaTokenMetaData(
       }
     });
     tokenContracts.forEach((tokenContract) => {
-      TOKEN_CACHE.set([chain, formattedAddressMap[tokenContract.address]].join('_'), {
-        address: tokenContract.address,
-        name: tokenContract.name,
-        decimals: tokenContract.decimals,
-        symbol: tokenContract.symbol,
-      });
+      TOKEN_CACHE.set(
+        [chain, formattedAddressMap[tokenContract.address]].join('_'),
+        {
+          address: tokenContract.address,
+          name: tokenContract.name,
+          decimals: tokenContract.decimals,
+          symbol: tokenContract.symbol,
+        }
+      );
     });
   } catch (e) {
     console.log(e);
@@ -193,7 +202,10 @@ const fetchSingleTerraMetadata = async (address: string, lcd: LCDClient) =>
         ({ address: address, symbol, name, decimals }) as TerraMetadata
     );
 
-async function getSingleTerraMetaData(originAddress: string, originChain: ChainId) {
+async function getSingleTerraMetaData(
+  originAddress: string,
+  originChain: ChainId
+) {
   const TERRA_HOST = {
     URL:
       originChain === CHAIN_ID_TERRA
@@ -262,12 +274,15 @@ async function getTerraTokenMetaData(
     }
 
     tokenContracts.forEach((tokenContract) => {
-      TOKEN_CACHE.set([chain, formattedAddressMap[tokenContract.address]].join('_'), {
-        address: tokenContract.address,
-        name: tokenContract.name,
-        decimals: tokenContract.decimals,
-        symbol: tokenContract.symbol,
-      });
+      TOKEN_CACHE.set(
+        [chain, formattedAddressMap[tokenContract.address]].join('_'),
+        {
+          address: tokenContract.address,
+          name: tokenContract.name,
+          decimals: tokenContract.decimals,
+          symbol: tokenContract.symbol,
+        }
+      );
     });
   } catch (e) {
     console.log(e);
@@ -347,7 +362,9 @@ async function getMiscTokenMetaData(
 
 const TOKEN_CACHE = new Map<string, TokenInfo>();
 
-async function getTokenMetaData(governorTokenList: GovernorGetTokenListResponse_Entry[]) {
+async function getTokenMetaData(
+  governorTokenList: GovernorGetTokenListResponse_Entry[]
+) {
   const chains = Object.keys(CHAIN_INFO_MAP);
   for (let i = 0; i < chains.length; i++) {
     const chain = chains[i];

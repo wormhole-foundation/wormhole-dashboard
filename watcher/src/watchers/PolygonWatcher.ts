@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { ethers } from 'ethers';
-import { AXIOS_CONFIG_JSON, POLYGON_ROOT_CHAIN_ADDRESS, POLYGON_ROOT_CHAIN_RPC } from '../consts';
+import {
+  AXIOS_CONFIG_JSON,
+  POLYGON_ROOT_CHAIN_ADDRESS,
+  POLYGON_ROOT_CHAIN_RPC,
+} from '../consts';
 import { EVMWatcher } from './EVMWatcher';
 
 export class PolygonWatcher extends EVMWatcher {
@@ -30,7 +34,9 @@ export class PolygonWatcher extends EVMWatcher {
         AXIOS_CONFIG_JSON
       )
     )?.data?.[0]?.result;
-    const block = rootChain.decodeFunctionResult('getLastChildBlock', callResult)[0].toNumber();
+    const block = rootChain
+      .decodeFunctionResult('getLastChildBlock', callResult)[0]
+      .toNumber();
     this.logger.info(`rooted child block ${block}`);
     return block;
   }

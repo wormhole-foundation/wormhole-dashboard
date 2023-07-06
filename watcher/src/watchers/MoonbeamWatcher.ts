@@ -34,7 +34,9 @@ export class MoonbeamWatcher extends EVMWatcher {
             )
           )?.data?.[0]?.result || false;
       } catch (e) {
-        this.logger.error(`error while trying to check for finality of block ${latestBlock}`);
+        this.logger.error(
+          `error while trying to check for finality of block ${latestBlock}`
+        );
       }
     }
     return latestBlock;

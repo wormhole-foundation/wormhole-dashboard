@@ -4,7 +4,9 @@ import { SuiWatcher } from '../SuiWatcher';
 
 jest.setTimeout(60000);
 
-const INITAL_SEQUENCE_NUMBER = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.sui ?? 1581000);
+const INITAL_SEQUENCE_NUMBER = Number(
+  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.sui ?? 1581000
+);
 
 test('getFinalizedSequenceNumber', async () => {
   const watcher = new SuiWatcher();
@@ -21,9 +23,15 @@ test.skip('getMessagesForBlocks', async () => {
   console.log(messages);
   const entries = Object.entries(messages);
   expect(entries.length).toEqual(46);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(40);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(5);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(
+    1
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(
+    40
+  );
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(
+    5
+  );
   expect(messages['1584976/2023-05-03T17:15:00.000Z']).toBeDefined();
   expect(messages['1584976/2023-05-03T17:15:00.000Z'].length).toEqual(1);
   expect(messages['1584976/2023-05-03T17:15:00.000Z'][0]).toEqual(

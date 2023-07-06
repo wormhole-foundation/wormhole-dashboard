@@ -52,7 +52,10 @@ function Table<T>({
                           cursor: 'pointer',
                           userSelect: 'select-none',
                           ':hover': {
-                            background: theme.palette.mode === 'dark' ? grey[800] : grey[100],
+                            background:
+                              theme.palette.mode === 'dark'
+                                ? grey[800]
+                                : grey[100],
                           },
                         }
                       : {}
@@ -62,12 +65,17 @@ function Table<T>({
                   <Box display="flex" alignContent="center">
                     {header.isPlaceholder
                       ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     <Box flexGrow={1} />
                     <Box display="flex" alignItems="center">
                       {{
                         asc: <ArrowUpward fontSize="small" sx={{ ml: 0.5 }} />,
-                        desc: <ArrowDownward fontSize="small" sx={{ ml: 0.5 }} />,
+                        desc: (
+                          <ArrowDownward fontSize="small" sx={{ ml: 0.5 }} />
+                        ),
                       }[header.column.getIsSorted() as string] ?? null}
                     </Box>
                   </Box>
@@ -96,7 +104,10 @@ function Table<T>({
               <TableCell
                 colSpan={table
                   .getHeaderGroups()
-                  .reduce((total, headerGroup) => total + headerGroup.headers.length, 0)}
+                  .reduce(
+                    (total, headerGroup) => total + headerGroup.headers.length,
+                    0
+                  )}
               >
                 <Box display="flex" alignItems="center">
                   <Box>{table.getCoreRowModel().rows.length} Rows</Box>
@@ -137,7 +148,8 @@ function Table<T>({
                         <NavigateBefore fontSize="small" />
                       </IconButton>
                       <Box>
-                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                        Page {table.getState().pagination.pageIndex + 1} of{' '}
+                        {table.getPageCount()}
                       </Box>
                       <IconButton
                         onClick={() => table.nextPage()}
@@ -147,7 +159,9 @@ function Table<T>({
                         <NavigateNext fontSize="small" />
                       </IconButton>
                       <IconButton
-                        onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                        onClick={() =>
+                          table.setPageIndex(table.getPageCount() - 1)
+                        }
                         disabled={!table.getCanNextPage()}
                         size="small"
                       >

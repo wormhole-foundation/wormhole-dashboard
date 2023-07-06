@@ -31,7 +31,9 @@ export class InjectiveExplorerWatcher extends Watcher {
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
-    const result: ExplorerBlocks = (await axios.get(`${this.rpc}/${this.latestBlockTag}`)).data;
+    const result: ExplorerBlocks = (
+      await axios.get(`${this.rpc}/${this.latestBlockTag}`)
+    ).data;
     if (result && result.paging.total) {
       let blockHeight: number = result.paging.total;
       if (blockHeight !== this.latestBlockHeight) {
@@ -40,14 +42,19 @@ export class InjectiveExplorerWatcher extends Watcher {
       }
       return blockHeight;
     }
-    throw new Error(`Unable to parse result of ${this.latestBlockTag} on ${this.rpc}`);
+    throw new Error(
+      `Unable to parse result of ${this.latestBlockTag} on ${this.rpc}`
+    );
   }
 
   // retrieve blocks for token bridge contract.
   // should be core, but the explorer doesn't support it yet
   // use "to": as the pagination key
   // compare block height ("block_number":) with what is passed in.
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<VaasByBlock> {
     const coreAddress = CONTRACTS.MAINNET[this.chain].core;
     const address = CONTRACTS.MAINNET[this.chain].token_bridge;
     if (!address) {
@@ -123,7 +130,10 @@ export class InjectiveExplorerWatcher extends Watcher {
                         emitter = attrs[l].value;
                       } else if (key === 'message.sequence') {
                         sequence = attrs[l].value;
-                      } else if (key === '_contract_address' || key === 'contract_address') {
+                      } else if (
+                        key === '_contract_address' ||
+                        key === 'contract_address'
+                      ) {
                         let addr = attrs[l].value;
                         if (addr === coreAddress) {
                           coreContract = true;
@@ -131,10 +141,18 @@ export class InjectiveExplorerWatcher extends Watcher {
                       }
                     }
                     if (coreContract && emitter !== '' && sequence !== '') {
-                      vaaKey = makeVaaKey(txn.hash, this.chain, emitter, sequence);
+                      vaaKey = makeVaaKey(
+                        txn.hash,
+                        this.chain,
+                        emitter,
+                        sequence
+                      );
                       this.logger.debug('blockKey: ' + blockKey);
                       this.logger.debug('Making vaaKey: ' + vaaKey);
-                      vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+                      vaasByBlock[blockKey] = [
+                        ...(vaasByBlock[blockKey] || []),
+                        vaaKey,
+                      ];
                     }
                   }
                 }

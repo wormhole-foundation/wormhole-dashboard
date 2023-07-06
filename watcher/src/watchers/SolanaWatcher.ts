@@ -41,7 +41,10 @@ export class SolanaWatcher extends Watcher {
     return connection.getSlot();
   }
 
-  async getMessagesForBlocks(fromSlot: number, toSlot: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromSlot: number,
+    toSlot: number
+  ): Promise<VaasByBlock> {
     const connection = new Connection(this.rpc, COMMITMENT);
     // in the rare case of maximumBatchSize skipped blocks in a row,
     // you might hit this error due to the recursion below
@@ -53,9 +56,14 @@ export class SolanaWatcher extends Watcher {
     // getSignaturesForAddress walks backwards so fromSignature occurs after toSignature
     let toBlock: VersionedBlockResponse | null = null;
     try {
-      toBlock = await connection.getBlock(toSlot, { maxSupportedTransactionVersion: 0 });
+      toBlock = await connection.getBlock(toSlot, {
+        maxSupportedTransactionVersion: 0,
+      });
     } catch (e) {
-      if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
+      if (
+        e instanceof SolanaJSONRPCError &&
+        (e.code === -32007 || e.code === -32009)
+      ) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
         return this.getMessagesForBlocks(fromSlot, toSlot - 1);
       } else {
@@ -66,20 +74,30 @@ export class SolanaWatcher extends Watcher {
       return this.getMessagesForBlocks(fromSlot, toSlot - 1);
     }
     const fromSignature =
-      toBlock.transactions[toBlock.transactions.length - 1].transaction.signatures[0];
+      toBlock.transactions[toBlock.transactions.length - 1].transaction
+        .signatures[0];
 
     let fromBlock: VersionedBlockResponse | null = null;
     try {
-      fromBlock = await connection.getBlock(fromSlot, { maxSupportedTransactionVersion: 0 });
+      fromBlock = await connection.getBlock(fromSlot, {
+        maxSupportedTransactionVersion: 0,
+      });
     } catch (e) {
-      if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
+      if (
+        e instanceof SolanaJSONRPCError &&
+        (e.code === -32007 || e.code === -32009)
+      ) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
         return this.getMessagesForBlocks(fromSlot + 1, toSlot);
       } else {
         throw e;
       }
     }
-    if (!fromBlock || !fromBlock.blockTime || fromBlock.transactions.length === 0) {
+    if (
+      !fromBlock ||
+      !fromBlock.blockTime ||
+      fromBlock.transactions.length === 0
+    ) {
       return this.getMessagesForBlocks(fromSlot + 1, toSlot);
     }
     const toSignature = fromBlock.transactions[0].transaction.signatures[0];
@@ -88,14 +106,15 @@ export class SolanaWatcher extends Watcher {
     let numSignatures = this.getSignaturesLimit;
     let currSignature: string | undefined = fromSignature;
     while (numSignatures === this.getSignaturesLimit) {
-      const signatures: ConfirmedSignatureInfo[] = await connection.getSignaturesForAddress(
-        new PublicKey(WORMHOLE_PROGRAM_ID),
-        {
-          before: currSignature,
-          until: toSignature,
-          limit: this.getSignaturesLimit,
-        }
-      );
+      const signatures: ConfirmedSignatureInfo[] =
+        await connection.getSignaturesForAddress(
+          new PublicKey(WORMHOLE_PROGRAM_ID),
+          {
+            before: currSignature,
+            until: toSignature,
+            limit: this.getSignaturesLimit,
+          }
+        );
 
       this.logger.info(`processing ${signatures.length} transactions`);
 
@@ -132,7 +151,9 @@ export class SolanaWatcher extends Watcher {
         const accountKeys = isLegacyMessage(message)
           ? message.accountKeys
           : message.staticAccountKeys;
-        const programIdIndex = accountKeys.findIndex((i) => i.toBase58() === WORMHOLE_PROGRAM_ID);
+        const programIdIndex = accountKeys.findIndex(
+          (i) => i.toBase58() === WORMHOLE_PROGRAM_ID
+        );
         const instructions = message.compiledInstructions;
         const innerInstructions =
           res.meta?.innerInstructions?.flatMap((i) =>
@@ -149,7 +170,11 @@ export class SolanaWatcher extends Watcher {
           const accountId = accountKeys[instruction.accountKeyIndexes[1]];
           const {
             message: { emitterAddress, sequence },
-          } = await getPostedMessage(connection, accountId.toBase58(), COMMITMENT);
+          } = await getPostedMessage(
+            connection,
+            accountId.toBase58(),
+            COMMITMENT
+          );
           const blockKey = makeBlockKey(
             res.slot.toString(),
             new Date(res.blockTime * 1000).toISOString()

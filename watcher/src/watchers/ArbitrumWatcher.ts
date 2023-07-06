@@ -51,7 +51,10 @@ export class ArbitrumWatcher extends EVMWatcher {
     const associatedL1: number = parseInt(l1Result.l1BlockNumber, 16);
     const l2BlkNum: number = parseInt(l1Result.number, 16);
     this.logger.debug(
-      'getFinalizedBlockNumber() checking map L1Block: ' + associatedL1 + ' => L2Block: ' + l2BlkNum
+      'getFinalizedBlockNumber() checking map L1Block: ' +
+        associatedL1 +
+        ' => L2Block: ' +
+        l2BlkNum
     );
 
     // Only update the map, if the L2 block number is newer

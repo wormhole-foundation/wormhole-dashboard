@@ -40,7 +40,9 @@ export const getTransactionsByAccountId = async (
   const res = (
     (
       await axios.get(
-        `${NEAR_EXPLORER_TRANSACTION_URL}?batch=1&input={"0":${JSON.stringify(params)}}`,
+        `${NEAR_EXPLORER_TRANSACTION_URL}?batch=1&input={"0":${JSON.stringify(
+          params
+        )}}`,
         AXIOS_CONFIG_JSON
       )
     ).data as GetTransactionsByAccountIdResponse
@@ -48,11 +50,15 @@ export const getTransactionsByAccountId = async (
   if ('error' in res) throw new Error(res.error.message);
   return res.result.data.items
     .filter(
-      (tx) => tx.status === 'success' && tx.actions.some((a) => a.kind === 'functionCall') // other actions don't generate logs
+      (tx) =>
+        tx.status === 'success' &&
+        tx.actions.some((a) => a.kind === 'functionCall') // other actions don't generate logs
     )
     .reverse(); // return chronological order
 };
 
-export const isWormholePublishEventLog = (log: EventLog): log is WormholePublishEventLog => {
+export const isWormholePublishEventLog = (
+  log: EventLog
+): log is WormholePublishEventLog => {
   return log.standard === 'wormhole' && log.event === 'publish';
 };

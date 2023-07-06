@@ -1,4 +1,8 @@
-import { ChainId, getSignedVAA, getSignedVAAWithRetry } from '@certusone/wormhole-sdk';
+import {
+  ChainId,
+  getSignedVAA,
+  getSignedVAAWithRetry,
+} from '@certusone/wormhole-sdk';
 import { GovernorGetEnqueuedVAAsResponse_Entry } from '@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc';
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
@@ -57,7 +61,9 @@ function EnqueuedVAAChecker({
             cancelled = true;
             return;
           }
-          await new Promise((resolve) => setTimeout(resolve, VAA_CHECK_TIMEOUT));
+          await new Promise((resolve) =>
+            setTimeout(resolve, VAA_CHECK_TIMEOUT)
+          );
         }
       }
     })();
@@ -65,7 +71,11 @@ function EnqueuedVAAChecker({
       cancelled = true;
     };
   }, [endpoint, type, emitterChain, emitterAddress, sequence]);
-  return <span role="img">{vaaHasQuorum === null ? '⏳' : vaaHasQuorum ? '✅' : '❌'}</span>;
+  return (
+    <span role="img">
+      {vaaHasQuorum === null ? '⏳' : vaaHasQuorum ? '✅' : '❌'}
+    </span>
+  );
 }
 
 export default EnqueuedVAAChecker;

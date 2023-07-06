@@ -4,7 +4,9 @@ import { SolanaWatcher } from '../SolanaWatcher';
 
 jest.setTimeout(60000);
 
-const INITIAL_SOLANA_BLOCK = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.solana ?? 0);
+const INITIAL_SOLANA_BLOCK = Number(
+  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.solana ?? 0
+);
 
 test('getFinalizedBlockNumber', async () => {
   const watcher = new SolanaWatcher();
@@ -52,9 +54,9 @@ test('getMessagesForBlocks - empty block', async () => {
 // temporary skip due to SolanaJSONRPCError: failed to get confirmed block: Block 174108865 cleaned up, does not exist on node. First available block: 176892532
 test('getMessagesForBlocks - block with no transactions', async () => {
   const watcher = new SolanaWatcher();
-  expect(watcher.getMessagesForBlocks(174108861, 174108861)).rejects.toThrowError(
-    'solana: invalid block range'
-  );
+  expect(
+    watcher.getMessagesForBlocks(174108861, 174108861)
+  ).rejects.toThrowError('solana: invalid block range');
 
   let messages = await watcher.getMessagesForBlocks(174108661, 174108861);
   expect(Object.keys(messages).length).toBe(1);

@@ -22,7 +22,6 @@ export class AlgorandWatcher extends Watcher {
     if (!ALGORAND_INFO.algodServer) {
       throw new Error('ALGORAND_INFO.algodServer is not defined!');
     }
-
     this.algodClient = new algosdk.Algodv2(
       ALGORAND_INFO.algodToken,
       ALGORAND_INFO.algodServer,
@@ -39,6 +38,7 @@ export class AlgorandWatcher extends Watcher {
     this.logger.info(`fetching final block for ${this.chain}`);
 
     let status = await this.algodClient.status().do();
+    this.logger.info(`got final block for ${this.chain} = ${status['last-round']}`);
     return status['last-round'];
   }
 
@@ -97,10 +97,14 @@ export class AlgorandWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+    this.logger.info('getMessagesForBlocks', fromBlock, toBlock);
     const txIds = await this.getApplicationLogTransactionIds(fromBlock, toBlock);
+    this.logger.info('txIds', txIds);
     const transactions = [];
     for (const txId of txIds) {
+      this.logger.info('txId', txId);
       const response = await this.indexerClient.searchForTransactions().txid(txId).do();
+      this.logger.info('response', response);
       if (response?.transactions?.[0]) {
         transactions.push(response.transactions[0]);
       }
@@ -116,7 +120,9 @@ export class AlgorandWatcher extends Watcher {
       vaasByBlock[message.blockKey].push(message.vaaKey);
       return vaasByBlock;
     }, {} as VaasByBlock);
+    this.logger.info('attempting to call lookupBlock...');
     const toBlockInfo = await this.indexerClient.lookupBlock(toBlock).do();
+    this.logger.info('toBlockInfo', toBlockInfo);
     const toBlockTimestamp = new Date(toBlockInfo.timestamp * 1000).toISOString();
     const toBlockKey = makeBlockKey(toBlock.toString(), toBlockTimestamp);
     if (!vaasByBlock[toBlockKey]) {

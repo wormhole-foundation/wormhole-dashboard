@@ -42,6 +42,7 @@ export class SolanaWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromSlot: number, toSlot: number): Promise<VaasByBlock> {
+    this.logger.info('getMessagesForBlocks in');
     const connection = new Connection(this.rpc, COMMITMENT);
     // in the rare case of maximumBatchSize skipped blocks in a row,
     // you might hit this error due to the recursion below
@@ -53,34 +54,39 @@ export class SolanaWatcher extends Watcher {
     // getSignaturesForAddress walks backwards so fromSignature occurs after toSignature
     let toBlock: VersionedBlockResponse | null = null;
     try {
+      this.logger.info(`fetching block ${toSlot} (toSlot)`);
       toBlock = await connection.getBlock(toSlot, { maxSupportedTransactionVersion: 0 });
     } catch (e) {
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
-        return this.getMessagesForBlocks(fromSlot, toSlot - 1);
+        return await this.getMessagesForBlocks(fromSlot, toSlot - 1);
       } else {
         throw e;
       }
     }
     if (!toBlock || !toBlock.blockTime || toBlock.transactions.length === 0) {
-      return this.getMessagesForBlocks(fromSlot, toSlot - 1);
+      this.logger.info(`block ${toSlot} is empty, recursing...(toSlot)`);
+      return await this.getMessagesForBlocks(fromSlot, toSlot - 1);
     }
     const fromSignature =
       toBlock.transactions[toBlock.transactions.length - 1].transaction.signatures[0];
 
     let fromBlock: VersionedBlockResponse | null = null;
     try {
+      this.logger.info(`fetching block ${fromSlot} (fromSlot)`);
       fromBlock = await connection.getBlock(fromSlot, { maxSupportedTransactionVersion: 0 });
     } catch (e) {
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
-        return this.getMessagesForBlocks(fromSlot + 1, toSlot);
+        this.logger.info(`block ${fromSlot} is empty, recursing...(fromSlot)`);
+        return await this.getMessagesForBlocks(fromSlot + 1, toSlot);
       } else {
         throw e;
       }
     }
     if (!fromBlock || !fromBlock.blockTime || fromBlock.transactions.length === 0) {
-      return this.getMessagesForBlocks(fromSlot + 1, toSlot);
+      this.logger.info(`block ${fromSlot} is empty, recursing...(fromSlot2)`);
+      return await this.getMessagesForBlocks(fromSlot + 1, toSlot);
     }
     const toSignature = fromBlock.transactions[0].transaction.signatures[0];
 
@@ -167,6 +173,7 @@ export class SolanaWatcher extends Watcher {
       numSignatures = signatures.length;
       currSignature = signatures.at(-1)?.signature;
     }
+    this.logger.info('getMessagesForBlocks out');
 
     // add last block for storeVaasByBlock
     const lastBlockKey = makeBlockKey(

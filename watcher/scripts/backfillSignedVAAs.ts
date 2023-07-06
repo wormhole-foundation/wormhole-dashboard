@@ -29,7 +29,9 @@ interface SignedVAAsRow {
     if (!bt.bigtable) {
       throw new Error('bigtable is undefined');
     }
-    const vaaTableId = assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID');
+    const vaaTableId = assertEnvironmentVariable(
+      'BIGTABLE_SIGNED_VAAS_TABLE_ID'
+    );
     const instance = bt.bigtable.instance(bt.instanceId);
     const vaaTable = instance.table(vaaTableId);
 

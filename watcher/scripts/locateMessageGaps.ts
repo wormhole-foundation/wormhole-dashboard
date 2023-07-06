@@ -27,7 +27,9 @@ import { Watcher } from '../src/watchers/Watcher';
     const total = observedMessages.length;
     console.log(`processing ${total} messages`);
     const gaps = [];
-    const latestEmission: { [emitter: string]: { sequence: bigint; block: number } } = {};
+    const latestEmission: {
+      [emitter: string]: { sequence: bigint; block: number };
+    } = {};
     for (const observedMessage of observedMessages) {
       const {
         chain: emitterChain,
@@ -90,16 +92,25 @@ import { Watcher } from '../src/watchers/Watcher';
       }
       let found = false;
       while (fromBlock <= rangeEnd && !found) {
-        const toBlock = Math.min(fromBlock + watcher.maximumBatchSize - 1, rangeEnd);
+        const toBlock = Math.min(
+          fromBlock + watcher.maximumBatchSize - 1,
+          rangeEnd
+        );
         const messages = await watcher.getMessagesForBlocks(fromBlock, toBlock);
-        for (const message of Object.entries(messages).filter(([key, value]) => value.length > 0)) {
+        for (const message of Object.entries(messages).filter(
+          ([key, value]) => value.length > 0
+        )) {
           const locatedMessages = message[1].filter((msgKey) => {
             const [_transaction, vaaKey] = msgKey.split(':');
             const [_chain, msgEmitter, msgSeq] = vaaKey.split('/');
             return emitter === msgEmitter && sequence === msgSeq;
           });
           if (locatedMessages.length > 0) {
-            await bt.storeVaasByBlock(chainName, { [message[0]]: locatedMessages }, false);
+            await bt.storeVaasByBlock(
+              chainName,
+              { [message[0]]: locatedMessages },
+              false
+            );
             console.log('located', message[0], locatedMessages);
             found = true;
           }

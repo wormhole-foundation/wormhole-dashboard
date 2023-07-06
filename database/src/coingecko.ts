@@ -1,4 +1,7 @@
-import { chunkArray, sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  chunkArray,
+  sleep,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import axios, { AxiosError, isAxiosError } from 'axios';
 
 const COIN_GECKO_API_BASE_URL = 'https://api.coingecko.com/api/v3';
@@ -32,14 +35,19 @@ const createConfig = (apiKey: string) => ({
   },
 });
 
-export const fetchPrices = async (coinIds: string[], apiKey?: string): Promise<CoinGeckoPrices> => {
+export const fetchPrices = async (
+  coinIds: string[],
+  apiKey?: string
+): Promise<CoinGeckoPrices> => {
   const [baseUrl, config] = apiKey
     ? [COIN_GECKO_PRO_API_BASE_URL, createConfig(apiKey)]
     : [COIN_GECKO_API_BASE_URL, undefined];
   let prices: CoinGeckoPrices = {};
   const chunks = chunkArray(coinIds, 200);
   for (const chunk of chunks) {
-    const url = `${baseUrl}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd`;
+    const url = `${baseUrl}/simple/price?ids=${chunk.join(
+      ','
+    )}&vs_currencies=usd`;
     const response = await axios.get<CoinGeckoPrices>(url, config);
     prices = {
       ...prices,
@@ -54,11 +62,16 @@ export const fetchCoins = async (apiKey?: string): Promise<CoinGeckoCoin[]> => {
   const [baseUrl, config] = apiKey
     ? [COIN_GECKO_PRO_API_BASE_URL, createConfig(apiKey)]
     : [COIN_GECKO_API_BASE_URL, undefined];
-  return (await axios.get<CoinGeckoCoin[]>(`${baseUrl}/coins/list?include_platform=true`, config))
-    .data;
+  return (
+    await axios.get<CoinGeckoCoin[]>(
+      `${baseUrl}/coins/list?include_platform=true`,
+      config
+    )
+  ).data;
 };
 
-const toTimestamp = (date: Date): number => parseInt((date.getTime() / 1000).toFixed(0));
+const toTimestamp = (date: Date): number =>
+  parseInt((date.getTime() / 1000).toFixed(0));
 
 export const fetchPriceHistories = async (
   coinIds: string[],
@@ -75,7 +88,10 @@ export const fetchPriceHistories = async (
   for (const coinId of coinIds) {
     try {
       const url = `${baseUrl}/coins/${coinId}/market_chart/range?vs_currency=usd&from=${from}&to=${to}`;
-      const response = await axios.get<CoinGeckoMarketChartResponse>(url, config);
+      const response = await axios.get<CoinGeckoMarketChartResponse>(
+        url,
+        config
+      );
       for (const [date, price] of response.data.prices) {
         const dateString = new Date(date).toISOString().slice(0, 10);
         priceHistories[dateString] = {

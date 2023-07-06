@@ -1,4 +1,7 @@
-import { ParsedAttestMetaVaa, ParsedTokenTransferVaa } from '@certusone/wormhole-sdk';
+import {
+  ParsedAttestMetaVaa,
+  ParsedTokenTransferVaa,
+} from '@certusone/wormhole-sdk';
 
 // Note: bigint is handled as string to prevent precision loss - https://github.com/brianc/node-postgres/pull/353
 
@@ -45,7 +48,9 @@ export interface TokenPrice {
   price_usd: number;
 }
 
-export const createTokenMetadata = (vaa: ParsedAttestMetaVaa): TokenMetadata => ({
+export const createTokenMetadata = (
+  vaa: ParsedAttestMetaVaa
+): TokenMetadata => ({
   token_chain: vaa.tokenChain,
   token_address: vaa.tokenAddress.toString('hex'),
   native_address: null,
@@ -55,7 +60,9 @@ export const createTokenMetadata = (vaa: ParsedAttestMetaVaa): TokenMetadata => 
   name: vaa.name,
 });
 
-export const createTokenTransfer = (vaa: ParsedTokenTransferVaa): TokenTransfer => ({
+export const createTokenTransfer = (
+  vaa: ParsedTokenTransferVaa
+): TokenTransfer => ({
   timestamp: vaa.timestamp.toString(),
   emitter_chain: vaa.emitterChain,
   emitter_address: vaa.emitterAddress.toString('hex'),
@@ -67,10 +74,13 @@ export const createTokenTransfer = (vaa: ParsedTokenTransferVaa): TokenTransfer 
   to_chain: vaa.toChain,
   payload_type: Number(vaa.payloadType),
   fee: vaa.fee !== null ? vaa.fee.toString() : null,
-  from_address: vaa.fromAddress !== null ? vaa.fromAddress.toString('hex') : null,
+  from_address:
+    vaa.fromAddress !== null ? vaa.fromAddress.toString('hex') : null,
 });
 
-export const createAttestMessage = (vaa: ParsedAttestMetaVaa): AttestMessage => ({
+export const createAttestMessage = (
+  vaa: ParsedAttestMetaVaa
+): AttestMessage => ({
   timestamp: vaa.timestamp.toString(),
   emitter_chain: vaa.emitterChain,
   emitter_address: vaa.emitterAddress.toString('hex'),

@@ -29,19 +29,26 @@ const CHUNK_SIZE = 10000;
       const txHash = msg.data.info.txHash[0].value;
       const { chain, emitter, sequence } = parseMessageId(msg.id);
       const txHashRowKey = makeVAAsByTxHashRowKey(txHash, chain);
-      const vaaRowKey = makeSignedVAAsRowKey(chain, emitter, sequence.toString());
-      vaasByTxHash[txHashRowKey] = [...(vaasByTxHash[txHashRowKey] || []), vaaRowKey];
+      const vaaRowKey = makeSignedVAAsRowKey(
+        chain,
+        emitter,
+        sequence.toString()
+      );
+      vaasByTxHash[txHashRowKey] = [
+        ...(vaasByTxHash[txHashRowKey] || []),
+        vaaRowKey,
+      ];
     }
-    const rowsToInsert = Object.entries(vaasByTxHash).map<BigtableVAAsByTxHashRow>(
-      ([txHashRowKey, vaaRowKeys]) => ({
-        key: txHashRowKey,
-        data: {
-          info: {
-            vaaKeys: { value: JSON.stringify(vaaRowKeys), timestamp: '0' },
-          },
+    const rowsToInsert = Object.entries(
+      vaasByTxHash
+    ).map<BigtableVAAsByTxHashRow>(([txHashRowKey, vaaRowKeys]) => ({
+      key: txHashRowKey,
+      data: {
+        info: {
+          vaaKeys: { value: JSON.stringify(vaaRowKeys), timestamp: '0' },
         },
-      })
-    );
+      },
+    }));
     const rowChunks = chunkArray(rowsToInsert, CHUNK_SIZE);
     let numWritten = 0;
     for (const rowChunk of rowChunks) {

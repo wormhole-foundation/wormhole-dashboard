@@ -35,7 +35,9 @@ export function parseVaaId(vaaRowKey: string) {
     for (const rowKey of rowKeysToUpdate) {
       let [chain, targetEmitter, targetSequence] = parseVaaId(rowKey);
       const formattedChainId = padUint16(chain);
-      const [rowsByChain] = await messageTable.getRows({ prefix: formattedChainId });
+      const [rowsByChain] = await messageTable.getRows({
+        prefix: formattedChainId,
+      });
       let messageRowKey = '';
       //filter to find sequence numbers:
       rowsByChain.forEach((row) => {

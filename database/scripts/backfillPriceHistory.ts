@@ -11,8 +11,12 @@ const PG_USER = assertEnvironmentVariable('PG_USER');
 const PG_PASSWORD = assertEnvironmentVariable('PG_PASSWORD');
 const PG_DATABASE = assertEnvironmentVariable('PG_DATABASE');
 const PG_HOST = assertEnvironmentVariable('PG_HOST');
-const TOKEN_METADATA_TABLE = assertEnvironmentVariable('PG_TOKEN_METADATA_TABLE');
-const TOKEN_PRICE_HISTORY_TABLE = assertEnvironmentVariable('PG_TOKEN_PRICE_HISTORY_TABLE');
+const TOKEN_METADATA_TABLE = assertEnvironmentVariable(
+  'PG_TOKEN_METADATA_TABLE'
+);
+const TOKEN_PRICE_HISTORY_TABLE = assertEnvironmentVariable(
+  'PG_TOKEN_PRICE_HISTORY_TABLE'
+);
 
 // Note: Run the Cloud SQL Auth proxy before running this script
 // https://cloud.google.com/sql/docs/postgres/connect-instance-auth-proxy
@@ -38,7 +42,12 @@ const TOKEN_PRICE_HISTORY_TABLE = assertEnvironmentVariable('PG_TOKEN_PRICE_HIST
     // look up price histories
     const start = new Date('2021-09-13');
     const end = new Date(Date.now());
-    const result = await fetchPriceHistories(coinIds, start, end, process.env.COIN_GECKO_API_KEY);
+    const result = await fetchPriceHistories(
+      coinIds,
+      start,
+      end,
+      process.env.COIN_GECKO_API_KEY
+    );
     const tokenPrices: TokenPrice[] = [];
     for (const [date, prices] of Object.entries(result)) {
       for (const [coinId, price] of Object.entries(prices)) {

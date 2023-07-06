@@ -33,10 +33,18 @@ const PG_USER = assertEnvironmentVariable('PG_USER');
 const PG_PASSWORD = assertEnvironmentVariable('PG_PASSWORD');
 const PG_DATABASE = assertEnvironmentVariable('PG_DATABASE');
 const PG_HOST = assertEnvironmentVariable('PG_HOST');
-const TOKEN_TRANSFER_TABLE = assertEnvironmentVariable('PG_TOKEN_TRANSFER_TABLE');
-const ATTEST_MESSAGE_TABLE = assertEnvironmentVariable('PG_ATTEST_MESSAGE_TABLE');
-const TOKEN_METADATA_TABLE = assertEnvironmentVariable('PG_TOKEN_METADATA_TABLE');
-const BIGTABLE_SIGNED_VAAS_TABLE_ID = assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID');
+const TOKEN_TRANSFER_TABLE = assertEnvironmentVariable(
+  'PG_TOKEN_TRANSFER_TABLE'
+);
+const ATTEST_MESSAGE_TABLE = assertEnvironmentVariable(
+  'PG_ATTEST_MESSAGE_TABLE'
+);
+const TOKEN_METADATA_TABLE = assertEnvironmentVariable(
+  'PG_TOKEN_METADATA_TABLE'
+);
+const BIGTABLE_SIGNED_VAAS_TABLE_ID = assertEnvironmentVariable(
+  'BIGTABLE_SIGNED_VAAS_TABLE_ID'
+);
 const BIGTABLE_INSTANCE_ID = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
 const BIGTABLE_CHUNK_SIZE = 10_000;
 
@@ -76,7 +84,9 @@ const getStatusString = (
     const tokenBridgeEmitters = Object.entries(TOKEN_BRIDGE_EMITTERS);
     for (const [chain, emitter] of tokenBridgeEmitters) {
       log.start();
-      const paddedChainId = padUint16(coalesceChainId(chain as ChainName).toString());
+      const paddedChainId = padUint16(
+        coalesceChainId(chain as ChainName).toString()
+      );
       let start = `${paddedChainId}/${emitter}/`;
       const end = `${start}z`;
       let numRowsRead = 0;
@@ -111,19 +121,33 @@ const getStatusString = (
                 payloadType === TokenBridgePayload.TransferWithPayload
               ) {
                 const payload = parseTokenTransferPayload(vaa.payload);
-                const tokenTransferVaa: ParsedTokenTransferVaa = { ...vaa, ...payload };
+                const tokenTransferVaa: ParsedTokenTransferVaa = {
+                  ...vaa,
+                  ...payload,
+                };
                 tokenTransfers.push(createTokenTransfer(tokenTransferVaa));
               } else if (payloadType === TokenBridgePayload.AttestMeta) {
                 const payload = parseAttestMetaPayload(vaa.payload);
-                const attestMetaVaa: ParsedAttestMetaVaa = { ...vaa, ...payload };
+                const attestMetaVaa: ParsedAttestMetaVaa = {
+                  ...vaa,
+                  ...payload,
+                };
                 attestMessages.push(createAttestMessage(attestMetaVaa));
                 tokenMetadata.push(createTokenMetadata(attestMetaVaa));
               }
             }
           } catch {}
         });
-        numTransfersWritten += await batchInsertOrIgnore(pg, TOKEN_TRANSFER_TABLE, tokenTransfers);
-        numAttestsWritten += await batchInsertOrIgnore(pg, ATTEST_MESSAGE_TABLE, attestMessages);
+        numTransfersWritten += await batchInsertOrIgnore(
+          pg,
+          TOKEN_TRANSFER_TABLE,
+          tokenTransfers
+        );
+        numAttestsWritten += await batchInsertOrIgnore(
+          pg,
+          ATTEST_MESSAGE_TABLE,
+          attestMessages
+        );
         numTokenMetadataWritten += await batchInsertOrIgnore(
           pg,
           TOKEN_METADATA_TABLE,

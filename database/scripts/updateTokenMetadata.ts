@@ -41,7 +41,9 @@ const PG_USER = assertEnvironmentVariable('PG_USER');
 const PG_PASSWORD = assertEnvironmentVariable('PG_PASSWORD');
 const PG_DATABASE = assertEnvironmentVariable('PG_DATABASE');
 const PG_HOST = assertEnvironmentVariable('PG_HOST');
-const TOKEN_METADATA_TABLE = assertEnvironmentVariable('PG_TOKEN_METADATA_TABLE');
+const TOKEN_METADATA_TABLE = assertEnvironmentVariable(
+  'PG_TOKEN_METADATA_TABLE'
+);
 
 const getNativeAddress = async (
   tokenChain: ChainId,
@@ -61,7 +63,11 @@ const getNativeAddress = async (
         chainID: 'dimension_37-1',
       });
       return (
-        (await queryExternalId(client, CONTRACTS.MAINNET.xpla.token_bridge, tokenAddress)) || null
+        (await queryExternalId(
+          client,
+          CONTRACTS.MAINNET.xpla.token_bridge,
+          tokenAddress
+        )) || null
       );
     } else if (tokenChain === CHAIN_ID_TERRA2) {
       const client = new LCDClient({
@@ -69,10 +75,16 @@ const getNativeAddress = async (
         chainID: 'phoenix-1',
       });
       return (
-        (await queryExternalId(client, CONTRACTS.MAINNET.terra2.token_bridge, tokenAddress)) || null
+        (await queryExternalId(
+          client,
+          CONTRACTS.MAINNET.terra2.token_bridge,
+          tokenAddress
+        )) || null
       );
     } else if (tokenChain === CHAIN_ID_INJECTIVE) {
-      const client = new ChainGrpcWasmApi(getNetworkInfo(Network.MainnetK8s).grpc);
+      const client = new ChainGrpcWasmApi(
+        getNetworkInfo(Network.MainnetK8s).grpc
+      );
       return await queryExternalIdInjective(
         client,
         CONTRACTS.MAINNET.injective.token_bridge,
@@ -214,7 +226,11 @@ const findCoinGeckoCoinId = (
         shouldUpdate ||= native_address !== null;
       }
       if (coin_gecko_coin_id === null && native_address !== null) {
-        coin_gecko_coin_id = findCoinGeckoCoinId(token_chain, native_address, coinGeckoCoins);
+        coin_gecko_coin_id = findCoinGeckoCoinId(
+          token_chain,
+          native_address,
+          coinGeckoCoins
+        );
         shouldUpdate ||= coin_gecko_coin_id !== null;
       }
       if (shouldUpdate) {

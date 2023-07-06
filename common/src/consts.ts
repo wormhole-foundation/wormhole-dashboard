@@ -57,8 +57,10 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   sui: 'ccceeb29348f71bdd22ffef43a2a19c1f5b5e17c5cca5411529120182672ade5',
 };
 
-export const isTokenBridgeEmitter = (chain: ChainId | ChainName, emitter: string) =>
-  TOKEN_BRIDGE_EMITTERS[coalesceChainName(chain)] === emitter;
+export const isTokenBridgeEmitter = (
+  chain: ChainId | ChainName,
+  emitter: string
+) => TOKEN_BRIDGE_EMITTERS[coalesceChainName(chain)] === emitter;
 
 export const NFT_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   solana: '0def15a24423e1edd1a5ab16f557b9060303ddbab8c803d2ee48f4b78a1cfd6b',
@@ -79,5 +81,7 @@ export const NFT_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   aptos: '0000000000000000000000000000000000000000000000000000000000000005',
 };
 
-export const isNFTBridgeEmitter = (chain: ChainId | ChainName, emitter: string) =>
-  NFT_BRIDGE_EMITTERS[coalesceChainName(chain)] === emitter;
+export const isNFTBridgeEmitter = (
+  chain: ChainId | ChainName,
+  emitter: string
+) => NFT_BRIDGE_EMITTERS[coalesceChainName(chain)] === emitter;

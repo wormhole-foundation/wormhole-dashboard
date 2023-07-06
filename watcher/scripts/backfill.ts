@@ -1,7 +1,13 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { chunkArray, sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  ChainId,
+  coalesceChainName,
+} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import {
+  chunkArray,
+  sleep,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { JsonDatabase } from '../src/databases/JsonDatabase';
 import { VaasByBlock } from '../src/databases/types';
@@ -19,10 +25,13 @@ import { VaasByBlock } from '../src/databases/types';
     let chunk = 1;
     for (const chunkeyKeys of chunkedKeys) {
       console.log('chunk', chunk++, 'of', chunkedKeys.length);
-      const chunkedVaasByBlock = chunkeyKeys.reduce<VaasByBlock>((obj, curr) => {
-        obj[curr] = vaasByBlock[curr];
-        return obj;
-      }, {});
+      const chunkedVaasByBlock = chunkeyKeys.reduce<VaasByBlock>(
+        (obj, curr) => {
+          obj[curr] = vaasByBlock[curr];
+          return obj;
+        },
+        {}
+      );
       await remoteDb.storeVaasByBlock(
         coalesceChainName(Number(chain) as ChainId),
         chunkedVaasByBlock
@@ -33,7 +42,10 @@ import { VaasByBlock } from '../src/databases/types';
   const lastBlockEntries = Object.entries(localDb.lastBlockByChain);
   for (const [chain, blockKey] of lastBlockEntries) {
     console.log('backfilling last block for', chain, blockKey);
-    await remoteDb.storeLatestBlock(coalesceChainName(Number(chain) as ChainId), blockKey);
+    await remoteDb.storeLatestBlock(
+      coalesceChainName(Number(chain) as ChainId),
+      blockKey
+    );
     await sleep(500);
   }
 })();

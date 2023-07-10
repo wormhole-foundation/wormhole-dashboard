@@ -13,10 +13,12 @@ import (
 	"github.com/certusone/wormhole/node/pkg/p2p"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
+	"github.com/eiannone/keyboard"
 	ipfslog "github.com/ipfs/go-log/v2"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
+	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 
 	"go.uber.org/zap"
 )
@@ -39,7 +41,7 @@ type heartbeat struct {
 	counter       string
 	features      []string
 	guardianAddr  string
-	networks      []*map[string]interface{}
+	networks      []*gossipv1.Heartbeat_Network
 	nodeName      string
 	timestamp     time.Time
 	version       string
@@ -106,17 +108,67 @@ func main() {
 
 	hbByGuardian := make(map[string]heartbeat, len(gs.Keys))
 
-	tm.Clear()
-	tm.MoveCursor(1,1)
-	tm.Flush()
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-    t.AppendHeader(table.Row{"#", "Name", "Version", "Features", "Counter", "Boot", "Timestamp", "Address"})
+	activeTable := 1 // 0 = chains, 1 = guardians
+
+	resetTerm(true)
+
+	chainTable := table.NewWriter()
+	chainTable.SetOutputMirror(os.Stdout)
+	chainTable.AppendHeader(table.Row{"ID", "Chain", "Status", "Healthy", "Highest"})
+	chainTable.SetStyle(table.StyleColoredDark)
+	chainTable.SortBy([]table.SortBy{
+		{Name: "ID", Mode: table.AscNumeric},
+	})
+	
+	guardianTable := table.NewWriter()
+	guardianTable.SetOutputMirror(os.Stdout)
+    guardianTable.AppendHeader(table.Row{"#", "Guardian", "Version", "Features", "Counter", "Boot", "Timestamp", "Address"})
 	for idx, g := range gs.Keys {
-		t.AppendRow(table.Row{idx, "", "", "", "", "", "", g})
+		guardianTable.AppendRow(table.Row{idx, "", "", "", "", "", "", g})
 	}
-	t.SetStyle(table.StyleColoredDark)
-	t.Render()
+	guardianTable.SetStyle(table.StyleColoredDark)
+	guardianTable.Render()
+	prompt()
+
+	// Keyboard handler
+	if err := keyboard.Open(); err != nil {
+		panic(err)
+	}
+	defer func() {
+		keyboard.Close()
+		resetTerm(true)
+	}()
+	go func() {		
+		for {
+			char, key, err := keyboard.GetKey()
+			if err != nil {
+				logger.Fatal("error getting key", zap.Error(err))
+			}
+			wantsOut := false
+			if key == keyboard.KeyCtrlC {
+				wantsOut = true
+			} else {
+				switch string(char) {
+				case "q":
+					wantsOut = true
+				case "c":
+					activeTable = 0
+					resetTerm(true)
+					chainTable.Render()
+					prompt()
+				case "g":
+					activeTable = 1
+					resetTerm(true)
+					guardianTable.Render()
+					prompt()
+				}
+			}
+			if wantsOut {
+				break
+			}
+		}
+		rootCtxCancel()
+	}()
 
 	// Ignore observations
 	go func() {
@@ -161,37 +213,62 @@ func main() {
 				return
 			case hb := <-heartbeatC:
 				id := hb.GuardianAddr
-				networks := make([]*map[string]interface{}, 0, len(hb.Networks))
-				for _, network := range hb.Networks {
-					networks = append(networks, &map[string]interface{}{
-						"id":              network.Id,
-						"height":          strconv.FormatInt(network.Height, 10),
-						"contractAddress": network.ContractAddress,
-						"errorCount":      strconv.FormatUint(network.ErrorCount, 10),
-					})
-				}
 				hbByGuardian[id] = heartbeat{
 					bootTimestamp: time.Unix(hb.BootTimestamp / 1000000000, 0),
 					counter:       strconv.FormatInt(hb.Counter, 10),
 					features:      hb.Features,
 					guardianAddr:  hb.GuardianAddr,
-					networks:      networks,
+					networks:      hb.Networks,
 					nodeName:      hb.NodeName,
 					timestamp:     time.Unix(hb.Timestamp / 1000000000, 0),
 					version:       hb.Version,
 				}
-				tm.MoveCursor(1,1)
-				tm.Flush()
-				t.ResetRows()
+				chainTable.ResetRows()
+				guardianTable.ResetRows()
+				chainIdsToHeartbeats := make(map[uint32][]*gossipv1.Heartbeat_Network)
 				for idx, g := range gs.Keys {
 					info, ok := hbByGuardian[g.String()]
 					if ok {
-						t.AppendRow(table.Row{idx, info.nodeName, info.version, strings.Join(info.features, ", "), info.counter, info.bootTimestamp, info.timestamp, g})
+						guardianTable.AppendRow(table.Row{idx, info.nodeName, info.version, strings.Join(info.features, ", "), info.counter, info.bootTimestamp, info.timestamp, g})
+						for _, network := range info.networks {
+							if _, ok := chainIdsToHeartbeats[network.Id]; !ok {
+								chainIdsToHeartbeats[network.Id] = make([]*gossipv1.Heartbeat_Network, len(gs.Keys))
+							}
+							chainIdsToHeartbeats[network.Id] = append(chainIdsToHeartbeats[network.Id], network)
+						}
 					} else {
-						t.AppendRow(table.Row{idx, "", "", "", "", "", "", g})
+						guardianTable.AppendRow(table.Row{idx, "", "", "", "", "", "", g})
 					}
 				}
-				t.Render()
+				for chainId, heartbeats := range chainIdsToHeartbeats {
+					highest := int64(0)
+					for _, heartbeat := range heartbeats {
+						if heartbeat != nil && heartbeat.Height > highest {
+							highest = heartbeat.Height
+						}
+					}
+					healthyCount := 0
+					for _, heartbeat := range heartbeats {
+						if heartbeat != nil && heartbeat.Height != 0 && highest - heartbeat.Height <= 1000 {
+							healthyCount++
+						}
+					}
+					status := "green"
+					if healthyCount < vaa.CalculateQuorum(len(gs.Keys)) {
+						status = "red"
+					} else if healthyCount < len(gs.Keys) - 1 {
+						status = "yellow"
+					}
+					chainTable.AppendRow(table.Row{chainId, vaa.ChainID(chainId), status, healthyCount, highest})
+				}
+				if activeTable == 0 {
+					resetTerm(false)
+					chainTable.Render()
+				} else {
+					resetTerm(false)
+					guardianTable.Render()
+				}
+				prompt()
 			}
 		}
 	}()
@@ -242,6 +319,16 @@ func main() {
 
 	<-rootCtx.Done()
 	logger.Info("root context cancelled, exiting...")
-	// TODO: wait for things to shut down gracefully
+}
 
+func resetTerm(clear bool) {
+	if (clear) {
+		tm.Clear()
+	}
+	tm.MoveCursor(1,1)
+	tm.Flush()
+}
+
+func prompt() {
+	fmt.Print("[C]hains, [G]uardians, [Q]uit: ")
 }

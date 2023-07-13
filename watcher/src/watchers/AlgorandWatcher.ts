@@ -19,6 +19,10 @@ export class AlgorandWatcher extends Watcher {
   constructor() {
     super('algorand');
 
+    if (!ALGORAND_INFO.algodServer) {
+      throw new Error('ALGORAND_INFO.algodServer is not defined!');
+    }
+
     this.algodClient = new algosdk.Algodv2(
       ALGORAND_INFO.algodToken,
       ALGORAND_INFO.algodServer,

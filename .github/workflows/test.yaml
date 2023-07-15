@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
+      - run: npm ci
       - run: npx prettier --check .
   build-fly:
     runs-on: ubuntu-latest

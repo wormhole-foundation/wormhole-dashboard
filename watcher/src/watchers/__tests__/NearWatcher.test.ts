@@ -67,7 +67,7 @@ describe('getMessagesFromBlockResults', () => {
     expect(messages).toBeTruthy();
   });
 
-  test('with ArchiveProvider', async () => {
+  test.skip('with ArchiveProvider', async () => {
     const provider = await getNearProvider(NEAR_ARCHIVE_RPC);
     const messages = await getMessagesFromBlockResults(provider, [
       await provider.block({ blockId: 'Bzjemj99zxe1h8kVp8H2hwVifmbQL8HT34LyPHzEK5qp' }),

@@ -18,6 +18,7 @@
     "@certusone/wormhole-sdk": "^0.9.15-beta.4"
   },
   "devDependencies": {
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "prettier": "^2.8.1"
   }
 }

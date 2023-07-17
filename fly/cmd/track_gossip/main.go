@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"time"
@@ -47,7 +48,17 @@ func main() {
 	nodeKeyPath = "/tmp/node.key"
 	logLevel = "info"
 	// common.SetRestrictiveUmask()
-
+	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
+	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
+	flag.Parse()
+	if *rpcUrl == "" {
+		fmt.Println("rpcUrl must be specified")
+		os.Exit(1)
+	}
+	if *coreBridgeAddr == "" {
+		fmt.Println("coreBridgeAddr must be specified")
+		os.Exit(1)
+	}
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
 		fmt.Println("Invalid log level")
@@ -96,7 +107,7 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, gs, err := utils.FetchCurrentGuardianSet()
+	idx, gs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}
@@ -120,7 +131,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case <-obsvC:
-				numObs++;
+				numObs++
 			}
 		}
 	}()
@@ -133,7 +144,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case <-obsvReqC:
-				numObsReq++;
+				numObsReq++
 			}
 		}
 	}()
@@ -145,7 +156,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case <-signedInC:
-				numSigned++;
+				numSigned++
 			}
 		}
 	}()
@@ -157,7 +168,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case <-heartbeatC:
-				numHeartbeat++;
+				numHeartbeat++
 			}
 		}
 	}()
@@ -169,7 +180,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case <-govConfigC:
-				numGovConfig++;
+				numGovConfig++
 			}
 		}
 	}()
@@ -181,7 +192,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case <-govStatusC:
-				numGovStatus++;
+				numGovStatus++
 			}
 		}
 	}()
@@ -193,9 +204,9 @@ func main() {
 	go func() {
 		for {
 			select {
-			case <- rootCtx.Done():
+			case <-rootCtx.Done():
 				return
-			case <- ticker.C:
+			case <-ticker.C:
 				logger.Info(
 					"Stats",
 					zap.Int("numObs", numObs),
@@ -205,12 +216,12 @@ func main() {
 					zap.Int("numGovConfig", numGovConfig),
 					zap.Int("numGovStatus", numGovStatus),
 				)
-				numObs = 0;
-				numObsReq = 0;
-				numSigned = 0;
-				numHeartbeat = 0;
-				numGovConfig = 0;
-				numGovStatus = 0;
+				numObs = 0
+				numObsReq = 0
+				numSigned = 0
+				numHeartbeat = 0
+				numGovConfig = 0
+				numGovStatus = 0
 			}
 		}
 	}()

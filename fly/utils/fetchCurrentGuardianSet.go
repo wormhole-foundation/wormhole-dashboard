@@ -17,14 +17,12 @@ import (
 // I would have used NewEthereumConnector from
 // https://github.com/wormhole-foundation/wormhole/blob/main/node/pkg/watchers/evm/connectors/ethereum.go
 // but I didn't want to deal with the celo vs eth multiple definition ld issue
-func FetchCurrentGuardianSet() (uint32, *ethabi.StructsGuardianSet, error) {
+func FetchCurrentGuardianSet(rpcUrl, contractAddress string) (uint32, *ethabi.StructsGuardianSet, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	rawUrl := "https://rpc.ankr.com/eth";
-	ethContract := "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B";
-	contract := eth_common.HexToAddress(ethContract)
-	rawClient, err := ethRpc.DialContext(ctx, rawUrl)
+	contract := eth_common.HexToAddress(contractAddress)
+	rawClient, err := ethRpc.DialContext(ctx, rpcUrl)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to connect to ethereum")
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -29,11 +30,11 @@ var (
 )
 
 var (
-	p2pNetworkID       string
-	p2pPort            uint
-	p2pBootstrap       string
-	nodeKeyPath        string
-	logLevel           string
+	p2pNetworkID string
+	p2pPort      uint
+	p2pBootstrap string
+	nodeKeyPath  string
+	logLevel     string
 )
 
 type heartbeat struct {
@@ -55,6 +56,18 @@ func main() {
 	nodeKeyPath = "/tmp/node.key"
 	logLevel = "warn"
 
+	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
+	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
+	flag.Parse()
+	if *rpcUrl == "" {
+		fmt.Println("rpcUrl must be specified")
+		os.Exit(1)
+	}
+	if *coreBridgeAddr == "" {
+		fmt.Println("coreBridgeAddr must be specified")
+		os.Exit(1)
+	}
+
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
 		fmt.Println("Invalid log level")
@@ -66,7 +79,7 @@ func main() {
 	ipfslog.SetAllLoggers(lvl)
 
 	// ctx := context.Background()
-	
+
 	// Node's main lifecycle context.
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
 	defer rootCtxCancel()
@@ -95,7 +108,7 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 1024)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, sgs, err := utils.FetchCurrentGuardianSet()
+	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}
@@ -119,10 +132,10 @@ func main() {
 	chainTable.SortBy([]table.SortBy{
 		{Name: "ID", Mode: table.AscNumeric},
 	})
-	
+
 	guardianTable := table.NewWriter()
 	guardianTable.SetOutputMirror(os.Stdout)
-    guardianTable.AppendHeader(table.Row{"#", "Guardian", "Version", "Features", "Counter", "Boot", "Timestamp", "Address"})
+	guardianTable.AppendHeader(table.Row{"#", "Guardian", "Version", "Features", "Counter", "Boot", "Timestamp", "Address"})
 	for idx, g := range gs.Keys {
 		guardianTable.AppendRow(table.Row{idx, "", "", "", "", "", "", g})
 	}
@@ -138,7 +151,7 @@ func main() {
 		keyboard.Close()
 		resetTerm(true)
 	}()
-	go func() {		
+	go func() {
 		for {
 			char, key, err := keyboard.GetKey()
 			if err != nil {
@@ -204,7 +217,6 @@ func main() {
 		}
 	}()
 
-
 	// Handle heartbeats
 	go func() {
 		for {
@@ -214,13 +226,13 @@ func main() {
 			case hb := <-heartbeatC:
 				id := hb.GuardianAddr
 				hbByGuardian[id] = heartbeat{
-					bootTimestamp: time.Unix(hb.BootTimestamp / 1000000000, 0),
+					bootTimestamp: time.Unix(hb.BootTimestamp/1000000000, 0),
 					counter:       strconv.FormatInt(hb.Counter, 10),
 					features:      hb.Features,
 					guardianAddr:  hb.GuardianAddr,
 					networks:      hb.Networks,
 					nodeName:      hb.NodeName,
-					timestamp:     time.Unix(hb.Timestamp / 1000000000, 0),
+					timestamp:     time.Unix(hb.Timestamp/1000000000, 0),
 					version:       hb.Version,
 				}
 				chainTable.ResetRows()
@@ -249,14 +261,14 @@ func main() {
 					}
 					healthyCount := 0
 					for _, heartbeat := range heartbeats {
-						if heartbeat != nil && heartbeat.Height != 0 && highest - heartbeat.Height <= 1000 {
+						if heartbeat != nil && heartbeat.Height != 0 && highest-heartbeat.Height <= 1000 {
 							healthyCount++
 						}
 					}
 					status := "green"
 					if healthyCount < vaa.CalculateQuorum(len(gs.Keys)) {
 						status = "red"
-					} else if healthyCount < len(gs.Keys) - 1 {
+					} else if healthyCount < len(gs.Keys)-1 {
 						status = "yellow"
 					}
 					chainTable.AppendRow(table.Row{chainId, vaa.ChainID(chainId), status, healthyCount, highest})
@@ -322,10 +334,10 @@ func main() {
 }
 
 func resetTerm(clear bool) {
-	if (clear) {
+	if clear {
 		tm.Clear()
 	}
-	tm.MoveCursor(1,1)
+	tm.MoveCursor(1, 1)
 	tm.Flush()
 }
 

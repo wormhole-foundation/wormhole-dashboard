@@ -36,6 +36,7 @@ test('getMessagesForSequenceNumbers', async () => {
       latestSequenceNumber
     )
   ).sort();
+  console.log(messageKeys);
   expect(messageKeys.length).toBe(watcher.maximumBatchSize);
   expect(Date.parse(messageKeys.at(-1)!.split('/')[1])).toBeLessThan(Date.now());
   let prevKey = messageKeys[0];
@@ -43,8 +44,9 @@ test('getMessagesForSequenceNumbers', async () => {
     const currKey = messageKeys[i];
     const [prevBlockNumber, prevTimestamp, prevEventSequenceNumber] = prevKey.split('/');
     const [blockNumber, timestamp, eventSequenceNumber] = currKey.split('/');
-    expect(Number(blockNumber)).toBeGreaterThan(Number(prevBlockNumber));
-    expect(Date.parse(timestamp)).toBeGreaterThan(Date.parse(prevTimestamp));
+    // blocks may contain multiple wormhole messages
+    expect(Number(blockNumber)).toBeGreaterThanOrEqual(Number(prevBlockNumber));
+    expect(Date.parse(timestamp)).toBeGreaterThanOrEqual(Date.parse(prevTimestamp));
     expect(Number(eventSequenceNumber)).toBeGreaterThan(Number(prevEventSequenceNumber));
     prevKey = currKey;
   }

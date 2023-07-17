@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"time"
@@ -24,11 +25,11 @@ var (
 )
 
 var (
-	p2pNetworkID       string
-	p2pPort            uint
-	p2pBootstrap       string
-	nodeKeyPath        string
-	logLevel           string
+	p2pNetworkID string
+	p2pPort      uint
+	p2pBootstrap string
+	nodeKeyPath  string
+	logLevel     string
 )
 
 func main() {
@@ -38,8 +39,17 @@ func main() {
 	p2pPort = 8999
 	nodeKeyPath = "/tmp/node.key"
 	logLevel = "info"
-
-
+	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
+	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
+	flag.Parse()
+	if *rpcUrl == "" {
+		fmt.Println("rpcUrl must be specified")
+		os.Exit(1)
+	}
+	if *coreBridgeAddr == "" {
+		fmt.Println("coreBridgeAddr must be specified")
+		os.Exit(1)
+	}
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
 		fmt.Println("Invalid log level")
@@ -51,7 +61,7 @@ func main() {
 	ipfslog.SetAllLoggers(lvl)
 
 	// ctx := context.Background()
-	
+
 	// Node's main lifecycle context.
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
 	defer rootCtxCancel()
@@ -80,7 +90,7 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, sgs, err := utils.FetchCurrentGuardianSet()
+	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}
@@ -109,7 +119,7 @@ func main() {
 					if _, ok := obsvByHash[o.MessageId][ga]; !ok {
 						obsvByHash[o.MessageId][ga] = time.Now()
 					}
-					logger.Warn("status", zap.String("id",o.MessageId), zap.Any("msg", obsvByHash[o.MessageId]))
+					logger.Warn("status", zap.String("id", o.MessageId), zap.Any("msg", obsvByHash[o.MessageId]))
 				}
 			}
 		}
@@ -137,7 +147,6 @@ func main() {
 			}
 		}
 	}()
-
 
 	// Handle heartbeats
 	go func() {

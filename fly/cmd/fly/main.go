@@ -118,10 +118,18 @@ func main() {
 	bigtableInstanceID = "wormhole-mainnet"
 	signedVAATopicName = "signed-vaa"
 
+	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
+	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
 	credentialsFile := flag.String("credentialsFile", "", "GCP service account or refresh token JSON credentials file")
 	flag.Parse()
 	if *credentialsFile == "" {
 		log.Fatalf("gcpCredentialsFile must be specified")
+	}
+	if *rpcUrl == "" {
+		log.Fatalf("rpcUrl must be specified")
+	}
+	if *coreBridgeAddr == "" {
+		log.Fatalf("coreBridgeAddr must be specified")
 	}
 
 	lvl, err := ipfslog.LevelFromString(logLevel)
@@ -188,7 +196,7 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, sgs, err := utils.FetchCurrentGuardianSet()
+	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}

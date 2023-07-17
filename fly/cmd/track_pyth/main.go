@@ -10,6 +10,7 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -104,6 +105,15 @@ func main() {
 	logger.Info("Starting up")
 
 	// Verify flags
+	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
+	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
+	flag.Parse()
+	if *rpcUrl == "" {
+		logger.Fatal("rpcUrl must be specified")
+	}
+	if *coreBridgeAddr == "" {
+		logger.Fatal("coreBridgeAddr must be specified")
+	}
 	if nodeKeyPath == "" {
 		logger.Fatal("Please specify --nodeKey")
 	}
@@ -139,7 +149,7 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, sgs, err := utils.FetchCurrentGuardianSet()
+	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}

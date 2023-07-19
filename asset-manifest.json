@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.2809f7ba.js",
+    "main.js": "/wormhole-dashboard/static/js/main.e6a990e7.js",
     "static/js/915.dda1937c.chunk.js": "/wormhole-dashboard/static/js/915.dda1937c.chunk.js",
     "static/media/moonbeam.svg": "/wormhole-dashboard/static/media/moonbeam.d537e3282e2645ee2f1df9f7c3711f5a.svg",
     "static/media/terra2.svg": "/wormhole-dashboard/static/media/terra2.3b8a4497121229ac69ab6afa1c4e9317.svg",
@@ -18,6 +18,7 @@
     "static/media/aptos.svg": "/wormhole-dashboard/static/media/aptos.19d0eda7068d07106473e6218dc2ae3e.svg",
     "static/media/pyth_logomark_white.svg": "/wormhole-dashboard/static/media/pyth_logomark_white.c38a751800a718641d8ec56525922433.svg",
     "static/media/solana.svg": "/wormhole-dashboard/static/media/solana.61403bc0a0fa16f39ea8b67f1dce06fe.svg",
+    "static/media/base.svg": "/wormhole-dashboard/static/media/base.9d0a30a811c8797eb779959b83a9919f.svg",
     "static/media/oasis-network-rose-logo.svg": "/wormhole-dashboard/static/media/oasis-network-rose-logo.8f04dadd5b02ff48b835e789ad1c6dea.svg",
     "static/media/bsc.svg": "/wormhole-dashboard/static/media/bsc.651c7605759848e72d890a9f7ecda59f.svg",
     "static/media/aurora.svg": "/wormhole-dashboard/static/media/aurora.4367c8904ada068be8b2993caab6f0e3.svg",
@@ -28,10 +29,10 @@
     "static/media/xpla.svg": "/wormhole-dashboard/static/media/xpla.39d25b51bf8a5b7f6aeb01cd57c5ec61.svg",
     "static/media/algorand.svg": "/wormhole-dashboard/static/media/algorand.699bf008d7073523b8edd75d8f3b38ac.svg",
     "static/media/eth.svg": "/wormhole-dashboard/static/media/eth.5a5de20bf3808241fc61ed9ad7680ab5.svg",
-    "main.2809f7ba.js.map": "/wormhole-dashboard/static/js/main.2809f7ba.js.map",
+    "main.e6a990e7.js.map": "/wormhole-dashboard/static/js/main.e6a990e7.js.map",
     "915.dda1937c.chunk.js.map": "/wormhole-dashboard/static/js/915.dda1937c.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.2809f7ba.js"
+    "static/js/main.e6a990e7.js"
   ]
 }

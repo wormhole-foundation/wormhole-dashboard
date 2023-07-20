@@ -163,8 +163,8 @@ test('getBlock (Karura compatibility)', async () => {
   console.log('block', block);
   block = await watcher.getBlock(4595357); // Null block
   console.log('block', block);
-  block = await watcher.getBlock(4595358); // good block
-  console.log('block', block);
-  block = await watcher.getBlock(4619551); // good luck
-  console.log('block', block);
+  // block = await watcher.getBlock(4595358); // good block
+  // console.log('block', block);
+  // block = await watcher.getBlock(4619551); // good luck
+  // console.log('block', block);
 });

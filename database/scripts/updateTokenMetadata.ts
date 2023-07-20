@@ -144,6 +144,7 @@ const COINGECKO_PLATFORM_BY_CHAIN: { [key in ChainName]?: string } = {
   xpla: undefined,
   injective: undefined,
   sui: 'sui',
+  base: 'base',
 };
 
 const coinGeckoCoinIdCache = new Map<string, string>();

@@ -29,7 +29,8 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     chainName === 'fantom' ||
     chainName === 'klaytn' ||
     chainName === 'celo' ||
-    chainName === 'optimism'
+    chainName === 'optimism' ||
+    chainName === 'base'
   ) {
     return new EVMWatcher(chainName);
   } else if (chainName === 'algorand') {

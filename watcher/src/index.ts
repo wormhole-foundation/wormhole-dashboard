@@ -30,6 +30,7 @@ const supportedChains: ChainName[] = [
   'xpla',
   'injective',
   'sui',
+  'base',
 ];
 
 for (const chain of supportedChains) {

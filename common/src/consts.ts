@@ -29,6 +29,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   xpla: '777549',
   solana: '94401321', // https://explorer.solana.com/tx/KhLy688yDxbP7xbXVXK7TGpZU5DAFHbYiaoX16zZArxvVySz8i8g7N7Ss2noQYoq9XRbg6HDzrQBjUfmNcSWwhe
   sui: '1485552', // https://explorer.sui.io/txblock/671SoTvVUvBZQWKXeameDvAwzHQvnr8Nj7dR9MUwm3CV?network=https%3A%2F%2Frpc.mainnet.sui.io
+  base: '1422314',
 };
 
 export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
@@ -55,6 +56,7 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   xpla: '8f9cf727175353b17a5f574270e370776123d90fd74956ae4277962b4fdee24c',
   injective: '00000000000000000000000045dbea4617971d93188eda21530bc6503d153313',
   sui: 'ccceeb29348f71bdd22ffef43a2a19c1f5b5e17c5cca5411529120182672ade5',
+  base: '0000000000000000000000008d2de8d2f73F1F4cAB472AC9A881C9b123C79627',
 };
 
 export const isTokenBridgeEmitter = (chain: ChainId | ChainName, emitter: string) =>
@@ -77,6 +79,7 @@ export const NFT_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   arbitrum: '0000000000000000000000003dd14d553cfd986eac8e3bddf629d82073e188c8',
   optimism: '000000000000000000000000fe8cd454b4a1ca468b57d79c0cc77ef5b6f64585',
   aptos: '0000000000000000000000000000000000000000000000000000000000000005',
+  base: '000000000000000000000000DA3adC6621B2677BEf9aD26598e6939CF0D92f88',
 };
 
 export const isNFTBridgeEmitter = (chain: ChainId | ChainName, emitter: string) =>

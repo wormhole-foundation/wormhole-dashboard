@@ -34,7 +34,9 @@ const TOKEN_PRICE_HISTORY_TABLE = assertEnvironmentVariable('PG_TOKEN_PRICE_HIST
       .distinct()
       .select('coin_gecko_coin_id')
       .whereNotNull('coin_gecko_coin_id');
-    const coinIds = rows.map((row) => row.coin_gecko_coin_id);
+    const coinIds = rows
+      .map((row) => row.coin_gecko_coin_id)
+      .filter((c) => c === 'injective-protocol');
     // look up price histories
     const start = new Date('2021-09-13');
     const end = new Date(Date.now());

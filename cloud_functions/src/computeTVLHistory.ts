@@ -90,6 +90,7 @@ export async function computeTVLHistory(req: any, res: any) {
           t.emitter_chain = t.token_chain
           OR t.to_chain = t.token_chain
         )
+        AND t.module = 'TokenBridge'
       GROUP BY
         date,
         t.token_address,

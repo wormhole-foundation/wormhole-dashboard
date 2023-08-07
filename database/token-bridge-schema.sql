@@ -38,6 +38,7 @@ CREATE TABLE token_transfer (
   payload_type INTEGER NOT NULL,
   fee DECIMAL(78, 0),
   from_address CHAR(64),
+  module CHAR(64) NOT NULL,
   PRIMARY KEY (emitter_chain, emitter_address, sequence)
 );
 

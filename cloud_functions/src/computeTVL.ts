@@ -72,6 +72,7 @@ export async function computeTVL(req: any, res: any) {
         t.emitter_chain = t.token_chain
         OR t.to_chain = t.token_chain
       )
+      AND t.module = 'TokenBridge'
     GROUP BY
       t.token_address,
       t.token_chain,

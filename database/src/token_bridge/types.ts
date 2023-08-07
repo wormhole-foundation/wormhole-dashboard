@@ -25,6 +25,7 @@ export interface TokenTransfer {
   payload_type: number;
   fee: string | null; // bigint
   from_address: string | null;
+  module: string; // 'TokenBridge'
 }
 
 export interface AttestMessage {
@@ -68,6 +69,7 @@ export const createTokenTransfer = (vaa: ParsedTokenTransferVaa): TokenTransfer 
   payload_type: Number(vaa.payloadType),
   fee: vaa.fee !== null ? vaa.fee.toString() : null,
   from_address: vaa.fromAddress !== null ? vaa.fromAddress.toString('hex') : null,
+  module: 'TokenBridge',
 });
 
 export const createAttestMessage = (vaa: ParsedAttestMetaVaa): AttestMessage => ({

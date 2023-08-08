@@ -11,13 +11,22 @@ import {
   parseTokenTransferPayload,
   parseVaa,
 } from '@certusone/wormhole-sdk';
-import { isTokenBridgeEmitter } from '@wormhole-foundation/wormhole-monitor-common';
 import {
+  CIRCLE_DOMAIN_TO_CHAIN_ID,
+  isCircleIntegrationEmitter,
+  isTokenBridgeEmitter,
+} from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  TokenTransfer,
   createAttestMessage,
   createTokenMetadata,
   createTokenTransfer,
 } from '@wormhole-foundation/wormhole-monitor-database';
 import { assertEnvironmentVariable } from './utils';
+import {
+  CircleIntegrationPayload,
+  parseCircleIntegrationDepositWithPayload,
+} from './_sdk_circleIntegration';
 
 let initialized = false;
 let bigtable: Bigtable;
@@ -62,7 +71,12 @@ export const processVaa: EventFunction = async (message: PubsubMessage, context:
     const [chain, emitter] = rowKey.split('/');
     const chainId = Number(chain);
     assertChain(chainId);
-    if (!isTokenBridgeEmitter(chainId, emitter)) {
+    const module = isTokenBridgeEmitter(chainId, emitter)
+      ? 'TokenBridge'
+      : isCircleIntegrationEmitter(chainId, emitter)
+      ? 'CircleIntegration'
+      : null;
+    if (!module) {
       return;
     }
     const [row] = await signedVAAsTable.row(rowKey).get({ decode: false });
@@ -70,23 +84,49 @@ export const processVaa: EventFunction = async (message: PubsubMessage, context:
     const vaa = parseVaa(vaaBytes);
     if (vaa.payload.length > 0) {
       const payloadType = vaa.payload[0];
-      if (
-        payloadType === TokenBridgePayload.Transfer ||
-        payloadType === TokenBridgePayload.TransferWithPayload
-      ) {
-        const payload = parseTokenTransferPayload(vaa.payload);
-        const tokenTransferVaa: ParsedTokenTransferVaa = { ...vaa, ...payload };
-        const tokenTransfer = createTokenTransfer(tokenTransferVaa);
-        await pg(tokenTransferTable).insert(tokenTransfer).onConflict().ignore();
-      } else if (payloadType === TokenBridgePayload.AttestMeta) {
-        const payload = parseAttestMetaPayload(vaa.payload);
-        const attestMetaVaa: ParsedAttestMetaVaa = { ...vaa, ...payload };
-        const attestMessage = createAttestMessage(attestMetaVaa);
-        const tokenMetadata = createTokenMetadata(attestMetaVaa);
-        await pg.transaction(async (trx) => {
-          await trx(attestMessageTable).insert(attestMessage).onConflict().ignore();
-          await trx(tokenMetadataTable).insert(tokenMetadata).onConflict().ignore();
-        });
+      if (module === 'TokenBridge') {
+        if (
+          payloadType === TokenBridgePayload.Transfer ||
+          payloadType === TokenBridgePayload.TransferWithPayload
+        ) {
+          const payload = parseTokenTransferPayload(vaa.payload);
+          const tokenTransferVaa: ParsedTokenTransferVaa = { ...vaa, ...payload };
+          const tokenTransfer = createTokenTransfer(tokenTransferVaa);
+          await pg(tokenTransferTable).insert(tokenTransfer).onConflict().ignore();
+        } else if (payloadType === TokenBridgePayload.AttestMeta) {
+          const payload = parseAttestMetaPayload(vaa.payload);
+          const attestMetaVaa: ParsedAttestMetaVaa = { ...vaa, ...payload };
+          const attestMessage = createAttestMessage(attestMetaVaa);
+          const tokenMetadata = createTokenMetadata(attestMetaVaa);
+          await pg.transaction(async (trx) => {
+            await trx(attestMessageTable).insert(attestMessage).onConflict().ignore();
+            await trx(tokenMetadataTable).insert(tokenMetadata).onConflict().ignore();
+          });
+        }
+      } else if (module === 'CircleIntegration') {
+        if (payloadType === CircleIntegrationPayload.DepositWithPayload) {
+          const payload = parseCircleIntegrationDepositWithPayload(vaa.payload);
+          const to_chain = CIRCLE_DOMAIN_TO_CHAIN_ID[payload.targetDomain];
+          if (!to_chain) {
+            throw new Error(`Missing mapping for Circle domain ${payload.targetDomain}`);
+          }
+          const tokenTransfer: TokenTransfer = {
+            timestamp: vaa.timestamp.toString(),
+            emitter_chain: vaa.emitterChain,
+            emitter_address: vaa.emitterAddress.toString('hex'),
+            sequence: vaa.sequence.toString(),
+            amount: payload.amount.toString(),
+            token_address: payload.tokenAddress.toString('hex'),
+            token_chain: vaa.emitterChain,
+            to_address: payload.mintRecipient.toString('hex'),
+            to_chain,
+            payload_type: Number(payload.payloadType),
+            fee: null,
+            from_address: payload.fromAddress.toString('hex'),
+            module,
+          };
+          await pg(tokenTransferTable).insert(tokenTransfer).onConflict().ignore();
+        }
       }
     }
     console.log(`Processed signed VAA: ${rowKey}`);

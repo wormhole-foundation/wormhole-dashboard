@@ -1,4 +1,7 @@
 import {
+  CHAIN_ID_ARBITRUM,
+  CHAIN_ID_AVAX,
+  CHAIN_ID_ETH,
   ChainId,
   ChainName,
   coalesceChainName,
@@ -84,3 +87,19 @@ export const NFT_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
 
 export const isNFTBridgeEmitter = (chain: ChainId | ChainName, emitter: string) =>
   NFT_BRIDGE_EMITTERS[coalesceChainName(chain)] === emitter;
+
+export const CIRCLE_INTEGRATION_EMITTERS: { [key in ChainName]?: string } = {
+  ethereum: '0000000000000000000000002703483B1a5a7c577e8680de9Df8Be03c6f30e3c',
+  avalanche: '00000000000000000000000009Fb06A271faFf70A651047395AaEb6265265F13',
+  arbitrum: '000000000000000000000000AaDA05BD399372f0b0463744C09113c137636f6a',
+};
+
+export const isCircleIntegrationEmitter = (chain: ChainId | ChainName, emitter: string) =>
+  CIRCLE_INTEGRATION_EMITTERS[coalesceChainName(chain)] === emitter;
+
+// https://developers.circle.com/stablecoin/docs/cctp-technical-reference
+export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
+  0: CHAIN_ID_ETH,
+  1: CHAIN_ID_AVAX,
+  3: CHAIN_ID_ARBITRUM,
+};

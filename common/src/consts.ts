@@ -89,9 +89,9 @@ export const isNFTBridgeEmitter = (chain: ChainId | ChainName, emitter: string) 
   NFT_BRIDGE_EMITTERS[coalesceChainName(chain)]?.toLowerCase() === emitter.toLowerCase();
 
 export const CIRCLE_INTEGRATION_EMITTERS: { [key in ChainName]?: string } = {
-  ethereum: '0000000000000000000000002703483b1a5a7c577e8680de9df8be03c6f30e3c',
+  ethereum: '000000000000000000000000aada05bd399372f0b0463744c09113c137636f6a',
   avalanche: '00000000000000000000000009fb06a271faff70a651047395aaeb6265265f13',
-  arbitrum: '000000000000000000000000aada05bd399372f0b0463744c09113c137636f6a',
+  arbitrum: '0000000000000000000000002703483b1a5a7c577e8680de9df8be03c6f30e3c',
 };
 
 export const isCircleIntegrationEmitter = (chain: ChainId | ChainName, emitter: string) =>

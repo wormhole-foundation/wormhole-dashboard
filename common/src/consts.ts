@@ -59,11 +59,11 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   xpla: '8f9cf727175353b17a5f574270e370776123d90fd74956ae4277962b4fdee24c',
   injective: '00000000000000000000000045dbea4617971d93188eda21530bc6503d153313',
   sui: 'ccceeb29348f71bdd22ffef43a2a19c1f5b5e17c5cca5411529120182672ade5',
-  base: '0000000000000000000000008d2de8d2f73F1F4cAB472AC9A881C9b123C79627',
+  base: '0000000000000000000000008d2de8d2f73f1f4cab472ac9a881c9b123c79627',
 };
 
 export const isTokenBridgeEmitter = (chain: ChainId | ChainName, emitter: string) =>
-  TOKEN_BRIDGE_EMITTERS[coalesceChainName(chain)] === emitter;
+  TOKEN_BRIDGE_EMITTERS[coalesceChainName(chain)]?.toLowerCase() === emitter.toLowerCase();
 
 export const NFT_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   solana: '0def15a24423e1edd1a5ab16f557b9060303ddbab8c803d2ee48f4b78a1cfd6b',
@@ -82,20 +82,20 @@ export const NFT_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   arbitrum: '0000000000000000000000003dd14d553cfd986eac8e3bddf629d82073e188c8',
   optimism: '000000000000000000000000fe8cd454b4a1ca468b57d79c0cc77ef5b6f64585',
   aptos: '0000000000000000000000000000000000000000000000000000000000000005',
-  base: '000000000000000000000000DA3adC6621B2677BEf9aD26598e6939CF0D92f88',
+  base: '000000000000000000000000da3adc6621b2677bef9ad26598e6939cf0d92f88',
 };
 
 export const isNFTBridgeEmitter = (chain: ChainId | ChainName, emitter: string) =>
-  NFT_BRIDGE_EMITTERS[coalesceChainName(chain)] === emitter;
+  NFT_BRIDGE_EMITTERS[coalesceChainName(chain)]?.toLowerCase() === emitter.toLowerCase();
 
 export const CIRCLE_INTEGRATION_EMITTERS: { [key in ChainName]?: string } = {
-  ethereum: '0000000000000000000000002703483B1a5a7c577e8680de9Df8Be03c6f30e3c',
-  avalanche: '00000000000000000000000009Fb06A271faFf70A651047395AaEb6265265F13',
-  arbitrum: '000000000000000000000000AaDA05BD399372f0b0463744C09113c137636f6a',
+  ethereum: '0000000000000000000000002703483b1a5a7c577e8680de9df8be03c6f30e3c',
+  avalanche: '00000000000000000000000009fb06a271faff70a651047395aaeb6265265f13',
+  arbitrum: '000000000000000000000000aada05bd399372f0b0463744c09113c137636f6a',
 };
 
 export const isCircleIntegrationEmitter = (chain: ChainId | ChainName, emitter: string) =>
-  CIRCLE_INTEGRATION_EMITTERS[coalesceChainName(chain)] === emitter;
+  CIRCLE_INTEGRATION_EMITTERS[coalesceChainName(chain)]?.toLowerCase() === emitter.toLowerCase();
 
 // https://developers.circle.com/stablecoin/docs/cctp-technical-reference
 export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {

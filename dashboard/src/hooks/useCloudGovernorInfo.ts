@@ -28,12 +28,22 @@ export interface EnqueuedVAA {
   releaseTime: number;
   notionalValue: string;
   txHash: string;
+  byGuardian: {
+    [guardianAddress: string]: EnqueuedVAAResponse;
+  };
+}
+
+export interface TotalEnqueuedVaasByGuardianByChain {
+  [guardianAddress: string]: {
+    [chainId: number]: number;
+  };
 }
 
 export interface CloudGovernorInfo {
   notionals: AvailableNotionalByChain[];
   tokens: GovernorToken[];
   enqueuedVAAs: EnqueuedVAA[];
+  totalEnqueuedVaas: TotalEnqueuedVaasByGuardianByChain;
 }
 
 interface Chain {
@@ -89,6 +99,7 @@ const createEmptyInfo = (): CloudGovernorInfo => ({
   notionals: [],
   tokens: [],
   enqueuedVAAs: [],
+  totalEnqueuedVaas: {},
 });
 
 const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
@@ -139,29 +150,40 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
 
   const tokens = jumpConfig?.tokens || [];
 
-  const vaaById = status.data.governorStatus.reduce<{
-    [key: string]: EnqueuedVAA;
-  }>((vaaById, status) => {
-    for (const chain of status.chains) {
+  const vaaById: { [key: string]: EnqueuedVAA } = {};
+  const totalEnqueuedVaas: TotalEnqueuedVaasByGuardianByChain = {};
+  for (const s of status.data.governorStatus) {
+    for (const chain of s.chains) {
       for (const emitter of chain.emitters) {
+        if (!totalEnqueuedVaas[s.guardianAddress]) {
+          totalEnqueuedVaas[s.guardianAddress] = {};
+        }
+        if (!totalEnqueuedVaas[s.guardianAddress][chain.chainId]) {
+          totalEnqueuedVaas[s.guardianAddress][chain.chainId] = 0;
+        }
+        totalEnqueuedVaas[s.guardianAddress][chain.chainId] += Number(emitter.totalEnqueuedVaas);
+
+        // NOTE: the enqueuedVaas list is limited to 20 VAAs
         for (const vaa of emitter.enqueuedVaas) {
-          const vaaId = `${chain.chainId}/${emitter}/${vaa.sequence}`;
+          const emitterAddress = emitter.emitterAddress.slice(2);
+          const vaaId = `${chain.chainId}/${emitterAddress}/${vaa.sequence}`;
           vaaById[vaaId] = {
             ...vaa,
             emitterChain: chain.chainId,
-            emitterAddress: emitter.emitterAddress.slice(2),
+            emitterAddress,
+            byGuardian: { ...(vaaById[vaaId]?.byGuardian || {}), [s.guardianAddress]: vaa },
           };
         }
       }
     }
-    return vaaById;
-  }, {});
-  const enqueuedVAAs = Object.values(vaaById);
+  }
 
+  const enqueuedVAAs = Object.values(vaaById);
   return {
     notionals,
     tokens,
     enqueuedVAAs,
+    totalEnqueuedVaas,
   };
 };
 

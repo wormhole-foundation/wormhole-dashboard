@@ -1,12 +1,11 @@
 import {
-  ChainId,
   CHAIN_ID_ALGORAND,
   CHAIN_ID_NEAR,
   CHAIN_ID_TERRA2,
+  ChainId,
   tryHexToNativeAssetString,
 } from '@certusone/wormhole-sdk';
-import { GovernorGetEnqueuedVAAsResponse_Entry } from '@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc';
-import { ExpandMore } from '@mui/icons-material';
+import { ExpandMore, WarningAmberOutlined } from '@mui/icons-material';
 import {
   Accordion,
   AccordionDetails,
@@ -19,10 +18,10 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  SortingState,
   createColumnHelper,
   getCoreRowModel,
   getSortedRowModel,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import numeral from 'numeral';
@@ -30,11 +29,12 @@ import React, { useMemo, useState } from 'react';
 import {
   AvailableNotionalByChain,
   CloudGovernorInfo,
+  EnqueuedVAA,
   GovernorToken,
 } from '../hooks/useCloudGovernorInfo';
 import useSymbolInfo from '../hooks/useSymbolInfo';
 import chainIdToName from '../utils/chainIdToName';
-import { CHAIN_INFO_MAP } from '../utils/consts';
+import { CHAIN_INFO_MAP, GUARDIAN_SET_3 } from '../utils/consts';
 import { explorerTx, getExplorerTxHash } from '../utils/explorer';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
@@ -81,7 +81,7 @@ const notionalColumns = [
   }),
   notionalColumnHelper.accessor(calculatePercent, {
     id: 'progress',
-    header: () => 'Progress',
+    header: () => 'Percent',
     cell: (info) => (
       <Tooltip title={`${info.getValue().toFixed(2)}%`} arrow>
         <LinearProgress
@@ -94,7 +94,58 @@ const notionalColumns = [
   }),
 ];
 
-const enqueuedColumnHelper = createColumnHelper<GovernorGetEnqueuedVAAsResponse_Entry>();
+type GuardianHoldingStat = {
+  name: string;
+  numHeld: number;
+  byChain: { [chainId: number]: number };
+};
+
+const guardianHoldingColumnHelper = createColumnHelper<GuardianHoldingStat>();
+
+const guardianHoldingColumns = [
+  guardianHoldingColumnHelper.accessor('name', {
+    header: () => 'Guardian',
+    sortingFn: `text`,
+  }),
+  guardianHoldingColumnHelper.accessor('numHeld', {
+    header: () => <Box order="1">Total Held</Box>,
+    cell: (info) => <Box textAlign="right">{info.getValue()}</Box>,
+  }),
+  guardianHoldingColumnHelper.accessor('byChain', {
+    header: () => <Box order="1">By Chain</Box>,
+    cell: (info) => (
+      <Box display="flex" alignItems="center" justifyContent="flex-end">
+        {Object.entries(info.getValue())
+          .filter(([chainId, num]) => num !== 0)
+          .map(([chainId, number]) => (
+            <React.Fragment key={chainId}>
+              <Box
+                ml={2}
+                display="flex"
+                alignItems="center"
+                borderRadius="50%"
+                sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
+              >
+                {CHAIN_INFO_MAP[chainId]?.icon ? (
+                  <img
+                    src={CHAIN_INFO_MAP[chainId].icon}
+                    alt={CHAIN_INFO_MAP[chainId].name}
+                    width={12}
+                    height={12}
+                  />
+                ) : (
+                  <Typography variant="body2">{chainId}</Typography>
+                )}
+              </Box>
+              <Box sx={{ ml: 0.5 }}>{number}</Box>
+            </React.Fragment>
+          ))}
+      </Box>
+    ),
+  }),
+];
+
+const enqueuedColumnHelper = createColumnHelper<EnqueuedVAA>();
 
 const enqueuedColumns = [
   enqueuedColumnHelper.accessor('emitterChain', {
@@ -121,6 +172,11 @@ const enqueuedColumns = [
     id: 'hasQuorum',
     header: () => 'Has Quorum?',
     cell: (info) => <EnqueuedVAAChecker vaa={info.row.original} />,
+  }),
+  enqueuedColumnHelper.display({
+    id: 'numGuardians',
+    header: () => 'Num Holding',
+    cell: (info) => Object.keys(info.row.original.byGuardian).length,
   }),
   enqueuedColumnHelper.accessor('txHash', {
     header: () => 'Transaction Hash',
@@ -233,6 +289,38 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setNotionalSorting,
   });
+  const guardianHoldingStats: GuardianHoldingStat[] = useMemo(() => {
+    const stats: GuardianHoldingStat[] = GUARDIAN_SET_3.map((g) => ({
+      name: g.name,
+      numHeld: 0,
+      byChain: {},
+    }));
+    for (const gPub of Object.keys(governorInfo.totalEnqueuedVaas)) {
+      const idx = GUARDIAN_SET_3.findIndex(
+        (g) => `0x${gPub}`.toLowerCase() === g.pubkey.toLowerCase()
+      );
+      if (idx !== -1) {
+        stats[idx].byChain = governorInfo.totalEnqueuedVaas[gPub];
+        stats[idx].numHeld += Object.values(governorInfo.totalEnqueuedVaas[gPub]).reduce(
+          (s, n) => s + n,
+          0
+        );
+      }
+    }
+    return stats;
+  }, [governorInfo.totalEnqueuedVaas]);
+  const [guardianHoldingSorting, setGuardianHoldingSorting] = useState<SortingState>([]);
+  const guardianHolding = useReactTable({
+    columns: guardianHoldingColumns,
+    data: guardianHoldingStats,
+    state: {
+      sorting: guardianHoldingSorting,
+    },
+    getRowId: (key) => JSON.stringify(key),
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setGuardianHoldingSorting,
+  });
   const [enqueuedSorting, setEnqueuedSorting] = useState<SortingState>([]);
   const enqueuedTable = useReactTable({
     columns: enqueuedColumns,
@@ -312,17 +400,36 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
         </Box>
       }
     >
+      {governorInfo.enqueuedVAAs.length ? (
+        <Box mb={2}>
+          <Card>
+            <Table<GuardianHoldingStat> table={guardianHolding} />
+          </Card>
+        </Box>
+      ) : null}
       <Box my={2}>
         <Card>
-          <Table<GovernorGetEnqueuedVAAsResponse_Entry>
-            table={enqueuedTable}
-            showRowCount={!!governorInfo.enqueuedVAAs.length}
-          />
-          {governorInfo.enqueuedVAAs.length === 0 ? (
-            <Typography variant="body2" sx={{ py: 1, textAlign: 'center' }}>
-              No enqueued VAAs
-            </Typography>
-          ) : null}
+          <Accordion>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography display="flex" alignItems="center">
+                Transactions ({governorInfo.enqueuedVAAs.length}){' '}
+                <Tooltip title="Please note: Each guardian only gossips 20 of its enqueued VAAs. If the numbers above are larger than that, only a subset of the held transactions may be shown">
+                  <WarningAmberOutlined sx={{ fontSize: '1em', ml: 0.5 }} />
+                </Tooltip>
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Table<EnqueuedVAA>
+                table={enqueuedTable}
+                showRowCount={!!governorInfo.enqueuedVAAs.length}
+              />
+              {governorInfo.enqueuedVAAs.length === 0 ? (
+                <Typography variant="body2" sx={{ py: 1, textAlign: 'center' }}>
+                  No enqueued VAAs
+                </Typography>
+              ) : null}
+            </AccordionDetails>
+          </Accordion>
         </Card>
       </Box>
       <Box mb={2}>

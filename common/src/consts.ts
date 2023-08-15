@@ -60,6 +60,8 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   injective: '00000000000000000000000045dbea4617971d93188eda21530bc6503d153313',
   sui: 'ccceeb29348f71bdd22ffef43a2a19c1f5b5e17c5cca5411529120182672ade5',
   base: '0000000000000000000000008d2de8d2f73f1f4cab472ac9a881c9b123c79627',
+  sei: '86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e',
+  wormchain: 'aeb534c45c3049d380b9d9b966f9895f53abd4301bfaff407fa09dea8ae7a924',
 };
 
 export const isTokenBridgeEmitter = (chain: ChainId | ChainName, emitter: string) =>

@@ -137,3 +137,27 @@ test('getMessagesForBlocks(injective)', async () => {
     '0xab3f3f6ebd51c4776eeb5d0eef525207590daab24cf794434387747395a3e904:19/00000000000000000000000045dbea4617971d93188eda21530bc6503d153313/33'
   );
 });
+
+test('getFinalizedBlockNumber(sei)', async () => {
+  const watcher = new CosmwasmWatcher('sei');
+  const blockNumber = await watcher.getFinalizedBlockNumber();
+  console.log(blockNumber);
+  expect(blockNumber).toBeGreaterThan(0);
+});
+
+test('getMessagesForBlocks(sei)', async () => {
+  const watcher = new CosmwasmWatcher('sei');
+  const vaasByBlock = await watcher.getMessagesForBlocks(18907686, 18907687);
+  const entries = Object.entries(vaasByBlock);
+  console.log(entries);
+  expect(entries.length).toEqual(2);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(1);
+  expect(vaasByBlock['18907686/2023-08-17T00:46:43.834Z']).toBeDefined();
+  expect(vaasByBlock['18907686/2023-08-17T00:46:43.834Z'].length).toEqual(2);
+  expect(vaasByBlock['18907686/2023-08-17T00:46:43.834Z']).toEqual([
+    'BB54EC8EBE75644D9EC12FED3BFAF7311CF4A813CB26F188C78AF3E9A27D0FB4:32/86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e/1479',
+    '6C586010F41DB1F75BCAE8AD6E823F2618A94E567939E3B31E7D55C2EE542698:32/86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e/1480',
+  ]);
+});

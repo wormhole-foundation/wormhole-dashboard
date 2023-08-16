@@ -39,7 +39,7 @@ export class CosmwasmWatcher extends Watcher {
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
-    const result = (await axios.get(`${this.rpc}/${this.latestBlockTag}`)).data;
+    const result = (await axios.get(`${this.rpc}/${this.latestBlockTag}`, AXIOS_CONFIG_JSON)).data;
     if (result && result.block.header.height) {
       let blockHeight: number = parseInt(result.block.header.height);
       if (blockHeight !== this.latestBlockHeight) {
@@ -68,7 +68,7 @@ export class CosmwasmWatcher extends Watcher {
     for (let blockNumber = fromBlock; blockNumber <= toBlock; blockNumber++) {
       this.logger.debug('Getting block number ' + blockNumber);
       const blockResult: CosmwasmBlockResult = (
-        await axios.get(`${this.rpc}/${this.getBlockTag}${blockNumber}`)
+        await axios.get(`${this.rpc}/${this.getBlockTag}${blockNumber}`, AXIOS_CONFIG_JSON)
       ).data;
       if (!blockResult || !blockResult.block.data) {
         throw new Error('bad result for block ${blockNumber}');

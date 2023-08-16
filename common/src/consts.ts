@@ -33,6 +33,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   solana: '94401321', // https://explorer.solana.com/tx/KhLy688yDxbP7xbXVXK7TGpZU5DAFHbYiaoX16zZArxvVySz8i8g7N7Ss2noQYoq9XRbg6HDzrQBjUfmNcSWwhe
   sui: '1485552', // https://explorer.sui.io/txblock/671SoTvVUvBZQWKXeameDvAwzHQvnr8Nj7dR9MUwm3CV?network=https%3A%2F%2Frpc.mainnet.sui.io
   base: '1422314',
+  sei: '238594',
 };
 
 export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {

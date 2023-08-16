@@ -49,6 +49,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   solana: process.env.SOLANA_RPC ?? 'https://api.mainnet-beta.solana.com',
   sui: 'https://rpc.mainnet.sui.io',
   base: 'https://developer-access-mainnet.base.org',
+  sei: 'https://sei-api.polkachu.com', // https://docs.sei.io/develop/resources
 };
 
 // Separating for now so if we max out infura we can keep Polygon going

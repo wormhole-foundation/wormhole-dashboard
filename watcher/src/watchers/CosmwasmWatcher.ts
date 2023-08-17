@@ -192,7 +192,7 @@ type CosmwasmBlockResult = {
   };
 };
 
-type CosmwasmHashResult = {
+export type CosmwasmHashResult = {
   tx: {
     body: {
       messages: string[];

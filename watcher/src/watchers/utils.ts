@@ -13,6 +13,7 @@ import { SolanaWatcher } from './SolanaWatcher';
 import { TerraExplorerWatcher } from './TerraExplorerWatcher';
 import { Watcher } from './Watcher';
 import { SuiWatcher } from './SuiWatcher';
+import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 
 export function makeFinalizedWatcher(chainName: ChainName): Watcher {
   if (chainName === 'solana') {
@@ -45,9 +46,11 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     return new NearWatcher();
   } else if (chainName === 'injective') {
     return new InjectiveExplorerWatcher();
+  } else if (chainName === 'sei') {
+    return new SeiExplorerWatcher();
   } else if (chainName === 'terra') {
     return new TerraExplorerWatcher('terra');
-  } else if (chainName === 'terra2' || chainName === 'xpla' || chainName === 'sei') {
+  } else if (chainName === 'terra2' || chainName === 'xpla') {
     return new CosmwasmWatcher(chainName);
   } else if (chainName === 'sui') {
     return new SuiWatcher();

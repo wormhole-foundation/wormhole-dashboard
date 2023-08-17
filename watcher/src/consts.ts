@@ -69,6 +69,8 @@ export const ALGORAND_INFO = {
   token: '',
 };
 
+export const SEI_GRAPHQL = 'https://pacific-1-graphql.alleslabs.dev/v1/graphql';
+
 export const DB_SOURCE =
   process.env.NODE_ENV === 'test' ? 'local' : process.env.DB_SOURCE || 'local';
 export const JSON_DB_FILE = process.env.JSON_DB_FILE || './db.json';

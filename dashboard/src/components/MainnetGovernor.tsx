@@ -5,22 +5,30 @@ import {
   ChainId,
   tryHexToNativeAssetString,
 } from '@certusone/wormhole-sdk';
-import { ExpandMore, WarningAmberOutlined } from '@mui/icons-material';
+import {
+  ExpandMore,
+  KeyboardArrowDown,
+  KeyboardArrowRight,
+  WarningAmberOutlined,
+} from '@mui/icons-material';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
   Card,
+  IconButton,
   LinearProgress,
   Link,
   Tooltip,
   Typography,
 } from '@mui/material';
 import {
+  ExpandedState,
   SortingState,
   createColumnHelper,
   getCoreRowModel,
+  getExpandedRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
@@ -43,7 +51,7 @@ import Table from './Table';
 const calculatePercent = (notional: AvailableNotionalByChain): number => {
   try {
     return (
-      ((Number(notional.notionalLimit) - Number(notional.remainingAvailableNotional.jump)) /
+      ((Number(notional.notionalLimit) - Number(notional.remainingAvailableNotional.quorum)) /
         Number(notional.notionalLimit)) *
       100
     );
@@ -57,7 +65,30 @@ const notionalColumnHelper = createColumnHelper<AvailableNotionalByChain>();
 const notionalColumns = [
   notionalColumnHelper.accessor('chainId', {
     header: () => 'Chain',
-    cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
+    cell: (info) => (
+      <>
+        {info.row.getCanExpand() ? (
+          <IconButton
+            size="small"
+            sx={{ ml: -1 }}
+            {...{
+              onClick: info.row.getToggleExpandedHandler(),
+            }}
+          >
+            {info.row.getIsExpanded() ? (
+              <KeyboardArrowDown fontSize="inherit" />
+            ) : (
+              <KeyboardArrowRight fontSize="inherit" />
+            )}
+          </IconButton>
+        ) : null}{' '}
+        {info.row.original.guardianName ? (
+          <Box sx={{ pl: 3 }}>{info.row.original.guardianName}</Box>
+        ) : (
+          `${chainIdToName(info.getValue())} (${info.getValue()})`
+        )}
+      </>
+    ),
   }),
   notionalColumnHelper.accessor('notionalLimit', {
     header: () => <Box order="1">Limit</Box>,
@@ -69,15 +100,21 @@ const notionalColumns = [
   }),
   notionalColumnHelper.accessor('remainingAvailableNotional.min', {
     header: () => <Box order="1">Min Remaining</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) =>
+      info.row.original.guardianName ? null : (
+        <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+      ),
   }),
-  notionalColumnHelper.accessor('remainingAvailableNotional.avg', {
-    header: () => <Box order="1">Avg Remaining</Box>,
+  notionalColumnHelper.accessor('remainingAvailableNotional.quorum', {
+    header: () => <Box order="1">Quorum Remaining</Box>,
     cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
   }),
   notionalColumnHelper.accessor('remainingAvailableNotional.max', {
     header: () => <Box order="1">Max Remaining</Box>,
-    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+    cell: (info) =>
+      info.row.original.guardianName ? null : (
+        <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>
+      ),
   }),
   notionalColumnHelper.accessor(calculatePercent, {
     id: 'progress',
@@ -266,14 +303,19 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
   );
 
   const [notionalSorting, setNotionalSorting] = useState<SortingState>([]);
+  const [notionalExpanded, setNotionalExpanded] = useState<ExpandedState>({});
   const notionalTable = useReactTable({
     columns: notionalColumns,
     data: governorInfo.notionals,
     state: {
+      expanded: notionalExpanded,
       sorting: notionalSorting,
     },
-    getRowId: (notional) => notional.chainId.toString(),
+    getRowId: (notional) => `${notional.chainId.toString()}-${notional.guardianName || ''}`,
+    getSubRows: (row) => row.byGuardian,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    onExpandedChange: setNotionalExpanded,
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setNotionalSorting,
   });

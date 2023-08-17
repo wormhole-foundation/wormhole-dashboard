@@ -1,18 +1,20 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
-import { JUMP_GUARDIAN_ADDRESS } from '../utils/consts';
+import { GUARDIAN_SET_3, JUMP_GUARDIAN_ADDRESS } from '../utils/consts';
+import { getQuorumCount } from '../components/Alerts';
 
 export interface AvailableNotionalByChain {
+  guardianName?: string;
   chainId: number;
   remainingAvailableNotional: {
-    jump: string;
     min: string;
     max: string;
-    avg: string;
+    quorum: string;
   };
   notionalLimit: string;
   bigTransactionSize: string;
+  byGuardian?: AvailableNotionalByChain[];
 }
 
 export interface GovernorToken {
@@ -108,45 +110,86 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
     axios.get<GovernorStatusResponse>(`${endpoint}/governor-status`),
   ]);
 
-  let jumpConfig: GovernorConfig | undefined;
-  const notionalsByChain = configs.data.governorConfigs.reduce<{
+  let jumpConfig: GovernorConfig | undefined = undefined;
+  const availableNotionalByChain: {
     [chainId: number]: bigint[];
-  }>((notionalsByChain, config) => {
-    if (config.guardianAddress.toLowerCase() === JUMP_GUARDIAN_ADDRESS) jumpConfig = config;
-    config.chains.forEach(({ chainId, availableNotional }) => {
-      if (notionalsByChain[chainId] === undefined) {
-        notionalsByChain[chainId] = [];
-      }
-      notionalsByChain[chainId].push(BigInt(availableNotional));
-    });
-    return notionalsByChain;
-  }, {});
-  const notionals = jumpConfig
-    ? jumpConfig.chains.map<AvailableNotionalByChain>((chain) => {
-        const stats = (notionalsByChain[chain.chainId] || []).reduce<{
-          min: bigint;
-          max: bigint;
-          sum: bigint;
-        }>(
-          (stats, notional) => {
-            if (notional < stats.min) stats.min = notional;
-            if (notional > stats.max) stats.max = notional;
-            stats.sum += notional;
-            return stats;
-          },
-          { min: BigInt(1e9), max: BigInt(-1e9), sum: BigInt(0) }
-        );
-        return {
+  } = {};
+  const bigTransactionSizeByChain: {
+    [chainId: number]: bigint[];
+  } = {};
+  const notionalLimitsByChain: {
+    [chainId: number]: bigint[];
+  } = {};
+  const guardiansByChain: {
+    [chainId: number]: AvailableNotionalByChain[];
+  } = {};
+  for (const config of configs.data.governorConfigs) {
+    if (config.guardianAddress.toLowerCase() === JUMP_GUARDIAN_ADDRESS) {
+      jumpConfig = config;
+    }
+    const guardianName =
+      GUARDIAN_SET_3.find(
+        (g) => `0x${config.guardianAddress}`.toLowerCase() === g.pubkey.toLowerCase()
+      )?.name || config.guardianAddress;
+    for (const chain of config.chains) {
+      const { chainId, availableNotional, bigTransactionSize, notionalLimit } = chain;
+      availableNotionalByChain[chainId] = [
+        ...(availableNotionalByChain[chainId] || []),
+        BigInt(availableNotional),
+      ];
+      bigTransactionSizeByChain[chainId] = [
+        ...(bigTransactionSizeByChain[chainId] || []),
+        BigInt(bigTransactionSize),
+      ];
+      notionalLimitsByChain[chainId] = [
+        ...(notionalLimitsByChain[chainId] || []),
+        BigInt(notionalLimit),
+      ];
+      guardiansByChain[chainId] = [
+        ...(guardiansByChain[chainId] || []),
+        {
           ...chain,
+          guardianName,
           remainingAvailableNotional: {
-            jump: chain.availableNotional,
-            min: stats.min.toString(),
-            max: stats.max.toString(),
-            avg: (stats.sum / BigInt(notionalsByChain[chain.chainId]?.length || 1)).toString(),
+            min: '',
+            max: '',
+            quorum: chain.availableNotional,
           },
-        };
-      })
-    : [];
+        },
+      ];
+    }
+  }
+
+  const notionals: AvailableNotionalByChain[] = [];
+  const quorumIdx = getQuorumCount('mainnet') - 1;
+  for (const chainIdStr in availableNotionalByChain) {
+    const chainId = Number(chainIdStr);
+    availableNotionalByChain[chainId].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)).reverse();
+    bigTransactionSizeByChain[chainId].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)).reverse();
+    notionalLimitsByChain[chainId].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)).reverse();
+    notionals.push({
+      chainId,
+      remainingAvailableNotional: {
+        min: availableNotionalByChain[chainId][
+          availableNotionalByChain[chainId].length - 1
+        ].toString(),
+        max: availableNotionalByChain[chainId][0].toString(),
+        quorum:
+          availableNotionalByChain[chainId][
+            Math.min(quorumIdx, availableNotionalByChain[chainId].length - 1)
+          ].toString(),
+      },
+      bigTransactionSize:
+        bigTransactionSizeByChain[chainId][
+          Math.min(quorumIdx, bigTransactionSizeByChain[chainId].length - 1)
+        ].toString(),
+      notionalLimit:
+        notionalLimitsByChain[chainId][
+          Math.min(quorumIdx, notionalLimitsByChain[chainId].length - 1)
+        ].toString(),
+      byGuardian: guardiansByChain[chainId],
+    });
+  }
 
   const tokens = jumpConfig?.tokens || [];
 

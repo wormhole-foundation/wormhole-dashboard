@@ -326,11 +326,10 @@ function Misses() {
           return filteredMisses.length === 0 ? null : (
             <CollapsibleSection
               key={chain}
-              header={
-                <Typography variant="h5">
-                  {coalesceChainName(Number(chain) as ChainId)} ({chain}) - {filteredMisses.length}
-                </Typography>
-              }
+              defaultExpanded={false}
+              header={`${coalesceChainName(Number(chain) as ChainId)} (${chain}) - ${
+                filteredMisses.length
+              }`}
             >
               {filteredMisses.map((message) => (
                 <Box

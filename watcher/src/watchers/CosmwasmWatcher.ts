@@ -27,6 +27,9 @@ export class CosmwasmWatcher extends Watcher {
     this.getBlockTag = 'blocks/';
     this.hashTag = 'cosmos/tx/v1beta1/txs/';
     this.latestBlockHeight = 0;
+    if (chain === 'sei') {
+      this.maximumBatchSize = 1;
+    }
   }
 
   /**

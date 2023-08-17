@@ -31,6 +31,7 @@ const supportedChains: ChainName[] = [
   'injective',
   'sui',
   'base',
+  'sei',
 ];
 
 for (const chain of supportedChains) {

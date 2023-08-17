@@ -2,6 +2,7 @@ import { expect, jest, test } from '@jest/globals';
 import { CosmwasmWatcher } from '../CosmwasmWatcher';
 import { TerraExplorerWatcher } from '../TerraExplorerWatcher';
 import { InjectiveExplorerWatcher } from '../InjectiveExplorerWatcher';
+import { SeiExplorerWatcher } from '../SeiExplorerWatcher';
 
 jest.setTimeout(60000);
 
@@ -145,7 +146,8 @@ test('getFinalizedBlockNumber(sei)', async () => {
   expect(blockNumber).toBeGreaterThan(0);
 });
 
-test('getMessagesForBlocks(sei)', async () => {
+// skipped because the SeiExplorerWatcher is used
+test.skip('getMessagesForBlocks(sei)', async () => {
   const watcher = new CosmwasmWatcher('sei');
   const vaasByBlock = await watcher.getMessagesForBlocks(18907686, 18907687);
   const entries = Object.entries(vaasByBlock);
@@ -159,5 +161,22 @@ test('getMessagesForBlocks(sei)', async () => {
   expect(vaasByBlock['18907686/2023-08-17T00:46:43.834Z']).toEqual([
     'BB54EC8EBE75644D9EC12FED3BFAF7311CF4A813CB26F188C78AF3E9A27D0FB4:32/86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e/1479',
     '6C586010F41DB1F75BCAE8AD6E823F2618A94E567939E3B31E7D55C2EE542698:32/86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e/1480',
+  ]);
+});
+
+// skipped because it takes more and more time to paginate back
+test.skip('getMessagesForBlocks(sei explorer)', async () => {
+  const watcher = new SeiExplorerWatcher();
+  const vaasByBlock = await watcher.getMessagesForBlocks(19061244, 19061245);
+  const entries = Object.entries(vaasByBlock);
+  console.log(entries);
+  expect(entries.length).toEqual(1);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(vaasByBlock['19061244/2023-08-17T16:52:07.156Z']).toBeDefined();
+  expect(vaasByBlock['19061244/2023-08-17T16:52:07.156Z'].length).toEqual(1);
+  expect(vaasByBlock['19061244/2023-08-17T16:52:07.156Z']).toEqual([
+    'E66AC5A3C288A3FCC05CCE57863AAAA8F27035FE73088FA0278C4315F18AB443:32/86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e/5016',
   ]);
 });

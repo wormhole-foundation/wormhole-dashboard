@@ -348,7 +348,7 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
       </Box>
       <Box mt={2}>
         <Card>
-          <Accordion>
+          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography>Accounts ({accountsInfo.length})</Typography>
             </AccordionSummary>

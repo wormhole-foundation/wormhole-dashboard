@@ -21,6 +21,7 @@ import {
   SortingState,
   createColumnHelper,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
@@ -32,7 +33,6 @@ import {
   EnqueuedVAA,
   GovernorToken,
 } from '../hooks/useCloudGovernorInfo';
-import useSymbolInfo from '../hooks/useSymbolInfo';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP, GUARDIAN_SET_3 } from '../utils/consts';
 import { explorerTx, getExplorerTxHash } from '../utils/explorer';
@@ -206,11 +206,7 @@ const enqueuedColumns = [
   }),
 ];
 
-interface GovernorToken_ext extends GovernorToken {
-  symbol: string;
-}
-
-const tokenColumnHelper = createColumnHelper<GovernorToken_ext>();
+const tokenColumnHelper = createColumnHelper<GovernorToken>();
 
 const tokenColumns = [
   tokenColumnHelper.accessor('originChainId', {
@@ -251,11 +247,6 @@ const tokenColumns = [
       );
     },
   }),
-  tokenColumnHelper.display({
-    id: 'Symbol',
-    header: () => 'Symbol',
-    cell: (info) => `${info.row.original?.symbol}`,
-  }),
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
     cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0.0000')}</Box>,
@@ -265,16 +256,13 @@ const tokenColumns = [
 type ChainIdToEnqueuedCount = { [chainId: number]: number };
 
 function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
-  const tokenSymbols = useSymbolInfo(governorInfo.tokens);
-  // TODO: governorInfo.tokens triggers updates to displayTokens, not tokenSymbols
-  // Should fix this
   const displayTokens = useMemo(
     () =>
       governorInfo.tokens.map((tk) => ({
         ...tk,
-        symbol: tokenSymbols.get([tk.originChainId, tk.originAddress].join('_'))?.symbol || '',
+        // TODO: get token symbols from DB
       })),
-    [governorInfo.tokens, tokenSymbols]
+    [governorInfo.tokens]
   );
 
   const [notionalSorting, setNotionalSorting] = useState<SortingState>([]);
@@ -330,6 +318,7 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
     },
     getRowId: (vaa) => JSON.stringify(vaa),
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setEnqueuedSorting,
   });
@@ -400,6 +389,11 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
         </Box>
       }
     >
+      <Box mb={2}>
+        <Card>
+          <Table<AvailableNotionalByChain> table={notionalTable} />
+        </Card>
+      </Box>
       {governorInfo.enqueuedVAAs.length ? (
         <Box mb={2}>
           <Card>
@@ -409,7 +403,7 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
       ) : null}
       <Box my={2}>
         <Card>
-          <Accordion>
+          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography display="flex" alignItems="center">
                 Transactions ({governorInfo.enqueuedVAAs.length}){' '}
@@ -421,6 +415,7 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
             <AccordionDetails>
               <Table<EnqueuedVAA>
                 table={enqueuedTable}
+                paginated={!!governorInfo.enqueuedVAAs.length}
                 showRowCount={!!governorInfo.enqueuedVAAs.length}
               />
               {governorInfo.enqueuedVAAs.length === 0 ? (
@@ -432,19 +427,14 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
           </Accordion>
         </Card>
       </Box>
-      <Box mb={2}>
-        <Card>
-          <Table<AvailableNotionalByChain> table={notionalTable} />
-        </Card>
-      </Box>
       <Box mt={2}>
         <Card>
-          <Accordion>
+          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography>Tokens ({governorInfo.tokens.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table<GovernorToken_ext> table={tokenTable} />
+              <Table<GovernorToken> table={tokenTable} />
             </AccordionDetails>
           </Accordion>
         </Card>

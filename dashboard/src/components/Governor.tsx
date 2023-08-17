@@ -32,7 +32,6 @@ import {
 import numeral from 'numeral';
 import React, { useMemo, useState } from 'react';
 import useGovernorInfo from '../hooks/useGovernorInfo';
-import useSymbolInfo from '../hooks/useSymbolInfo';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP } from '../utils/consts';
 import { explorerTx, getExplorerTxHash } from '../utils/explorer';
@@ -143,11 +142,7 @@ const enqueuedColumns = [
   }),
 ];
 
-interface GovernorGetTokenListResponse_Entry_ext extends GovernorGetTokenListResponse_Entry {
-  symbol: string;
-}
-
-const tokenColumnHelper = createColumnHelper<GovernorGetTokenListResponse_Entry_ext>();
+const tokenColumnHelper = createColumnHelper<GovernorGetTokenListResponse_Entry>();
 
 const tokenColumns = [
   tokenColumnHelper.accessor('originChainId', {
@@ -189,11 +184,6 @@ const tokenColumns = [
       );
     },
   }),
-  tokenColumnHelper.display({
-    id: 'Symbol',
-    header: () => 'Symbol',
-    cell: (info) => `${info.row.original?.symbol}`,
-  }),
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
     cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0.0000')}</Box>,
@@ -204,16 +194,12 @@ type ChainIdToEnqueuedCount = { [chainId: number]: number };
 
 function Governor() {
   const governorInfo = useGovernorInfo();
-  const tokenSymbols = useSymbolInfo(governorInfo.tokens);
-  // TODO: governorInfo.tokens triggers updates to displayTokens, not tokenSymbols
-  // Should fix this
   const displayTokens = useMemo(
     () =>
       governorInfo.tokens.map((tk) => ({
         ...tk,
-        symbol: tokenSymbols.get([tk.originChainId, tk.originAddress].join('_'))?.symbol || '',
       })),
-    [governorInfo.tokens, tokenSymbols]
+    [governorInfo.tokens]
   );
 
   const [notionalSorting, setNotionalSorting] = useState<SortingState>([]);
@@ -327,12 +313,12 @@ function Governor() {
       </Box>
       <Box mt={2}>
         <Card>
-          <Accordion>
+          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography>Tokens ({governorInfo.tokens.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table<GovernorGetTokenListResponse_Entry_ext> table={tokenTable} />
+              <Table<GovernorGetTokenListResponse_Entry> table={tokenTable} />
             </AccordionDetails>
           </Accordion>
         </Card>

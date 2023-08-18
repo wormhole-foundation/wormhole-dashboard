@@ -1,6 +1,6 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
-import { AXIOS_CONFIG_JSON, SEI_GRAPHQL } from '../consts';
+import { AXIOS_CONFIG_JSON, SEI_EXPLORER_GRAPHQL, SEI_EXPLORER_TXS } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { CosmwasmHashResult, CosmwasmWatcher } from './CosmwasmWatcher';
@@ -51,7 +51,7 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
     this.logger.debug(`Query string = ${JSON.stringify(query)}`);
     const bulkTxnResult = (
       await axios.post<SeiExplorerAccountTransactionsResponse>(
-        SEI_GRAPHQL,
+        SEI_EXPLORER_GRAPHQL,
         query,
         AXIOS_CONFIG_JSON
       )
@@ -86,7 +86,7 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
       this.logger.debug(`Query string = ${JSON.stringify(query)}`);
       const bulkTxnResult = (
         await axios.post<SeiExplorerAccountTransactionsResponse>(
-          SEI_GRAPHQL,
+          SEI_EXPLORER_GRAPHQL,
           query,
           AXIOS_CONFIG_JSON
         )
@@ -104,10 +104,6 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
         const txn = bulkTxns[i];
         const height: number = txn.block.height;
         const hash = txn.transaction.hash.replace('\\x', '').toUpperCase();
-        if (hash === 'EBC1A645510633590A6042A4DAF18BE3983364092AA807CDEA25AC6FC99477A4') {
-          // old tx is seemingly missing from node
-          continue;
-        }
         this.logger.debug(`Found one: ${fromBlock}, ${height}, ${toBlock}, ${hash}`);
         if (
           height >= fromBlock &&
@@ -125,9 +121,19 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
           // This is straight from CosmwasmWatcher, could probably optimize
           try {
             await sleep(500); // don't make the RPC upset
-            const hashResult: CosmwasmHashResult = (
-              await axios.get(`${this.rpc}/${this.hashTag}${hash}`, AXIOS_CONFIG_JSON)
-            ).data;
+            let hashResult: CosmwasmHashResult | undefined;
+            try {
+              // try hitting the node first
+              hashResult = (
+                await axios.get(`${this.rpc}/${this.hashTag}${hash}`, AXIOS_CONFIG_JSON)
+              ).data;
+            } catch (e: any) {
+              if (e?.response?.status === 404) {
+                // the node is mysteriously missing some transactions, but so is this ='(
+                hashResult = (await axios.get(`${SEI_EXPLORER_TXS}${hash}`, AXIOS_CONFIG_JSON))
+                  .data;
+              }
+            }
             if (hashResult && hashResult.tx_response.events) {
               const numEvents = hashResult.tx_response.events.length;
               for (let j = 0; j < numEvents; j++) {
@@ -176,7 +182,6 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
               // Just skip this one...
             } else {
               // Rethrow the error because we only want to catch the above error
-              this.logger.error(`${this.rpc}/${this.hashTag}${hash}`);
               throw e;
             }
           }

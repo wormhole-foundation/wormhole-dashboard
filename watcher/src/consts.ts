@@ -69,7 +69,8 @@ export const ALGORAND_INFO = {
   token: '',
 };
 
-export const SEI_GRAPHQL = 'https://pacific-1-graphql.alleslabs.dev/v1/graphql';
+export const SEI_EXPLORER_GRAPHQL = 'https://pacific-1-graphql.alleslabs.dev/v1/graphql';
+export const SEI_EXPLORER_TXS = 'https://celatone-api.alleslabs.dev/txs/sei/pacific-1/';
 
 export const DB_SOURCE =
   process.env.NODE_ENV === 'test' ? 'local' : process.env.DB_SOURCE || 'local';

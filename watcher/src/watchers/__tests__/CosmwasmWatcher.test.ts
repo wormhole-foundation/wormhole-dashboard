@@ -139,7 +139,8 @@ test('getMessagesForBlocks(injective)', async () => {
   );
 });
 
-test('getFinalizedBlockNumber(sei)', async () => {
+// skipped because the SeiExplorerWatcher is used
+test.skip('getFinalizedBlockNumber(sei)', async () => {
   const watcher = new CosmwasmWatcher('sei');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   console.log(blockNumber);
@@ -162,6 +163,13 @@ test.skip('getMessagesForBlocks(sei)', async () => {
     'BB54EC8EBE75644D9EC12FED3BFAF7311CF4A813CB26F188C78AF3E9A27D0FB4:32/86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e/1479',
     '6C586010F41DB1F75BCAE8AD6E823F2618A94E567939E3B31E7D55C2EE542698:32/86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e/1480',
   ]);
+});
+
+test('getFinalizedBlockNumber(sei explorer)', async () => {
+  const watcher = new SeiExplorerWatcher();
+  const blockNumber = await watcher.getFinalizedBlockNumber();
+  console.log(blockNumber);
+  expect(blockNumber).toBeGreaterThan(0);
 });
 
 // skipped because it takes more and more time to paginate back

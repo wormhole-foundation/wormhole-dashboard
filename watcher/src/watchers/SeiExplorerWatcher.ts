@@ -15,7 +15,14 @@ type SeiExplorerAccountTransactionsResponse = {
         hash: string;
         success: boolean;
         messages: any[];
+        is_clear_admin: boolean;
+        is_execute: boolean;
         is_ibc: boolean;
+        is_instantiate: boolean;
+        is_migrate: boolean;
+        is_send: boolean;
+        is_store_code: boolean;
+        is_update_admin: boolean;
       };
     }[];
   };
@@ -25,7 +32,7 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
   constructor() {
     super('sei');
     // arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
-    this.maximumBatchSize = 100_000;
+    this.maximumBatchSize = 1_000_000;
   }
 
   makeGraphQLQuery(offset: number, pageSize: number) {
@@ -97,8 +104,17 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
         const txn = bulkTxns[i];
         const height: number = txn.block.height;
         const hash = txn.transaction.hash.replace('\\x', '').toUpperCase();
+        if (hash === 'EBC1A645510633590A6042A4DAF18BE3983364092AA807CDEA25AC6FC99477A4') {
+          // old tx is seemingly missing from node
+          continue;
+        }
         this.logger.debug(`Found one: ${fromBlock}, ${height}, ${toBlock}, ${hash}`);
-        if (height >= fromBlock && height <= toBlock && txn.transaction.is_ibc) {
+        if (
+          height >= fromBlock &&
+          height <= toBlock &&
+          txn.transaction.is_execute &&
+          txn.transaction.is_ibc
+        ) {
           // We only care about the transactions in the given block range
           // Sei uses IBC message emission
           const blockKey = makeBlockKey(
@@ -160,6 +176,7 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
               // Just skip this one...
             } else {
               // Rethrow the error because we only want to catch the above error
+              this.logger.error(`${this.rpc}/${this.hashTag}${hash}`);
               throw e;
             }
           }

@@ -25,7 +25,7 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
   constructor() {
     super('sei');
     // arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
-    this.maximumBatchSize = 1_000_000;
+    this.maximumBatchSize = 100_000;
   }
 
   makeGraphQLQuery(offset: number, pageSize: number) {
@@ -33,8 +33,31 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
       query:
         'query getTxsByAddressPagination($expression: account_transactions_bool_exp, $offset: Int!, $pageSize: Int!) {\n  account_transactions(\n    where: $expression\n    order_by: {block_height: desc}\n    offset: $offset\n    limit: $pageSize\n  ) {\n    block {\n      height\n      timestamp\n    }\n    transaction {\n      account {\n        address\n      }\n      hash\n      success\n      messages\n      is_clear_admin\n      is_execute\n      is_ibc\n      is_instantiate\n      is_migrate\n      is_send\n      is_store_code\n      is_update_admin\n    }\n    is_signer\n  }\n}',
       variables: { expression: { account_id: { _eq: 42 } }, offset, pageSize },
+      // 42 is the account id of sei1gjrrme22cyha4ht2xapn3f08zzw6z3d4uxx6fyy9zd5dyr3yxgzqqncdqn
+      // returned by getAccountIdByAddressQueryDocument
       operationName: 'getTxsByAddressPagination',
     };
+  }
+
+  async getFinalizedBlockNumber(): Promise<number> {
+    const query = this.makeGraphQLQuery(0, 1);
+    this.logger.debug(`Query string = ${JSON.stringify(query)}`);
+    const bulkTxnResult = (
+      await axios.post<SeiExplorerAccountTransactionsResponse>(
+        SEI_GRAPHQL,
+        query,
+        AXIOS_CONFIG_JSON
+      )
+    ).data;
+    const blockHeight = bulkTxnResult?.data?.account_transactions?.[0]?.block?.height;
+    if (blockHeight) {
+      if (blockHeight !== this.latestBlockHeight) {
+        this.latestBlockHeight = blockHeight;
+        this.logger.debug('blockHeight = ' + blockHeight);
+      }
+      return blockHeight;
+    }
+    throw new Error(`Unable to parse result of ${this.latestBlockTag} on ${this.rpc}`);
   }
 
   // retrieve blocks for core contract

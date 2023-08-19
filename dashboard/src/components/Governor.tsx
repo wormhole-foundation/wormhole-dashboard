@@ -25,6 +25,7 @@ import {
 import {
   createColumnHelper,
   getCoreRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
@@ -51,8 +52,11 @@ const calculatePercent = (notional: GovernorGetAvailableNotionalByChainResponse_
   }
 };
 
-const notionalColumnHelper =
-  createColumnHelper<GovernorGetAvailableNotionalByChainResponse_Entry>();
+interface NotionalWithHolds extends GovernorGetAvailableNotionalByChainResponse_Entry {
+  held: bigint;
+}
+
+const notionalColumnHelper = createColumnHelper<NotionalWithHolds>();
 
 const notionalColumns = [
   notionalColumnHelper.accessor('chainId', {
@@ -69,6 +73,10 @@ const notionalColumns = [
   }),
   notionalColumnHelper.accessor('remainingAvailableNotional', {
     header: () => <Box order="1">Remaining</Box>,
+    cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
+  }),
+  notionalColumnHelper.accessor('held', {
+    header: () => <Box order="1">Withheld</Box>,
     cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0')}</Box>,
   }),
   notionalColumnHelper.accessor(calculatePercent, {
@@ -190,7 +198,12 @@ const tokenColumns = [
   }),
 ];
 
-type ChainIdToEnqueuedCount = { [chainId: number]: number };
+type ChainIdToEnqueuedStats = {
+  [chainId: number]: {
+    count: number;
+    notional: bigint;
+  };
+};
 
 function Governor() {
   const governorInfo = useGovernorInfo();
@@ -201,11 +214,34 @@ function Governor() {
       })),
     [governorInfo.tokens]
   );
-
+  const enqueuedByChain = useMemo(
+    () =>
+      governorInfo.enqueued.reduce<ChainIdToEnqueuedStats>((counts, v) => {
+        if (!counts[v.emitterChain]) {
+          counts[v.emitterChain] = {
+            count: 1,
+            notional: BigInt(v.notionalValue),
+          };
+        } else {
+          counts[v.emitterChain].count++;
+          counts[v.emitterChain].notional += BigInt(v.notionalValue);
+        }
+        return counts;
+      }, {}),
+    [governorInfo.enqueued]
+  );
+  const notionalWithHolds = useMemo(
+    () =>
+      governorInfo.notionals.map<NotionalWithHolds>((n) => ({
+        ...n,
+        held: enqueuedByChain[n.chainId]?.notional || BigInt(0),
+      })),
+    [governorInfo.notionals, enqueuedByChain]
+  );
   const [notionalSorting, setNotionalSorting] = useState<SortingState>([]);
   const notionalTable = useReactTable({
     columns: notionalColumns,
-    data: governorInfo.notionals,
+    data: notionalWithHolds,
     state: {
       sorting: notionalSorting,
     },
@@ -223,6 +259,7 @@ function Governor() {
     },
     getRowId: (vaa) => JSON.stringify(vaa),
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setEnqueuedSorting,
   });
@@ -238,18 +275,6 @@ function Governor() {
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setTokenSorting,
   });
-  const enqueuedByChain: ChainIdToEnqueuedCount = useMemo(
-    () =>
-      governorInfo.enqueued.reduce((counts, v) => {
-        if (!counts[v.emitterChain]) {
-          counts[v.emitterChain] = 1;
-        } else {
-          counts[v.emitterChain]++;
-        }
-        return counts;
-      }, {} as ChainIdToEnqueuedCount),
-    [governorInfo.enqueued]
-  );
   return (
     <CollapsibleSection
       defaultExpanded={false}
@@ -286,7 +311,7 @@ function Governor() {
                   )}
                 </Box>
                 <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                  {enqueuedByChain[Number(chainId)]}
+                  {enqueuedByChain[Number(chainId)].count}
                 </Typography>
               </React.Fragment>
             ))}
@@ -295,13 +320,14 @@ function Governor() {
     >
       <Box mb={2}>
         <Card>
-          <Table<GovernorGetAvailableNotionalByChainResponse_Entry> table={notionalTable} />
+          <Table<NotionalWithHolds> table={notionalTable} />
         </Card>
       </Box>
       <Box my={2}>
         <Card>
           <Table<GovernorGetEnqueuedVAAsResponse_Entry>
             table={enqueuedTable}
+            paginated={!!governorInfo.enqueued.length}
             showRowCount={!!governorInfo.enqueued.length}
           />
           {governorInfo.enqueued.length === 0 ? (

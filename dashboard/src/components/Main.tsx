@@ -1,37 +1,49 @@
 import { GitHub } from '@mui/icons-material';
-import { AppBar, Box, Divider, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
-import { MonitorSettingsProvider } from '../contexts/MonitorSettingsContext';
-import { useNetworkContext } from '../contexts/NetworkContext';
+import { AppBar, Box, Button, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
+import { Route, HashRouter as Router, Switch, NavLink } from 'react-router-dom';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';
-import useCloudGovernorInfo from '../hooks/useCloudGovernorInfo';
 import useHeartbeats from '../hooks/useHeartbeats';
+import useLatestRelease from '../hooks/useLatestRelease';
 import WormholeStatsIcon from '../icons/WormholeStatsIcon';
-import Accountant from './Accountant';
-import Chains from './Chains';
-import CollapsibleSection from './CollapsibleSection';
-import Governor from './Governor';
-import Guardians from './Guardians';
-import MainnetGovernor from './MainnetGovernor';
-import Monitor from './Monitor';
+import Alerts from './Alerts';
+import Home from './Home';
 import NetworkSelector from './NetworkSelector';
 import Settings from './Settings';
-import Alerts from './Alerts';
-import useLatestRelease from '../hooks/useLatestRelease';
+import Metrics from './Metrics';
 
 function Main() {
   const heartbeats = useHeartbeats();
   const chainIdsToHeartbeats = useChainHeartbeats(heartbeats);
-  const { currentNetwork } = useNetworkContext();
-  const governorInfo = useCloudGovernorInfo();
   const latestRelease = useLatestRelease();
   return (
-    <>
+    <Router>
       <AppBar position="static">
         <Toolbar variant="dense">
-          <Box pr={1} display="flex" alignItems="center">
-            <WormholeStatsIcon />
-          </Box>
-          <Typography variant="h6">Dashboard</Typography>
+          <NavLink
+            to="/"
+            exact
+            component={Button}
+            color="inherit"
+            activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
+            style={{ marginLeft: -8, textTransform: 'none', borderRadius: 0 }}
+          >
+            <Box display="flex" alignItems="center">
+              <WormholeStatsIcon />
+            </Box>
+            <Typography variant="h6" sx={{ pl: 0.75 }}>
+              Dashboard
+            </Typography>
+          </NavLink>
+          <NavLink
+            to="/metrics"
+            exact
+            component={Button}
+            color="inherit"
+            activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
+            style={{ paddingRight: 8, marginLeft: 8, textTransform: 'none', borderRadius: 0 }}
+          >
+            <Typography variant="h6">Metrics</Typography>
+          </NavLink>
           <Box flexGrow={1} />
           <Hidden smDown>
             <Alerts
@@ -53,30 +65,19 @@ function Main() {
           <Settings />
         </Toolbar>
       </AppBar>
-      <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} />
-      <Divider />
-      <Guardians
-        heartbeats={heartbeats}
-        chainIdsToHeartbeats={chainIdsToHeartbeats}
-        latestRelease={latestRelease}
-      />
-      <Divider />
-      {currentNetwork.name === 'Mainnet' ? (
-        <>
-          <MainnetGovernor governorInfo={governorInfo} />
-          <Divider />
-          <Accountant governorInfo={governorInfo} />
-          <Divider />
-          <MonitorSettingsProvider>
-            <CollapsibleSection header="Monitor">
-              <Monitor />
-            </CollapsibleSection>
-          </MonitorSettingsProvider>
-        </>
-      ) : (
-        <Governor />
-      )}
-    </>
+      <Switch>
+        <Route path="/metrics">
+          <Metrics />
+        </Route>
+        <Route path="/">
+          <Home
+            heartbeats={heartbeats}
+            chainIdsToHeartbeats={chainIdsToHeartbeats}
+            latestRelease={latestRelease}
+          />
+        </Route>
+      </Switch>
+    </Router>
   );
 }
 export default Main;

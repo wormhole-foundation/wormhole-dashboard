@@ -288,33 +288,35 @@ function Governor() {
         >
           <Box>Governor</Box>
           <Box flexGrow={1} />
-          {Object.keys(enqueuedByChain)
-            .sort()
-            .map((chainId) => (
-              <React.Fragment key={chainId}>
-                <Box
-                  ml={2}
-                  display="flex"
-                  alignItems="center"
-                  borderRadius="50%"
-                  sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
-                >
-                  {CHAIN_INFO_MAP[chainId]?.icon ? (
-                    <img
-                      src={CHAIN_INFO_MAP[chainId].icon}
-                      alt={CHAIN_INFO_MAP[chainId].name}
-                      width={24}
-                      height={24}
-                    />
-                  ) : (
-                    <Typography variant="body2">{chainId}</Typography>
-                  )}
+          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+            {Object.keys(enqueuedByChain)
+              .sort()
+              .map((chainId) => (
+                <Box key={chainId} display="flex" alignItems="center">
+                  <Box
+                    ml={2}
+                    display="flex"
+                    alignItems="center"
+                    borderRadius="50%"
+                    sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
+                  >
+                    {CHAIN_INFO_MAP[chainId]?.icon ? (
+                      <img
+                        src={CHAIN_INFO_MAP[chainId].icon}
+                        alt={CHAIN_INFO_MAP[chainId].name}
+                        width={24}
+                        height={24}
+                      />
+                    ) : (
+                      <Typography variant="body2">{chainId}</Typography>
+                    )}
+                  </Box>
+                  <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                    {enqueuedByChain[Number(chainId)].count}
+                  </Typography>
                 </Box>
-                <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                  {enqueuedByChain[Number(chainId)].count}
-                </Typography>
-              </React.Fragment>
-            ))}
+              ))}
+          </Box>
         </Box>
       }
     >

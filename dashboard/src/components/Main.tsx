@@ -25,14 +25,16 @@ function Main() {
             component={Button}
             color="inherit"
             activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
-            style={{ marginLeft: -8, textTransform: 'none', borderRadius: 0 }}
+            style={{ marginLeft: -8, textTransform: 'none', borderRadius: 0, minWidth: 0 }}
           >
             <Box display="flex" alignItems="center">
               <WormholeStatsIcon />
             </Box>
-            <Typography variant="h6" sx={{ pl: 0.75 }}>
-              Dashboard
-            </Typography>
+            <Hidden smDown>
+              <Typography variant="h6" sx={{ pl: 0.75 }}>
+                Dashboard
+              </Typography>
+            </Hidden>
           </NavLink>
           <NavLink
             to="/metrics"

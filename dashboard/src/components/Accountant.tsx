@@ -18,7 +18,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Fragment, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
@@ -26,9 +26,9 @@ import useGetAccountantPendingTransfers, {
 } from '../hooks/useGetAccountantPendingTransfers';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_INFO_MAP, GUARDIAN_SET_3 } from '../utils/consts';
-import Table from './Table';
-import CollapsibleSection from './CollapsibleSection';
 import { explorerTx, getExplorerTxHash } from '../utils/explorer';
+import CollapsibleSection from './CollapsibleSection';
+import Table from './Table';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 
@@ -295,33 +295,35 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
         >
           <Box>Accountant</Box>
           <Box flexGrow={1} />
-          {Object.keys(pendingByChain)
-            .sort()
-            .map((chainId) => (
-              <Fragment key={chainId}>
-                <Box
-                  ml={2}
-                  display="flex"
-                  alignItems="center"
-                  borderRadius="50%"
-                  sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
-                >
-                  {CHAIN_INFO_MAP[chainId]?.icon ? (
-                    <img
-                      src={CHAIN_INFO_MAP[chainId].icon}
-                      alt={CHAIN_INFO_MAP[chainId].name}
-                      width={24}
-                      height={24}
-                    />
-                  ) : (
-                    <Typography variant="body2">{chainId}</Typography>
-                  )}
+          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+            {Object.keys(pendingByChain)
+              .sort()
+              .map((chainId) => (
+                <Box key={chainId} display="flex" alignItems="center">
+                  <Box
+                    ml={2}
+                    display="flex"
+                    alignItems="center"
+                    borderRadius="50%"
+                    sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
+                  >
+                    {CHAIN_INFO_MAP[chainId]?.icon ? (
+                      <img
+                        src={CHAIN_INFO_MAP[chainId].icon}
+                        alt={CHAIN_INFO_MAP[chainId].name}
+                        width={24}
+                        height={24}
+                      />
+                    ) : (
+                      <Typography variant="body2">{chainId}</Typography>
+                    )}
+                  </Box>
+                  <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                    {pendingByChain[Number(chainId)]}
+                  </Typography>
                 </Box>
-                <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                  {pendingByChain[Number(chainId)]}
-                </Typography>
-              </Fragment>
-            ))}
+              ))}
+          </Box>
         </Box>
       }
     >

@@ -1,9 +1,4 @@
-import {
-  CHAIN_ID_SUI,
-  isCosmWasmChain,
-  isEVMChain,
-  tryHexToNativeString,
-} from '@certusone/wormhole-sdk';
+import { isCosmWasmChain, isEVMChain, tryHexToNativeString } from '@certusone/wormhole-sdk';
 import {
   ChainId,
   CHAIN_ID_ACALA,
@@ -12,6 +7,7 @@ import {
   CHAIN_ID_ARBITRUM,
   CHAIN_ID_AURORA,
   CHAIN_ID_AVAX,
+  CHAIN_ID_BASE,
   CHAIN_ID_BSC,
   CHAIN_ID_CELO,
   CHAIN_ID_ETH,
@@ -24,6 +20,7 @@ import {
   CHAIN_ID_OASIS,
   CHAIN_ID_POLYGON,
   CHAIN_ID_SOLANA,
+  CHAIN_ID_SUI,
   CHAIN_ID_TERRA,
   CHAIN_ID_TERRA2,
   CHAIN_ID_XPLA,
@@ -76,6 +73,8 @@ export const explorerBlock = (chainId: ChainId, block: string) =>
     ? `https://explorer.injective.network/block/${block}`
     : chainId === CHAIN_ID_SUI
     ? `https://suiexplorer.com/txblock/${block}`
+    : chainId === CHAIN_ID_BASE
+    ? `https://basescan.org/block/${block}`
     : '';
 
 export const explorerTx = (chainId: ChainId, tx: string) =>
@@ -123,6 +122,8 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     ? `https://explorer.injective.network/transaction/${tx}`
     : chainId === CHAIN_ID_SUI
     ? `https://suiexplorer.com/txblock/${tx}`
+    : chainId === CHAIN_ID_BASE
+    ? `https://basescan.org/tx/${tx}`
     : '';
 
 export const explorerVaa = (key: string) =>

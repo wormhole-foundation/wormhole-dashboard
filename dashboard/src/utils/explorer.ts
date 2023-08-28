@@ -72,7 +72,7 @@ export const explorerBlock = (chainId: ChainId, block: string) =>
     : chainId === CHAIN_ID_INJECTIVE
     ? `https://explorer.injective.network/block/${block}`
     : chainId === CHAIN_ID_SUI
-    ? `https://suiexplorer.com/txblock/${block}`
+    ? `https://suiexplorer.com/checkpoint/${block}`
     : chainId === CHAIN_ID_BASE
     ? `https://basescan.org/block/${block}`
     : '';

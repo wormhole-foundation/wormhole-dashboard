@@ -12,6 +12,7 @@ export interface Heartbeat {
   guardianAddr: string;
   bootTimestamp: string;
   features: string[];
+  p2pNodeAddr?: string;
 }
 
 export interface HeartbeatNetwork {
@@ -28,7 +29,7 @@ export async function getLastHeartbeats(network: Network): Promise<Heartbeat[]> 
     const lastHeartbeats = await api.GetLastHeartbeats({});
     return lastHeartbeats.entries.reduce<Heartbeat[]>((heartbeats, entry) => {
       if (entry.rawHeartbeat) {
-        heartbeats.push(entry.rawHeartbeat);
+        heartbeats.push({ ...entry.rawHeartbeat, p2pNodeAddr: entry.p2pNodeAddr });
       }
       return heartbeats;
     }, []);

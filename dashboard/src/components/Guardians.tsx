@@ -66,10 +66,12 @@ const columns = [
   }),
   columnHelper.accessor('guardianAddr', {
     header: () => 'Address',
+    cell: (info) => <code>{info.getValue()}</code>,
   }),
-  //columnHelper.accessor("p2pNodeAddr", {
-  //  header: () => "P2P Address",
-  //}),
+  columnHelper.accessor('p2pNodeAddr', {
+    header: () => 'P2P Address',
+    cell: (info) => <code>{info.getValue()}</code>,
+  }),
 ];
 
 type HighestByChain = { [chainId: string]: bigint };
@@ -237,7 +239,7 @@ function Guardians({
     state: {
       sorting,
     },
-    getRowId: (heartbeat) => heartbeat.guardianAddr,
+    getRowId: (heartbeat) => `${heartbeat.guardianAddr}-${heartbeat.nodeName}`,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
@@ -321,7 +323,7 @@ function Guardians({
         <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
           {heartbeats.map((hb) => (
             <GuardianCard
-              key={hb.guardianAddr}
+              key={`${hb.guardianAddr}-${hb.nodeName}`}
               heartbeat={hb}
               highestByChain={highestByChain}
               latestRelease={latestRelease}

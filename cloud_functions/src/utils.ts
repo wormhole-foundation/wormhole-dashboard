@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 export async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
 }
@@ -23,4 +25,67 @@ export function parseMessageId(id: string): {
     emitter,
     sequence: BigInt(sequence),
   };
+}
+
+// This function expects the following environment variables to be set:
+// SLACK_CHANNEL_ID
+// SLACK_POST_URL
+// SLACK_BOT_TOKEN
+export async function formatAndSendToSlack(msg: string): Promise<any> {
+  const SLACK_CHANNEL_ID = assertEnvironmentVariable('SLACK_CHANNEL_ID');
+  const SLACK_POST_URL = assertEnvironmentVariable('SLACK_POST_URL');
+  const SLACK_BOT_TOKEN = assertEnvironmentVariable('SLACK_BOT_TOKEN');
+  // Construct the payload
+  const payload = {
+    channel: SLACK_CHANNEL_ID,
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: '*Wormhole Missing VAA Alarm*',
+        },
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: msg,
+        },
+      },
+    ],
+  };
+
+  // Send to slack channel
+  const AXIOS_NUM_RETRIES = 1;
+  const AXIOS_RETRY_TIME_IN_MILLISECONDS = 250;
+  let response = null;
+  const url = SLACK_POST_URL;
+  for (let i = 0; i < AXIOS_NUM_RETRIES; ++i) {
+    try {
+      response = await axios.post(url, payload, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
+        },
+      });
+      break;
+    } catch (error) {
+      console.error(
+        `axios error with post request: ${url}. trying again in ${AXIOS_RETRY_TIME_IN_MILLISECONDS}ms.`
+      );
+      console.error(error);
+      await sleep(AXIOS_RETRY_TIME_IN_MILLISECONDS);
+    }
+  }
+
+  if (response === null) {
+    throw Error('error with axios.post');
+  }
+  const responseData = response.data.data;
+  return responseData;
 }

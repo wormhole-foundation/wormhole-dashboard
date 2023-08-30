@@ -25,8 +25,12 @@ import useGetAccountantPendingTransfers, {
   PendingTransfer,
 } from '../hooks/useGetAccountantPendingTransfers';
 import chainIdToName from '../utils/chainIdToName';
-import { CHAIN_INFO_MAP, GUARDIAN_SET_3 } from '../utils/consts';
-import { explorerTx, getExplorerTxHash } from '../utils/explorer';
+import { CHAIN_ICON_MAP, GUARDIAN_SET_3 } from '../utils/consts';
+import {
+  CHAIN_INFO_MAP,
+  explorerTx,
+  getExplorerTxHash,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
 
@@ -307,9 +311,9 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
                     borderRadius="50%"
                     sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
                   >
-                    {CHAIN_INFO_MAP[chainId]?.icon ? (
+                    {CHAIN_ICON_MAP[chainId] ? (
                       <img
-                        src={CHAIN_INFO_MAP[chainId].icon}
+                        src={CHAIN_ICON_MAP[chainId]}
                         alt={CHAIN_INFO_MAP[chainId].name}
                         width={24}
                         height={24}

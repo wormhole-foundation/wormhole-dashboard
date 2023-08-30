@@ -35,7 +35,6 @@ import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
 import chainIdToName from '../utils/chainIdToName';
-import { CHAIN_INFO_MAP } from '../utils/consts';
 import {
   BEHIND_DIFF,
   CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD,
@@ -45,6 +44,7 @@ import {
 } from './Alerts';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
+import { CHAIN_ICON_MAP } from '../utils/consts';
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
 
@@ -168,7 +168,7 @@ function Chain({
                 }}
               >
                 <Typography component="div" color="text.secondary">
-                  {CHAIN_INFO_MAP[chainId]?.icon ? (
+                  {CHAIN_ICON_MAP[chainId] ? (
                     <Box
                       sx={{
                         borderRadius: '50%',
@@ -181,7 +181,7 @@ function Chain({
                         },
                       }}
                     >
-                      <img src={CHAIN_INFO_MAP[chainId]?.icon} alt={chainId} />
+                      <img src={CHAIN_ICON_MAP[chainId]} alt={chainId} />
                     </Box>
                   ) : (
                     chainId

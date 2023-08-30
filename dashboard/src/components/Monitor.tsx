@@ -19,7 +19,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import CollapsibleSection from './CollapsibleSection';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
 import { useSettings } from '../contexts/MonitorSettingsContext';
-import { explorerBlock, explorerTx, explorerVaa } from '../utils/explorer';
+import {
+  explorerBlock,
+  explorerTx,
+  explorerVaa,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 type LastBlockByChain = { [chainId: string]: string };
 type CountsByChain = {

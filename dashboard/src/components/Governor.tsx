@@ -34,11 +34,15 @@ import numeral from 'numeral';
 import React, { useMemo, useState } from 'react';
 import useGovernorInfo from '../hooks/useGovernorInfo';
 import chainIdToName from '../utils/chainIdToName';
-import { CHAIN_INFO_MAP } from '../utils/consts';
-import { explorerTx, getExplorerTxHash } from '../utils/explorer';
+import {
+  CHAIN_INFO_MAP,
+  explorerTx,
+  getExplorerTxHash,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import Table from './Table';
+import { CHAIN_ICON_MAP } from '../utils/consts';
 
 const calculatePercent = (notional: GovernorGetAvailableNotionalByChainResponse_Entry): number => {
   try {
@@ -300,9 +304,9 @@ function Governor() {
                     borderRadius="50%"
                     sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
                   >
-                    {CHAIN_INFO_MAP[chainId]?.icon ? (
+                    {CHAIN_ICON_MAP[chainId] ? (
                       <img
-                        src={CHAIN_INFO_MAP[chainId].icon}
+                        src={CHAIN_ICON_MAP[chainId]}
                         alt={CHAIN_INFO_MAP[chainId].name}
                         width={24}
                         height={24}

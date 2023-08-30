@@ -1,32 +1,3 @@
-import {
-  ChainId,
-  CHAIN_ID_ACALA,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_APTOS,
-  CHAIN_ID_ARBITRUM,
-  CHAIN_ID_AURORA,
-  CHAIN_ID_AVAX,
-  CHAIN_ID_BSC,
-  CHAIN_ID_CELO,
-  CHAIN_ID_ETH,
-  CHAIN_ID_FANTOM,
-  CHAIN_ID_INJECTIVE,
-  CHAIN_ID_KARURA,
-  CHAIN_ID_KLAYTN,
-  CHAIN_ID_MOONBEAM,
-  CHAIN_ID_NEAR,
-  CHAIN_ID_OASIS,
-  CHAIN_ID_OPTIMISM,
-  CHAIN_ID_POLYGON,
-  CHAIN_ID_PYTHNET,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_SUI,
-  CHAIN_ID_TERRA,
-  CHAIN_ID_TERRA2,
-  CHAIN_ID_XPLA,
-  CHAIN_ID_SEI,
-  CHAIN_ID_BASE,
-} from '@certusone/wormhole-sdk';
 import acalaIcon from '../images/acala.svg';
 import algorandIcon from '../images/algorand.svg';
 import aptosIcon from '../images/aptos.svg';
@@ -41,241 +12,52 @@ import fantomIcon from '../images/fantom.svg';
 import injectiveIcon from '../images/injective.svg';
 import karuraIcon from '../images/karura.svg';
 import klaytnIcon from '../images/klaytn.svg';
+import moonbeamIcon from '../images/moonbeam.svg';
 import nearIcon from '../images/near.svg';
 import oasisIcon from '../images/oasis-network-rose-logo.svg';
 import optimismIcon from '../images/optimism.svg';
 import polygonIcon from '../images/polygon.svg';
+import pythnetIcon from '../images/pyth_logomark_white.svg';
 import seiIcon from '../images/sei.svg';
 import solanaIcon from '../images/solana.svg';
 import suiIcon from '../images/sui.svg';
 import terraIcon from '../images/terra.svg';
 import terra2Icon from '../images/terra2.svg';
+import wormchainIcon from '../images/wormchain.svg';
 import xplaIcon from '../images/xpla.svg';
-import moonbeamIcon from '../images/moonbeam.svg';
-import pythnetIcon from '../images/pyth_logomark_white.svg';
 
 require('dotenv').config();
 
 export const WORMCHAIN_URL = 'https://wormchain.jumpisolated.com';
 
-export type CHAIN_INFO = {
-  name: string;
-  evm: boolean;
-  chainId: ChainId;
-  endpointUrl: any;
-  explorerStem: string;
-  icon?: string;
-};
-
-export const CHAIN_INFO_MAP: { [key: string]: CHAIN_INFO } = {
-  1: {
-    name: 'solana',
-    evm: false,
-    chainId: CHAIN_ID_SOLANA,
-    endpointUrl: process.env.REACT_APP_SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
-    explorerStem: `https://solscan.io`,
-    icon: solanaIcon,
-  },
-  2: {
-    name: 'eth',
-    evm: true,
-    chainId: CHAIN_ID_ETH,
-    endpointUrl: process.env.REACT_APP_ETH_RPC || 'https://rpc.ankr.com/eth',
-    explorerStem: `https://etherscan.io`,
-    icon: ethIcon,
-  },
-  3: {
-    name: 'terra',
-    evm: false,
-    chainId: CHAIN_ID_TERRA,
-    endpointUrl: '',
-    explorerStem: `https://finder.terra.money/classic`,
-    icon: terraIcon,
-  },
-  4: {
-    name: 'bsc',
-    evm: true,
-    chainId: CHAIN_ID_BSC,
-    endpointUrl: process.env.REACT_APP_BSC_RPC || 'https://bsc-dataseed2.defibit.io',
-    explorerStem: `https://bscscan.com`,
-    icon: bscIcon,
-  },
-  5: {
-    name: 'polygon',
-    evm: true,
-    chainId: CHAIN_ID_POLYGON,
-    endpointUrl: process.env.REACT_APP_POLYGON_RPC || 'https://polygon-rpc.com',
-    explorerStem: `https://polygonscan.com`,
-    icon: polygonIcon,
-  },
-  6: {
-    name: 'avalanche',
-    evm: true,
-    chainId: CHAIN_ID_AVAX,
-    endpointUrl: process.env.REACT_APP_AVAX_RPC || 'https://api.avax.network/ext/bc/C/rpc',
-    explorerStem: `https://snowtrace.io`,
-    icon: avaxIcon,
-  },
-  7: {
-    name: 'oasis',
-    evm: true,
-    chainId: CHAIN_ID_OASIS,
-    endpointUrl: 'https://emerald.oasis.dev',
-    explorerStem: `https://explorer.emerald.oasis.dev`,
-    icon: oasisIcon,
-  },
-  8: {
-    name: 'algorand',
-    evm: false,
-    chainId: CHAIN_ID_ALGORAND,
-    endpointUrl: 'https://node.algoexplorerapi.io',
-    explorerStem: `https://algoexplorer.io`,
-    icon: algorandIcon,
-  },
-  9: {
-    name: 'aurora',
-    evm: true,
-    chainId: CHAIN_ID_AURORA,
-    endpointUrl: 'https://mainnet.aurora.dev',
-    explorerStem: `https://aurorascan.dev`,
-    icon: auroraIcon,
-  },
-  10: {
-    name: 'fantom',
-    evm: true,
-    chainId: CHAIN_ID_FANTOM,
-    endpointUrl: 'https://rpc.ftm.tools',
-    explorerStem: `https://ftmscan.com`,
-    icon: fantomIcon,
-  },
-  11: {
-    name: 'karura',
-    evm: true,
-    chainId: CHAIN_ID_KARURA,
-    endpointUrl: 'https://eth-rpc-karura.aca-api.network',
-    explorerStem: `https://blockscout.karura.network`,
-    icon: karuraIcon,
-  },
-  12: {
-    name: 'acala',
-    evm: true,
-    chainId: CHAIN_ID_ACALA,
-    endpointUrl: 'https://eth-rpc-acala.aca-api.network',
-    explorerStem: `https://blockscout.acala.network`,
-    icon: acalaIcon,
-  },
-  13: {
-    name: 'klaytn',
-    evm: true,
-    chainId: CHAIN_ID_KLAYTN,
-    endpointUrl: 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
-    explorerStem: `https://scope.klaytn.com`,
-    icon: klaytnIcon,
-  },
-  14: {
-    name: 'celo',
-    evm: true,
-    chainId: CHAIN_ID_CELO,
-    endpointUrl: 'https://forno.celo.org',
-    explorerStem: `https://explorer.celo.org`,
-    icon: celoIcon,
-  },
-  15: {
-    name: 'near',
-    evm: false,
-    chainId: CHAIN_ID_NEAR,
-    endpointUrl: '',
-    explorerStem: `https://explorer.near.org`,
-    icon: nearIcon,
-  },
-  16: {
-    name: 'moonbeam',
-    evm: true,
-    chainId: CHAIN_ID_MOONBEAM,
-    endpointUrl: 'https://rpc.ankr.com/moonbeam',
-    explorerStem: `https://moonscan.io`,
-    icon: moonbeamIcon,
-  },
-  18: {
-    name: 'terra2',
-    evm: false,
-    chainId: CHAIN_ID_TERRA2,
-    endpointUrl: '',
-    explorerStem: `https://finder.terra.money/mainnet`,
-    icon: terra2Icon,
-  },
-  19: {
-    name: 'injective',
-    evm: false,
-    chainId: CHAIN_ID_INJECTIVE,
-    endpointUrl: '',
-    explorerStem: `https://explorer.injective.network`,
-    icon: injectiveIcon,
-  },
-  21: {
-    name: 'sui',
-    evm: false,
-    chainId: CHAIN_ID_SUI,
-    endpointUrl: 'https://rpc.mainnet.sui.io',
-    explorerStem: `https://explorer.sui.io`,
-    icon: suiIcon,
-  },
-  22: {
-    name: 'aptos',
-    evm: false,
-    chainId: CHAIN_ID_APTOS,
-    endpointUrl: 'https://fullnode.mainnet.aptoslabs.com/v1',
-    explorerStem: `https://explorer.aptoslabs.com`,
-    icon: aptosIcon,
-  },
-  23: {
-    name: 'arbitrum',
-    evm: true,
-    chainId: CHAIN_ID_ARBITRUM,
-    endpointUrl: 'https://arb1.arbitrum.io/rpc',
-    explorerStem: `https://arbiscan.io`,
-    icon: arbitrumIcon,
-  },
-  24: {
-    name: 'optimism',
-    evm: true,
-    chainId: CHAIN_ID_OPTIMISM,
-    endpointUrl: 'https://rpc.ankr.com/optimism',
-    explorerStem: `https://optimistic.etherscan.io`,
-    icon: optimismIcon,
-  },
-  26: {
-    name: 'pythnet',
-    evm: false,
-    chainId: CHAIN_ID_PYTHNET,
-    endpointUrl: '',
-    explorerStem: '',
-    icon: pythnetIcon,
-  },
-  28: {
-    name: 'xpla',
-    evm: false,
-    chainId: CHAIN_ID_XPLA,
-    endpointUrl: 'https://dimension-lcd.xpla.dev',
-    explorerStem: `https://explorer.xpla.io`,
-    icon: xplaIcon,
-  },
-  30: {
-    name: 'base',
-    evm: true,
-    chainId: CHAIN_ID_BASE,
-    endpointUrl: 'https://rpc.ankr.com/base',
-    explorerStem: `https://basescan.org`,
-    icon: baseIcon,
-  },
-  32: {
-    name: 'sei',
-    evm: false,
-    chainId: CHAIN_ID_SEI,
-    endpointUrl: '',
-    explorerStem: '',
-    icon: seiIcon,
-  },
+export const CHAIN_ICON_MAP: { [key: string]: string } = {
+  1: solanaIcon,
+  2: ethIcon,
+  3: terraIcon,
+  4: bscIcon,
+  5: polygonIcon,
+  6: avaxIcon,
+  7: oasisIcon,
+  8: algorandIcon,
+  9: auroraIcon,
+  10: fantomIcon,
+  11: karuraIcon,
+  12: acalaIcon,
+  13: klaytnIcon,
+  14: celoIcon,
+  15: nearIcon,
+  16: moonbeamIcon,
+  18: terra2Icon,
+  19: injectiveIcon,
+  21: suiIcon,
+  22: aptosIcon,
+  23: arbitrumIcon,
+  24: optimismIcon,
+  26: pythnetIcon,
+  28: xplaIcon,
+  30: baseIcon,
+  32: seiIcon,
+  3104: wormchainIcon,
 };
 
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';

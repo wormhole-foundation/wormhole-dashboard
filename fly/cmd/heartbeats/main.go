@@ -113,6 +113,7 @@ var guardianIndexToNameMap = map[int]string{
 var lastTime = time.Now()
 
 const numGuardians = 19
+const totalsRow = numGuardians
 
 func main() {
 
@@ -212,7 +213,6 @@ func main() {
 	// First dimension = guardian id
 	// Second dimension = gossip message type
 	// Value = count
-	const totalsRow = numGuardians
 	if len(gs.Keys) != numGuardians {
 		logger.Error("Invalid number of guardians.", zap.Int("found", len(gs.Keys)), zap.Uint32("expected", numGuardians))
 		return
@@ -220,27 +220,7 @@ func main() {
 
 	var gossipLock sync.Mutex
 	// The extra row is for the totals
-	var gossipCounter = [numGuardians + 1][GSM_maxTypeVal]int{
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0}}
+	var gossipCounter [numGuardians + 1][GSM_maxTypeVal]int
 
 	activeTable := 1 // 0 = chains, 1 = guardians, 2 = message counts, 3 = obsv rate
 
@@ -587,7 +567,7 @@ func handleObsv(idx uint) bool {
 		}
 		for i := 0; i < numGuardians; i++ {
 			obsvRateRows[i].obsvCount = currentObsvTable[uint(i)]
-			pct := currentObsvTable[uint(i)] * 100 / currentObsvTable[numGuardians]
+			pct := currentObsvTable[uint(i)] * 100 / currentObsvTable[totalsRow]
 			for j := 0; j < 10; j++ {
 				if pct >= uint(j+1) {
 					obsvRateRows[i].percents[j] = "="
@@ -600,7 +580,7 @@ func handleObsv(idx uint) bool {
 		needToRender = true
 	}
 	currentObsvData[idx]++
-	currentObsvData[numGuardians]++
+	currentObsvData[totalsRow]++
 	return needToRender
 }
 

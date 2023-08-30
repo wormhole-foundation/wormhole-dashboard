@@ -13,6 +13,16 @@ export type MissingVaasByChain = {
   };
 };
 
+export async function commonGetMissingVaas(): Promise<MissingVaasByChain> {
+  // The ID of your GCS bucket
+  const bucketName = 'wormhole-observed-blocks-cache';
+  const cacheBucket = storage.bucket(bucketName);
+  const cacheFileName = 'missing-vaas-cache.json';
+  const cloudStorageCache = cacheBucket.file(cacheFileName);
+  const [csCache] = await cloudStorageCache.download();
+  return JSON.parse(csCache.toString());
+}
+
 export async function getMissingVaas(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') {
@@ -26,14 +36,7 @@ export async function getMissingVaas(req: any, res: any) {
 
   let messages: MissingVaasByChain = {};
   try {
-    // The ID of your GCS bucket
-    const bucketName = 'wormhole-observed-blocks-cache';
-    const cacheBucket = storage.bucket(bucketName);
-    const cacheFileName = 'missing-vaas-cache.json';
-
-    const cloudStorageCache = cacheBucket.file(cacheFileName);
-    const [csCache] = await cloudStorageCache.download();
-    messages = JSON.parse(csCache.toString());
+    messages = await commonGetMissingVaas();
     res.status(200).send(JSON.stringify(messages));
   } catch (e) {
     res.sendStatus(500);

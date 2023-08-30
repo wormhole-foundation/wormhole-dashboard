@@ -1,4 +1,9 @@
-import { isCosmWasmChain, isEVMChain, tryHexToNativeString } from '@certusone/wormhole-sdk';
+import {
+  CHAIN_ID_WORMCHAIN,
+  isCosmWasmChain,
+  isEVMChain,
+  tryHexToNativeString,
+} from '@certusone/wormhole-sdk';
 import {
   ChainId,
   CHAIN_ID_ACALA,
@@ -24,9 +29,10 @@ import {
   CHAIN_ID_TERRA,
   CHAIN_ID_TERRA2,
   CHAIN_ID_XPLA,
-} from '@certusone/wormhole-sdk/lib/esm/utils/consts';
+} from '@certusone/wormhole-sdk';
 import { base58 } from 'ethers/lib/utils';
 import { CHAIN_INFO_MAP } from './consts';
+// import { CHAIN_INFO_MAP } from './consts';
 
 export const explorerBlock = (chainId: ChainId, block: string) =>
   chainId === CHAIN_ID_ETH
@@ -75,6 +81,8 @@ export const explorerBlock = (chainId: ChainId, block: string) =>
     ? `https://suiexplorer.com/checkpoint/${block}`
     : chainId === CHAIN_ID_BASE
     ? `https://basescan.org/block/${block}`
+    : chainId === CHAIN_ID_WORMCHAIN
+    ? `https://bigdipper.live/wormhole/blocks/${block}`
     : '';
 
 export const explorerTx = (chainId: ChainId, tx: string) =>
@@ -124,6 +132,8 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     ? `https://suiexplorer.com/txblock/${tx}`
     : chainId === CHAIN_ID_BASE
     ? `https://basescan.org/tx/${tx}`
+    : chainId === CHAIN_ID_WORMCHAIN
+    ? `https://bigdipper.live/wormhole/transactions/${tx}`
     : '';
 
 export const explorerVaa = (key: string) =>

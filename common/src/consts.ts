@@ -34,6 +34,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
   sui: '1485552', // https://explorer.sui.io/txblock/671SoTvVUvBZQWKXeameDvAwzHQvnr8Nj7dR9MUwm3CV?network=https%3A%2F%2Frpc.mainnet.sui.io
   base: '1422314',
   sei: '238594',
+  wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A
 };
 
 export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {

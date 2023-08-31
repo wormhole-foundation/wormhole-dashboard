@@ -3,6 +3,8 @@ import { CosmwasmWatcher } from '../CosmwasmWatcher';
 import { TerraExplorerWatcher } from '../TerraExplorerWatcher';
 import { InjectiveExplorerWatcher } from '../InjectiveExplorerWatcher';
 import { SeiExplorerWatcher } from '../SeiExplorerWatcher';
+import { WormchainWatcher } from '../WormchainWatcher';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 
 jest.setTimeout(60000);
 
@@ -186,5 +188,28 @@ test.skip('getMessagesForBlocks(sei explorer)', async () => {
   expect(vaasByBlock['19061244/2023-08-17T16:52:07.156Z'].length).toEqual(1);
   expect(vaasByBlock['19061244/2023-08-17T16:52:07.156Z']).toEqual([
     'E66AC5A3C288A3FCC05CCE57863AAAA8F27035FE73088FA0278C4315F18AB443:32/86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e/5016',
+  ]);
+});
+
+test('getFinalizedBlockNumber(wormchain)', async () => {
+  const watcher = new WormchainWatcher();
+  const blockNumber = await watcher.getFinalizedBlockNumber();
+  console.log(blockNumber);
+  expect(blockNumber).toBeGreaterThan(Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.wormchain));
+});
+
+test('getMessagesForBlocks(wormchain)', async () => {
+  const watcher = new WormchainWatcher();
+  const vaasByBlock = await watcher.getMessagesForBlocks(4510119, 4510119);
+  const entries = Object.entries(vaasByBlock);
+  console.log(entries);
+  expect(entries.length).toEqual(1);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(0);
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
+  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+  expect(vaasByBlock['4510119/2023-08-25T07:54:58.406Z']).toBeDefined();
+  expect(vaasByBlock['4510119/2023-08-25T07:54:58.406Z'].length).toEqual(1);
+  expect(vaasByBlock['4510119/2023-08-25T07:54:58.406Z']).toEqual([
+    '4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A:3104/aeb534c45c3049d380b9d9b966f9895f53abd4301bfaff407fa09dea8ae7a924/0',
   ]);
 });

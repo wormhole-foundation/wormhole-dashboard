@@ -50,6 +50,7 @@ export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
   sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
   base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
   sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
+  wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
 };
 
 // Separating for now so if we max out infura we can keep Polygon going

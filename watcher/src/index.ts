@@ -32,6 +32,7 @@ const supportedChains: ChainName[] = [
   'sui',
   'base',
   'sei',
+  'wormchain',
 ];
 
 for (const chain of supportedChains) {

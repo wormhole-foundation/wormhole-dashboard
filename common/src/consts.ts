@@ -2,6 +2,7 @@ import {
   CHAIN_ID_ARBITRUM,
   CHAIN_ID_AVAX,
   CHAIN_ID_ETH,
+  CHAIN_ID_OPTIMISM,
   ChainId,
   ChainName,
   coalesceChainName,
@@ -95,6 +96,7 @@ export const isNFTBridgeEmitter = (chain: ChainId | ChainName, emitter: string) 
 export const CIRCLE_INTEGRATION_EMITTERS: { [key in ChainName]?: string } = {
   ethereum: '000000000000000000000000aada05bd399372f0b0463744c09113c137636f6a',
   avalanche: '00000000000000000000000009fb06a271faff70a651047395aaeb6265265f13',
+  optimism: '0000000000000000000000002703483b1a5a7c577e8680de9df8be03c6f30e3c',
   arbitrum: '0000000000000000000000002703483b1a5a7c577e8680de9df8be03c6f30e3c',
 };
 
@@ -105,5 +107,6 @@ export const isCircleIntegrationEmitter = (chain: ChainId | ChainName, emitter: 
 export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
   0: CHAIN_ID_ETH,
   1: CHAIN_ID_AVAX,
+  2: CHAIN_ID_OPTIMISM,
   3: CHAIN_ID_ARBITRUM,
 };

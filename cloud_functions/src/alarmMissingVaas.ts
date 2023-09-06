@@ -40,6 +40,7 @@ export async function alarmMissingVaas(req: any, res: any) {
     console.log('could not get missing VAAs', e);
     res.sendStatus(500);
   }
+  res.status(200).send('successfully alarmed missing VAAS');
   return;
 }
 

@@ -16,7 +16,7 @@ import { getMessagesFromBlockResults } from '../src/watchers/NearWatcher';
 // Ensure `DB_SOURCE` and Bigtable environment variables are set to backfill Bigtable database.
 // Otherwise, the script will backfill the local JSON database.
 
-const BATCH_SIZE = 1000;
+const BATCH_SIZE = 100;
 
 (async () => {
   const db = initDb();
@@ -25,10 +25,12 @@ const BATCH_SIZE = 1000;
   const fromBlock = Number(
     (await db.getLastBlockByChain(chain)) ?? INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] ?? 0
   );
+  // console.log(`Last block seen: ${fromBlock}`);
 
   // fetch all transactions for core bridge contract from explorer
   let log = ora('Fetching transactions from NEAR Explorer...').start();
   const toBlock = await provider.block({ finality: 'final' });
+  // console.log('\ntoBlock', toBlock.header.height, toBlock.header.timestamp.toString());
   const transactions = await getTransactionsByAccountId(
     CONTRACTS.MAINNET.near.core,
     BATCH_SIZE,

@@ -1,11 +1,13 @@
-import { createLogger, format, Logger, LoggerOptions, transports } from 'winston';
+import winston, { createLogger, format, Logger, LoggerOptions, transports } from 'winston';
 import { toArray } from './array';
 import { getEnvironment } from './environment';
+import LokiTransport from 'winston-loki';
+import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 
 const { combine, errors, printf, simple, timestamp } = format;
 let logger: WormholeLogger | undefined = undefined;
 
-export type WormholeLogger = Logger & { labels: string[] };
+export type WormholeLogger = Logger & { source: string };
 
 /**
  * Get a logger that is scoped to the given labels. If a parent logger is
@@ -24,33 +26,59 @@ export type WormholeLogger = Logger & { labels: string[] };
  * [2022-12-20 05:04:34.170 +0000] [error] [foo] 2
  * [2022-12-20 05:04:34.170 +0000] [warn] [foo | bar] 4
  * ```
- * @param labels
- * @param parent
+ * @param source
  * @returns
  */
-export const getLogger = (
-  labels: string | string[] = [],
-  parent?: WormholeLogger
-): WormholeLogger => {
-  // base logger is parent if unspecified
-  if (!parent) parent = logger = logger ?? createBaseLogger();
+export const getLogger = (source: string): WormholeLogger => {
+  logger = logger ?? createBaseLogger();
 
-  // no labels, return parent logger
-  labels = toArray(labels);
-  if (labels.length === 0) return parent;
+  // no source, return main logger
+  if (!source) return logger;
 
   // create scoped logger
-  const child: WormholeLogger = parent.child({
-    labels: [...parent.labels, ...labels],
+  const child: WormholeLogger = logger.child({
+    source: source,
   }) as WormholeLogger;
-  child.labels = labels;
+  child.source = source;
+  logger.info({ message: `created child logger with label ${source}`, labels: { source: source } });
   return child;
 };
 
 const createBaseLogger = (): WormholeLogger => {
   const { logLevel, logDir } = getEnvironment();
   const logPath = !!logDir ? `${logDir}/watcher.${new Date().toISOString()}.log` : null;
-  console.log(`watcher is logging to ${logPath ?? 'the console'} at level ${logLevel}`);
+  let transport: winston.transport[] = [
+    logPath
+      ? new transports.File({
+          filename: logPath,
+        })
+      : new transports.Console(),
+  ];
+  let usingLoki = false;
+  if (process.env.GRAFANA_HOST || process.env.GRAFANA_USERID || process.env.GRAFANA_PASSWORD) {
+    usingLoki = true;
+    const GRAFANA_HOST = assertEnvironmentVariable('GRAFANA_HOST');
+    const GRAFANA_USERID = assertEnvironmentVariable('GRAFANA_USERID');
+    const GRAFANA_PASSWORD = assertEnvironmentVariable('GRAFANA_PASSWORD');
+    const MY_APP_NAME = 'wormhole-dashboard';
+    const GRAFANA_BASICAUTH = GRAFANA_USERID + ':' + GRAFANA_PASSWORD;
+    transport.push(
+      new LokiTransport({
+        host: GRAFANA_HOST,
+        labels: { product: MY_APP_NAME },
+        json: true,
+        basicAuth: GRAFANA_BASICAUTH,
+        format: winston.format.json(),
+        replaceTimestamp: false,
+        onConnectionError: (err) => console.error(err),
+      })
+    );
+  }
+  console.log(
+    `watcher is logging to ${logPath ?? 'the console'} ${
+      usingLoki ? 'and loki' : ''
+    } at level ${logLevel}`
+  );
 
   const loggerConfig: LoggerOptions = {
     level: logLevel,
@@ -61,20 +89,13 @@ const createBaseLogger = (): WormholeLogger => {
         format: 'YYYY-MM-DD HH:mm:ss.SSS ZZ',
       }),
       printf((info) => {
-        // log format: [YYYY-MM-DD HH:mm:ss.SSS A ZZ] [level] [labels] message
-        const labels = info.labels?.length > 0 ? info.labels.join(' | ') : 'main';
-        return `[${info.timestamp}] [${info.level}] [${labels}] ${info.message}`;
+        // log format: [YYYY-MM-DD HH:mm:ss.SSS A ZZ] [level] [source] message
+        const source = info.source || 'main';
+        return `[${info.timestamp}] [${info.level}] [${source}] ${info.message}`;
       })
     ),
-    transports: [
-      logPath
-        ? new transports.File({
-            filename: logPath,
-          })
-        : new transports.Console(),
-    ],
+    transports: transport,
   };
   const logger = createLogger(loggerConfig) as WormholeLogger;
-  logger.labels = [];
   return logger;
 };

@@ -8,7 +8,7 @@ import { CONFIG } from '@wormhole-foundation/connect-sdk';
 (async () => {
   const conf = CONFIG.Testnet.chains.Solana!;
   const sw = new SolanaWatcher(conf.rpc, conf.contracts.coreBridge);
-  const msgs = await sw.getMessagesForBlocks(242637716, 242637736);
+  const msgs = await sw.getMessagesForBlocks(242637719, 242637719);
 
   console.log(msgs);
 })();

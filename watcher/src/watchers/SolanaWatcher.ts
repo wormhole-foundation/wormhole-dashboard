@@ -82,15 +82,17 @@ export class SolanaWatcher extends Watcher {
 
     // identify block range by fetching signatures of the first and last transactions
     // getSignaturesForAddress walks backwards so fromSignature occurs after toSignature
-    const toBlock: VersionedBlockResponse = await this.findNextValidBlock(toSlot, -1);
-    const fromSignature =
-      toBlock.transactions[toBlock.transactions.length - 1].transaction.signatures[0];
 
-    const fromBlock: VersionedBlockResponse | null = await this.findNextValidBlock(fromSlot, 1);
-    const toSignature = fromBlock.transactions[0].transaction.signatures[0];
+    // start by finding a valid range of blocks so we can use their
+    // signatures in the `getSignaturesForAddress` search
+    // look for the (last block + 1) and (first block - 1) since the signature parameters in the search later
+    // are _exclusive_ so we have to get the signatures immediate preceeding or following the ones we're interested in
+    const toBlock: VersionedBlockResponse = await this.findNextValidBlock(toSlot + 1, -1);
+    const fromBlock: VersionedBlockResponse | null = await this.findNextValidBlock(fromSlot - 1, 1);
 
-    this.logger.info(`fromSlot adjustment: ${fromSlot - fromBlock.parentSlot - 1}`);
-    this.logger.info(`toSlot adjustment: ${toSlot - toBlock.parentSlot - 1}`);
+    const fromSignature = toBlock.transactions[0].transaction.signatures[0];
+    const toSignature =
+      fromBlock.transactions[fromBlock.transactions.length - 1].transaction.signatures[0];
 
     // get all core bridge signatures between fromTransaction and toTransaction
     let numSignatures = this.getSignaturesLimit;
@@ -154,6 +156,7 @@ export class SolanaWatcher extends Watcher {
 
             // Important to return the addresses in the order they're specified in the
             // address table lookup object. Note writable comes first, then readable.
+            // TODO: check if this is broken by multiple addressTableLookups in a single message
             return atl.writableIndexes
               .concat(atl.readonlyIndexes)
               .map((i) => lookupTableAccount.state.addresses[i]);

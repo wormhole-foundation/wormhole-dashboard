@@ -34,10 +34,10 @@ export class SolanaWatcher extends Watcher {
 
   connection: Connection | undefined;
 
-  constructor(rpc?: string, contract?: string) {
+  constructor(rpc: string = RPCS_BY_CHAIN.solana!, contract: string = WORMHOLE_PROGRAM_ID) {
     super('solana');
-    this.rpc = rpc ?? RPCS_BY_CHAIN.solana!;
-    this.programId = contract ?? WORMHOLE_PROGRAM_ID;
+    this.rpc = rpc;
+    this.programId = contract;
   }
 
   getConnnection(): Connection {
@@ -49,23 +49,29 @@ export class SolanaWatcher extends Watcher {
     return this.getConnnection().getSlot();
   }
 
-  private async findNextValidBlock(slot: number, next: number): Promise<VersionedBlockResponse> {
+  private async findNextValidBlock(
+    slot: number,
+    next: number,
+    retries: number
+  ): Promise<VersionedBlockResponse> {
     // identify block range by fetching signatures of the first and last transactions
     // getSignaturesForAddress walks backwards so fromSignature occurs after toSignature
+    if (retries === 0) throw new Error(`No block found after exhausting retries`);
+
     let block: VersionedBlockResponse | null = null;
     try {
       block = await this.getConnnection().getBlock(slot, { maxSupportedTransactionVersion: 0 });
     } catch (e) {
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
-        return this.findNextValidBlock(slot + next, next);
+        return this.findNextValidBlock(slot + next, next, retries - 1);
       } else {
         throw e;
       }
     }
 
     if (!block || !block.blockTime || block.transactions.length === 0) {
-      return this.findNextValidBlock(slot + next, next);
+      return this.findNextValidBlock(slot + next, next, retries - 1);
     }
 
     return block;
@@ -82,15 +88,22 @@ export class SolanaWatcher extends Watcher {
 
     // identify block range by fetching signatures of the first and last transactions
     // getSignaturesForAddress walks backwards so fromSignature occurs after toSignature
-    const toBlock: VersionedBlockResponse = await this.findNextValidBlock(toSlot, -1);
-    const fromSignature =
-      toBlock.transactions[toBlock.transactions.length - 1].transaction.signatures[0];
 
-    const fromBlock: VersionedBlockResponse | null = await this.findNextValidBlock(fromSlot, 1);
-    const toSignature = fromBlock.transactions[0].transaction.signatures[0];
+    // start by finding a valid range of blocks so we can use their
+    // signatures in the `getSignaturesForAddress` search
+    // look for the (last block + 1) and (first block - 1) since the signature parameters in the search later
+    // are _exclusive_ so we have to get the signatures immediate preceeding or following the ones we're interested in
+    const retries = 5;
+    const toBlock: VersionedBlockResponse = await this.findNextValidBlock(toSlot + 1, -1, retries);
+    const fromBlock: VersionedBlockResponse = await this.findNextValidBlock(
+      fromSlot - 1,
+      1,
+      retries
+    );
 
-    this.logger.info(`fromSlot adjustment: ${fromSlot - fromBlock.parentSlot - 1}`);
-    this.logger.info(`toSlot adjustment: ${toSlot - toBlock.parentSlot - 1}`);
+    const fromSignature = toBlock.transactions[0].transaction.signatures[0];
+    const toSignature =
+      fromBlock.transactions[fromBlock.transactions.length - 1].transaction.signatures[0];
 
     // get all core bridge signatures between fromTransaction and toTransaction
     let numSignatures = this.getSignaturesLimit;
@@ -154,6 +167,7 @@ export class SolanaWatcher extends Watcher {
 
             // Important to return the addresses in the order they're specified in the
             // address table lookup object. Note writable comes first, then readable.
+            // TODO: check if this is broken by multiple addressTableLookups in a single message
             return atl.writableIndexes
               .concat(atl.readonlyIndexes)
               .map((i) => lookupTableAccount.state.addresses[i]);

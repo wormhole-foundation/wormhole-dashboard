@@ -1,3 +1,4 @@
+import { Heartbeat_Network } from '@certusone/wormhole-sdk-proto-web/lib/cjs/gossip/v1/gossip';
 import {
   GridView,
   InfoOutlined,
@@ -9,6 +10,10 @@ import {
 import {
   Box,
   Card,
+  CardActionArea,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Divider,
   Hidden,
   LinearProgress,
@@ -17,6 +22,8 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  SxProps,
+  Theme,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
@@ -36,6 +43,7 @@ import { Heartbeat } from '../utils/getLastHeartbeats';
 import { isHeartbeatUnhealthy } from './Chains';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
+import chainIdToName from '../utils/chainIdToName';
 
 const columnHelper = createColumnHelper<Heartbeat>();
 
@@ -76,6 +84,50 @@ const columns = [
 
 type HighestByChain = { [chainId: string]: bigint };
 
+const networkColumnHelper = createColumnHelper<Heartbeat_Network>();
+
+const networkColumns = [
+  networkColumnHelper.accessor('id', {
+    header: () => 'Chain',
+    cell: (info) => (
+      <Typography variant="body2" noWrap>
+        {chainIdToName(info.getValue())} ({info.getValue()})
+      </Typography>
+    ),
+  }),
+  networkColumnHelper.accessor('height', {
+    header: () => 'Height',
+  }),
+  networkColumnHelper.accessor('contractAddress', {
+    header: () => 'Contract',
+  }),
+];
+
+function GuardianDetails({
+  heartbeat,
+  highestByChain,
+  conditionalRowStyle,
+}: {
+  heartbeat: Heartbeat;
+  highestByChain: HighestByChain;
+  conditionalRowStyle?: ((a: Heartbeat_Network) => SxProps<Theme> | undefined) | undefined;
+}) {
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'id', desc: false }]);
+  console.log(sorting);
+  const table = useReactTable({
+    columns: networkColumns,
+    data: heartbeat.networks,
+    state: {
+      sorting,
+    },
+    getRowId: (network) => network.id.toString(),
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+  });
+  return <Table<Heartbeat_Network> table={table} conditionalRowStyle={conditionalRowStyle} />;
+}
+
 function GuardianCard({
   heartbeat,
   highestByChain,
@@ -85,6 +137,13 @@ function GuardianCard({
   highestByChain: HighestByChain;
   latestRelease: string | null;
 }) {
+  const [open, setOpen] = useState(false);
+  const handleOpen = useCallback(() => {
+    setOpen(true);
+  }, []);
+  const handleClose = useCallback(() => {
+    setOpen(false);
+  }, []);
   const chainCount = Object.keys(highestByChain).length;
   const healthyCount = useMemo(
     () =>
@@ -100,108 +159,128 @@ function GuardianCard({
       ),
     [heartbeat, highestByChain]
   );
+  const conditionalRowStyle = useCallback(
+    (network: Heartbeat_Network) =>
+      isHeartbeatUnhealthy({ network, guardian: '', name: '' }, highestByChain[network.id])
+        ? { backgroundColor: 'rgba(100,0,0,.2)' }
+        : {},
+    [highestByChain]
+  );
   const healthyPercent = (healthyCount / chainCount) * 100;
   const hasLatestRelease = latestRelease && heartbeat.version !== latestRelease;
   return (
     <Box m={1} height="100%" sx={{ width: { sm: 232, xs: 142 } }}>
       <Card
         sx={{
-          display: 'flex',
-          p: 1,
           height: '100%',
-          alignItems: 'center',
+
           position: 'relative',
           overflow: 'visible',
         }}
       >
-        <Hidden smDown>
-          <Box flexBasis="72px" height="100%" textAlign="center">
-            <Typography variant="body2" sx={{ flexGrow: 1 }}>
-              {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
-            </Typography>
-          </Box>
-          <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-        </Hidden>
-        <Box flexGrow={1} my={-0.5}>
-          <Hidden smUp>
-            <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
-              {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
-            </Typography>
-          </Hidden>
-          <Tooltip
-            title={
-              <Typography variant="body2">
-                Last Heartbeat:{' '}
-                {heartbeat.timestamp
-                  ? new Date(Number(heartbeat.timestamp) / 1000000).toLocaleString()
-                  : null}
-              </Typography>
-            }
-          >
-            <Box display="flex" alignItems="center" my={0.25}>
-              <MonitorHeartOutlined fontSize="inherit" sx={{ mr: 0.5 }} />
-              <Typography variant="caption">
-                {heartbeat.timestamp ? (
-                  <TimeAgo date={Number(heartbeat.timestamp) / 1000000} />
-                ) : null}
+        <CardActionArea
+          onClick={handleOpen}
+          sx={{ display: 'flex', p: 1, height: '100%', alignItems: 'center' }}
+        >
+          <Hidden smDown>
+            <Box flexBasis="72px" height="100%" textAlign="center">
+              <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
               </Typography>
             </Box>
-          </Tooltip>
-          <Tooltip
-            title={
-              <>
-                <Typography variant="body2" gutterBottom>
-                  Boot Time:{' '}
-                  {heartbeat.bootTimestamp
-                    ? new Date(Number(heartbeat.bootTimestamp) / 1000000).toLocaleString()
+            <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+          </Hidden>
+          <Box flexGrow={1} my={-0.5}>
+            <Hidden smUp>
+              <Typography variant="subtitle2" sx={{ flexGrow: 1 }}>
+                {heartbeat.nodeName.replace(/([a-w,y-z])([A-Z])/g, '$1 $2')}
+              </Typography>
+            </Hidden>
+            <Tooltip
+              title={
+                <Typography variant="body2">
+                  Last Heartbeat:{' '}
+                  {heartbeat.timestamp
+                    ? new Date(Number(heartbeat.timestamp) / 1000000).toLocaleString()
                     : null}
                 </Typography>
-                {hasLatestRelease ? (
-                  <>
-                    <Typography variant="body2" gutterBottom>
-                      {heartbeat.nodeName} is not running the latest release.
-                    </Typography>
-                    <Typography variant="body2">Theirs: {heartbeat.version}</Typography>
-                    <Typography variant="body2">Latest: {latestRelease}</Typography>
-                  </>
-                ) : null}
-              </>
-            }
-          >
-            <Box display="flex" alignItems="center" my={0.25}>
-              <PlayCircleOutline
-                color={hasLatestRelease ? 'primary' : 'inherit'}
-                fontSize="inherit"
-                sx={{ mr: 0.5 }}
-              />
-              <Typography variant="caption">
-                {heartbeat.bootTimestamp ? (
-                  <TimeAgo date={Number(heartbeat.bootTimestamp) / 1000000} />
-                ) : null}
-              </Typography>
-            </Box>
-          </Tooltip>
-          <Tooltip
-            title={
-              <Typography variant="body2">
-                Healthy Chains: {healthyCount} / {chainCount}
-              </Typography>
-            }
-          >
-            <Box display="flex" alignItems="center" my={0.25}>
-              <LinkIcon fontSize="inherit" sx={{ mr: 0.5 }} />
-              <LinearProgress
-                variant="determinate"
-                value={healthyPercent}
-                sx={{ flexGrow: 1 }}
-                color={
-                  healthyPercent === 100 ? 'success' : healthyPercent > 80 ? 'warning' : 'error'
-                }
-              />
-            </Box>
-          </Tooltip>
-        </Box>
+              }
+            >
+              <Box display="flex" alignItems="center" my={0.25}>
+                <MonitorHeartOutlined fontSize="inherit" sx={{ mr: 0.5 }} />
+                <Typography variant="caption">
+                  {heartbeat.timestamp ? (
+                    <TimeAgo date={Number(heartbeat.timestamp) / 1000000} />
+                  ) : null}
+                </Typography>
+              </Box>
+            </Tooltip>
+            <Tooltip
+              title={
+                <>
+                  <Typography variant="body2" gutterBottom>
+                    Boot Time:{' '}
+                    {heartbeat.bootTimestamp
+                      ? new Date(Number(heartbeat.bootTimestamp) / 1000000).toLocaleString()
+                      : null}
+                  </Typography>
+                  {hasLatestRelease ? (
+                    <>
+                      <Typography variant="body2" gutterBottom>
+                        {heartbeat.nodeName} is not running the latest release.
+                      </Typography>
+                      <Typography variant="body2">Theirs: {heartbeat.version}</Typography>
+                      <Typography variant="body2">Latest: {latestRelease}</Typography>
+                    </>
+                  ) : null}
+                </>
+              }
+            >
+              <Box display="flex" alignItems="center" my={0.25}>
+                <PlayCircleOutline
+                  color={hasLatestRelease ? 'primary' : 'inherit'}
+                  fontSize="inherit"
+                  sx={{ mr: 0.5 }}
+                />
+                <Typography variant="caption">
+                  {heartbeat.bootTimestamp ? (
+                    <TimeAgo date={Number(heartbeat.bootTimestamp) / 1000000} />
+                  ) : null}
+                </Typography>
+              </Box>
+            </Tooltip>
+            <Tooltip
+              title={
+                <Typography variant="body2">
+                  Healthy Chains: {healthyCount} / {chainCount}
+                </Typography>
+              }
+            >
+              <Box display="flex" alignItems="center" my={0.25}>
+                <LinkIcon fontSize="inherit" sx={{ mr: 0.5 }} />
+                <LinearProgress
+                  variant="determinate"
+                  value={healthyPercent}
+                  sx={{ flexGrow: 1 }}
+                  color={
+                    healthyPercent === 100 ? 'success' : healthyPercent > 80 ? 'warning' : 'error'
+                  }
+                />
+              </Box>
+            </Tooltip>
+          </Box>
+        </CardActionArea>
       </Card>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle>{heartbeat.nodeName}</DialogTitle>
+        <DialogContent>
+          <GuardianDetails
+            heartbeat={heartbeat}
+            highestByChain={highestByChain}
+            conditionalRowStyle={conditionalRowStyle}
+          />
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

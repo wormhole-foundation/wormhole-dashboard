@@ -21,16 +21,16 @@ export class TerraExplorerWatcher extends Watcher {
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
-    this.latestBlockTag = 'blocks/latest';
-    this.getBlockTag = 'blocks/';
+    this.latestBlockTag = 'v1/blocks/latest';
+    this.getBlockTag = 'v1/blocks/';
     this.allTxsTag = 'v1/txs?';
     this.latestBlockHeight = 0;
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
     const result = (await axios.get(`${this.rpc}/${this.latestBlockTag}`, AXIOS_CONFIG_JSON)).data;
-    if (result && result.block.header.height) {
-      let blockHeight: number = parseInt(result.block.header.height);
+    if (result && result.height) {
+      let blockHeight: number = parseInt(result.height);
       if (blockHeight !== this.latestBlockHeight) {
         this.latestBlockHeight = blockHeight;
         this.logger.debug('blockHeight = ' + blockHeight);
@@ -149,13 +149,13 @@ export class TerraExplorerWatcher extends Watcher {
       // become the new starting point for subsequent calls.
       this.logger.debug(`Adding filler for block ${toBlock}`);
       const blkUrl = `${this.rpc}/${this.getBlockTag}${toBlock}`;
-      const result: CosmwasmBlockResult = (await axios.get(blkUrl, AXIOS_CONFIG_JSON)).data;
+      const result: NewCosmwasmBlockResult = (await axios.get(blkUrl, AXIOS_CONFIG_JSON)).data;
       if (!result) {
         throw new Error(`Unable to get block information for block ${toBlock}`);
       }
       const blockKey = makeBlockKey(
-        result.block.header.height.toString(),
-        new Date(result.block.header.time).toISOString()
+        result.height.toString(),
+        new Date(result.timestamp).toISOString()
       );
       vaasByBlock[blockKey] = [];
     }
@@ -231,4 +231,28 @@ type CosmwasmBlockResult = {
       signatures: string[];
     };
   };
+};
+
+type NewCosmwasmBlockResult = {
+  chainId: string; //'columbus-5';
+  height: number; //14520709;
+  timestamp: string; //'2023-09-13T13:38:23.081Z';
+  proposer: {
+    moniker: string; //'ISS';
+    identity: string; //'';
+    operatorAddress: string; //'terravaloper15khv8dsaxqmf7nwu4jdlp9slxl7aczte3x068c';
+  };
+  txs: [
+    {
+      id: number;
+      tx: Object;
+      logs: Object[];
+      height: string;
+      txhash: string;
+      raw_log: string;
+      gas_used: string;
+      timestamp: string;
+      gas_wanted: string;
+    }
+  ];
 };

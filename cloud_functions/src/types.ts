@@ -256,3 +256,29 @@ export interface MessageCountsHistory {
     [date: string]: { [chainId: string]: number };
   };
 }
+
+export type TokenEntry = {
+  price: number;
+  decimalDivisor: number;
+  symbol: string;
+  coinGeckoId: string;
+};
+
+export type AccountEntry = {
+  key: {
+    chain_id: number;
+    token_chain: number;
+    token_address: string;
+  };
+  balance: string;
+};
+
+export type TokenMetaDatum = {
+  token_chain: number; //5;
+  token_address: string; //'000000000000000000000000df7837de1f2fa4631d716cf2502f8b230f1dcc32';
+  native_address: string; //'0xdf7837de1f2fa4631d716cf2502f8b230f1dcc32';
+  coin_gecko_coin_id: string; //'telcoin';
+  decimals: number; //2;
+  symbol: string; //'TEL';
+  name: string; //'Telcoin (PoS)';
+};

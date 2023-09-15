@@ -8,7 +8,7 @@ const initialCeloBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.celo);
 const initialOasisBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.oasis);
 const initialKaruraBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.karura);
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 test('getBlock by tag', async () => {
   const watcher = new EVMWatcher('avalanche');

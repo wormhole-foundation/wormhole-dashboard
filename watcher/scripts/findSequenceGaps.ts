@@ -1,9 +1,9 @@
 import { chains, chainToChainId } from '@wormhole-foundation/connect-sdk';
+import fs from 'fs';
 import axios from 'axios';
 
 // emitter => {sequence, timestamp}[]
 type SequenceByEmitter = Record<string, [bigint, number][]>;
-type GapStats = Record<string, [number, number][]>;
 const URL = 'https://api.testnet.wormholescan.io/api/v1/vaas';
 
 (async function () {
@@ -16,30 +16,32 @@ const URL = 'https://api.testnet.wormholescan.io/api/v1/vaas';
   for (const cn of chains) {
     console.log('Working on: ', cn);
     const chain = chainToChainId.get(cn);
-    const sbe = await collectSeqences(chain!, until);
-
-    // Find gaps and produce stats
-    const gs: GapStats = {};
-    for (const emitter in sbe) {
-      const seqs = sbe[emitter];
-
-      for (let i = 0; i < seqs.length - 1; i++) {
-        const sd = Number(seqs[i + 1][0] - seqs[i][0]);
-        if (sd === 1) continue;
-        if (!(emitter in gs)) gs[emitter] = [];
-
-        const avgTs = seqs[i + 1][1] + (seqs[i + 1][1] - seqs[i][1]) / 2;
-
-        gs[emitter].push([avgTs, sd]);
+    for (let i = 0; i < 5; i++) {
+      console.log(i);
+      const rows: string[] = [];
+      const sbe = await collectSeqences(chain!, until);
+      for (const emitter in sbe) {
+        const seqs = sbe[emitter];
+        for (const seq of seqs) {
+          rows.push(`${cn},${emitter},${seq[0]},${seqs[1]}`);
+        }
       }
+      fs.writeFileSync(`missing-seqs-${i}.csv`, rows.join('\n'));
     }
 
-    for (const emitter in gs) {
-      const gaps = gs[emitter];
-      const latest = new Date(gaps[gaps.length - 1][0]);
-      console.log(`Emitter ${emitter} had ${gaps.length} gaps`);
-      console.log(`\tLatest gap ${latest.toString()}`);
-    }
+    //// Find gaps and produce stats
+    //for (const emitter in sbe) {
+    //  const seqs = sbe[emitter];
+
+    //  for (let i = 0; i < seqs.length - 1; i++) {
+    //    const sd = Number(seqs[i + 1][0] - seqs[i][0]);
+    //    if (sd === 1) continue;
+
+    //    const avgTs = seqs[i + 1][1] + (seqs[i + 1][1] - seqs[i][1]) / 2;
+    //    rows.push(`${cn},${emitter},${avgTs},${seqs[i][0]},${sd}`);
+    //  }
+    //}
+    //fs.writeFileSync('missing-seqs.csv', rows.join('\n'));
     return;
   }
 })();
@@ -56,7 +58,6 @@ async function collectSeqences(chainId: number, until: number): Promise<Sequence
       data: { data: vaas },
     } = await axios.get(`${URL}/${chainId}?page=${page}&sort=DESC`);
 
-    console.log(page);
     if (vaas.length === 0) break;
 
     for (const vaa of vaas) {

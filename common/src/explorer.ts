@@ -109,7 +109,7 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     : chainId === CHAIN_ID_ACALA
     ? `https://blockscout.acala.network/tx/${tx}`
     : chainId === CHAIN_ID_SOLANA
-    ? `https://solscan.io/tx/${tx}`
+    ? `https://solscan.io/account/${tx}`
     : chainId === CHAIN_ID_TERRA
     ? `https://finder.terra.money/columbus-5/tx/${tx}`
     : chainId === CHAIN_ID_TERRA2

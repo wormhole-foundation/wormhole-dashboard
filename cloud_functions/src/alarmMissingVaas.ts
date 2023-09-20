@@ -5,6 +5,35 @@ import { ObservedMessage } from './types';
 import { explorerBlock, explorerTx } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
 
+interface EnqueuedVAAResponse {
+  sequence: string;
+  releaseTime: number;
+  notionalValue: string;
+  txHash: string;
+}
+
+interface Emitter {
+  emitterAddress: string;
+  enqueuedVaas: EnqueuedVAAResponse[];
+  totalEnqueuedVaas: string;
+}
+
+interface ChainStatus {
+  availableNotional: string;
+  chainId: number;
+  emitters: Emitter[];
+}
+
+interface GovernedVAA {
+  chainId: number;
+  emitterAddress: string;
+  sequence: string;
+  txHash: string;
+}
+
+// The key is the vaaKey
+type GovernedVAAMap = Map<string, GovernedVAA>;
+
 export async function alarmMissingVaas(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') {
@@ -26,6 +55,10 @@ export async function alarmMissingVaas(req: any, res: any) {
       firestoreVAAs.push(vaa);
     });
 
+    // Get governed VAAS
+    const governedVAAs: GovernedVAAMap = await getGovernedVaas();
+    console.log('number of governed VAAs', governedVAAs.size);
+
     // attempting to retrieve missing VAAs...
     const messages: MissingVaasByChain = await commonGetMissingVaas();
     if (messages) {
@@ -42,12 +75,18 @@ export async function alarmMissingVaas(req: any, res: any) {
             const msg: ObservedMessage = msgs.messages[i];
             if (msg.timestamp < twoHoursAgo) {
               let vaaKey: string = `${msg.chain}/${msg.emitter}/${msg.seq}`;
-              if (!firestoreMap.has(vaaKey)) {
-                let firestoreMsg: FirestoreVAA = convert(msg);
-                firestoreMap.set(vaaKey, firestoreMsg);
-                firestoreVAAs.push(firestoreMsg);
-                await formatAndSendToSlack(formatMessage(msg));
+              if (firestoreMap.has(vaaKey)) {
+                console.log(`skipping over ${vaaKey} because it is already in firestore`);
+                continue;
               }
+              if (governedVAAs.has(vaaKey)) {
+                console.log(`skipping over ${vaaKey} because it is governed`);
+                continue;
+              }
+              let firestoreMsg: FirestoreVAA = convert(msg);
+              firestoreMap.set(vaaKey, firestoreMsg);
+              firestoreVAAs.push(firestoreMsg);
+              await formatAndSendToSlack(formatMessage(msg));
             }
           }
         } else {
@@ -62,6 +101,48 @@ export async function alarmMissingVaas(req: any, res: any) {
   await updateFirestore(firestoreVAAs);
   res.status(200).send('successfully alarmed missing VAAS');
   return;
+}
+
+// This function gets all the enqueued VAAs from he governorStatus collection.
+async function getGovernedVaas(): Promise<GovernedVAAMap> {
+  const vaas: GovernedVAAMap = new Map<string, GovernedVAA>();
+  // Walk all the guardians and retrieve the enqueued VAAs
+  const firestore = new Firestore();
+  const collection = firestore.collection(
+    assertEnvironmentVariable('FIRESTORE_GOVERNOR_STATUS_COLLECTION')
+  );
+  const snapshot = await collection.get();
+  for (const doc of snapshot.docs) {
+    const data = doc.data();
+    if (data) {
+      // data should be a ChainStatus[]
+      const chains: ChainStatus[] = data.chains;
+      chains.forEach((chain) => {
+        // chain should be a ChainStatus
+        const emitters: Emitter[] = chain.emitters;
+        emitters.forEach((emitter) => {
+          // Filter 0x off the front of the emitter address
+          if (emitter.emitterAddress.startsWith('0x')) {
+            emitter.emitterAddress = emitter.emitterAddress.slice(2);
+          }
+          // emitter should be an Emitter
+          const enqueuedVaas: EnqueuedVAAResponse[] = emitter.enqueuedVaas;
+          enqueuedVaas.forEach((vaa) => {
+            // vaa should be an EnqueuedVAAResponse
+            const governedVAA: GovernedVAA = {
+              chainId: chain.chainId,
+              emitterAddress: emitter.emitterAddress,
+              sequence: vaa.sequence,
+              txHash: vaa.txHash,
+            };
+            const key = `${chain.chainId}/${emitter.emitterAddress}/${vaa.sequence}`;
+            vaas.set(key, governedVAA);
+          });
+        });
+      });
+    }
+  }
+  return vaas;
 }
 
 // This function gets all the VAAs in the firestore table,

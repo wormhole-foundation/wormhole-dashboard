@@ -5,10 +5,10 @@ import { assertEnvironmentVariable } from './utils';
 import { TokenPrice } from '@wormhole-foundation/wormhole-monitor-database';
 import { Firestore } from 'firebase-admin/firestore';
 
-const WORMCHAIN_URL = 'https://wormchain.jumpisolated.com';
-const ACCOUNTANT_CONTRACT_ADDRESS =
+const WORMCHAIN_URL: string = 'https://wormchain.jumpisolated.com';
+const ACCOUNTANT_CONTRACT_ADDRESS: string =
   'wormhole14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9srrg465';
-const PAGE_LIMIT = 2000; // throws a gas limit error over this
+const PAGE_LIMIT: number = 2000; // throws a gas limit error over this
 
 type FullMetadata = {
   metadata: TokenMetaDatum;
@@ -26,10 +26,10 @@ const priceMap: Map<string, TokenPrice> = new Map<string, TokenPrice>(); // key 
 const accountMap: Map<Key, AccountEntry> = new Map<Key, AccountEntry>();
 
 async function getAccountantAccounts(): Promise<AccountEntry[]> {
-  const cosmWasmClient = await CosmWasmClient.connect(WORMCHAIN_URL);
+  const cosmWasmClient: CosmWasmClient = await CosmWasmClient.connect(WORMCHAIN_URL);
   let accounts: AccountEntry[] = [];
-  let response;
-  let start_after = undefined;
+  let response: any;
+  let start_after: Key | undefined = undefined;
   do {
     response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
       all_accounts: {
@@ -38,7 +38,9 @@ async function getAccountantAccounts(): Promise<AccountEntry[]> {
       },
     });
     accounts = [...accounts, ...response.accounts];
-    start_after = response.accounts.length && response.accounts[response.accounts.length - 1].key;
+    if (response.accounts.length > 0) {
+      start_after = response.accounts[response.accounts.length - 1].key;
+    }
   } while (response.accounts.length === PAGE_LIMIT);
   return accounts;
 }
@@ -78,9 +80,11 @@ async function getTokenPrices(): Promise<TokenPrice[]> {
       },
     });
     // get all of the known coin IDs
+    const today = new Date(Date.now()).toISOString().slice(0, 10);
     const rows = await pg(assertEnvironmentVariable('PG_TOKEN_PRICE_HISTORY_TABLE'))
       .select('*')
       .whereNotNull('coin_gecko_coin_id')
+      .andWhere('date', '=', today)
       .distinct();
     return rows;
   } catch (e) {
@@ -116,6 +120,7 @@ async function populateMaps() {
 
   // Lastly, get the price information
   const prices: TokenPrice[] = await getTokenPrices();
+  console.log(`Got ${prices.length} token prices`);
   for (const p of prices) {
     // Check the date on the price.  Only use the latest.
     const existingPrice = priceMap.get(p.coin_gecko_coin_id);

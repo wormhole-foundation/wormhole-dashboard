@@ -59,6 +59,9 @@ export async function alarmMissingVaas(req: any, res: any) {
     const governedVAAs: GovernedVAAMap = await getGovernedVaas();
     console.log('number of governed VAAs', governedVAAs.size);
 
+    // Get reference times
+    const refTimes: LatestTimeByChain = await getLastBlockTimeFromFirestore();
+
     // attempting to retrieve missing VAAs...
     const messages: MissingVaasByChain = await commonGetMissingVaas();
     if (messages) {
@@ -73,7 +76,17 @@ export async function alarmMissingVaas(req: any, res: any) {
           for (let i = 0; i < msgs.messages.length; i++) {
             // Check the timestamp and only send messages that are older than 2 hours
             const msg: ObservedMessage = msgs.messages[i];
-            if (msg.timestamp < twoHoursAgo) {
+            // If there is a reference time for this chain, use it.  Otherwise, use the current time.
+            let timeToCheck = twoHoursAgo;
+            if (refTimes[chainId]) {
+              let refTime = refTimes[chainId]?.latestTime;
+              if (refTime) {
+                const refDateTime = new Date(refTime);
+                refDateTime.setHours(refDateTime.getHours() - 2);
+                timeToCheck = refDateTime.toISOString();
+              }
+            }
+            if (msg.timestamp < timeToCheck) {
               let vaaKey: string = `${msg.chain}/${msg.emitter}/${msg.seq}`;
               if (firestoreMap.has(vaaKey)) {
                 console.log(`skipping over ${vaaKey} because it is already in firestore`);
@@ -213,6 +226,26 @@ function formatMessage(msg: ObservedMessage): string {
   return formattedMsg;
 }
 
+async function getLastBlockTimeFromFirestore(): Promise<LatestTimeByChain> {
+  // Get VAAs in the firestore holding area.
+  const firestore = new Firestore();
+  const collectionRef = firestore.collection(
+    assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION')
+  );
+  let values: LatestTimeByChain = {};
+  try {
+    const snapshot = await collectionRef.get();
+    snapshot.docs
+      .sort((a, b) => Number(a.id) - Number(b.id))
+      .forEach((doc) => {
+        values[Number(doc.id) as ChainId] = { latestTime: doc.data().lastBlockKey.split('/')[1] };
+      });
+  } catch (e) {
+    console.error(e);
+  }
+  return values;
+}
+
 type FirestoreVAA = {
   chain: string;
   txHash: string;
@@ -220,4 +253,8 @@ type FirestoreVAA = {
   block: string;
   blockTS: string;
   noticedTS: string;
+};
+
+type LatestTimeByChain = {
+  [chain in ChainId]?: { latestTime: string };
 };

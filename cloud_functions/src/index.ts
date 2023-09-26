@@ -20,6 +20,7 @@ export const { getTVLHistory } = require('./getTVLHistory');
 export const { getMessageCountHistory } = require('./getMessageCountHistory');
 export const { computeMessageCountHistory } = require('./computeMessageCountHistory');
 export const { computeTvlTvm } = require('./computeTvlTvm');
+export const { updateTokenMetadata } = require('./updateTokenMetadata');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.
@@ -41,3 +42,4 @@ functions.http('getTVLHistory', getTVLHistory);
 functions.http('getMessageCountHistory', getMessageCountHistory);
 functions.http('computeMessageCountHistory', computeMessageCountHistory);
 functions.http('computeTvlTvm', computeTvlTvm);
+functions.http('updateTokenMetadata', updateTokenMetadata);

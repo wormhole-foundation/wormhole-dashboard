@@ -1,9 +1,38 @@
+import { ChainName } from '@certusone/wormhole-sdk';
 import { chunkArray, sleep } from '@wormhole-foundation/wormhole-monitor-common';
-import axios, { AxiosError, isAxiosError } from 'axios';
+import axios, { isAxiosError } from 'axios';
 
 const COIN_GECKO_API_BASE_URL = 'https://api.coingecko.com/api/v3';
 const COIN_GECKO_PRO_API_BASE_URL = 'https://pro-api.coingecko.com/api/v3';
 const COIN_GECKO_API_SLEEP_MS = 200;
+
+// https://api.coingecko.com/api/v3/asset_platforms
+export const COINGECKO_PLATFORM_BY_CHAIN: { [key in ChainName]?: string } = {
+  solana: 'solana',
+  ethereum: 'ethereum',
+  terra: 'terra',
+  terra2: 'terra-2',
+  bsc: 'binance-smart-chain',
+  polygon: 'polygon-pos',
+  avalanche: 'avalanche',
+  oasis: 'oasis',
+  algorand: 'algorand',
+  aptos: 'aptos',
+  aurora: 'aurora',
+  fantom: 'fantom',
+  karura: 'karura',
+  acala: 'acala',
+  klaytn: 'klay-token',
+  celo: 'celo',
+  near: 'near-protocol',
+  moonbeam: 'moonbeam',
+  arbitrum: 'arbitrum-one',
+  optimism: 'optimistic-ethereum',
+  xpla: undefined,
+  injective: 'injective',
+  sui: 'sui',
+  base: 'base',
+};
 
 export interface CoinGeckoPrices {
   [coinId: string]: { usd: number | null };

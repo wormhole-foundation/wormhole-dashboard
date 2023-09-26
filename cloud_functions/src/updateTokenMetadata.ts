@@ -1,9 +1,8 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
 import {
   assertEnvironmentVariable,
   chunkArray,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import knex, { Knex } from 'knex';
 import { ChainId, assertChain, toChainName } from '@certusone/wormhole-sdk';
 import {
   COINGECKO_PLATFORM_BY_CHAIN,
@@ -11,14 +10,7 @@ import {
   TokenMetadata,
   fetchCoins,
   getNativeAddress,
-} from '../src';
-import knex from 'knex';
-
-const PG_USER = assertEnvironmentVariable('PG_USER');
-const PG_PASSWORD = assertEnvironmentVariable('PG_PASSWORD');
-const PG_DATABASE = assertEnvironmentVariable('PG_DATABASE');
-const PG_HOST = assertEnvironmentVariable('PG_HOST');
-const TOKEN_METADATA_TABLE = assertEnvironmentVariable('PG_TOKEN_METADATA_TABLE');
+} from '@wormhole-foundation/wormhole-monitor-database';
 
 const coinGeckoCoinIdCache = new Map<string, string>();
 
@@ -35,8 +27,6 @@ const findCoinGeckoCoinId = (
   const chainName = toChainName(chainId);
   const platform = COINGECKO_PLATFORM_BY_CHAIN[chainName];
   if (platform === undefined) {
-    // throw new Error(`No coin gecko platform found for chain: ${chainName}`);
-    // console.error(`No coin gecko platform found for chain: ${chainName}`);
     return null;
   }
   for (const coin of coinGeckoCoins) {
@@ -45,28 +35,33 @@ const findCoinGeckoCoinId = (
       return coin.id;
     }
   }
-  // throw new Error(`No coin gecko coin ID found for chain: ${chainName}, address: ${nativeAddress}`);
-  // console.error(`No coin gecko coin ID found for chain: ${chainName}, address: ${nativeAddress}`);
   return null;
 };
 
-// This script tries to populate token metadata missing certain fields
-// Note: Run the Cloud SQL Auth proxy before running this script
-// https://cloud.google.com/sql/docs/postgres/connect-instance-auth-proxy
-
-(async () => {
-  const pg = knex({
-    client: 'pg',
-    connection: {
-      host: PG_HOST,
-      // port: 5432, // default
-      user: PG_USER,
-      password: PG_PASSWORD,
-      database: PG_DATABASE,
-    },
-  });
+export async function updateTokenMetadata(req: any, res: any) {
+  res.set('Access-Control-Allow-Origin', '*');
+  if (req.method === 'OPTIONS') {
+    // Send response to OPTIONS requests
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Max-Age', '3600');
+    res.sendStatus(204);
+    return;
+  }
+  let pg: Knex | undefined;
   try {
-    const result = await pg<TokenMetadata>(TOKEN_METADATA_TABLE)
+    pg = knex({
+      client: 'pg',
+      connection: {
+        host: assertEnvironmentVariable('PG_HOST'),
+        // port: 5432, // default
+        user: assertEnvironmentVariable('PG_USER'),
+        password: assertEnvironmentVariable('PG_PASSWORD'),
+        database: assertEnvironmentVariable('PG_DATABASE'),
+      },
+    });
+    const table = assertEnvironmentVariable('PG_TOKEN_METADATA_TABLE');
+    const result = await pg<TokenMetadata>(table)
       .select()
       .whereNull('native_address')
       .orWhereNull('coin_gecko_coin_id');
@@ -105,18 +100,26 @@ const findCoinGeckoCoinId = (
         console.log('will update', tokenMetadata);
       }
     }
-    const chunks = chunkArray(toUpdate, 100);
-    let numUpdated = 0;
-    for (const chunk of chunks) {
-      const result: any = await pg<TokenMetadata>(TOKEN_METADATA_TABLE)
-        .insert(chunk)
-        .onConflict(['token_chain', 'token_address'])
-        .merge(['native_address', 'coin_gecko_coin_id']);
-      numUpdated += result.rowCount;
+    if (toUpdate.length > 0) {
+      const chunks = chunkArray(toUpdate, 100);
+      let numUpdated = 0;
+      for (const chunk of chunks) {
+        const result: any = await pg<TokenMetadata>(table)
+          .insert(chunk)
+          .onConflict(['token_chain', 'token_address'])
+          .merge(['native_address', 'coin_gecko_coin_id']);
+        numUpdated += result.rowCount;
+      }
+      console.log(`updated ${numUpdated} rows`);
+    } else {
+      console.log(`nothing to update`);
     }
-    console.log(`updated ${numUpdated} rows`);
+    res.sendStatus('200');
   } catch (e) {
     console.error(e);
+    res.sendStatus(500);
   }
-  await pg.destroy();
-})();
+  if (pg) {
+    await pg.destroy();
+  }
+}

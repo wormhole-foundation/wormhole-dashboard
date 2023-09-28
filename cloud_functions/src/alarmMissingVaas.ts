@@ -62,6 +62,9 @@ export async function alarmMissingVaas(req: any, res: any) {
     // Get reference times
     const refTimes: LatestTimeByChain = await getLastBlockTimeFromFirestore();
 
+    // Alarm any watchers that are behind by more than 24 hours
+    await alarmOldBlockTimes(refTimes);
+
     // attempting to retrieve missing VAAs...
     const messages: MissingVaasByChain = await commonGetMissingVaas();
     if (messages) {
@@ -227,7 +230,7 @@ function formatMessage(msg: ObservedMessage): string {
 }
 
 async function getLastBlockTimeFromFirestore(): Promise<LatestTimeByChain> {
-  // Get VAAs in the firestore holding area.
+  // Get latest observed times from firestore.latestObservedBlocks
   const firestore = new Firestore();
   const collectionRef = firestore.collection(
     assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION')
@@ -246,6 +249,89 @@ async function getLastBlockTimeFromFirestore(): Promise<LatestTimeByChain> {
   return values;
 }
 
+async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void> {
+  let alarmsToStore: AlarmedChainTime[] = [];
+  // Read in the already alarmed chains.
+  const alarmedChains: Map<ChainId, AlarmedChainTime> = await getAlarmedChainsFromFirestore();
+  if (alarmedChains && alarmedChains.size > 0) {
+    alarmsToStore = [...alarmedChains.values()];
+  } else {
+    console.log('no alarmed chains found in firestore');
+  }
+  // Walk all chains and check the latest block time.
+  const now = new Date();
+  for (const chain of Object.keys(latestTimes)) {
+    const chainId: ChainId = chain as any as ChainId;
+    const latestTime: string | undefined = latestTimes[chainId]?.latestTime;
+    if (!latestTime) {
+      continue;
+    }
+    // console.log(`Checking chain ${chainId} with latest time ${latestTime}`);
+    const thePast = new Date();
+    // Alarm if the chain is behind by more than 24 hours.
+    thePast.setHours(thePast.getHours() - 24);
+    const oneDayAgo = thePast.toISOString();
+    if (latestTime < oneDayAgo && !alarmedChains.has(chainId)) {
+      // Send a message to slack
+      const chainTime: Date = new Date(latestTime);
+      const cName: string = CHAIN_ID_TO_NAME[chainId] as ChainName;
+      const deltaTime: number = (now.getTime() - chainTime.getTime()) / (1000 * 60 * 60 * 24);
+      const formattedMsg = `*Chain:* ${cName}(${chainId})\nThe watcher is behind by ${deltaTime} days.`;
+      await formatAndSendToSlack(formattedMsg);
+      alarmsToStore.push({ chain: chainId, alarmTime: now.toISOString() });
+    }
+  }
+  // Save this info so that we don't keep alarming it.
+  await storeAlarmedChains(alarmsToStore);
+}
+
+async function getAlarmedChainsFromFirestore(): Promise<Map<ChainId, AlarmedChainTime>> {
+  // Get VAAs in the firestore holding area.
+  const firestore = new Firestore();
+  const collection = firestore.collection(
+    assertEnvironmentVariable('FIRESTORE_ALARM_MISSING_VAAS_COLLECTION')
+  );
+  let current = new Map<ChainId, AlarmedChainTime>();
+  const now = new Date();
+  const thePast = now;
+  thePast.setHours(now.getHours() - 24);
+  const twentyFourHoursAgo = thePast.toISOString();
+  await collection
+    .doc('ChainTimes')
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data) {
+          // if alarmTime < 24 hours old, leave in firestore
+          const times: AlarmedChainTime[] = data.times;
+          if (times) {
+            times.forEach((time) => {
+              if (time.alarmTime > twentyFourHoursAgo) {
+                console.log('keeping alarmed chain in firestore', time.chain);
+                current.set(time.chain, time);
+              } else {
+                console.log('removing alarmed chain from firestore', time.chain);
+              }
+            });
+          }
+        }
+      }
+    })
+    .catch((error) => {
+      console.log('Error getting document:', error);
+    });
+  return current;
+}
+
+async function storeAlarmedChains(alarms: AlarmedChainTime[]): Promise<void> {
+  const firestore = new Firestore();
+  const alarmedChains = firestore
+    .collection(assertEnvironmentVariable('FIRESTORE_ALARM_MISSING_VAAS_COLLECTION'))
+    .doc('ChainTimes');
+  await alarmedChains.set({ times: alarms });
+}
+
 type FirestoreVAA = {
   chain: string;
   txHash: string;
@@ -253,6 +339,11 @@ type FirestoreVAA = {
   block: string;
   blockTS: string;
   noticedTS: string;
+};
+
+type AlarmedChainTime = {
+  chain: ChainId;
+  alarmTime: string;
 };
 
 type LatestTimeByChain = {

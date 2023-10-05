@@ -55,6 +55,7 @@ export class BigtableDatabase extends Database {
       this.firestoreDb = getFirestore();
       this.pubsub = new PubSub();
     } catch (e) {
+      this.logger.error(e);
       throw new Error('Could not load bigtable db');
     }
   }

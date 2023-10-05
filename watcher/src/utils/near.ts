@@ -9,6 +9,8 @@ import {
   Transaction,
   WormholePublishEventLog,
 } from '../types/near';
+import { BlockId, BlockResult } from 'near-api-js/lib/providers/provider';
+import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 
 // The following is obtained by going to: https://explorer.near.org/accounts/contract.wormhole_crypto.near
 // and watching the network tab in the browser to see where the explorer is going.
@@ -21,6 +23,32 @@ export const getNearProvider = async (rpc: string): Promise<Provider> => {
   const provider = connection.connection.provider;
   return provider;
 };
+
+export async function getTimestampByBlock(
+  provider: Provider,
+  blockHeight: number
+): Promise<number> {
+  const block: BlockResult = await fetchBlockByBlockId(provider, blockHeight);
+  return block.header.timestamp;
+}
+
+export async function fetchBlockByBlockId(
+  provider: Provider,
+  blockHeight: BlockId
+): Promise<BlockResult> {
+  let success: boolean = false;
+  let block: BlockResult = {} as BlockResult;
+  while (!success) {
+    try {
+      block = await provider.block({ blockId: blockHeight });
+      success = true;
+    } catch (e) {
+      console.error('Error fetching block', e);
+      await sleep(5000);
+    }
+  }
+  return block;
+}
 
 // This function will only return transactions in the time window.
 export const getTransactionsByAccountId = async (
@@ -42,11 +70,11 @@ export const getTransactionsByAccountId = async (
 
   while (!done) {
     // using this api: https://github.com/near/near-explorer/blob/beead42ba2a91ad8d2ac3323c29b1148186eec98/backend/src/router/transaction/list.ts#L127
-    console.log(
-      `Near explorer URL: [${NEAR_EXPLORER_TRANSACTION_URL}?batch=1&input={"0":${JSON.stringify(
-        params
-      )}}]`
-    );
+    // console.log(
+    //   `Near explorer URL: [${NEAR_EXPLORER_TRANSACTION_URL}?batch=1&input={"0":${JSON.stringify(
+    //     params
+    //   )}}]`
+    // );
     const res = (
       (
         await axios.get(

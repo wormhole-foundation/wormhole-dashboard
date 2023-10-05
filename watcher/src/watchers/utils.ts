@@ -7,7 +7,6 @@ import { CosmwasmWatcher } from './CosmwasmWatcher';
 import { EVMWatcher } from './EVMWatcher';
 import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
 import { MoonbeamWatcher } from './MoonbeamWatcher';
-import { NearWatcher } from './NearWatcher';
 import { PolygonWatcher } from './PolygonWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
 import { TerraExplorerWatcher } from './TerraExplorerWatcher';
@@ -15,6 +14,7 @@ import { Watcher } from './Watcher';
 import { SuiWatcher } from './SuiWatcher';
 import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
+import { NearArchiveWatcher } from './NearArchiveWatcher';
 
 export function makeFinalizedWatcher(chainName: ChainName): Watcher {
   if (chainName === 'solana') {
@@ -44,7 +44,7 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
   } else if (chainName === 'aptos') {
     return new AptosWatcher();
   } else if (chainName === 'near') {
-    return new NearWatcher();
+    return new NearArchiveWatcher();
   } else if (chainName === 'injective') {
     return new InjectiveExplorerWatcher();
   } else if (chainName === 'sei') {

@@ -22,35 +22,67 @@ export const getNearProvider = async (rpc: string): Promise<Provider> => {
   return provider;
 };
 
+// This function will only return transactions in the time window.
 export const getTransactionsByAccountId = async (
   accountId: string,
   batchSize: number,
-  timestamp: string
+  beginningTimestamp: number,
+  endingTimestamp: string
 ): Promise<Transaction[]> => {
   const params: GetTransactionsByAccountIdRequestParams = {
     accountId,
     limit: batchSize,
     cursor: {
-      timestamp,
+      timestamp: endingTimestamp,
       indexInChunk: 0,
     },
   };
+  let txs: Transaction[] = [];
+  let done: boolean = false;
 
-  // using this api: https://github.com/near/near-explorer/blob/beead42ba2a91ad8d2ac3323c29b1148186eec98/backend/src/router/transaction/list.ts#L127
-  const res = (
-    (
-      await axios.get(
-        `${NEAR_EXPLORER_TRANSACTION_URL}?batch=1&input={"0":${JSON.stringify(params)}}`,
-        AXIOS_CONFIG_JSON
+  while (!done) {
+    // using this api: https://github.com/near/near-explorer/blob/beead42ba2a91ad8d2ac3323c29b1148186eec98/backend/src/router/transaction/list.ts#L127
+    console.log(
+      `Near explorer URL: [${NEAR_EXPLORER_TRANSACTION_URL}?batch=1&input={"0":${JSON.stringify(
+        params
+      )}}]`
+    );
+    const res = (
+      (
+        await axios.get(
+          `${NEAR_EXPLORER_TRANSACTION_URL}?batch=1&input={"0":${JSON.stringify(params)}}`,
+          AXIOS_CONFIG_JSON
+        )
+      ).data as GetTransactionsByAccountIdResponse
+    )[0];
+    if ('error' in res) throw new Error(res.error.message);
+    const numItems: number = res.result.data.items.length;
+    const localTxs: Transaction[] = res.result.data.items
+      .filter(
+        (tx) => tx.status === 'success' && tx.actions.some((a) => a.kind === 'functionCall') // other actions don't generate logs
       )
-    ).data as GetTransactionsByAccountIdResponse
-  )[0];
-  if ('error' in res) throw new Error(res.error.message);
-  return res.result.data.items
-    .filter(
-      (tx) => tx.status === 'success' && tx.actions.some((a) => a.kind === 'functionCall') // other actions don't generate logs
-    )
-    .reverse(); // return chronological order
+      .reverse(); // return chronological order
+    txs = txs.concat(localTxs);
+    if (numItems < batchSize) {
+      done = true;
+    } else {
+      params.cursor = res.result.data.cursor;
+    }
+    for (const tx of localTxs) {
+      // console.log(`Transaction ${tx.hash} at block ${tx.blockTimestamp}`);
+      if (tx.blockTimestamp * 1_000_000 >= beginningTimestamp) {
+        console.log(
+          `Transaction ${tx.hash} at block ${tx.blockTimestamp} is newer than beginning timestamp ${beginningTimestamp}.`
+        );
+        txs.push(tx);
+      } else if (tx.blockTimestamp * 1_000_000 < beginningTimestamp) {
+        // This transaction is older than the beginning timestamp, so we're done.
+        done = true;
+        break;
+      }
+    }
+  }
+  return txs;
 };
 
 export const isWormholePublishEventLog = (log: EventLog): log is WormholePublishEventLog => {

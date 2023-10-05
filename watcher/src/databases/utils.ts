@@ -60,10 +60,13 @@ export const makeSignedVAAsRowKey = (chain: number, emitter: string, sequence: s
   `${padUint16(chain.toString())}/${emitter}/${padUint64(sequence)}`;
 
 let database: Database = new Database();
-export const initDb = (): Database => {
+export const initDb = (startWatching: boolean = true): Database => {
   if (DB_SOURCE === 'bigtable') {
     database = new BigtableDatabase();
-    (database as BigtableDatabase).watchMissing();
+    if (startWatching) {
+      console.log('Starting Bigtable watcher...');
+      (database as BigtableDatabase).watchMissing();
+    }
   } else {
     database = new JsonDatabase();
   }

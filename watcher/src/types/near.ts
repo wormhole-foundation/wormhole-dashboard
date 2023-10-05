@@ -23,6 +23,7 @@ export type GetTransactionsByAccountIdResponse = [
         type: string;
         data: {
           items: Transaction[];
+          cursor: { timestamp: string; indexInChunk: number };
         };
       };
     }

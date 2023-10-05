@@ -4,22 +4,24 @@ import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole
 import { RPCS_BY_CHAIN } from '../../consts';
 import { getNearProvider, getTransactionsByAccountId, NEAR_ARCHIVE_RPC } from '../../utils/near';
 import { getMessagesFromBlockResults, NearWatcher } from '../NearWatcher';
+import { NearArchiveWatcher } from '../NearArchiveWatcher';
 
 jest.setTimeout(60000);
 
 const INITIAL_NEAR_BLOCK = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.near ?? 0);
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new NearWatcher();
+  const watcher = new NearArchiveWatcher();
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(INITIAL_NEAR_BLOCK);
 });
 
+// No more "too old" blocks
 test('getMessagesForBlocks', async () => {
   // requests that are too old for rpc node should error, be caught, and return an empty object
-  const watcher = new NearWatcher();
+  const watcher = new NearArchiveWatcher();
   const messages = await watcher.getMessagesForBlocks(INITIAL_NEAR_BLOCK, INITIAL_NEAR_BLOCK);
-  expect(Object.keys(messages).length).toEqual(0);
+  expect(Object.keys(messages).length).toEqual(1);
 });
 
 describe('getNearProvider', () => {
@@ -42,6 +44,7 @@ test('getTransactionsByAccountId', async () => {
   let transactions = await getTransactionsByAccountId(
     CONTRACTS.MAINNET.near.core,
     10,
+    1669731480649090392,
     '1669732480649090392'
   );
   expect(transactions.length).toEqual(10);
@@ -51,6 +54,7 @@ test('getTransactionsByAccountId', async () => {
   transactions = await getTransactionsByAccountId(
     CONTRACTS.MAINNET.near.core,
     15,
+    1661429814932000000,
     '1661429914932000000'
   );
   expect(transactions.length).toEqual(2);
@@ -59,9 +63,9 @@ test('getTransactionsByAccountId', async () => {
 
 describe('getMessagesFromBlockResults', () => {
   test('with Provider', async () => {
-    const watcher = new NearWatcher();
+    const watcher = new NearArchiveWatcher();
     const provider = await watcher.getProvider();
-    const messages = getMessagesFromBlockResults(provider, [
+    const messages = await getMessagesFromBlockResults(provider, [
       await provider.block({ finality: 'final' }),
     ]);
     expect(messages).toBeTruthy();
@@ -85,7 +89,7 @@ describe('getMessagesFromBlockResults', () => {
     });
 
     // validate keys
-    const watcher = new NearWatcher();
+    const watcher = new NearArchiveWatcher();
     const blockKey = Object.keys(messages).at(-1)!;
     expect(watcher.isValidBlockKey(blockKey)).toBe(true);
     expect(watcher.isValidVaaKey(messages[blockKey][0])).toBe(true);

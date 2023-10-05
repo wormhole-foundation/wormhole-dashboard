@@ -8,7 +8,12 @@ import {
 import { BlockResult, Provider } from 'near-api-js/lib/providers/provider';
 import ora from 'ora';
 import { initDb, makeBlockKey } from '../src/databases/utils';
-import { getNearProvider, getTransactionsByAccountId, NEAR_ARCHIVE_RPC } from '../src/utils/near';
+import {
+  getNearProvider,
+  getTimestampByBlock,
+  getTransactionsByAccountId,
+  NEAR_ARCHIVE_RPC,
+} from '../src/utils/near';
 import { getMessagesFromBlockResults } from '../src/watchers/NearWatcher';
 import { Transaction } from '../src/types/near';
 import { VaasByBlock } from '../src/databases/types';
@@ -22,11 +27,6 @@ import { VaasByBlock } from '../src/databases/types';
 // Otherwise, the script will backfill the local JSON database.
 
 const BATCH_SIZE = 100;
-
-async function getTimestampByBlock(provider: Provider, blockHeight: number): Promise<number> {
-  const block: BlockResult = await provider.block({ blockId: blockHeight });
-  return block.header.timestamp;
-}
 
 (async () => {
   const db = initDb(false); // Don't start watching
@@ -58,16 +58,15 @@ async function getTimestampByBlock(provider: Provider, blockHeight: number): Pro
     log.text = `Fetching blocks... ${i + 1}/${blockHashes.length}`;
     let success: boolean = false;
     while (!success) {
-      success = true;
       try {
         const block = await provider.block({ blockId: blockHashes[i] });
         if (block.header.height > fromBlock && block.header.height <= toBlock.header.height) {
           blocks.push(block);
         }
+        success = true;
       } catch (e) {
-        console.log('Error fetching block', e);
+        console.error('Error fetching block', e);
         await sleep(5000);
-        success = false;
       }
     }
   }

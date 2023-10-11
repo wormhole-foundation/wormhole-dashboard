@@ -1,15 +1,17 @@
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
-import { MAX_VAA_DECIMALS } from '@certusone/wormhole-sdk';
+import { ChainId, MAX_VAA_DECIMALS } from '@certusone/wormhole-sdk';
 import { Firestore } from 'firebase-admin/firestore';
 import { TokenPrice } from '@wormhole-foundation/wormhole-monitor-database';
 import { TVLHistory } from './types';
+import { isTokenDenylisted } from './consts';
 
 interface LockedToken {
   date: string;
   token_address: string;
   token_chain: number;
   coin_gecko_coin_id: string;
+  native_address: string;
   decimals: number;
   amount_locked: string;
 }
@@ -58,6 +60,7 @@ export async function computeTVLHistory(req: any, res: any) {
         t.token_address,
         t.token_chain,
         m.coin_gecko_coin_id,
+        m.native_address,
         a.decimals,
         SUM(
           CASE
@@ -86,6 +89,7 @@ export async function computeTVLHistory(req: any, res: any) {
         AND t.token_chain = a.token_chain
       WHERE
         m.coin_gecko_coin_id IS NOT NULL
+        AND m.native_address IS NOT NULL
         AND (
           t.emitter_chain = t.token_chain
           OR t.to_chain = t.token_chain
@@ -96,6 +100,7 @@ export async function computeTVLHistory(req: any, res: any) {
         t.token_address,
         t.token_chain,
         m.coin_gecko_coin_id,
+        m.native_address,
         a.decimals
       ORDER BY 
         date ASC
@@ -148,7 +153,8 @@ export async function computeTVLHistory(req: any, res: any) {
       const prevDateString = addDays(date, -1).toISOString().slice(0, 10);
       for (const lockedTokensByAddress of Object.values(lockedTokensByDate[prevDateString] || {})) {
         for (const lockedToken of Object.values(lockedTokensByAddress)) {
-          const { token_chain, token_address, amount_locked } = lockedToken;
+          const { token_chain, token_address, amount_locked, native_address } = lockedToken;
+          if (isTokenDenylisted(token_chain as ChainId, native_address)) continue;
           if (lockedTokensByDate[dateString][token_chain] === undefined) {
             lockedTokensByDate[dateString][token_chain] = {};
           }

@@ -4,6 +4,7 @@ import { MAX_VAA_DECIMALS } from '@certusone/wormhole-sdk';
 import { Firestore } from 'firebase-admin/firestore';
 import { fetchPrices } from '@wormhole-foundation/wormhole-monitor-database';
 import { NotionalTVL } from './types';
+import { isTokenDenylisted } from './consts';
 
 export async function computeTVL(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -112,6 +113,7 @@ export async function computeTVL(req: any, res: any) {
         coin_gecko_coin_id,
         amount_locked,
       } = row;
+      if (isTokenDenylisted(token_chain, native_address)) continue;
       const tokenPrice = prices[coin_gecko_coin_id].usd;
       if (!tokenPrice) {
         console.error(`No price for coin ID: ${coin_gecko_coin_id}`);

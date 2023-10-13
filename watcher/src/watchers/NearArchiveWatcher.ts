@@ -28,8 +28,14 @@ export class NearArchiveWatcher extends Watcher {
   async getFinalizedBlockNumber(): Promise<number> {
     this.logger.info(`fetching final block for ${this.chain}`);
     const provider = await this.getProvider();
-    const block = await provider.block({ finality: 'final' });
-    return block.header.height;
+    try {
+      const block = await provider.block({ finality: 'final' });
+      console.log('getFinalizedBlockNumber', block.header.height);
+      return block.header.height;
+    } catch (e) {
+      this.logger.error('getFinalizedBlockNumber(): Error fetching block', e);
+      throw e;
+    }
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
@@ -37,7 +43,16 @@ export class NearArchiveWatcher extends Watcher {
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
     const provider = await this.getProvider();
     const fromBlockTimestamp: number = await getTimestampByBlock(provider, fromBlock);
-    const toBlockInfo: BlockResult = await fetchBlockByBlockId(provider, toBlock);
+    if (fromBlockTimestamp === 0) {
+      this.logger.error(`Unable to fetch timestamp for block ${fromBlock}`);
+      throw new Error(`Unable to fetch timestamp for fromBlock ${fromBlock}`);
+    }
+    const toBlockInfo: BlockResult | string = await fetchBlockByBlockId(provider, toBlock);
+    if (typeof toBlockInfo === 'string') {
+      this.logger.error(`Unable to fetchBlockByBlockId(${toBlockInfo} error: ${toBlockInfo}`);
+      // It's okay to throw here the calling code will do exponential backoff.
+      throw new Error(toBlockInfo);
+    }
     const transactions: Transaction[] = await getTransactionsByAccountId(
       CONTRACTS.MAINNET.near.core,
       this.maximumBatchSize,
@@ -54,6 +69,10 @@ export class NearArchiveWatcher extends Watcher {
       while (!success) {
         try {
           const block = await fetchBlockByBlockId(provider, blockHashes[i]);
+          if (typeof block === 'string') {
+            this.logger.error(block);
+            throw new Error(block);
+          }
           if (block.header.height > fromBlock && block.header.height <= toBlockInfo.header.height) {
             blocks.push(block);
           }

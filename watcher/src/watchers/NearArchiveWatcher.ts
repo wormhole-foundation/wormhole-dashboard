@@ -47,11 +47,13 @@ export class NearArchiveWatcher extends Watcher {
       this.logger.error(`Unable to fetch timestamp for block ${fromBlock}`);
       throw new Error(`Unable to fetch timestamp for fromBlock ${fromBlock}`);
     }
-    const toBlockInfo: BlockResult | string = await fetchBlockByBlockId(provider, toBlock);
-    if (typeof toBlockInfo === 'string') {
-      this.logger.error(`Unable to fetchBlockByBlockId(${toBlockInfo} error: ${toBlockInfo}`);
-      // It's okay to throw here the calling code will do exponential backoff.
-      throw new Error(toBlockInfo);
+    let toBlockInfo: BlockResult = {} as BlockResult;
+    try {
+      toBlockInfo = await fetchBlockByBlockId(provider, toBlock);
+    } catch (e) {
+      // Logging this to help with troubleshooting.
+      this.logger.error('getMessagesForBlocks(): Error fetching block', e);
+      throw e;
     }
     const transactions: Transaction[] = await getTransactionsByAccountId(
       CONTRACTS.MAINNET.near.core,
@@ -65,22 +67,10 @@ export class NearArchiveWatcher extends Watcher {
     const blocks: BlockResult[] = [];
     const blockHashes = [...new Set(transactions.map((tx) => tx.blockHash))]; // de-dup blocks
     for (let i = 0; i < blockHashes.length; i++) {
-      let success: boolean = false;
-      while (!success) {
-        try {
-          const block = await fetchBlockByBlockId(provider, blockHashes[i]);
-          if (typeof block === 'string') {
-            this.logger.error(block);
-            throw new Error(block);
-          }
-          if (block.header.height > fromBlock && block.header.height <= toBlockInfo.header.height) {
-            blocks.push(block);
-          }
-          success = true;
-        } catch (e) {
-          console.error('Error fetching block', e);
-          await sleep(5000);
-        }
+      // If the following throws, it will trigger exponential backoff and retry
+      const block = await fetchBlockByBlockId(provider, blockHashes[i]);
+      if (block.header.height > fromBlock && block.header.height <= toBlockInfo.header.height) {
+        blocks.push(block);
       }
     }
 

@@ -288,3 +288,18 @@ export type TokenMetaDatum = {
   symbol: string; //'TEL';
   name: string; //'Telcoin (PoS)';
 };
+
+export type PagerDutyInfo = {
+  url: string;
+  routingKey: string;
+  summary: string;
+  source: string;
+};
+
+export type SlackInfo = {
+  channelId: string;
+  postUrl: string;
+  botToken: string;
+  msg: string;
+  bannerTxt: string;
+};

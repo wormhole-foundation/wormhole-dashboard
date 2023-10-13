@@ -1,7 +1,7 @@
 import { CHAIN_ID_TO_NAME, ChainId, ChainName } from '@certusone/wormhole-sdk';
 import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
 import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './utils';
-import { ObservedMessage, ReobserveInfo } from './types';
+import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';
 import { explorerBlock, explorerTx } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
 import axios from 'axios';
@@ -45,6 +45,15 @@ export async function alarmMissingVaas(req: any, res: any) {
     res.status(204).send('');
     return;
   }
+
+  const alarmSlackInfo: SlackInfo = {
+    channelId: assertEnvironmentVariable('MISSING_VAA_SLACK_CHANNEL_ID'),
+    postUrl: assertEnvironmentVariable('MISSING_VAA_SLACK_POST_URL'),
+    botToken: assertEnvironmentVariable('MISSING_VAA_SLACK_BOT_TOKEN'),
+    bannerTxt: 'Wormhole Missing VAA Alarm',
+    msg: '',
+  };
+
   let firestoreVAAs: FirestoreVAA[] = [];
   let reobsMap: Map<string, ReobserveInfo> = new Map<string, ReobserveInfo>();
   try {
@@ -114,7 +123,8 @@ export async function alarmMissingVaas(req: any, res: any) {
                 txhash: msg.txHash,
                 vaaKey: vaaKey,
               });
-              await formatAndSendToSlack(formatMessage(msg));
+              alarmSlackInfo.msg = formatMessage(msg);
+              await formatAndSendToSlack(alarmSlackInfo);
             }
           }
         } else {
@@ -301,6 +311,14 @@ async function getLastBlockTimeFromFirestore(): Promise<LatestTimeByChain> {
 }
 
 async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void> {
+  const alarmSlackInfo: SlackInfo = {
+    channelId: assertEnvironmentVariable('MISSING_VAA_SLACK_CHANNEL_ID'),
+    postUrl: assertEnvironmentVariable('MISSING_VAA_SLACK_POST_URL'),
+    botToken: assertEnvironmentVariable('MISSING_VAA_SLACK_BOT_TOKEN'),
+    bannerTxt: 'Wormhole Missing VAA Alarm',
+    msg: '',
+  };
+
   let alarmsToStore: AlarmedChainTime[] = [];
   // Read in the already alarmed chains.
   const alarmedChains: Map<ChainId, AlarmedChainTime> = await getAlarmedChainsFromFirestore();
@@ -327,8 +345,8 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
       const chainTime: Date = new Date(latestTime);
       const cName: string = CHAIN_ID_TO_NAME[chainId] as ChainName;
       const deltaTime: number = (now.getTime() - chainTime.getTime()) / (1000 * 60 * 60 * 24);
-      const formattedMsg = `*Chain:* ${cName}(${chainId})\nThe watcher is behind by ${deltaTime} days.`;
-      await formatAndSendToSlack(formattedMsg);
+      alarmSlackInfo.msg = `*Chain:* ${cName}(${chainId})\nThe watcher is behind by ${deltaTime} days.`;
+      await formatAndSendToSlack(alarmSlackInfo);
       alarmsToStore.push({ chain: chainId, alarmTime: now.toISOString() });
     }
   }

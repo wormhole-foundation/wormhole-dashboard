@@ -1,0 +1,96 @@
+{
+  "osmosisRPCs": [
+    {
+      "address": "https://lcd.osmosis.zone/",
+      "provider": "Osmosis Foundation"
+    },
+    {
+      "address": "https://osmosis-lcd.quickapi.com:443/",
+      "provider": "Chainlayer"
+    },
+    {
+      "address": "https://lcd-osmosis.blockapsis.com/",
+      "provider": "chainapsis"
+    },
+    {
+      "address": "https://osmosis-api.lavenderfive.com:443/",
+      "provider": "Lavender.Five Nodes 🐝"
+    },
+    {
+      "address": "https://rest-osmosis.ecostake.com/",
+      "provider": "ecostake"
+    },
+    {
+      "address": "https://api-osmosis-ia.cosmosia.notional.ventures/",
+      "provider": "Notional"
+    },
+    {
+      "address": "https://api.osmosis.interbloc.org/",
+      "provider": "Interbloc"
+    },
+    {
+      "address": "https://api-osmosis.cosmos-spaces.cloud/",
+      "provider": "Cosmos Spaces"
+    },
+    {
+      "address": "https://osmosis-api.polkachu.com/",
+      "provider": "Polkachu"
+    },
+    {
+      "address": "https://osmosis.rest.stakin-nodes.com/",
+      "provider": "Stakin"
+    },
+    {
+      "address": "https://api.osl.zone/",
+      "provider": "Osmosis Support Lab"
+    },
+    {
+      "address": "https://osmosis-mainnet-lcd.autostake.com:443/",
+      "provider": "AutoStake 🛡️ Slash Protected"
+    },
+    {
+      "address": "https://osmosis.rest.interchain.ivaldilabs.xyz/",
+      "provider": "ivaldilabs"
+    },
+    {
+      "address": "https://osmosis.api.kjnodes.com/",
+      "provider": "kjnodes"
+    },
+    {
+      "address": "https://api-osmosis-01.stakeflow.io/",
+      "provider": "Stakeflow"
+    },
+    {
+      "address": "https://osmosis-rest.staketab.org/",
+      "provider": "Staketab"
+    },
+    {
+      "address": "https://osmosis-api.w3coins.io/",
+      "provider": "w3coins"
+    },
+    {
+      "address": "https://lcd-osmosis.whispernode.com:443/",
+      "provider": "WhisperNode🤐"
+    },
+    {
+      "address": "https://api-osmosis.mms.team/",
+      "provider": "MMS"
+    },
+    {
+      "address": "https://osmosis-rest.publicnode.com/",
+      "provider": "Allnodes.com ⚡️ Nodes & Staking"
+    },
+    {
+      "address": "https://community.nuxian-node.ch:6797/osmosis/crpc/",
+      "provider": "PRO Delegators"
+    },
+    {
+      "address": "https://osmosis-api.stake-town.com:443/",
+      "provider": "StakeTown"
+    },
+    {
+      "address": "https://rpc-osmosis.in3s.com:443/",
+      "provider": "in3s.com"
+    }
+  ]
+}

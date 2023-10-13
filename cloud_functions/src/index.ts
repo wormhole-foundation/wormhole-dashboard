@@ -22,6 +22,7 @@ export const { computeMessageCountHistory } = require('./computeMessageCountHist
 export const { computeTvlTvm } = require('./computeTvlTvm');
 export const { updateTokenMetadata } = require('./updateTokenMetadata');
 export const { getReobserveVaas } = require('./getReobserveVaas');
+export const { wormchainMonitor } = require('./wormchainMonitor');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.
@@ -45,3 +46,4 @@ functions.http('computeMessageCountHistory', computeMessageCountHistory);
 functions.http('computeTvlTvm', computeTvlTvm);
 functions.http('updateTokenMetadata', updateTokenMetadata);
 functions.http('getReobserveVaas', getReobserveVaas);
+functions.http('wormchainMonitor', wormchainMonitor);

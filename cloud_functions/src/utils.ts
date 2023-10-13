@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { PagerDutyInfo, SlackInfo } from './types';
 
 export async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
@@ -29,23 +30,16 @@ export function parseMessageId(id: string): {
   };
 }
 
-// This function expects the following environment variables to be set:
-// SLACK_CHANNEL_ID
-// SLACK_POST_URL
-// SLACK_BOT_TOKEN
-export async function formatAndSendToSlack(msg: string): Promise<any> {
-  const SLACK_CHANNEL_ID = assertEnvironmentVariable('SLACK_CHANNEL_ID');
-  const SLACK_POST_URL = assertEnvironmentVariable('SLACK_POST_URL');
-  const SLACK_BOT_TOKEN = assertEnvironmentVariable('SLACK_BOT_TOKEN');
+export async function formatAndSendToSlack(info: SlackInfo): Promise<any> {
   // Construct the payload
   const payload = {
-    channel: SLACK_CHANNEL_ID,
+    channel: info.channelId,
     blocks: [
       {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: '*Wormhole Missing VAA Alarm*',
+          text: `*${info.bannerTxt}*`,
         },
       },
       {
@@ -55,7 +49,7 @@ export async function formatAndSendToSlack(msg: string): Promise<any> {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: msg,
+          text: info.msg,
         },
       },
     ],
@@ -65,14 +59,14 @@ export async function formatAndSendToSlack(msg: string): Promise<any> {
   const AXIOS_NUM_RETRIES = 1;
   const AXIOS_RETRY_TIME_IN_MILLISECONDS = 250;
   let response = null;
-  const url = SLACK_POST_URL;
+  const url = info.postUrl;
   for (let i = 0; i < AXIOS_NUM_RETRIES; ++i) {
     try {
       response = await axios.post(url, payload, {
         headers: {
           'User-Agent': 'Mozilla/5.0',
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
+          Authorization: `Bearer ${info.botToken}`,
         },
       });
       break;
@@ -109,4 +103,47 @@ export async function isVAASigned(vaaKey: string): Promise<boolean> {
     return false;
   }
   return false;
+}
+
+export async function sendToPagerDuty(info: PagerDutyInfo): Promise<any> {
+  // Construct the payload
+  const payload = {
+    summary: info.summary,
+    severity: 'critical',
+    source: info.source,
+  };
+
+  // Construct the data section
+  const data = {
+    payload,
+    routing_key: info.routingKey,
+    event_action: 'trigger',
+  };
+
+  // Send to pagerduty
+  const AXIOS_NUM_RETRIES = 1;
+  const AXIOS_RETRY_TIME_IN_MILLISECONDS = 250;
+  let response = null;
+  for (let i = 0; i <= AXIOS_NUM_RETRIES; ++i) {
+    try {
+      response = await axios.post(info.url, data, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Content-Type': 'application/json',
+        },
+      });
+      break;
+    } catch (error) {
+      console.error(
+        `axios error with post request: ${info.url}. trying again in ${AXIOS_RETRY_TIME_IN_MILLISECONDS}ms.`
+      );
+      console.error(error);
+      await sleep(AXIOS_RETRY_TIME_IN_MILLISECONDS);
+    }
+  }
+
+  if (response === null) {
+    throw Error('error with axios.post');
+  }
+  return response.data.data;
 }

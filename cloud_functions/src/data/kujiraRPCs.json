@@ -1,0 +1,76 @@
+{
+  "kujiraRPCs": [
+    {
+      "address": "https://lcd-kujira.whispernode.com:443/",
+      "provider": "WhisperNode🤐"
+    },
+    {
+      "address": "https://rest-kujira.goldenratiostaking.net/",
+      "provider": "Golden Ratio Staking"
+    },
+    {
+      "address": "https://lcd.kaiyo.kujira.setten.io/",
+      "provider": "setten.io"
+    },
+    {
+      "address": "https://kujira-api.lavenderfive.com:443/",
+      "provider": "Lavender.Five Nodes 🐝"
+    },
+    {
+      "address": "https://kujira-api.polkachu.com/",
+      "provider": "polkachu"
+    },
+    {
+      "address": "https://rest-kujira.ecostake.com/",
+      "provider": "ecostake"
+    },
+    {
+      "address": "https://api-kujira-ia.cosmosia.notional.ventures/",
+      "provider": "Notional"
+    },
+    {
+      "address": "https://kujira-lcd.wildsage.io/",
+      "provider": "WildSage Labs"
+    },
+    {
+      "address": "https://kujira-api.ibs.team/",
+      "provider": "Inter Blockchain Services"
+    },
+    {
+      "address": "https://api-kujira.starsquid.io/",
+      "provider": "Starsquid"
+    },
+    {
+      "address": "https://kujira.api.kjnodes.com/",
+      "provider": "kjnodes"
+    },
+    {
+      "address": "https://kuji-api.kleomedes.network/",
+      "provider": "Kleomedes"
+    },
+    {
+      "address": "https://kujira-mainnet-lcd.autostake.com:443/",
+      "provider": "AutoStake 🛡️ Slash Protected"
+    },
+    {
+      "address": "https://api.kujira.rektdao.club/",
+      "provider": "rektDAO"
+    },
+    {
+      "address": "https://kujira-api.theamsolutions.info/",
+      "provider": "AM Solutions"
+    },
+    {
+      "address": "https://kujira-api.w3coins.io/",
+      "provider": "w3coins"
+    },
+    {
+      "address": "https://api-kujira.mms.team/",
+      "provider": "MMS"
+    },
+    {
+      "address": "https://kujira-rest.publicnode.com/",
+      "provider": "Allnodes.com ⚡️ Nodes & Staking"
+    }
+  ]
+}

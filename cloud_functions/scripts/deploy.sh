@@ -119,18 +119,43 @@ if [ -z "$FIRESTORE_LATEST_TVLTVM_COLLECTION" ]; then
     exit 1
 fi
 
-if [ -z "$SLACK_CHANNEL_ID" ]; then
-    echo "SLACK_CHANNEL_ID must be specified"
+if [ -z "$MISSING_VAA_SLACK_CHANNEL_ID" ]; then
+    echo "MISSING_VAA_SLACK_CHANNEL_ID must be specified"
     exit 1
 fi
 
-if [ -z "$SLACK_POST_URL" ]; then
-    echo "SLACK_POST_URL must be specified"
+if [ -z "$MISSING_VAA_SLACK_POST_URL" ]; then
+    echo "MISSING_VAA_SLACK_POST_URL must be specified"
     exit 1
 fi
 
-if [ -z "$SLACK_BOT_TOKEN" ]; then
-    echo "SLACK_BOT_TOKEN must be specified"
+if [ -z "$MISSING_VAA_SLACK_BOT_TOKEN" ]; then
+    echo "MISSING_VAA_SLACK_BOT_TOKEN must be specified"
+    exit 1
+fi
+
+if [ -z "$WORMCHAIN_SLACK_CHANNEL_ID" ]; then
+    echo "WORMCHAIN_SLACK_CHANNEL_ID must be specified"
+    exit 1
+fi
+
+if [ -z "$WORMCHAIN_SLACK_POST_URL" ]; then
+    echo "WORMCHAIN_SLACK_POST_URL must be specified"
+    exit 1
+fi
+
+if [ -z "$WORMCHAIN_SLACK_BOT_TOKEN" ]; then
+    echo "WORMCHAIN_SLACK_BOT_TOKEN must be specified"
+    exit 1
+fi
+
+if [ -z "$WORMCHAIN_PAGERDUTY_ROUTING_KEY" ]; then
+    echo "WORMCHAIN_PAGERDUTY_ROUTING_KEY must be specified"
+    exit 1
+fi
+
+if [ -z "$WORMCHAIN_PAGERDUTY_URL" ]; then
+    echo "WORMCHAIN_PAGERDUTY_URL must be specified"
     exit 1
 fi
 
@@ -145,7 +170,7 @@ gcloud functions deploy latest-blocks --entry-point getLatestBlocks --runtime no
 gcloud functions deploy latest-tvltvm --entry-point getLatestTvlTvm --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,FIRESTORE_LATEST_TVLTVM_COLLECTION=$FIRESTORE_LATEST_TVLTVM_COLLECTION
 gcloud functions deploy compute-missing-vaas --entry-point computeMissingVaas --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 2GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL
 gcloud functions deploy missing-vaas --entry-point getMissingVaas --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3
-gcloud functions deploy alarm-missing-vaas --entry-point alarmMissingVaas --runtime nodejs16 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars SLACK_CHANNEL_ID=$SLACK_CHANNEL_ID,SLACK_POST_URL=$SLACK_POST_URL,SLACK_BOT_TOKEN=$SLACK_BOT_TOKEN,FIRESTORE_ALARM_MISSING_VAAS_COLLECTION=$FIRESTORE_ALARM_MISSING_VAAS_COLLECTION,FIRESTORE_GOVERNOR_STATUS_COLLECTION=$FIRESTORE_GOVERNOR_STATUS_COLLECTION,FIRESTORE_LATEST_COLLECTION=$FIRESTORE_LATEST_COLLECTION
+gcloud functions deploy alarm-missing-vaas --entry-point alarmMissingVaas --runtime nodejs16 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars MISSING_VAA_SLACK_CHANNEL_ID=$MISSING_VAA_SLACK_CHANNEL_ID,MISSING_VAA_SLACK_POST_URL=$MISSING_VAA_SLACK_POST_URL,MISSING_VAA_SLACK_BOT_TOKEN=$MISSING_VAA_SLACK_BOT_TOKEN,FIRESTORE_ALARM_MISSING_VAAS_COLLECTION=$FIRESTORE_ALARM_MISSING_VAAS_COLLECTION,FIRESTORE_GOVERNOR_STATUS_COLLECTION=$FIRESTORE_GOVERNOR_STATUS_COLLECTION,FIRESTORE_LATEST_COLLECTION=$FIRESTORE_LATEST_COLLECTION
 gcloud functions deploy vaas-by-tx-hash --entry-point getVaasByTxHash --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID=$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID
 gcloud functions deploy process-vaa --entry-point processVaa --runtime nodejs16 --timeout 300 --memory 256MB --region europe-west3 --trigger-topic $PUBSUB_SIGNED_VAA_TOPIC --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID=$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID,PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_TOKEN_TRANSFER_TABLE=$PG_TOKEN_TRANSFER_TABLE,PG_ATTEST_MESSAGE_TABLE=$PG_ATTEST_MESSAGE_TABLE,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE
 gcloud functions deploy refresh-todays-token-prices --entry-point refreshTodaysTokenPrices --runtime nodejs16 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE,PG_TOKEN_PRICE_HISTORY_TABLE=$PG_TOKEN_PRICE_HISTORY_TABLE
@@ -158,3 +183,4 @@ gcloud functions deploy message-count-history --entry-point getMessageCountHisto
 gcloud functions deploy compute-message-count-history --entry-point computeMessageCountHistory --runtime nodejs16 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 1GB --region europe-west3 --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,FIRESTORE_MESSAGE_COUNT_HISTORY_COLLECTION=$FIRESTORE_MESSAGE_COUNT_HISTORY_COLLECTION
 gcloud functions deploy update-token-metadata --entry-point updateTokenMetadata --runtime nodejs16 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE
 gcloud functions deploy reobserve-vaas --entry-point getReobserveVaas --runtime nodejs16 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars FIRESTORE_ALARM_MISSING_VAAS_COLLECTION=$FIRESTORE_ALARM_MISSING_VAAS_COLLECTION,REOBSERVE_VAA_API_KEY=$REOBSERVE_VAA_API_KEY
+gcloud functions deploy wormchain-monitor --entry-point wormchainMonitor --runtime nodejs16 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars WORMCHAIN_SLACK_CHANNEL_ID=$WORMCHAIN_SLACK_CHANNEL_ID,WORMCHAIN_SLACK_POST_URL=$WORMCHAIN_SLACK_POST_URL,WORMCHAIN_SLACK_BOT_TOKEN=$WORMCHAIN_SLACK_BOT_TOKEN,WORMCHAIN_PAGERDUTY_ROUTING_KEY=$WORMCHAIN_PAGERDUTY_ROUTING_KEY,WORMCHAIN_PAGERDUTY_URL=$WORMCHAIN_PAGERDUTY_URL

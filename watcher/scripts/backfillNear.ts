@@ -36,9 +36,6 @@ const BATCH_SIZE = 100;
     (await db.getLastBlockByChain(chain)) ?? INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] ?? 0
   );
   const fromBlockTimestamp: number = await getTimestampByBlock(provider, fromBlock);
-  if (fromBlockTimestamp === 0) {
-    throw new Error(`Unable to fetch timestamp for fromBlock ${fromBlock}`);
-  }
   console.log(`Last block seen: ${fromBlock} at ${fromBlockTimestamp}`);
 
   // fetch all transactions for core bridge contract from explorer

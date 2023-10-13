@@ -28,23 +28,15 @@ export async function getTimestampByBlock(
   provider: Provider,
   blockHeight: number
 ): Promise<number> {
-  const block: BlockResult | string = await fetchBlockByBlockId(provider, blockHeight);
-  if (typeof block === 'string') {
-    return 0;
-  }
+  const block: BlockResult = await fetchBlockByBlockId(provider, blockHeight);
   return block.header.timestamp;
 }
 
 export async function fetchBlockByBlockId(
   provider: Provider,
   blockHeight: BlockId
-): Promise<BlockResult | string> {
-  try {
-    return await provider.block({ blockId: blockHeight });
-  } catch (e: any) {
-    console.error('fetchBlockById(): Error fetching block', e);
-    return e.toString();
-  }
+): Promise<BlockResult> {
+  return await provider.block({ blockId: blockHeight });
 }
 
 // This function will only return transactions in the time window.

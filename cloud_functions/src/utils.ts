@@ -12,6 +12,8 @@ export const padUint16 = (s: string): string => s.padStart(MAX_UINT_16.length, '
 const MAX_UINT_64 = '18446744073709551615';
 export const padUint64 = (s: string): string => s.padStart(MAX_UINT_64.length, '0');
 
+export const WormholescanRPC: string = 'https://api.wormholescan.io/';
+
 export function parseMessageId(id: string): {
   chain: number;
   block: number;
@@ -88,4 +90,23 @@ export async function formatAndSendToSlack(msg: string): Promise<any> {
   }
   const responseData = response.data.data;
   return responseData;
+}
+
+export async function isVAASigned(vaaKey: string): Promise<boolean> {
+  const url: string = WormholescanRPC + 'v1/signed_vaa/1/' + vaaKey;
+  try {
+    const response = await axios.get(url);
+    // curl -X 'GET' \
+    // 'https://api.wormholescan.io/v1/signed_vaa/1/ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5/319118' \
+    // -H 'accept: application/json'
+    // This function will return true if the get returns 200
+    // Otherwise, it will return false
+    if (response.status === 200) {
+      return true;
+    }
+  } catch (e) {
+    console.error('Failed to query wormholescan with url', +url + "'", e);
+    return false;
+  }
+  return false;
 }

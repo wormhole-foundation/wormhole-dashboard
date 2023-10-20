@@ -1,9 +1,10 @@
 import { CHAIN_ID_TO_NAME, ChainId, ChainName } from '@certusone/wormhole-sdk';
 import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
-import { assertEnvironmentVariable, formatAndSendToSlack } from './utils';
-import { ObservedMessage } from './types';
+import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './utils';
+import { ObservedMessage, ReobserveInfo } from './types';
 import { explorerBlock, explorerTx } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
+import axios from 'axios';
 
 interface EnqueuedVAAResponse {
   sequence: string;
@@ -45,6 +46,7 @@ export async function alarmMissingVaas(req: any, res: any) {
     return;
   }
   let firestoreVAAs: FirestoreVAA[] = [];
+  let reobsMap: Map<string, ReobserveInfo> = new Map<string, ReobserveInfo>();
   try {
     // Get the current VAAs in the firestore holding area that we want to keep there.
     // The key is the vaaKey
@@ -54,6 +56,7 @@ export async function alarmMissingVaas(req: any, res: any) {
     firestoreMap.forEach((vaa) => {
       firestoreVAAs.push(vaa);
     });
+    reobsMap = await getAndProcessReobsVAAs();
 
     // Get governed VAAS
     const governedVAAs: GovernedVAAMap = await getGovernedVaas();
@@ -99,9 +102,18 @@ export async function alarmMissingVaas(req: any, res: any) {
                 console.log(`skipping over ${vaaKey} because it is governed`);
                 continue;
               }
+              if (await isVAASigned(vaaKey)) {
+                console.log(`skipping over ${vaaKey} because it is signed`);
+                continue;
+              }
               let firestoreMsg: FirestoreVAA = convert(msg);
               firestoreMap.set(vaaKey, firestoreMsg);
               firestoreVAAs.push(firestoreMsg);
+              reobsMap.set(msg.txHash, {
+                chain: msg.chain,
+                txhash: msg.txHash,
+                vaaKey: vaaKey,
+              });
               await formatAndSendToSlack(formatMessage(msg));
             }
           }
@@ -114,7 +126,11 @@ export async function alarmMissingVaas(req: any, res: any) {
     console.log('could not get missing VAAs', e);
     res.sendStatus(500);
   }
-  await updateFirestore(firestoreVAAs);
+  let reobs: ReobserveInfo[] = [];
+  reobsMap.forEach((vaa) => {
+    reobs.push(vaa);
+  });
+  await updateFirestore(firestoreVAAs, reobs);
   res.status(200).send('successfully alarmed missing VAAS');
   return;
 }
@@ -199,13 +215,43 @@ async function getAndProcessFirestore(): Promise<Map<string, FirestoreVAA>> {
   return current;
 }
 
-async function updateFirestore(vaas: FirestoreVAA[]): Promise<void> {
+async function getAndProcessReobsVAAs(): Promise<Map<string, ReobserveInfo>> {
+  // Get VAAs in the firestore holding area.
+  const firestore = new Firestore();
+  const collection = firestore.collection(
+    assertEnvironmentVariable('FIRESTORE_ALARM_MISSING_VAAS_COLLECTION')
+  );
+  let current = new Map<string, ReobserveInfo>();
+  await collection
+    .doc('Reobserve')
+    .get()
+    .then((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data) {
+          const vaas: ReobserveInfo[] = data.VAAs;
+          vaas.forEach((vaa) => {
+            current.set(vaa.txhash, vaa);
+          });
+          console.log('number of reobserved VAAs', vaas.length);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error('Error getting Reobserve document:', error);
+    });
+  return current;
+}
+
+async function updateFirestore(missing: FirestoreVAA[], reobserv: ReobserveInfo[]): Promise<void> {
   const firestore = new Firestore();
   const collection = firestore.collection(
     assertEnvironmentVariable('FIRESTORE_ALARM_MISSING_VAAS_COLLECTION')
   );
   const doc = collection.doc('VAAs');
-  await doc.set({ VAAs: vaas });
+  await doc.set({ VAAs: missing });
+  const reobserveDoc = collection.doc('Reobserve');
+  await reobserveDoc.set({ VAAs: reobserv });
 }
 
 function convert(msg: ObservedMessage): FirestoreVAA {

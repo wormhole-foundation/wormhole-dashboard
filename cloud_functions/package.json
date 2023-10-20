@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/index.ts",
-    "start": "npx functions-framework --target=computeTvlTvm [--signature-type=http]",
+    "start": "npx functions-framework --target=alarmMissingVaas [--signature-type=http]",
     "deploy": "bash scripts/deploy.sh",
     "gcp-build": "npm i ./dist/src/wormhole-foundation-wormhole-monitor-common-0.0.1.tgz ./dist/src/wormhole-foundation-wormhole-monitor-database-0.0.1.tgz"
   },

@@ -273,6 +273,12 @@ export type AccountEntry = {
   balance: string;
 };
 
+export type ReobserveInfo = {
+  chain: number;
+  txhash: string;
+  vaaKey: string;
+};
+
 export type TokenMetaDatum = {
   token_chain: number; //5;
   token_address: string; //'000000000000000000000000df7837de1f2fa4631d716cf2502f8b230f1dcc32';

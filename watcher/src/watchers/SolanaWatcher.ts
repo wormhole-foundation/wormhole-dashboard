@@ -143,7 +143,8 @@ export class SolanaWatcher extends Watcher {
         }
         if (!res || !res.blockTime) {
           throw new Error(
-            `solana: failed to fetch tx for signature ${res?.transaction.signatures[0] || 'unknown'
+            `solana: failed to fetch tx for signature ${
+              res?.transaction.signatures[0] || 'unknown'
             }`
           );
         }

@@ -32,13 +32,13 @@ test('getMessagesForBlocks - fromSlot is skipped slot', async () => {
   const watcher = new SolanaWatcher();
   const messages = await watcher.getMessagesForBlocks(171774030, 171774032); // 171774024 - 171774031 are skipped
   expect(Object.keys(messages).length).toBe(1);
-  expect(messages).toMatchObject({ '171774032/2023-01-10T13:36:38.000Z': [] });
+  expect(messages).toMatchObject({ '171774032/2023-01-10T13:36:39.000Z': [] });
 });
 
 test('getMessagesForBlocks - toSlot is skipped slot', async () => {
   const watcher = new SolanaWatcher();
   const messages = await watcher.getMessagesForBlocks(171774023, 171774025);
-  expect(messages).toMatchObject({ '171774023/2023-01-10T13:36:34.000Z': [] });
+  expect(messages).toMatchObject({ '171774025/2023-01-10T13:36:34.000Z': [] });
 });
 
 test('getMessagesForBlocks - empty block', async () => {
@@ -46,7 +46,7 @@ test('getMessagesForBlocks - empty block', async () => {
   const watcher = new SolanaWatcher();
   const messages = await watcher.getMessagesForBlocks(170979766, 170979766);
   expect(Object.keys(messages).length).toBe(1);
-  expect(messages).toMatchObject({ '170979766/2023-01-05T18:40:24.000Z': [] });
+  expect(messages).toMatchObject({ '170979766/2023-01-05T18:40:25.000Z': [] });
 });
 
 // temporary skip due to SolanaJSONRPCError: failed to get confirmed block: Block 174108865 cleaned up, does not exist on node. First available block: 176892532

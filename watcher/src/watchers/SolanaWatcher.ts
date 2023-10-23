@@ -34,19 +34,19 @@ export class SolanaWatcher extends Watcher {
 
   connection: Connection | undefined;
 
-  constructor(rpc: string = RPCS_BY_CHAIN.solana!, contract: string = WORMHOLE_PROGRAM_ID) {
+  constructor() {
     super('solana');
-    this.rpc = rpc;
-    this.programId = contract;
+    this.rpc = RPCS_BY_CHAIN.solana!;
+    this.programId = WORMHOLE_PROGRAM_ID;
   }
 
-  getConnnection(): Connection {
+  getConnection(): Connection {
     this.connection = this.connection ?? new Connection(this.rpc, COMMITMENT);
     return this.connection;
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
-    return this.getConnnection().getSlot();
+    return this.getConnection().getSlot();
   }
 
   private async findNextValidBlock(
@@ -60,7 +60,7 @@ export class SolanaWatcher extends Watcher {
 
     let block: VersionedBlockResponse | null = null;
     try {
-      block = await this.getConnnection().getBlock(slot, { maxSupportedTransactionVersion: 0 });
+      block = await this.getConnection().getBlock(slot, { maxSupportedTransactionVersion: 0 });
     } catch (e) {
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
@@ -94,12 +94,15 @@ export class SolanaWatcher extends Watcher {
     // look for the (last block + 1) and (first block - 1) since the signature parameters in the search later
     // are _exclusive_ so we have to get the signatures immediate preceeding or following the ones we're interested in
     const retries = 5;
-    const toBlock: VersionedBlockResponse = await this.findNextValidBlock(toSlot + 1, -1, retries);
-    const fromBlock: VersionedBlockResponse = await this.findNextValidBlock(
-      fromSlot - 1,
-      1,
-      retries
-    );
+    let toBlock: VersionedBlockResponse;
+    let fromBlock: VersionedBlockResponse;
+
+    try {
+      toBlock = await this.findNextValidBlock(toSlot + 1, -1, retries);
+      fromBlock = await this.findNextValidBlock(fromSlot - 1, 1, retries);
+    } catch (e) {
+      throw new Error('solana: invalid block range: ' + (e as Error).message);
+    }
 
     const fromSignature = toBlock.transactions[0].transaction.signatures[0];
     const toSignature =
@@ -110,7 +113,7 @@ export class SolanaWatcher extends Watcher {
     let currSignature: string | undefined = fromSignature;
     while (numSignatures === this.getSignaturesLimit) {
       const signatures: ConfirmedSignatureInfo[] =
-        await this.getConnnection().getSignaturesForAddress(new PublicKey(this.programId), {
+        await this.getConnection().getSignaturesForAddress(new PublicKey(this.programId), {
           before: currSignature,
           until: toSignature,
           limit: this.getSignaturesLimit,
@@ -125,7 +128,7 @@ export class SolanaWatcher extends Watcher {
       // reused, overwriting previous data). Then, the message account is the account given by
       // the second index in the instruction's account key indices. From here, we can fetch the
       // message data from the account and parse out the emitter and sequence.
-      const results = await this.getConnnection().getTransactions(
+      const results = await this.getConnection().getTransactions(
         signatures.map((s) => s.signature),
         {
           maxSupportedTransactionVersion: 0,
@@ -158,7 +161,7 @@ export class SolanaWatcher extends Watcher {
         // before looking for the programIdIndex
         if (message.addressTableLookups.length > 0) {
           const lookupPromises = message.addressTableLookups.map(async (atl) => {
-            const lookupTableAccount = await this.getConnnection()
+            const lookupTableAccount = await this.getConnection()
               .getAddressLookupTable(atl.accountKey)
               .then((res) => res.value);
 
@@ -196,7 +199,7 @@ export class SolanaWatcher extends Watcher {
           const accountId = accountKeys[instruction.accountKeyIndexes[1]];
           const {
             message: { emitterAddress, sequence },
-          } = await getPostedMessage(this.getConnnection(), accountId.toBase58(), COMMITMENT);
+          } = await getPostedMessage(this.getConnection(), accountId.toBase58(), COMMITMENT);
 
           const blockKey = makeBlockKey(
             res.slot.toString(),

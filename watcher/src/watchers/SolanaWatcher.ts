@@ -170,14 +170,29 @@ export class SolanaWatcher extends Watcher {
 
             // Important to return the addresses in the order they're specified in the
             // address table lookup object. Note writable comes first, then readable.
-            // TODO: check if this is broken by multiple addressTableLookups in a single message
-            return atl.writableIndexes
-              .concat(atl.readonlyIndexes)
-              .map((i) => lookupTableAccount.state.addresses[i]);
+            return [
+              atl.accountKey,
+              atl.writableIndexes.map((i) => lookupTableAccount.state.addresses[i]),
+              atl.readonlyIndexes.map((i) => lookupTableAccount.state.addresses[i]),
+            ] as [PublicKey, PublicKey[], PublicKey[]];
           });
 
+          // Lookup all addresses in parallel
           const lookups = await Promise.all(lookupPromises);
-          accountKeys = accountKeys.concat(...lookups);
+
+          // Ensure the order is maintained for lookups
+          // Static, Writable, Readable
+          // ref: https://github.com/gagliardetto/solana-go/blob/main/message.go#L414-L464
+          const writable: PublicKey[] = [];
+          const readable: PublicKey[] = [];
+          for (const atl of message.addressTableLookups) {
+            const table = lookups.find((l) => l[0].equals(atl.accountKey));
+            if (!table) throw new Error('Could not find address table lookup');
+            writable.push(...table[1]);
+            readable.push(...table[2]);
+          }
+
+          accountKeys.push(...writable.concat(readable));
         }
 
         const programIdIndex = accountKeys.findIndex((i) => i.toBase58() === this.programId);

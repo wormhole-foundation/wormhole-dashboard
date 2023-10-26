@@ -206,6 +206,12 @@ export class SolanaWatcher extends Watcher {
           .concat(instructions)
           .filter((i) => i.programIdIndex === programIdIndex);
 
+        const blockKey = makeBlockKey(
+          res.slot.toString(),
+          new Date(res.blockTime * 1000).toISOString()
+        );
+
+        const vaaKeys: string[] = [];
         for (const instruction of whInstructions) {
           // skip if not postMessage instruction
           const instructionId = instruction.data;
@@ -216,20 +222,17 @@ export class SolanaWatcher extends Watcher {
             message: { emitterAddress, sequence },
           } = await getPostedMessage(this.getConnection(), accountId.toBase58(), COMMITMENT);
 
-          const blockKey = makeBlockKey(
-            res.slot.toString(),
-            new Date(res.blockTime * 1000).toISOString()
+          vaaKeys.push(
+            makeVaaKey(
+              res.transaction.signatures[0],
+              this.chain,
+              emitterAddress.toString('hex'),
+              sequence.toString()
+            )
           );
-
-          const vaaKey = makeVaaKey(
-            res.transaction.signatures[0],
-            this.chain,
-            emitterAddress.toString('hex'),
-            sequence.toString()
-          );
-
-          vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
         }
+        if (vaaKeys.length > 0)
+          vaasByBlock[blockKey] = [...vaaKeys, ...(vaasByBlock[blockKey] || [])];
       }
 
       numSignatures = signatures.length;

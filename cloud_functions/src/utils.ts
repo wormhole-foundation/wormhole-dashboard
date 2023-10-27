@@ -93,7 +93,7 @@ export async function formatAndSendToSlack(msg: string): Promise<any> {
 }
 
 export async function isVAASigned(vaaKey: string): Promise<boolean> {
-  const url: string = WormholescanRPC + 'v1/signed_vaa/1/' + vaaKey;
+  const url: string = WormholescanRPC + 'v1/signed_vaa/' + vaaKey;
   try {
     const response = await axios.get(url);
     // curl -X 'GET' \
@@ -105,7 +105,7 @@ export async function isVAASigned(vaaKey: string): Promise<boolean> {
       return true;
     }
   } catch (e) {
-    console.error('Failed to query wormholescan with url', +url + "'", e);
+    console.error(`Failed to query wormholescan with url [${url}]`);
     return false;
   }
   return false;

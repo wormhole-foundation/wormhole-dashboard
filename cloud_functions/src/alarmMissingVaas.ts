@@ -230,8 +230,13 @@ async function getAndProcessReobsVAAs(): Promise<Map<string, ReobserveInfo>> {
         const data = doc.data();
         if (data) {
           const vaas: ReobserveInfo[] = data.VAAs;
-          vaas.forEach((vaa) => {
-            current.set(vaa.txhash, vaa);
+          vaas.forEach(async (vaa) => {
+            if (!(await isVAASigned(vaa.vaaKey))) {
+              console.log('keeping reobserved VAA in firestore', vaa.vaaKey);
+              current.set(vaa.txhash, vaa);
+            } else {
+              console.log('pruning reobserved VAA in firestore because it is signed. ', vaa.vaaKey);
+            }
           });
           console.log('number of reobserved VAAs', vaas.length);
         }

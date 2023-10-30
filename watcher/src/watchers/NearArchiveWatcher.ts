@@ -42,19 +42,41 @@ export class NearArchiveWatcher extends Watcher {
     // assume toBlock was retrieved from getFinalizedBlockNumber and is finalized
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
     const provider = await this.getProvider();
-    const fromBlockTimestamp: number = await getTimestampByBlock(provider, fromBlock);
-    if (fromBlockTimestamp === 0) {
-      this.logger.error(`Unable to fetch timestamp for block ${fromBlock}`);
-      throw new Error(`Unable to fetch timestamp for fromBlock ${fromBlock}`);
+    let fromBlockTimestamp: number = 0;
+    let done: boolean = false;
+    while (!done) {
+      try {
+        fromBlockTimestamp = await getTimestampByBlock(provider, fromBlock);
+        if (fromBlockTimestamp === 0) {
+          this.logger.error(`Unable to fetch timestamp for block ${fromBlock}`);
+          throw new Error(`Unable to fetch timestamp for fromBlock ${fromBlock}`);
+        }
+        done = true;
+      } catch (e) {
+        // Logging this to help with troubleshooting.
+        this.logger.error('getMessagesForBlocks(): Error fetching timestamp for block', e);
+        fromBlock++;
+        if (fromBlock > toBlock) {
+          throw new Error(`Couldn't find valid block in range ${fromBlock} - ${toBlock}`);
+        }
+      }
     }
     let toBlockInfo: BlockResult = {} as BlockResult;
-    try {
-      toBlockInfo = await fetchBlockByBlockId(provider, toBlock);
-    } catch (e) {
-      // Logging this to help with troubleshooting.
-      this.logger.error('getMessagesForBlocks(): Error fetching block', e);
-      throw e;
+    done = false;
+    while (!done) {
+      try {
+        toBlockInfo = await fetchBlockByBlockId(provider, toBlock);
+        done = true;
+      } catch (e) {
+        // Logging this to help with troubleshooting.
+        this.logger.error('getMessagesForBlocks(): Error fetching toBlock', e);
+        toBlock--;
+        if (toBlock < fromBlock) {
+          throw new Error(`Couldn't find valid block in range ${fromBlock} - ${toBlock}`);
+        }
+      }
     }
+    this.logger.info(`Range: ${fromBlock} - ${toBlock}`);
     const transactions: Transaction[] = await getTransactionsByAccountId(
       CONTRACTS.MAINNET.near.core,
       this.maximumBatchSize,

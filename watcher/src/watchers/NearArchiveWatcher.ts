@@ -16,7 +16,6 @@ import {
   isWormholePublishEventLog,
 } from '../utils/near';
 import { Watcher } from './Watcher';
-import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class NearArchiveWatcher extends Watcher {
   provider: Provider | null = null;
@@ -39,22 +38,58 @@ export class NearArchiveWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    // assume toBlock was retrieved from getFinalizedBlockNumber and is finalized
-    this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
+    const origFromBlock = fromBlock;
+    const origToBlock = toBlock;
+    this.logger.info(`fetching info for blocks ${origFromBlock} to ${origToBlock}`);
     const provider = await this.getProvider();
-    const fromBlockTimestamp: number = await getTimestampByBlock(provider, fromBlock);
+    // Do the following in a while loop until a fromBlock has been found.
+    let fromBlockTimestamp: number = 0;
+    let done: boolean = false;
+    while (!done) {
+      try {
+        fromBlockTimestamp = await getTimestampByBlock(provider, fromBlock);
+        done = true;
+      } catch (e) {
+        // Logging this to help with troubleshooting.
+        this.logger.debug(e);
+        this.logger.error('getMessagesForBlocks(): Error fetching from block', fromBlock);
+        fromBlock++;
+        if (fromBlock > toBlock) {
+          this.logger.error(
+            `Unable to fetch timestamp for fromBlock in range ${origFromBlock} - ${origToBlock}`
+          );
+          throw new Error(
+            `Unable to fetch timestamp for fromBlock in range ${origFromBlock} - ${origToBlock}`
+          );
+        }
+      }
+    }
     if (fromBlockTimestamp === 0) {
-      this.logger.error(`Unable to fetch timestamp for block ${fromBlock}`);
+      this.logger.error(`Unable to fetch timestamp for fromBlock ${fromBlock}`);
       throw new Error(`Unable to fetch timestamp for fromBlock ${fromBlock}`);
     }
     let toBlockInfo: BlockResult = {} as BlockResult;
-    try {
-      toBlockInfo = await fetchBlockByBlockId(provider, toBlock);
-    } catch (e) {
-      // Logging this to help with troubleshooting.
-      this.logger.error('getMessagesForBlocks(): Error fetching block', e);
-      throw e;
+    done = false;
+    while (!done) {
+      try {
+        toBlockInfo = await fetchBlockByBlockId(provider, toBlock);
+        done = true;
+      } catch (e) {
+        // Logging this to help with troubleshooting.
+        this.logger.debug(e);
+        this.logger.error('getMessagesForBlocks(): Error fetching toBlock', toBlock);
+        toBlock--;
+        if (toBlock < fromBlock) {
+          this.logger.error(
+            `Unable to fetch block info for toBlock in range ${origFromBlock} - ${origToBlock}`
+          );
+          throw new Error(
+            `Unable to fetch block info for toBlock in range ${origFromBlock} - ${origToBlock}`
+          );
+        }
+      }
     }
+    this.logger.info(`Actual block range: ${fromBlock} - ${toBlock}`);
     const transactions: Transaction[] = await getTransactionsByAccountId(
       CONTRACTS.MAINNET.near.core,
       this.maximumBatchSize,

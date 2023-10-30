@@ -24,6 +24,7 @@ export const getNearProvider = async (rpc: string): Promise<Provider> => {
   return provider;
 };
 
+// This function can definitely throw.
 export async function getTimestampByBlock(
   provider: Provider,
   blockHeight: number
@@ -32,6 +33,7 @@ export async function getTimestampByBlock(
   return block.header.timestamp;
 }
 
+// This function can definitely throw.
 export async function fetchBlockByBlockId(
   provider: Provider,
   blockHeight: BlockId

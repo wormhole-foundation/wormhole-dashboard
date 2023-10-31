@@ -32,7 +32,7 @@ export class NearArchiveWatcher extends Watcher {
       console.log('getFinalizedBlockNumber', block.header.height);
       return block.header.height;
     } catch (e) {
-      this.logger.error('getFinalizedBlockNumber(): Error fetching block', e);
+      this.logger.error(`getFinalizedBlockNumber(): Error fetching block: ${e}`);
       throw e;
     }
   }
@@ -52,7 +52,7 @@ export class NearArchiveWatcher extends Watcher {
       } catch (e) {
         // Logging this to help with troubleshooting.
         this.logger.debug(e);
-        this.logger.error('getMessagesForBlocks(): Error fetching from block', fromBlock);
+        this.logger.error(`getMessagesForBlocks(): Error fetching from block ${fromBlock}`);
         fromBlock++;
         if (fromBlock > toBlock) {
           this.logger.error(
@@ -77,7 +77,7 @@ export class NearArchiveWatcher extends Watcher {
       } catch (e) {
         // Logging this to help with troubleshooting.
         this.logger.debug(e);
-        this.logger.error('getMessagesForBlocks(): Error fetching toBlock', toBlock);
+        this.logger.error(`getMessagesForBlocks(): Error fetching toBlock ${toBlock}`);
         toBlock--;
         if (toBlock < fromBlock) {
           this.logger.error(

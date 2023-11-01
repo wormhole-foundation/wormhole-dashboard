@@ -132,6 +132,7 @@ export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
   1: CHAIN_ID_AVAX,
   2: CHAIN_ID_OPTIMISM,
   3: CHAIN_ID_ARBITRUM,
+  6: CHAIN_ID_BASE,
 };
 export type CHAIN_INFO = {
   name: string;

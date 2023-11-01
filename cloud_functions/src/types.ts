@@ -378,3 +378,13 @@ export type SlackInfo = {
   msg: string;
   bannerTxt: string;
 };
+
+export interface EventData {
+  blockNumber: number;
+  txHash: string;
+  from: string;
+  to: string;
+  token: string;
+  amount: string;
+  isDeposit: boolean;
+}

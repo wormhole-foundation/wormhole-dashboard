@@ -2,7 +2,8 @@
   "extends": "../tsconfig.base.json",
   "references": [{ "path": "../common" }, { "path": "../database" }],
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "skipLibCheck": true
   },
   "include": ["src", "src/data/*.json"]
 }

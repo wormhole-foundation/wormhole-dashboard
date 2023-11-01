@@ -226,6 +226,7 @@ gcloud functions --project "$GCP_PROJECT" deploy refresh-todays-token-prices --e
 gcloud functions --project "$GCP_PROJECT" deploy update-token-metadata --entry-point updateTokenMetadata --runtime nodejs18 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE
 gcloud functions --project "$GCP_PROJECT" deploy wormchain-monitor --entry-point wormchainMonitor --runtime nodejs18 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars WORMCHAIN_SLACK_CHANNEL_ID=$WORMCHAIN_SLACK_CHANNEL_ID,WORMCHAIN_SLACK_POST_URL=$WORMCHAIN_SLACK_POST_URL,WORMCHAIN_SLACK_BOT_TOKEN=$WORMCHAIN_SLACK_BOT_TOKEN,WORMCHAIN_PAGERDUTY_ROUTING_KEY=$WORMCHAIN_PAGERDUTY_ROUTING_KEY,WORMCHAIN_PAGERDUTY_URL=$WORMCHAIN_PAGERDUTY_URL
 gcloud functions --project "$GCP_PROJECT" deploy get-solana-events --entry-point getSolanaEvents --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars SOLANA_RPC=$SOLANA_RPC
+gcloud functions --project "$GCP_PROJECT" deploy get-sui-events --entry-point getSuiEvents --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3
 
 if [ "$NETWORK" == "MAINNET" ]; then
     echo "Finished deploying MAINNET functions"

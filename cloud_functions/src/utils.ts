@@ -49,7 +49,7 @@ export async function formatAndSendToSlack(info: SlackInfo): Promise<any> {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: info.msg,
+          text: `@here ${info.msg}`,
         },
       },
     ],

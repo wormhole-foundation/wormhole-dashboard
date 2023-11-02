@@ -49,6 +49,13 @@ const chainInfos: ClientInfo[] = [
   },
 ];
 
+const PAGER_DUTY_THRESHOLD: number = 2 / 3;
+const PAGER_DUTY_THRESHOLD_DISPLAY: string = '2/3';
+const SLACK_THRESHOLD: number = 0.5;
+const SLACK_THRESHOLD_DISPLAY: string = '50%';
+const AUTO_REFRESH_THRESHOLD: number = 0.25;
+const AUTO_REFRESH_THRESHOLD_DISPLAY: string = '25%';
+
 export async function wormchainMonitor(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') {
@@ -74,11 +81,12 @@ export async function wormchainMonitor(req: any, res: any) {
     source: 'wormchainMonitor cloud function',
     summary: '',
   };
+
   try {
     for (const info of chainInfos) {
-      // Get wormchain info
-      const fcClient: RetrievedInfo = await getClientInfo(WormchainRPCs, info.wormchainClientId);
       // Get foreign chain info
+      const fcClient: RetrievedInfo = await getClientInfo(WormchainRPCs, info.wormchainClientId);
+      // Get wormchain info
       const wcClient: RetrievedInfo = await getClientInfo(
         info.foreignChainURLs,
         info.foreignChainClientID
@@ -92,27 +100,48 @@ export async function wormchainMonitor(req: any, res: any) {
       const wcBlockTime: number = await getBlockTime(WormchainRPCs, wcClient.revisionHeight);
 
       // Calculate thresholds
+      const fcAutoRefreshThreshold: number =
+        fcBlockTime + Math.floor(fcClient.trustingPeriodInSeconds * AUTO_REFRESH_THRESHOLD);
       const fcSlackThreshold: number =
-        fcBlockTime + Math.floor(fcClient.trustingPeriodInSeconds / 2);
+        fcBlockTime + Math.floor(fcClient.trustingPeriodInSeconds * SLACK_THRESHOLD);
       const fcPagerThreshold: number =
-        fcBlockTime + Math.floor((fcClient.trustingPeriodInSeconds * 2) / 3);
+        fcBlockTime + Math.floor(fcClient.trustingPeriodInSeconds * PAGER_DUTY_THRESHOLD);
+      const wcAutoRefreshThreshold: number =
+        wcBlockTime + Math.floor(wcClient.trustingPeriodInSeconds * AUTO_REFRESH_THRESHOLD);
       const wcSlackThreshold: number =
-        wcBlockTime + Math.floor(wcClient.trustingPeriodInSeconds / 2);
+        wcBlockTime + Math.floor(wcClient.trustingPeriodInSeconds * SLACK_THRESHOLD);
       const wcPagerThreshold: number =
-        wcBlockTime + Math.floor((wcClient.trustingPeriodInSeconds * 2) / 3);
+        wcBlockTime + Math.floor(wcClient.trustingPeriodInSeconds * PAGER_DUTY_THRESHOLD);
 
+      // Now as the number of seconds since 1970
       const now: number = Math.floor(Date.now() / 1000); // in seconds
 
       if (now >= fcPagerThreshold || now >= wcPagerThreshold) {
-        console.error('Pager threshold exceeded for connection: wormchain <->' + info.chain);
-        alarmPagerDutyInfo.summary = `${info.chain} <-> wormchain is more than 2/3 through its trusting period.`;
+        console.error(`Pager threshold exceeded for connection: wormchain <-> ${info.chain}`);
+        alarmPagerDutyInfo.summary = `${info.chain} <-> wormchain is more than ${PAGER_DUTY_THRESHOLD_DISPLAY} through its trusting period.`;
         await sendToPagerDuty(alarmPagerDutyInfo);
       }
       // This check will send to slack for both the slack and pager thresholds exceeded.
       if (now >= fcSlackThreshold || now >= wcSlackThreshold) {
-        console.error('Slack threshold exceeded for connection: wormchain <->' + info.chain);
-        warningSlackInfo.msg = `${info.chain} <-> wormchain is more than 50% through its trusting period.`;
+        console.error(`Slack threshold exceeded for connection: wormchain <-> ${info.chain}`);
+        warningSlackInfo.msg = `${info.chain} <-> wormchain is more than ${SLACK_THRESHOLD_DISPLAY} through its trusting period.`;
         await formatAndSendToSlack(warningSlackInfo);
+      }
+      // Check to see if we need to automatically refresh the foreign chain
+      if (now >= fcAutoRefreshThreshold) {
+        console.error(`Auto refresh threshold exceeded for ${info.chain}`);
+        warningSlackInfo.msg = `${info.chain} <-> wormchain is more than ${AUTO_REFRESH_THRESHOLD_DISPLAY} through its trusting period.`;
+        await formatAndSendToSlack(warningSlackInfo);
+        await refreshLightClient(info.foreignChainURLs[0], info.foreignChainClientID);
+      }
+      // Check to see if we need to automatically refresh wormchain
+      if (now >= wcAutoRefreshThreshold) {
+        console.error(
+          `Auto refresh threshold exceeded for wormchain side of connection with ${info.chain}`
+        );
+        warningSlackInfo.msg = `${info.chain} <-> wormchain is more than ${AUTO_REFRESH_THRESHOLD_DISPLAY} through its trusting period.`;
+        await formatAndSendToSlack(warningSlackInfo);
+        await refreshLightClient(WormchainRPCs[0], info.wormchainClientId);
       }
     }
   } catch (e) {
@@ -158,6 +187,8 @@ async function getBlockTime(rpcs: ClientRPC[], height: number): Promise<number> 
   }
   throw Error('Unable to query any RPCs');
 }
+
+async function refreshLightClient(rpc: ClientRPC, channelId: string): Promise<void> {}
 
 type ChainInfoResponse = {
   client_state: {

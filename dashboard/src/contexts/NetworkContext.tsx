@@ -70,7 +70,21 @@ export const networkOptions: Network[] = [
   {
     env: 'testnet',
     endpoint: 'https://wormhole-v2-testnet-api.certus.one',
-    name: 'Testnet',
+    name: 'Testnet - Jump',
+    logo: '',
+    type: 'guardian',
+  },
+  {
+    env: 'testnet',
+    endpoint: 'http://t-guardian-01.nodes.stable.io:8051',
+    name: 'Testnet - xLabs 1',
+    logo: '',
+    type: 'guardian',
+  },
+  {
+    env: 'testnet',
+    endpoint: 'http://t-guardian-02.nodes.stable.io:8051',
+    name: 'Testnet - xLabs 2',
     logo: '',
     type: 'guardian',
   },

@@ -33,8 +33,15 @@ import {
 } from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
+import useTokenData, { TokenDataEntry } from '../hooks/useTokenData';
+import numeral from 'numeral';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
+type AccountWithTokenData = Account & {
+  tokenData?: TokenDataEntry;
+  tvlTvm: number;
+  adjBalance: number;
+};
 
 function getNumSignatures(signatures: string) {
   let bitfield = Number(signatures);
@@ -182,7 +189,7 @@ const pendingTransferColumns = [
   }),
 ];
 
-const accountsColumnHelper = createColumnHelper<Account>();
+const accountsColumnHelper = createColumnHelper<AccountWithTokenData>();
 
 const accountsColumns = [
   accountsColumnHelper.accessor('key.chain_id', {
@@ -195,11 +202,41 @@ const accountsColumns = [
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
   }),
+  accountsColumnHelper.accessor('tokenData.native_address', {
+    header: () => 'Native Address',
+  }),
+  accountsColumnHelper.accessor('tokenData.name', {
+    header: () => 'Name',
+  }),
+  accountsColumnHelper.accessor('tokenData.symbol', {
+    header: () => 'Symbol',
+  }),
+  accountsColumnHelper.accessor('tokenData.price_usd', {
+    header: () => 'Price',
+    cell: (info) => (info.getValue() ? numeral(info.getValue()).format('$0,0.0000') : ''),
+  }),
+  accountsColumnHelper.accessor('adjBalance', {
+    header: () => 'Adjusted Balance',
+    cell: (info) =>
+      info.getValue() < 1
+        ? info.getValue().toFixed(4)
+        : numeral(info.getValue()).format('0,0.0000'),
+  }),
+  accountsColumnHelper.accessor('tvlTvm', {
+    header: () => 'TVL/TVM',
+    cell: (info) =>
+      info.getValue() < 1
+        ? `$${info.getValue().toFixed(4)}`
+        : numeral(info.getValue()).format('$0,0.0000'),
+  }),
+  accountsColumnHelper.accessor('tokenData.decimals', {
+    header: () => 'Decimals',
+  }),
   accountsColumnHelper.accessor('key.token_address', {
     header: () => 'Token Address',
   }),
   accountsColumnHelper.accessor('balance', {
-    header: () => 'Balance',
+    header: () => 'Raw Balance',
   }),
 ];
 
@@ -207,6 +244,8 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
   const pendingTransferInfo = useGetAccountantPendingTransfers();
 
   const accountsInfo = useGetAccountantAccounts();
+
+  const tokenData = useTokenData();
 
   const pendingTransfersForAcct: PendingTransferForAcct[] = useMemo(
     () =>
@@ -238,6 +277,27 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
     }
     return stats;
   }, [pendingTransferInfo]);
+
+  const accountsWithTokenData: AccountWithTokenData[] = useMemo(() => {
+    return accountsInfo.map<AccountWithTokenData>((a) => {
+      const thisTokenData = tokenData?.[`${a.key.token_chain}/${a.key.token_address}`];
+      if (!thisTokenData)
+        return {
+          ...a,
+          adjBalance: 0,
+          tvlTvm: 0,
+        };
+      const adjBalance = Number(a.balance) / 10 ** thisTokenData.decimals;
+      const tvlTvm = adjBalance * Number(thisTokenData.price_usd);
+      return {
+        ...a,
+        tokenData: thisTokenData,
+        adjBalance,
+        tvlTvm,
+      };
+    });
+  }, [accountsInfo, tokenData]);
+
   const [guardianSigningSorting, setGuardianSigningSorting] = useState<SortingState>([]);
   const guardianSigning = useReactTable({
     columns: guardianSigningColumns,
@@ -267,7 +327,7 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
   const [accountsSorting, setAccountsSorting] = useState<SortingState>([]);
   const accounts = useReactTable({
     columns: accountsColumns,
-    data: accountsInfo,
+    data: accountsWithTokenData,
     state: {
       sorting: accountsSorting,
     },
@@ -359,7 +419,7 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
               <Typography>Accounts ({accountsInfo.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table<Account> table={accounts} paginated />
+              <Table<AccountWithTokenData> table={accounts} paginated />
             </AccordionDetails>
           </Accordion>
         </Card>

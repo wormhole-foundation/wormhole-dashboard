@@ -129,7 +129,7 @@ func main() {
 	sendC := make(chan []byte)
 
 	// Inbound observations
-	obsvC := make(chan *gossipv1.SignedObservation, 50)
+	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
 
 	// Inbound observation requests
 	obsvReqC := make(chan *gossipv1.ObservationRequest, 50)
@@ -171,7 +171,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case m := <-obsvC:
-				handleObservation(logger, gs, m)
+				handleObservation(logger, gs, m.Msg)
 			}
 		}
 	}()
@@ -259,8 +259,38 @@ func main() {
 	}
 
 	// Run supervisor.
+	components := p2p.DefaultComponents()
+	components.Port = p2pPort
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
-		if err := supervisor.Run(ctx, "p2p", p2p.Run(obsvC, obsvReqC, nil, sendC, signedInC, priv, nil, gst, p2pPort, p2pNetworkID, p2pBootstrap, "", false, rootCtxCancel, nil, govConfigC, govStatusC)); err != nil {
+		if err := supervisor.Run(ctx,
+			"p2p",
+			p2p.Run(obsvC,
+				obsvReqC,
+				nil,
+				sendC,
+				signedInC,
+				priv,
+				nil,
+				gst,
+				p2pNetworkID,
+				p2pBootstrap,
+				"",
+				false,
+				rootCtxCancel,
+				nil,
+				nil,
+				govConfigC,
+				govStatusC,
+				components,
+				nil,
+				false,
+				false,
+				nil,
+				nil,
+				"",
+				0,
+				"",
+			)); err != nil {
 			return err
 		}
 
@@ -289,16 +319,9 @@ func handleSignedVAAWithQuorum(logger *zap.Logger, gs common.GuardianSet, m *gos
 		return
 	}
 
-	// Calculate digest for logging
-	digest := v.SigningMsg()
-	hash := hex.EncodeToString(digest.Bytes())
-
 	// Check if guardianSet doesn't have any keys
 	if len(gs.Keys) == 0 {
-		logger.Warn("dropping SignedVAAWithQuorum message since we have a guardian set without keys",
-			zap.String("digest", hash),
-			zap.Any("message", m),
-		)
+		logger.Warn("dropping SignedVAAWithQuorum message since we have a guardian set without keys")
 		return
 	}
 

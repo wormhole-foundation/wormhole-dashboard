@@ -20,6 +20,8 @@ export interface HeartbeatNetwork {
   height: string;
   contractAddress: string;
   errorCount: string;
+  safeHeight?: string;
+  finalizedHeight?: string;
 }
 
 export async function getLastHeartbeats(network: Network): Promise<Heartbeat[]> {

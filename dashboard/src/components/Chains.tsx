@@ -59,7 +59,13 @@ const columns = [
     sortingFn: `text`,
   }),
   columnHelper.accessor('network.height', {
-    header: () => 'Height',
+    header: () => 'Latest',
+  }),
+  columnHelper.accessor('network.safeHeight', {
+    header: () => 'Safe',
+  }),
+  columnHelper.accessor('network.finalizedHeight', {
+    header: () => 'Finalized',
   }),
   columnHelper.accessor('network.contractAddress', {
     header: () => 'Contract',

@@ -70,7 +70,7 @@ func main() {
 	sendC := make(chan []byte)
 
 	// Inbound observations
-	obsvC := make(chan *gossipv1.SignedObservation, 50)
+	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
 
 	// Inbound observation requests
 	obsvReqC := make(chan *gossipv1.ObservationRequest, 50)
@@ -110,16 +110,16 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case o := <-obsvC:
-				if o.MessageId[:3] != "26/" && o.MessageId[:2] != "7/" {
-					ga := eth_common.BytesToAddress(o.Addr).String()
+				if o.Msg.MessageId[:3] != "26/" && o.Msg.MessageId[:2] != "7/" {
+					ga := eth_common.BytesToAddress(o.Msg.Addr).String()
 					// logger.Warn("observation", zap.String("id",o.MessageId), zap.String("addr",ga))
-					if _, ok := obsvByHash[o.MessageId]; !ok {
-						obsvByHash[o.MessageId] = map[string]time.Time{}
+					if _, ok := obsvByHash[o.Msg.MessageId]; !ok {
+						obsvByHash[o.Msg.MessageId] = map[string]time.Time{}
 					}
-					if _, ok := obsvByHash[o.MessageId][ga]; !ok {
-						obsvByHash[o.MessageId][ga] = time.Now()
+					if _, ok := obsvByHash[o.Msg.MessageId][ga]; !ok {
+						obsvByHash[o.Msg.MessageId][ga] = time.Now()
 					}
-					logger.Warn("status", zap.String("id", o.MessageId), zap.Any("msg", obsvByHash[o.MessageId]))
+					logger.Warn("status", zap.String("id", o.Msg.MessageId), zap.Any("msg", obsvByHash[o.Msg.MessageId]))
 				}
 			}
 		}
@@ -189,8 +189,38 @@ func main() {
 	}
 
 	// Run supervisor.
+	components := p2p.DefaultComponents()
+	components.Port = p2pPort
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
-		if err := supervisor.Run(ctx, "p2p", p2p.Run(obsvC, obsvReqC, nil, sendC, signedInC, priv, nil, gst, p2pPort, p2pNetworkID, p2pBootstrap, "", false, rootCtxCancel, nil, govConfigC, govStatusC)); err != nil {
+		if err := supervisor.Run(ctx,
+			"p2p",
+			p2p.Run(obsvC,
+				obsvReqC,
+				nil,
+				sendC,
+				signedInC,
+				priv,
+				nil,
+				gst,
+				p2pNetworkID,
+				p2pBootstrap,
+				"",
+				false,
+				rootCtxCancel,
+				nil,
+				nil,
+				govConfigC,
+				govStatusC,
+				components,
+				nil,
+				false,
+				false,
+				nil,
+				nil,
+				"",
+				0,
+				"",
+			)); err != nil {
 			return err
 		}
 

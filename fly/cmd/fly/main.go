@@ -176,7 +176,7 @@ func main() {
 	sendC := make(chan []byte)
 
 	// Inbound observations
-	obsvC := make(chan *gossipv1.SignedObservation, 50)
+	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
 
 	// Inbound observation requests
 	obsvReqC := make(chan *gossipv1.ObservationRequest, 50)
@@ -337,6 +337,8 @@ func main() {
 						"height":          strconv.FormatInt(network.Height, 10),
 						"contractAddress": network.ContractAddress,
 						"errorCount":      strconv.FormatUint(network.ErrorCount, 10),
+						"safeHeight":      strconv.FormatInt(network.SafeHeight, 10),
+						"finalizedHeight": strconv.FormatInt(network.FinalizedHeight, 10),
 					})
 				}
 
@@ -497,8 +499,43 @@ func main() {
 	}
 
 	// Run supervisor.
+	components := p2p.DefaultComponents()
+	components.Port = p2pPort
+	// Reduce number of connected peers to reduce network egress
+	components.GossipParams.D = 1    // default: 6
+	components.GossipParams.Dlo = 1  // default: 5
+	components.GossipParams.Dhi = 2  // default: 12
+	components.GossipParams.Dout = 1 // default: 2
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
-		if err := supervisor.Run(ctx, "p2p", p2p.Run(obsvC, obsvReqC, nil, sendC, signedInC, priv, nil, gst, p2pPort, p2pNetworkID, p2pBootstrap, "", false, rootCtxCancel, nil, govConfigC, govStatusC)); err != nil {
+		if err := supervisor.Run(ctx,
+			"p2p",
+			p2p.Run(obsvC,
+				obsvReqC,
+				nil,
+				sendC,
+				signedInC,
+				priv,
+				nil,
+				gst,
+				p2pNetworkID,
+				p2pBootstrap,
+				"",
+				false,
+				rootCtxCancel,
+				nil,
+				nil,
+				govConfigC,
+				govStatusC,
+				components,
+				nil,
+				false,
+				false,
+				nil,
+				nil,
+				"",
+				0,
+				"",
+			)); err != nil {
 			return err
 		}
 

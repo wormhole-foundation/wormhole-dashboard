@@ -1,12 +1,8 @@
 {
   "evmosRPCs": [
     {
-      "address": "https://lcd-evmos.whispernode.com:443/",
-      "provider": "WhisperNode🤐"
-    },
-    {
-      "address": "https://rest.bd.evmos.org:1317/",
-      "provider": "Blockdaemon"
+      "address": "https://evmos-api.polkachu.com/",
+      "provider": "Polkachu"
     },
     {
       "address": "https://evmos-api.lavenderfive.com:443/",
@@ -15,6 +11,14 @@
     {
       "address": "https://api-evmos-ia.cosmosia.notional.ventures/",
       "provider": "Notional"
+    },
+    {
+      "address": "https://lcd-evmos.whispernode.com:443/",
+      "provider": "WhisperNode🤐"
+    },
+    {
+      "address": "https://rest.bd.evmos.org:1317/",
+      "provider": "Blockdaemon"
     },
     {
       "address": "https://api.evmos.interbloc.org/",
@@ -31,10 +35,6 @@
     {
       "address": "https://api.evmos.nodestake.top/",
       "provider": "NodeStake"
-    },
-    {
-      "address": "https://evmos-api.polkachu.com/",
-      "provider": "Polkachu"
     },
     {
       "address": "https://api.evmos.silentvalidator.com/",

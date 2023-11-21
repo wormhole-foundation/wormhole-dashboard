@@ -240,6 +240,32 @@ const accountsColumns = [
   }),
 ];
 
+type ChainTvlTvm = { chainId: number; tvl: number; tvm: number };
+
+const overviewColumnHelper = createColumnHelper<ChainTvlTvm>();
+
+const overviewColumns = [
+  overviewColumnHelper.accessor('chainId', {
+    header: () => 'Chain',
+    cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
+    sortingFn: `text`,
+  }),
+  overviewColumnHelper.accessor('tvl', {
+    header: () => 'Total Value Locked',
+    cell: (info) =>
+      info.getValue() < 1
+        ? `$${info.getValue().toFixed(4)}`
+        : numeral(info.getValue()).format('$0,0.0000'),
+  }),
+  overviewColumnHelper.accessor('tvm', {
+    header: () => 'Total Value Minted',
+    cell: (info) =>
+      info.getValue() < 1
+        ? `$${info.getValue().toFixed(4)}`
+        : numeral(info.getValue()).format('$0,0.0000'),
+  }),
+];
+
 function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
   const pendingTransferInfo = useGetAccountantPendingTransfers();
 
@@ -297,6 +323,20 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
       };
     });
   }, [accountsInfo, tokenData]);
+  const tvlTvmPerChain: ChainTvlTvm[] = useMemo(
+    () =>
+      Object.values(
+        accountsWithTokenData.reduce<{ [chainId: number]: ChainTvlTvm }>((prev, curr) => {
+          if (!prev[curr.key.chain_id]) {
+            prev[curr.key.chain_id] = { chainId: curr.key.chain_id, tvl: 0, tvm: 0 };
+          }
+          prev[curr.key.chain_id][curr.key.chain_id === curr.key.token_chain ? 'tvl' : 'tvm'] +=
+            curr.tvlTvm;
+          return prev;
+        }, {})
+      ),
+    [accountsWithTokenData]
+  );
 
   const [guardianSigningSorting, setGuardianSigningSorting] = useState<SortingState>([]);
   const guardianSigning = useReactTable({
@@ -323,6 +363,18 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
     getPaginationRowModel: getPaginationRowModel(),
     autoResetPageIndex: false,
     onSortingChange: setPendingTransferSorting,
+  });
+  const [overviewSorting, setOverviewSorting] = useState<SortingState>([]);
+  const overview = useReactTable({
+    columns: overviewColumns,
+    data: tvlTvmPerChain,
+    state: {
+      sorting: overviewSorting,
+    },
+    getRowId: (key) => JSON.stringify(key),
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setOverviewSorting,
   });
   const [accountsSorting, setAccountsSorting] = useState<SortingState>([]);
   const accounts = useReactTable({
@@ -410,6 +462,18 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
               No pending transfers
             </Typography>
           ) : null}
+        </Card>
+      </Box>
+      <Box mt={2}>
+        <Card>
+          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography>Overview</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Table<ChainTvlTvm> table={overview} />
+            </AccordionDetails>
+          </Accordion>
         </Card>
       </Box>
       <Box mt={2}>

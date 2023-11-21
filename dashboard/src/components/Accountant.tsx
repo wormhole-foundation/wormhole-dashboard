@@ -313,7 +313,7 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
           adjBalance: 0,
           tvlTvm: 0,
         };
-      const adjBalance = Number(a.balance) / 10 ** thisTokenData.decimals;
+      const adjBalance = Number(a.balance) / 10 ** Math.min(thisTokenData.decimals, 8);
       const tvlTvm = adjBalance * Number(thisTokenData.price_usd);
       return {
         ...a,

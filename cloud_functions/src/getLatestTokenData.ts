@@ -1,5 +1,5 @@
 import { assertEnvironmentVariable } from './utils';
-import knex from 'knex';
+import knex, { Knex } from 'knex';
 
 export type TokenData = {
   token_chain: number;
@@ -16,9 +16,11 @@ export type TokenCache = {
   data?: TokenData[];
 };
 
+let pg: Knex;
+
 async function getLatestTokenData_(): Promise<TokenData[]> {
-  try {
-    const pg = knex({
+  if (!pg) {
+    pg = knex({
       client: 'pg',
       connection: {
         user: assertEnvironmentVariable('PG_USER'),
@@ -27,6 +29,8 @@ async function getLatestTokenData_(): Promise<TokenData[]> {
         host: assertEnvironmentVariable('PG_HOST'),
       },
     });
+  }
+  try {
     // get all of the known coin IDs
     const mdTable = assertEnvironmentVariable('PG_TOKEN_METADATA_TABLE');
     const pxTable = assertEnvironmentVariable('PG_TOKEN_PRICE_HISTORY_TABLE');

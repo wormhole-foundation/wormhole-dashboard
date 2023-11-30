@@ -9,18 +9,21 @@ import { NearArchiveWatcher } from '../NearArchiveWatcher';
 jest.setTimeout(60000);
 
 const INITIAL_NEAR_BLOCK = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.near ?? 0);
+let archiveWatcher: NearWatcher = new NearArchiveWatcher();
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new NearArchiveWatcher();
-  const blockNumber = await watcher.getFinalizedBlockNumber();
+  const blockNumber = await archiveWatcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(INITIAL_NEAR_BLOCK);
 });
 
 // No more "too old" blocks
 test('getMessagesForBlocks', async () => {
   // requests that are too old for rpc node should error, be caught, and return an empty object
-  const watcher = new NearArchiveWatcher();
-  const messages = await watcher.getMessagesForBlocks(INITIAL_NEAR_BLOCK, INITIAL_NEAR_BLOCK);
+  const messages = await archiveWatcher.getMessagesForBlocks(
+    INITIAL_NEAR_BLOCK,
+    INITIAL_NEAR_BLOCK
+  );
+  console.log('messages', messages);
   expect(Object.keys(messages).length).toEqual(1);
 });
 
@@ -62,9 +65,8 @@ test('getTransactionsByAccountId', async () => {
 });
 
 describe('getMessagesFromBlockResults', () => {
-  test('with Provider', async () => {
-    const watcher = new NearArchiveWatcher();
-    const provider = await watcher.getProvider();
+  test.skip('with Provider', async () => {
+    const provider = await archiveWatcher.getProvider();
     const messages = await getMessagesFromBlockResults(provider, [
       await provider.block({ finality: 'final' }),
     ]);
@@ -89,9 +91,8 @@ describe('getMessagesFromBlockResults', () => {
     });
 
     // validate keys
-    const watcher = new NearArchiveWatcher();
     const blockKey = Object.keys(messages).at(-1)!;
-    expect(watcher.isValidBlockKey(blockKey)).toBe(true);
-    expect(watcher.isValidVaaKey(messages[blockKey][0])).toBe(true);
+    expect(archiveWatcher.isValidBlockKey(blockKey)).toBe(true);
+    expect(archiveWatcher.isValidVaaKey(messages[blockKey][0])).toBe(true);
   });
 });

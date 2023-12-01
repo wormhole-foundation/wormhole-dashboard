@@ -18,6 +18,7 @@ jobs:
         env:
           ETH_RPC: ${{ secrets.ETH_RPC }}
           SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
+          NEAR_ARCHIVE_RPC: ${{ secrets.NEAR_ARCHIVE_RPC }}
         run: npm run test --workspaces --if-present
   format:
     runs-on: ubuntu-latest

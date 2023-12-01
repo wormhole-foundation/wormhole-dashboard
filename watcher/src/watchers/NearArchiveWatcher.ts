@@ -123,7 +123,8 @@ export class NearArchiveWatcher extends Watcher {
   }
 
   async getProvider(): Promise<Provider> {
-    return (this.provider = this.provider || (await getNearProvider(NEAR_ARCHIVE_RPC)));
+    const nearArchiveRPC: string = process.env.NEAR_ARCHIVE_RPC || 'https://rpc.mainnet.near.org';
+    return (this.provider = this.provider || (await getNearProvider(nearArchiveRPC)));
   }
 
   isValidVaaKey(key: string) {

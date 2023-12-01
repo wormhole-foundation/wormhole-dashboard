@@ -15,6 +15,7 @@ import { SuiWatcher } from './SuiWatcher';
 import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
 import { NearArchiveWatcher } from './NearArchiveWatcher';
+import { NearWatcher } from './NearWatcher';
 
 export function makeFinalizedWatcher(chainName: ChainName): Watcher {
   if (chainName === 'solana') {
@@ -44,7 +45,7 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
   } else if (chainName === 'aptos') {
     return new AptosWatcher();
   } else if (chainName === 'near') {
-    return new NearArchiveWatcher();
+    return new NearWatcher();
   } else if (chainName === 'injective') {
     return new InjectiveExplorerWatcher();
   } else if (chainName === 'sei') {

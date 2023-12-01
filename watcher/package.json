@@ -35,7 +35,7 @@
     "dotenv": "^16.0.3",
     "firebase-admin": "^11.4.0",
     "js-sha512": "^0.8.0",
-    "near-api-js": "^1.1.0",
+    "near-api-js": "^2.1.4",
     "ora": "^5.4.1",
     "winston": "^3.8.2",
     "winston-loki": "^6.0.7",

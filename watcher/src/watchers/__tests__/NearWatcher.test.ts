@@ -9,7 +9,7 @@ import { NearArchiveWatcher } from '../NearArchiveWatcher';
 jest.setTimeout(60000);
 
 const INITIAL_NEAR_BLOCK = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.near ?? 0);
-let archiveWatcher: NearWatcher = new NearArchiveWatcher();
+let archiveWatcher: NearArchiveWatcher = new NearArchiveWatcher();
 
 test('getFinalizedBlockNumber', async () => {
   const blockNumber = await archiveWatcher.getFinalizedBlockNumber();

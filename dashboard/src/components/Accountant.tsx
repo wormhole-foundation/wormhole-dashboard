@@ -1,12 +1,14 @@
-import { ExpandMore } from '@mui/icons-material';
+import { ExpandMore, Search } from '@mui/icons-material';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
   Card,
+  InputAdornment,
   LinearProgress,
   Link,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -14,11 +16,12 @@ import {
   SortingState,
   createColumnHelper,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
@@ -38,7 +41,7 @@ import numeral from 'numeral';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 type AccountWithTokenData = Account & {
-  tokenData?: TokenDataEntry;
+  tokenData: TokenDataEntry;
   tvlTvm: number;
   adjBalance: number;
 };
@@ -196,11 +199,13 @@ const accountsColumns = [
     header: () => 'Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
+    enableGlobalFilter: false,
   }),
   accountsColumnHelper.accessor('key.token_chain', {
     header: () => 'Token Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
+    enableGlobalFilter: false,
   }),
   accountsColumnHelper.accessor('tokenData.native_address', {
     header: () => 'Native Address',
@@ -211,9 +216,13 @@ const accountsColumns = [
   accountsColumnHelper.accessor('tokenData.symbol', {
     header: () => 'Symbol',
   }),
+  accountsColumnHelper.accessor('tokenData.coin_gecko_coin_id', {
+    header: () => 'Coin Gecko ID',
+  }),
   accountsColumnHelper.accessor('tokenData.price_usd', {
     header: () => 'Price',
     cell: (info) => (info.getValue() ? numeral(info.getValue()).format('$0,0.0000') : ''),
+    enableGlobalFilter: false,
   }),
   accountsColumnHelper.accessor('adjBalance', {
     header: () => 'Adjusted Balance',
@@ -221,6 +230,7 @@ const accountsColumns = [
       info.getValue() < 1
         ? info.getValue().toFixed(4)
         : numeral(info.getValue()).format('0,0.0000'),
+    enableGlobalFilter: false,
   }),
   accountsColumnHelper.accessor('tvlTvm', {
     header: () => 'TVL/TVM',
@@ -228,15 +238,18 @@ const accountsColumns = [
       info.getValue() < 1
         ? `$${info.getValue().toFixed(4)}`
         : numeral(info.getValue()).format('$0,0.0000'),
+    enableGlobalFilter: false,
   }),
   accountsColumnHelper.accessor('tokenData.decimals', {
     header: () => 'Decimals',
+    enableGlobalFilter: false,
   }),
   accountsColumnHelper.accessor('key.token_address', {
     header: () => 'Token Address',
   }),
   accountsColumnHelper.accessor('balance', {
     header: () => 'Raw Balance',
+    enableGlobalFilter: false,
   }),
 ];
 
@@ -312,6 +325,16 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
           ...a,
           adjBalance: 0,
           tvlTvm: 0,
+          tokenData: {
+            coin_gecko_coin_id: '',
+            decimals: 0,
+            name: '',
+            native_address: '',
+            price_usd: '',
+            symbol: '',
+            token_address: '',
+            token_chain: 0,
+          },
         };
       const adjBalance = Number(a.balance) / 10 ** Math.min(thisTokenData.decimals, 8);
       const tvlTvm = adjBalance * Number(thisTokenData.price_usd);
@@ -376,18 +399,25 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setOverviewSorting,
   });
+  const [accountsGlobalFilter, setAccountsGlobalFilter] = useState('');
+  const handleAccountsGlobalFilterChange = useCallback((e: any) => {
+    setAccountsGlobalFilter(e.target.value);
+  }, []);
   const [accountsSorting, setAccountsSorting] = useState<SortingState>([]);
   const accounts = useReactTable({
     columns: accountsColumns,
     data: accountsWithTokenData,
     state: {
+      globalFilter: accountsGlobalFilter,
       sorting: accountsSorting,
     },
-    getRowId: (key) => JSON.stringify(key),
+    getRowId: (token) => JSON.stringify(token.key),
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     autoResetPageIndex: false,
+    onGlobalFilterChange: setAccountsGlobalFilter,
     onSortingChange: setAccountsSorting,
   });
   const pendingByChain = useMemo(
@@ -483,7 +513,23 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
               <Typography>Accounts ({accountsInfo.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table<AccountWithTokenData> table={accounts} paginated />
+              <TextField
+                type="search"
+                value={accountsGlobalFilter}
+                onChange={handleAccountsGlobalFilterChange}
+                margin="dense"
+                size="small"
+                sx={{ mb: 1 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search />
+                    </InputAdornment>
+                  ),
+                }}
+                placeholder="Search Token"
+              />
+              <Table<AccountWithTokenData> table={accounts} paginated noWrap />
             </AccordionDetails>
           </Accordion>
         </Card>

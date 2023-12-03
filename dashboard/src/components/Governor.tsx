@@ -10,28 +10,31 @@ import {
   GovernorGetEnqueuedVAAsResponse_Entry,
   GovernorGetTokenListResponse_Entry,
 } from '@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc';
-import { ExpandMore } from '@mui/icons-material';
+import { ExpandMore, Search } from '@mui/icons-material';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
   Card,
+  InputAdornment,
   LinearProgress,
   Link,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
 import {
   createColumnHelper,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
 import numeral from 'numeral';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import useGovernorInfo from '../hooks/useGovernorInfo';
 import chainIdToName from '../utils/chainIdToName';
 import {
@@ -161,6 +164,7 @@ const tokenColumns = [
     header: () => 'Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
+    enableGlobalFilter: false,
   }),
   tokenColumnHelper.accessor('originAddress', {
     header: () => 'Token',
@@ -199,6 +203,7 @@ const tokenColumns = [
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
     cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0.0000')}</Box>,
+    enableGlobalFilter: false,
   }),
 ];
 
@@ -267,16 +272,24 @@ function Governor() {
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setEnqueuedSorting,
   });
+  const [tokenGlobalFilter, setTokenGlobalFilter] = useState('');
+  const handleTokenGlobalFilterChange = useCallback((e: any) => {
+    setTokenGlobalFilter(e.target.value);
+  }, []);
   const [tokenSorting, setTokenSorting] = useState<SortingState>([]);
   const tokenTable = useReactTable({
     columns: tokenColumns,
     data: displayTokens,
     state: {
+      globalFilter: tokenGlobalFilter,
       sorting: tokenSorting,
     },
     getRowId: (token) => `${token.originChainId}_${token.originAddress}`,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    onGlobalFilterChange: setTokenGlobalFilter,
     onSortingChange: setTokenSorting,
   });
   return (
@@ -350,6 +363,22 @@ function Governor() {
               <Typography>Tokens ({governorInfo.tokens.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
+              <TextField
+                type="search"
+                value={tokenGlobalFilter}
+                onChange={handleTokenGlobalFilterChange}
+                margin="dense"
+                size="small"
+                sx={{ mb: 1, ml: 1.5 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search />
+                    </InputAdornment>
+                  ),
+                }}
+                placeholder="Search Address"
+              />
               <Table<GovernorGetTokenListResponse_Entry> table={tokenTable} />
             </AccordionDetails>
           </Accordion>

@@ -9,6 +9,7 @@ import {
   ExpandMore,
   KeyboardArrowDown,
   KeyboardArrowRight,
+  Search,
   WarningAmberOutlined,
 } from '@mui/icons-material';
 import {
@@ -18,8 +19,10 @@ import {
   Box,
   Card,
   IconButton,
+  InputAdornment,
   LinearProgress,
   Link,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -29,12 +32,13 @@ import {
   createColumnHelper,
   getCoreRowModel,
   getExpandedRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import numeral from 'numeral';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   AvailableNotionalByChain,
   CloudGovernorInfo,
@@ -254,6 +258,7 @@ const tokenColumns = [
     header: () => 'Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
+    enableGlobalFilter: false,
   }),
   tokenColumnHelper.accessor('originAddress', {
     header: () => 'Token',
@@ -291,6 +296,7 @@ const tokenColumns = [
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
     cell: (info) => <Box textAlign="right">${numeral(info.getValue()).format('0,0.0000')}</Box>,
+    enableGlobalFilter: false,
   }),
 ];
 
@@ -368,16 +374,24 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setEnqueuedSorting,
   });
+  const [tokenGlobalFilter, setTokenGlobalFilter] = useState('');
+  const handleTokenGlobalFilterChange = useCallback((e: any) => {
+    setTokenGlobalFilter(e.target.value);
+  }, []);
   const [tokenSorting, setTokenSorting] = useState<SortingState>([]);
   const tokenTable = useReactTable({
     columns: tokenColumns,
     data: displayTokens,
     state: {
+      globalFilter: tokenGlobalFilter,
       sorting: tokenSorting,
     },
     getRowId: (token) => `${token.originChainId}_${token.originAddress}`,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    onGlobalFilterChange: setTokenGlobalFilter,
     onSortingChange: setTokenSorting,
   });
   const enqueuedByChain: ChainIdToEnqueuedCount = useMemo(
@@ -482,7 +496,23 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
               <Typography>Tokens ({governorInfo.tokens.length})</Typography>
             </AccordionSummary>
             <AccordionDetails>
-              <Table<GovernorToken> table={tokenTable} />
+              <TextField
+                type="search"
+                value={tokenGlobalFilter}
+                onChange={handleTokenGlobalFilterChange}
+                margin="dense"
+                size="small"
+                sx={{ mb: 1 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search />
+                    </InputAdornment>
+                  ),
+                }}
+                placeholder="Search Address"
+              />
+              <Table<GovernorToken> table={tokenTable} paginated />
             </AccordionDetails>
           </Accordion>
         </Card>

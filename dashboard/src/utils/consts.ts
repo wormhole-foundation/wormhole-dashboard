@@ -6,16 +6,22 @@ import auroraIcon from '../images/aurora.svg';
 import avaxIcon from '../images/avax.svg';
 import baseIcon from '../images/base.svg';
 import bscIcon from '../images/bsc.svg';
+import celestiaIcon from '../images/celestia.svg';
 import celoIcon from '../images/celo.svg';
+import cosmoshubIcon from '../images/cosmoshub.svg';
 import ethIcon from '../images/eth.svg';
+import evmosIcon from '../images/evmos.svg';
 import fantomIcon from '../images/fantom.svg';
 import injectiveIcon from '../images/injective.svg';
 import karuraIcon from '../images/karura.svg';
 import klaytnIcon from '../images/klaytn.svg';
+import kujiraIcon from '../images/kujira.svg';
 import moonbeamIcon from '../images/moonbeam.svg';
 import nearIcon from '../images/near.svg';
+import neonIcon from '../images/neon.svg';
 import oasisIcon from '../images/oasis-network-rose-logo.svg';
 import optimismIcon from '../images/optimism.svg';
+import osmosisIcon from '../images/osmosis.svg';
 import polygonIcon from '../images/polygon.svg';
 import pythnetIcon from '../images/pyth_logomark_white.svg';
 import seiIcon from '../images/sei.svg';
@@ -47,8 +53,10 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   14: celoIcon,
   15: nearIcon,
   16: moonbeamIcon,
+  17: neonIcon,
   18: terra2Icon,
   19: injectiveIcon,
+  20: osmosisIcon,
   21: suiIcon,
   22: aptosIcon,
   23: arbitrumIcon,
@@ -58,6 +66,11 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   30: baseIcon,
   32: seiIcon,
   3104: wormchainIcon,
+  4000: cosmoshubIcon,
+  4001: evmosIcon,
+  4002: kujiraIcon,
+  4004: celestiaIcon,
+  10002: ethIcon,
 };
 
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';

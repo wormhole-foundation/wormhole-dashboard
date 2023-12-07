@@ -59,8 +59,8 @@ if [ -z "$PG_DATABASE" ]; then
     exit 1
 fi
 
-if [ -z "$PG_HOST" ]; then
-    echo "PG_HOST must be specified"
+if [ -z "$PG_HOST" ] || [ "$PG_HOST" == "localhost" ] || [ "$PG_HOST" == "127.0.0.1" ]; then
+    echo "PG_HOST must be specified correctly"
     exit 1
 fi
 

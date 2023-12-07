@@ -6,8 +6,9 @@ import { useNetworkContext } from '../contexts/NetworkContext';
 const VAA_CHECK_TIMEOUT = 60000;
 const WORMHOLE_RPC_HOSTS = [
   'https://wormhole-v2-mainnet-api.certus.one',
-  'https://wormhole.inotel.ro',
   'https://wormhole-v2-mainnet-api.mcf.rocks',
+  'https://wormhole-v2-mainnet-api.chainlayer.network',
+  'https://wormhole-v2-mainnet-api.staking.fund',
 ];
 
 function EnqueuedVAAChecker({
@@ -35,7 +36,7 @@ function EnqueuedVAAChecker({
               sequence,
               {},
               1000,
-              3
+              WORMHOLE_RPC_HOSTS.length
             );
             if (!!response.vaaBytes) result = true;
           } catch (e) {}

@@ -76,21 +76,27 @@ export const networkOptions: Network[] = [
     logo: '',
     type: 'guardian',
   },
-  // The xLabs' testnet guardians are http only and won't work on the https site (mixed content)
-  // {
-  //   env: 'testnet',
-  //   endpoint: 'http://t-guardian-01.nodes.stable.io:8051',
-  //   name: 'Testnet - xLabs 1',
-  //   logo: '',
-  //   type: 'guardian',
-  // },
-  // {
-  //   env: 'testnet',
-  //   endpoint: 'http://t-guardian-02.nodes.stable.io:8051',
-  //   name: 'Testnet - xLabs 2',
-  //   logo: '',
-  //   type: 'guardian',
-  // },
+  {
+    env: 'testnet',
+    endpoint: 'https://guardian.testnet.xlabs.xyz',
+    name: 'Testnet - xLabs (LB)',
+    logo: '',
+    type: 'guardian',
+  },
+  {
+    env: 'testnet',
+    endpoint: 'https://guardian-01.testnet.xlabs.xyz',
+    name: 'Testnet - xLabs 1',
+    logo: '',
+    type: 'guardian',
+  },
+  {
+    env: 'testnet',
+    endpoint: 'https://guardian-02.testnet.xlabs.xyz',
+    name: 'Testnet - xLabs 2',
+    logo: '',
+    type: 'guardian',
+  },
   {
     env: 'devnet',
     endpoint: 'http://localhost:7071',

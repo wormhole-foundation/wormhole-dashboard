@@ -84,7 +84,7 @@ export const AXIOS_CONFIG_JSON: AxiosRequestConfig = {
 };
 
 export const GUARDIAN_RPC_HOSTS = [
-  'https://wormhole-v2-mainnet-api.certus.one',
+  'https://api.wormholescan.io',
   'https://wormhole-v2-mainnet-api.mcf.rocks',
   'https://wormhole-v2-mainnet-api.chainlayer.network',
   'https://wormhole-v2-mainnet-api.staking.fund',

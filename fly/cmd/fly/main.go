@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/hex"
-	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -18,6 +17,7 @@ import (
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	eth_common "github.com/ethereum/go-ethereum/common"
 	ipfslog "github.com/ipfs/go-log/v2"
+	"github.com/joho/godotenv"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
@@ -46,6 +46,9 @@ var (
 	gcpProjectID       string
 	bigtableInstanceID string
 	signedVAATopicName string
+	rpcUrl             string
+	coreBridgeAddr     string
+	credentialsFile    string
 )
 
 // Make a bigtable row key from a VAA
@@ -107,30 +110,38 @@ func incrementPythNetMsgCount(ctx context.Context, client *firestore.Client, cou
 	}
 }
 
-func main() {
-	// TODO: pass in config instead of hard-coding it
-	p2pNetworkID = "/wormhole/mainnet/2"
-	p2pBootstrap = "/dns4/wormhole-mainnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWQp644DK27fd3d4Km3jr7gHiuJJ5ZGmy8hH4py7fP4FP7,/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC"
-	p2pPort = 8999
-	nodeKeyPath = "/tmp/node.key"
-	logLevel = "warn"
-	gcpProjectID = "wormhole-message-db-mainnet"
-	bigtableInstanceID = "wormhole-mainnet"
-	signedVAATopicName = "signed-vaa"
+func loadEnvVars() {
+	err := godotenv.Load() // By default loads .env
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	p2pNetworkID = verifyEnvVar("P2P_NETWORK_ID")
+	p2pBootstrap = verifyEnvVar("P2P_BOOTSTRAP")
+	port, err := strconv.ParseUint(verifyEnvVar("P2P_PORT"), 10, 32)
+	if err != nil {
+		log.Fatal("Error parsing P2P_PORT")
+	}
+	p2pPort = uint(port)
+	nodeKeyPath = verifyEnvVar("NODE_KEY_PATH")
+	logLevel = verifyEnvVar("LOG_LEVEL")
+	gcpProjectID = verifyEnvVar("GCP_PROJECT_ID")
+	bigtableInstanceID = verifyEnvVar("BIGTABLE_INSTANCE_ID")
+	signedVAATopicName = verifyEnvVar("SIGNED_VAA_TOPIC_NAME")
+	rpcUrl = verifyEnvVar("RPC_URL")
+	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
+	credentialsFile = verifyEnvVar("CREDENTIALS_FILE")
+}
 
-	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
-	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
-	credentialsFile := flag.String("credentialsFile", "", "GCP service account or refresh token JSON credentials file")
-	flag.Parse()
-	if *credentialsFile == "" {
-		log.Fatalf("gcpCredentialsFile must be specified")
+func verifyEnvVar(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		log.Fatalf("%s must be specified", key)
 	}
-	if *rpcUrl == "" {
-		log.Fatalf("rpcUrl must be specified")
-	}
-	if *coreBridgeAddr == "" {
-		log.Fatalf("coreBridgeAddr must be specified")
-	}
+	return value
+}
+
+func main() {
+	loadEnvVars()
 
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
@@ -143,7 +154,7 @@ func main() {
 	ipfslog.SetAllLoggers(lvl)
 
 	ctx := context.Background()
-	sa := option.WithCredentialsFile(*credentialsFile)
+	sa := option.WithCredentialsFile(credentialsFile)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
 		log.Fatalln(err)
@@ -196,7 +207,7 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
+	idx, sgs, err := utils.FetchCurrentGuardianSet(rpcUrl, coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}

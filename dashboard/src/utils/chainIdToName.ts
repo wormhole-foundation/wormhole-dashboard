@@ -6,6 +6,7 @@ const chainIdToNameMap: { [chainId: string]: string } = {
   4000: 'cosmoshub',
   4001: 'evmos',
   4002: 'kujira',
+  4003: 'neutron',
   4004: 'celestia',
 };
 const chainIdToName = (chainId: number) => chainIdToNameMap[chainId] || 'Unknown';

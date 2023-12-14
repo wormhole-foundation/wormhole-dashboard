@@ -19,6 +19,7 @@ import kujiraIcon from '../images/kujira.svg';
 import moonbeamIcon from '../images/moonbeam.svg';
 import nearIcon from '../images/near.svg';
 import neonIcon from '../images/neon.svg';
+import neutronIcon from '../images/neutron.svg';
 import oasisIcon from '../images/oasis-network-rose-logo.svg';
 import optimismIcon from '../images/optimism.svg';
 import osmosisIcon from '../images/osmosis.svg';
@@ -69,6 +70,7 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   4000: cosmoshubIcon,
   4001: evmosIcon,
   4002: kujiraIcon,
+  4003: neutronIcon,
   4004: celestiaIcon,
   10002: ethIcon,
 };

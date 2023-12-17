@@ -4,7 +4,7 @@ import axios, { isAxiosError } from 'axios';
 
 const COIN_GECKO_API_BASE_URL = 'https://api.coingecko.com/api/v3';
 const COIN_GECKO_PRO_API_BASE_URL = 'https://pro-api.coingecko.com/api/v3';
-const COIN_GECKO_API_SLEEP_MS = 200;
+const COIN_GECKO_API_SLEEP_MS = 1000;
 
 // https://api.coingecko.com/api/v3/asset_platforms
 export const COINGECKO_PLATFORM_BY_CHAIN: { [key in ChainName]?: string } = {
@@ -66,10 +66,13 @@ export const fetchPrices = async (coinIds: string[], apiKey?: string): Promise<C
     ? [COIN_GECKO_PRO_API_BASE_URL, createConfig(apiKey)]
     : [COIN_GECKO_API_BASE_URL, undefined];
   let prices: CoinGeckoPrices = {};
-  const chunks = chunkArray(coinIds, 200);
+  const chunks = chunkArray(coinIds, 400);
+  console.log(`fetching ${chunks.length} chunks of prices`);
   for (const chunk of chunks) {
+    console.log(`fetching chunk of ${chunk.length} prices`);
     const url = `${baseUrl}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd`;
     const response = await axios.get<CoinGeckoPrices>(url, config);
+    console.log(`fetched ${Object.keys(response.data).length} prices`);
     prices = {
       ...prices,
       ...response.data,

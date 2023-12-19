@@ -45,7 +45,7 @@ export const getLogger = (source: string): WormholeLogger => {
 };
 
 const createBaseLogger = (): WormholeLogger => {
-  const { logLevel, logDir } = getEnvironment();
+  const { logLevel, logDir, network } = getEnvironment();
   const logPath = !!logDir ? `${logDir}/watcher.${new Date().toISOString()}.log` : null;
   let transport: winston.transport[] = [
     logPath
@@ -60,7 +60,7 @@ const createBaseLogger = (): WormholeLogger => {
     const GRAFANA_HOST = assertEnvironmentVariable('GRAFANA_HOST');
     const GRAFANA_USERID = assertEnvironmentVariable('GRAFANA_USERID');
     const GRAFANA_PASSWORD = assertEnvironmentVariable('GRAFANA_PASSWORD');
-    const MY_APP_NAME = 'wormhole-dashboard';
+    const MY_APP_NAME = network === '' ? 'wormhole-dashboard' : `wormhole-dashboard-${network}`;
     const GRAFANA_BASICAUTH = GRAFANA_USERID + ':' + GRAFANA_PASSWORD;
     transport.push(
       new LokiTransport({

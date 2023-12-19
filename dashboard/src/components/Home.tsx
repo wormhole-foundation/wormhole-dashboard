@@ -45,6 +45,14 @@ function Home({
             </CollapsibleSection>
           </MonitorSettingsProvider>
         </>
+      ) : currentNetwork.name === 'Testnet' ? (
+        <>
+          <MonitorSettingsProvider>
+            <CollapsibleSection header="Monitor">
+              <Monitor />
+            </CollapsibleSection>
+          </MonitorSettingsProvider>
+        </>
       ) : (
         <Governor />
       )}

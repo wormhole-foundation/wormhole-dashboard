@@ -64,6 +64,13 @@ export const networkOptions: Network[] = [
   // },
   {
     env: 'testnet',
+    endpoint: 'https://europe-west3-wormhole-message-db-testnet.cloudfunctions.net',
+    name: 'Testnet',
+    logo: '',
+    type: 'cloudfunction',
+  },
+  {
+    env: 'testnet',
     endpoint: 'https://guardian.testnet.xlabs.xyz',
     name: 'Testnet - xLabs (LB)',
     logo: '',

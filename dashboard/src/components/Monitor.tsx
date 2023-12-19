@@ -24,6 +24,7 @@ import {
   explorerTx,
   explorerVaa,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import { useNetworkContext } from '../contexts/NetworkContext';
 
 type LastBlockByChain = { [chainId: string]: string };
 type CountsByChain = {
@@ -138,6 +139,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
 }
 
 function DetailBlocks({ chain }: { chain: string }) {
+  const { currentNetwork } = useNetworkContext();
   const { showDetails } = useSettings();
   const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
     getEmptyDataWrapper()
@@ -150,9 +152,7 @@ function DetailBlocks({ chain }: { chain: string }) {
       setMessagesWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
         const response = await axios.get<ObservedMessage[]>(
-          `https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/messages/${chain}${
-            fromId ? `?fromId=${fromId}` : ''
-          }`
+          `${currentNetwork.endpoint}/messages/${chain}${fromId ? `?fromId=${fromId}` : ''}`
         );
         if (response.data && !cancelled) {
           response.data.reverse();
@@ -172,7 +172,7 @@ function DetailBlocks({ chain }: { chain: string }) {
     return () => {
       cancelled = true;
     };
-  }, [chain, fromId]);
+  }, [chain, fromId, currentNetwork]);
   const rawMessages = messagesWrapper.data;
   const lastMessageId = rawMessages && rawMessages[0].id;
   const handlePageClick = useCallback(() => {
@@ -288,6 +288,7 @@ function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
 }
 
 function Misses() {
+  const { currentNetwork } = useNetworkContext();
   const { showAllMisses } = useSettings();
   const [missesWrapper, setMissesWrapper] = useState<DataWrapper<MissesByChain>>(
     getEmptyDataWrapper()
@@ -298,9 +299,7 @@ function Misses() {
     (async () => {
       setMissesWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
-        const response = await axios.get<MissesByChain>(
-          'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/missing-vaas'
-        );
+        const response = await axios.get<MissesByChain>(`${currentNetwork.endpoint}/missing-vaas`);
         if (response.data && !cancelled) {
           setMissesWrapper(receiveDataWrapper(response.data));
         }
@@ -317,7 +316,7 @@ function Misses() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentNetwork]);
   const now = new Date();
   now.setHours(now.getHours() - 2);
   const twoHoursAgo = now.toISOString();
@@ -398,6 +397,7 @@ function SettingsButton() {
 }
 
 function Monitor() {
+  const { currentNetwork } = useNetworkContext();
   const [lastBlockByChainWrapper, setLastBlockByChainWrapper] = useState<
     DataWrapper<LastBlockByChain>
   >(getEmptyDataWrapper());
@@ -407,9 +407,8 @@ function Monitor() {
     (async () => {
       setLastBlockByChainWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
-        const response = await axios.get<LastBlockByChain>(
-          'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/latest-blocks'
-        );
+        const url: string = `${currentNetwork.endpoint}/latest-blocks`;
+        const response = await axios.get<LastBlockByChain>(url);
         if (response.data && !cancelled) {
           setLastBlockByChainWrapper(receiveDataWrapper(response.data));
         }
@@ -426,7 +425,7 @@ function Monitor() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentNetwork]);
   const [messageCountsWrapper, setMessageCountsWrapper] = useState<DataWrapper<CountsByChain>>(
     getEmptyDataWrapper()
   );
@@ -436,9 +435,8 @@ function Monitor() {
     (async () => {
       setMessageCountsWrapper((r) => ({ ...r, isFetching: true, error: null }));
       try {
-        const response = await axios.get<CountsByChain>(
-          'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/message-counts'
-        );
+        const url: string = `${currentNetwork.endpoint}/message-counts`;
+        const response = await axios.get<CountsByChain>(url);
         if (response.data && !cancelled) {
           setMessageCountsWrapper(receiveDataWrapper(response.data));
         }
@@ -455,7 +453,7 @@ function Monitor() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentNetwork]);
   return (
     <Card sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', mb: 1, alignItems: 'center' }}>

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { useNetworkContext } from '../contexts/NetworkContext';
 
 export type TokenDataEntry = {
   token_chain: number;
@@ -17,13 +18,14 @@ export type TokenDataByChainAddress = {
 };
 
 function useTokenData(): TokenDataByChainAddress | null {
+  const { currentNetwork } = useNetworkContext();
   const [tokenData, setTokenData] = useState<TokenDataByChainAddress | null>(null);
   useEffect(() => {
     let cancelled = false;
     (async () => {
       while (!cancelled) {
         const response = await axios.get<{ data: TokenDataEntry[] }>(
-          'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/latest-tokendata'
+          `${currentNetwork.endpoint}/latest-tokendata`
         );
         if (!cancelled) {
           setTokenData(
@@ -39,7 +41,7 @@ function useTokenData(): TokenDataByChainAddress | null {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentNetwork]);
   return tokenData;
 }
 export default useTokenData;

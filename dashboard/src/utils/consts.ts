@@ -73,6 +73,9 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   4003: neutronIcon,
   4004: celestiaIcon,
   10002: ethIcon,
+  10003: arbitrumIcon,
+  10004: baseIcon,
+  10005: optimismIcon,
 };
 
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';

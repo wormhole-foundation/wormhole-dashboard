@@ -10,11 +10,8 @@
     "backfill-price-history": "ts-node scripts/backfillPriceHistory.ts"
   },
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.9.16",
     "@google-cloud/bigtable": "^4.4.0",
     "@google-cloud/pubsub": "^3.4.1",
-    "@injectivelabs/networks": "^1.10.7",
-    "@injectivelabs/sdk-ts": "^1.10.46",
     "@injectivelabs/networks": "^1.0.73",
     "@injectivelabs/sdk-ts": "^1.0.368",
     "@mysten/sui.js": "^0.32.2",

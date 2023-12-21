@@ -16,6 +16,7 @@ import injectiveIcon from '../images/injective.svg';
 import karuraIcon from '../images/karura.svg';
 import klaytnIcon from '../images/klaytn.svg';
 import kujiraIcon from '../images/kujira.svg';
+import mantleIcon from '../images/mantle-mnt-logo.svg';
 import moonbeamIcon from '../images/moonbeam.svg';
 import nearIcon from '../images/near.svg';
 import neonIcon from '../images/neon.svg';
@@ -25,6 +26,7 @@ import optimismIcon from '../images/optimism.svg';
 import osmosisIcon from '../images/osmosis.svg';
 import polygonIcon from '../images/polygon.svg';
 import pythnetIcon from '../images/pyth_logomark_white.svg';
+import scrollIcon from '../images/scroll.svg';
 import seiIcon from '../images/sei.svg';
 import solanaIcon from '../images/solana.svg';
 import suiIcon from '../images/sui.svg';
@@ -66,6 +68,8 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   28: xplaIcon,
   30: baseIcon,
   32: seiIcon,
+  34: scrollIcon,
+  35: mantleIcon,
   3104: wormchainIcon,
   4000: cosmoshubIcon,
   4001: evmosIcon,

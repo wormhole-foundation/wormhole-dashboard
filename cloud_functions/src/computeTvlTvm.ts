@@ -5,7 +5,10 @@ import { assertEnvironmentVariable } from './utils';
 import { TokenPrice } from '@wormhole-foundation/wormhole-monitor-database';
 import { Firestore } from 'firebase-admin/firestore';
 
-const WORMCHAIN_URL: string = 'https://wormchain.jumpisolated.com';
+const WORMCHAIN_URL: string = 'https://tncnt-eu-wormchain-main-01.rpc.p2p.world';
+// If for some reason the above URL is not working, use this one:
+// const WORMCHAIN_URL: string = 'https://wormchain-rpc.quickapi.com';
+// In the future add the ability to have multiple URLs and try them all until one works.
 const ACCOUNTANT_CONTRACT_ADDRESS: string =
   'wormhole14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9srrg465';
 const PAGE_LIMIT: number = 2000; // throws a gas limit error over this

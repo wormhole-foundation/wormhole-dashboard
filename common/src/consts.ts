@@ -121,18 +121,21 @@ export const CIRCLE_INTEGRATION_EMITTERS: { [key in ChainName]?: string } = {
   avalanche: '00000000000000000000000009fb06a271faff70a651047395aaeb6265265f13',
   optimism: '0000000000000000000000002703483b1a5a7c577e8680de9df8be03c6f30e3c',
   arbitrum: '0000000000000000000000002703483b1a5a7c577e8680de9df8be03c6f30e3c',
+  base: '00000000000000000000000003faBB06Fa052557143dC28eFCFc63FC12843f1D',
+  polygon: '0000000000000000000000000FF28217dCc90372345954563486528aa865cDd6',
 };
 
 export const isCircleIntegrationEmitter = (chain: ChainId | ChainName, emitter: string) =>
   CIRCLE_INTEGRATION_EMITTERS[coalesceChainName(chain)]?.toLowerCase() === emitter.toLowerCase();
 
-// https://developers.circle.com/stablecoin/docs/cctp-technical-reference
+// https://developers.circle.com/stablecoins/docs/supported-domains
 export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
   0: CHAIN_ID_ETH,
   1: CHAIN_ID_AVAX,
   2: CHAIN_ID_OPTIMISM,
   3: CHAIN_ID_ARBITRUM,
   6: CHAIN_ID_BASE,
+  7: CHAIN_ID_POLYGON,
 };
 export type CHAIN_INFO = {
   name: string;

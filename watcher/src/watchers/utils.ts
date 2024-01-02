@@ -49,9 +49,9 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     return new InjectiveExplorerWatcher();
   } else if (chainName === 'sei') {
     return new SeiExplorerWatcher();
-  } else if (chainName === 'terra') {
-    return new TerraExplorerWatcher('terra');
-  } else if (chainName === 'terra2' || chainName === 'xpla') {
+  } else if (chainName === 'terra' || chainName === 'terra2') {
+    return new TerraExplorerWatcher(chainName);
+  } else if (chainName === 'xpla') {
     return new CosmwasmWatcher(chainName);
   } else if (chainName === 'sui') {
     return new SuiWatcher();

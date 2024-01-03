@@ -339,7 +339,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case hb := <-heartbeatC:
-				id := hb.GuardianAddr
+				id := hb.NodeName
 				now := time.Now()
 				networks := make([]*map[string]interface{}, 0, len(hb.Networks))
 				for _, network := range hb.Networks {

@@ -15,6 +15,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { isLegacyMessage, normalizeCompileInstruction } from '../utils/solana';
 import { Watcher } from './Watcher';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 
 const WORMHOLE_PROGRAM_ID = CONTRACTS.MAINNET.solana.core;
 const COMMITMENT: Commitment = 'finalized';
@@ -34,9 +35,9 @@ export class SolanaWatcher extends Watcher {
 
   connection: Connection | undefined;
 
-  constructor() {
-    super('solana');
-    this.rpc = RPCS_BY_CHAIN.solana!;
+  constructor(network: NETWORK) {
+    super(network, 'solana');
+    this.rpc = RPCS_BY_CHAIN[this.network].solana!;
     this.programId = WORMHOLE_PROGRAM_ID;
   }
 

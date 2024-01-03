@@ -4,6 +4,7 @@ dotenv.config();
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { initDb } from './databases/utils';
 import { makeFinalizedWatcher } from './watchers/utils';
+import { getNetworkFromEnv } from './utils/environment';
 
 initDb();
 
@@ -35,6 +36,8 @@ const supportedChains: ChainName[] = [
   'wormchain',
 ];
 
+const network = getNetworkFromEnv();
+
 for (const chain of supportedChains) {
-  makeFinalizedWatcher(chain).watch();
+  makeFinalizedWatcher(network, chain).watch();
 }

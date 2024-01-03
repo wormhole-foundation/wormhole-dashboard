@@ -8,7 +8,6 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { EventLog, Transaction } from '../types/near';
 import {
-  NEAR_ARCHIVE_RPC,
   fetchBlockByBlockId,
   getNearProvider,
   getTimestampByBlock,
@@ -16,12 +15,13 @@ import {
   isWormholePublishEventLog,
 } from '../utils/near';
 import { Watcher } from './Watcher';
+import { NETWORK, assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class NearArchiveWatcher extends Watcher {
   provider: Provider | null = null;
 
-  constructor() {
-    super('near');
+  constructor(network: NETWORK) {
+    super(network, 'near');
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -123,8 +123,8 @@ export class NearArchiveWatcher extends Watcher {
   }
 
   async getProvider(): Promise<Provider> {
-    const nearArchiveRPC: string = process.env.NEAR_ARCHIVE_RPC || 'https://rpc.mainnet.near.org';
-    return (this.provider = this.provider || (await getNearProvider(nearArchiveRPC)));
+    const nearArchiveRPC: string = assertEnvironmentVariable('NEAR_ARCHIVE_RPC');
+    return (this.provider = this.provider || (await getNearProvider(this.network, nearArchiveRPC)));
   }
 
   isValidVaaKey(key: string) {

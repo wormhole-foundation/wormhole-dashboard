@@ -3,6 +3,7 @@ import { Watcher } from './Watcher';
 import { ALGORAND_INFO } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 
 type Message = {
   blockKey: string;
@@ -16,22 +17,22 @@ export class AlgorandWatcher extends Watcher {
   algodClient: algosdk.Algodv2;
   indexerClient: algosdk.Indexer;
 
-  constructor() {
-    super('algorand');
+  constructor(network: NETWORK) {
+    super(network, 'algorand');
 
-    if (!ALGORAND_INFO.algodServer) {
+    if (!ALGORAND_INFO[this.network].algodServer) {
       throw new Error('ALGORAND_INFO.algodServer is not defined!');
     }
 
     this.algodClient = new algosdk.Algodv2(
-      ALGORAND_INFO.algodToken,
-      ALGORAND_INFO.algodServer,
-      ALGORAND_INFO.algodPort
+      ALGORAND_INFO[this.network].algodToken,
+      ALGORAND_INFO[this.network].algodServer,
+      ALGORAND_INFO[this.network].algodPort
     );
     this.indexerClient = new algosdk.Indexer(
-      ALGORAND_INFO.token,
-      ALGORAND_INFO.server,
-      ALGORAND_INFO.port
+      ALGORAND_INFO[this.network].token,
+      ALGORAND_INFO[this.network].server,
+      ALGORAND_INFO[this.network].port
     );
   }
 
@@ -51,7 +52,7 @@ export class AlgorandWatcher extends Watcher {
     const maxResults = 225; // determined through testing
     do {
       const request = this.indexerClient
-        .lookupApplicationLogs(ALGORAND_INFO.appid)
+        .lookupApplicationLogs(ALGORAND_INFO[this.network].appid)
         .minRound(fromBlock)
         .maxRound(toBlock);
       if (nextToken) {
@@ -72,7 +73,8 @@ export class AlgorandWatcher extends Watcher {
     let messages: Message[] = [];
     if (
       transaction['tx-type'] !== 'pay' &&
-      transaction['application-transaction']?.['application-id'] === ALGORAND_INFO.appid &&
+      transaction['application-transaction']?.['application-id'] ===
+        ALGORAND_INFO[this.network].appid &&
       transaction.logs?.length === 1
     ) {
       messages.push({

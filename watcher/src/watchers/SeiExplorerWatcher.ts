@@ -4,7 +4,7 @@ import { AXIOS_CONFIG_JSON, SEI_EXPLORER_GRAPHQL, SEI_EXPLORER_TXS } from '../co
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { CosmwasmHashResult, CosmwasmWatcher } from './CosmwasmWatcher';
-import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import { NETWORK, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 
 type SeiExplorerAccountTransactionsResponse = {
   data: {
@@ -29,8 +29,8 @@ type SeiExplorerAccountTransactionsResponse = {
 };
 
 export class SeiExplorerWatcher extends CosmwasmWatcher {
-  constructor() {
-    super('sei');
+  constructor(network: NETWORK) {
+    super(network, 'sei');
     // arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
     this.maximumBatchSize = 1_000_000;
   }

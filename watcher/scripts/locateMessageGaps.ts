@@ -7,11 +7,13 @@ import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { parseMessageId } from '../src/databases/utils';
 import { makeFinalizedWatcher } from '../src/watchers/utils';
 import { Watcher } from '../src/watchers/Watcher';
+import { getNetworkFromEnv } from '../src/utils/environment';
 
 // This script checks for gaps in the message sequences for an emitter.
 // Ideally this shouldn't happen, but there seems to be an issue with Oasis, Karura, and Celo
 
 (async () => {
+  const network = getNetworkFromEnv();
   const bt = new BigtableDatabase();
   if (!bt.bigtable) {
     throw new Error('bigtable is undefined');
@@ -72,7 +74,7 @@ import { Watcher } from '../src/watchers/Watcher';
       const chainName = coalesceChainName(Number(chain) as ChainId);
       let watcher: Watcher;
       try {
-        watcher = makeFinalizedWatcher(chainName);
+        watcher = makeFinalizedWatcher(network, chainName);
       } catch (e) {
         console.error('skipping gap for unsupported chain', chainName);
         continue;

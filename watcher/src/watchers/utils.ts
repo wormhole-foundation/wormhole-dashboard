@@ -14,14 +14,15 @@ import { SuiWatcher } from './SuiWatcher';
 import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
 import { NearArchiveWatcher } from './NearArchiveWatcher';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 
-export function makeFinalizedWatcher(chainName: ChainName): Watcher {
+export function makeFinalizedWatcher(network: NETWORK, chainName: ChainName): Watcher {
   if (chainName === 'solana') {
-    return new SolanaWatcher();
+    return new SolanaWatcher(network);
   } else if (chainName === 'ethereum' || chainName === 'karura' || chainName === 'acala') {
-    return new EVMWatcher(chainName, 'finalized');
+    return new EVMWatcher(network, chainName, 'finalized');
   } else if (chainName === 'bsc') {
-    return new BSCWatcher();
+    return new BSCWatcher(network);
   } else if (
     chainName === 'avalanche' ||
     chainName === 'oasis' ||
@@ -32,29 +33,29 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     chainName === 'optimism' ||
     chainName === 'base'
   ) {
-    return new EVMWatcher(chainName);
+    return new EVMWatcher(network, chainName);
   } else if (chainName === 'algorand') {
-    return new AlgorandWatcher();
+    return new AlgorandWatcher(network);
   } else if (chainName === 'moonbeam') {
-    return new MoonbeamWatcher();
+    return new MoonbeamWatcher(network);
   } else if (chainName === 'arbitrum') {
-    return new ArbitrumWatcher();
+    return new ArbitrumWatcher(network);
   } else if (chainName === 'aptos') {
-    return new AptosWatcher();
+    return new AptosWatcher(network);
   } else if (chainName === 'near') {
-    return new NearArchiveWatcher();
+    return new NearArchiveWatcher(network);
   } else if (chainName === 'injective') {
-    return new InjectiveExplorerWatcher();
+    return new InjectiveExplorerWatcher(network);
   } else if (chainName === 'sei') {
-    return new SeiExplorerWatcher();
+    return new SeiExplorerWatcher(network);
   } else if (chainName === 'terra' || chainName === 'terra2') {
-    return new TerraExplorerWatcher(chainName);
+    return new TerraExplorerWatcher(network, chainName);
   } else if (chainName === 'xpla') {
-    return new CosmwasmWatcher(chainName);
+    return new CosmwasmWatcher(network, chainName);
   } else if (chainName === 'sui') {
-    return new SuiWatcher();
+    return new SuiWatcher(network);
   } else if (chainName === 'wormchain') {
-    return new WormchainWatcher();
+    return new WormchainWatcher(network);
   } else {
     throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
   }

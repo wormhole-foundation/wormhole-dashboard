@@ -7,6 +7,7 @@ import { Watcher } from './Watcher';
 import { SHA256 } from 'jscrypto/SHA256';
 import { Base64 } from 'jscrypto/Base64';
 import { isBase64Encoded } from '../utils/isBase64Encoded';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class CosmwasmWatcher extends Watcher {
   latestBlockTag: string;
@@ -15,12 +16,12 @@ export class CosmwasmWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(chain: CosmWasmChainName | 'wormchain') {
-    super(chain);
+  constructor(network: NETWORK, chain: CosmWasmChainName | 'wormchain') {
+    super(network, chain);
     if (chain === 'injective') {
       throw new Error('Please use InjectiveExplorerWatcher for injective');
     }
-    this.rpc = RPCS_BY_CHAIN[this.chain];
+    this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }

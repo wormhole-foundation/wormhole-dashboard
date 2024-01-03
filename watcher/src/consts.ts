@@ -1,4 +1,5 @@
-import { ChainName, CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { ChainName, CONTRACTS, Network } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 import { AxiosRequestConfig } from 'axios';
 
 export const TIMEOUT = 0.5 * 1000;
@@ -24,50 +25,101 @@ export const TIMEOUT = 0.5 * 1000;
 // Arbitrum
 //  This node didn't work:  'https://arb1.arbitrum.io/rpc',
 
-export const RPCS_BY_CHAIN: { [key in ChainName]?: string } = {
-  ethereum: process.env.ETH_RPC,
-  bsc: process.env.BSC_RPC || 'https://rpc.ankr.com/bsc',
-  polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon',
-  avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche',
-  oasis: process.env.OASIS_RPC || 'https://emerald.oasis.dev',
-  algorand: process.env.ALGORAND_RPC || 'https://mainnet-api.algonode.cloud',
-  fantom: process.env.FANTOM_RPC || 'https://rpc.ankr.com/fantom',
-  karura: process.env.KARURA_RPC || 'https://eth-rpc-karura.aca-api.network',
-  acala: process.env.ACALA_RPC || 'https://eth-rpc-acala.aca-api.network',
-  klaytn: process.env.KLAYTN_RPC || 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
-  celo: process.env.CELO_RPC || 'https://forno.celo.org',
-  moonbeam: process.env.MOONBEAM_RPC || 'https://rpc.ankr.com/moonbeam',
-  arbitrum: process.env.ARBITRUM_RPC || 'https://arb1.arbitrum.io/rpc',
-  optimism: process.env.OPTIMISM_RPC || 'https://rpc.ankr.com/optimism',
-  aptos: process.env.APTOS_RPC || 'https://fullnode.mainnet.aptoslabs.com/',
-  near: process.env.NEAR_RPC || 'https://rpc.mainnet.near.org',
-  xpla: process.env.XPLA_RPC || 'https://dimension-lcd.xpla.dev',
-  terra2: process.env.TERRA2_RPC || 'https://phoenix-lcd.terra.dev',
-  // terra: 'https://columbus-fcd.terra.dev',
-  terra: process.env.TERRA_RPC || 'https://terra-classic-fcd.publicnode.com',
-  injective: process.env.INJECTIVE_RPC || 'https://api.injective.network',
-  solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
-  sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
-  base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
-  sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
-  wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
+export const RPCS_BY_CHAIN: { [key in NETWORK]: { [key in ChainName]?: string } } = {
+  [NETWORK.MAINNET]: {
+    ethereum: process.env.ETH_RPC,
+    bsc: process.env.BSC_RPC || 'https://rpc.ankr.com/bsc',
+    polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon',
+    avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche',
+    oasis: process.env.OASIS_RPC || 'https://emerald.oasis.dev',
+    algorand: process.env.ALGORAND_RPC || 'https://mainnet-api.algonode.cloud',
+    fantom: process.env.FANTOM_RPC || 'https://rpc.ankr.com/fantom',
+    karura: process.env.KARURA_RPC || 'https://eth-rpc-karura.aca-api.network',
+    acala: process.env.ACALA_RPC || 'https://eth-rpc-acala.aca-api.network',
+    klaytn: process.env.KLAYTN_RPC || 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
+    celo: process.env.CELO_RPC || 'https://forno.celo.org',
+    moonbeam: process.env.MOONBEAM_RPC || 'https://rpc.ankr.com/moonbeam',
+    arbitrum: process.env.ARBITRUM_RPC || 'https://arb1.arbitrum.io/rpc',
+    optimism: process.env.OPTIMISM_RPC || 'https://rpc.ankr.com/optimism',
+    aptos: process.env.APTOS_RPC || 'https://fullnode.mainnet.aptoslabs.com/',
+    near: process.env.NEAR_RPC || 'https://rpc.mainnet.near.org',
+    xpla: process.env.XPLA_RPC || 'https://dimension-lcd.xpla.dev',
+    terra2: process.env.TERRA2_RPC || 'https://phoenix-lcd.terra.dev',
+    // terra: 'https://columbus-fcd.terra.dev',
+    terra: process.env.TERRA_RPC || 'https://terra-classic-fcd.publicnode.com',
+    injective: process.env.INJECTIVE_RPC || 'https://api.injective.network',
+    solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
+    sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
+    base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
+    sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
+    wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
+  },
+  [NETWORK.TESTNET]: {
+    ethereum: process.env.ETH_RPC,
+    bsc: process.env.BSC_RPC,
+    polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon_mumbai',
+    avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche_fuji',
+    oasis: process.env.OASIS_RPC || 'https://testnet.emerald.oasis.dev',
+    algorand: process.env.ALGORAND_RPC || 'https://testnet-api.algonode.cloud',
+    fantom: process.env.FANTOM_RPC,
+    karura: process.env.KARURA_RPC,
+    acala: process.env.ACALA_RPC || 'https://eth-rpc-acala-testnet.aca-staging.network',
+    klaytn: process.env.KLAYTN_RPC || 'https://rpc.ankr.com/klaytn_testnet',
+    celo: process.env.CELO_RPC || 'https://alfajores-forno.celo-testnet.org',
+    moonbeam: process.env.MOONBEAM_RPC,
+    arbitrum: process.env.ARBITRUM_RPC || 'https://sepolia-rollup.arbitrum.io/rpc',
+    optimism: process.env.OPTIMISM_RPC || 'https://optimism-goerli.publicnode.com',
+    aptos: process.env.APTOS_RPC,
+    near: process.env.NEAR_RPC,
+    xpla: process.env.XPLA_RPC || 'https://cube-lcd.xpla.dev',
+    terra2: process.env.TERRA2_RPC || 'https://pisco-lcd.terra.dev',
+    terra: process.env.TERRA_RPC,
+    injective: process.env.INJECTIVE_RPC,
+    solana: process.env.SOLANA_RPC,
+    sui: process.env.SUI_RPC,
+    base: process.env.BASE_RPC,
+    sei: process.env.SEI_RPC,
+    wormchain: process.env.WORMCHAIN_RPC,
+  },
 };
 
+// The following is obsolete, but I'm leaving it here for now in case we need it later.
 // Separating for now so if we max out infura we can keep Polygon going
-export const POLYGON_ROOT_CHAIN_RPC = 'https://rpc.ankr.com/eth';
-export const POLYGON_ROOT_CHAIN_ADDRESS = '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287';
-// Optimism watcher relies on finalized calls which don't work right on Ankr
-export const OPTIMISM_CTC_CHAIN_RPC = process.env.ETH_RPC;
-export const OPTIMISM_CTC_CHAIN_ADDRESS = '0x5E4e65926BA27467555EB562121fac00D24E9dD2';
+export const POLYGON_ROOT_CHAIN_INFO: { [key in NETWORK]: PolygonRootChainInfo } = {
+  [NETWORK.MAINNET]: {
+    address: '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287',
+    rpc: 'https://rpc.ankr.com/eth',
+  },
+  [NETWORK.TESTNET]: {
+    address: '0x2890ba17efe978480615e330ecb65333b880928e',
+    rpc: 'https://rpc.ankr.com/eth', // TODO:  Put testnet info here
+  },
+};
 
-export const ALGORAND_INFO = {
-  appid: Number(CONTRACTS.MAINNET.algorand.core),
-  algodToken: '',
-  algodServer: RPCS_BY_CHAIN.algorand,
-  algodPort: 443,
-  server: 'https://mainnet-idx.algonode.cloud',
-  port: 443,
-  token: '',
+export const ALGORAND_INFO: { [key in NETWORK]: AlgorandInfo } = {
+  [NETWORK.MAINNET]: {
+    appid: Number(CONTRACTS.MAINNET.algorand.core),
+    algodToken: '',
+    algodServer: RPCS_BY_CHAIN[NETWORK.MAINNET].algorand
+      ? RPCS_BY_CHAIN[NETWORK.MAINNET].algorand
+      : '',
+    algodPort: 443,
+    server: 'https://mainnet-idx.algonode.cloud',
+    port: 443,
+    token: '',
+  },
+  [NETWORK.TESTNET]: {
+    appid: Number(CONTRACTS.TESTNET.algorand.core),
+    algodToken: '',
+    algodServer: RPCS_BY_CHAIN[NETWORK.TESTNET].algorand
+      ? RPCS_BY_CHAIN[NETWORK.TESTNET].algorand
+      : '',
+    algodPort: 443,
+    // TODO: Change to testnet info here;
+    server: 'https://testnet-idx.algonode.cloud',
+    port: 443,
+    token: '',
+  },
 };
 
 export const SEI_EXPLORER_GRAPHQL = 'https://pacific-1-graphql.alleslabs.dev/v1/graphql';
@@ -89,3 +141,18 @@ export const GUARDIAN_RPC_HOSTS = [
   'https://wormhole-v2-mainnet-api.chainlayer.network',
   'https://wormhole-v2-mainnet-api.staking.fund',
 ];
+
+export type AlgorandInfo = {
+  appid: number;
+  algodToken: string;
+  algodServer: string;
+  algodPort: number;
+  server: string;
+  port: number;
+  token: string;
+};
+
+export type PolygonRootChainInfo = {
+  address: string;
+  rpc: string;
+};

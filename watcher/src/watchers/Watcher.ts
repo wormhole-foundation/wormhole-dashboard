@@ -1,6 +1,7 @@
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
-  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  NETWORK,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { z } from 'zod';
@@ -11,10 +12,12 @@ import { getLogger, WormholeLogger } from '../utils/logger';
 
 export class Watcher {
   chain: ChainName;
+  network: NETWORK;
   logger: WormholeLogger;
   maximumBatchSize: number = 100;
 
-  constructor(chain: ChainName) {
+  constructor(network: NETWORK, chain: ChainName) {
+    this.network = network;
     this.chain = chain;
     this.logger = getLogger(chain);
   }
@@ -33,7 +36,7 @@ export class Watcher {
       const initialBlock = z
         .number()
         .int()
-        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[this.chain]));
+        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[this.network][this.chain]));
       return (
         z.number().int().parse(Number(block)) > initialBlock &&
         Date.parse(z.string().datetime().parse(timestamp)) < Date.now()
@@ -49,7 +52,7 @@ export class Watcher {
 
   async watch(): Promise<void> {
     let toBlock: number | null = null;
-    let fromBlock: number | null = await getResumeBlockByChain(this.chain);
+    let fromBlock: number | null = await getResumeBlockByChain(this.network, this.chain);
     let retry = 0;
     while (true) {
       try {

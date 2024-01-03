@@ -1,19 +1,24 @@
 import { expect, jest, test } from '@jest/globals';
-import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
+import {
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  NETWORK,
+} from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
 import { AptosWatcher } from '../AptosWatcher';
 
 jest.setTimeout(60000);
 
-const INITAL_SEQUENCE_NUMBER = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.aptos ?? 0);
+const INITAL_SEQUENCE_NUMBER = Number(
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[NETWORK.MAINNET].aptos ?? 0
+);
 
 test('getFinalizedSequenceNumber', async () => {
-  const watcher = new AptosWatcher();
+  const watcher = new AptosWatcher(NETWORK.MAINNET);
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(INITAL_SEQUENCE_NUMBER);
 });
 
 test('getMessagesForSequenceNumbers', async () => {
-  const watcher = new AptosWatcher();
+  const watcher = new AptosWatcher(NETWORK.MAINNET);
   const messages = await watcher.getMessagesForBlocks(0, 1);
   expect(messages).toMatchObject({
     '1095891/2022-10-19T00:55:54.676Z/0': [

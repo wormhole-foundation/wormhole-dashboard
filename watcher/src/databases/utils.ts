@@ -1,7 +1,8 @@
 import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
-  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   MAX_UINT_64,
+  NETWORK,
   padUint16,
   padUint64,
 } from '@wormhole-foundation/wormhole-monitor-common';
@@ -73,9 +74,12 @@ export const initDb = (startWatching: boolean = true): Database => {
   return database;
 };
 
-export const getResumeBlockByChain = async (chain: ChainName): Promise<number | null> => {
+export const getResumeBlockByChain = async (
+  network: NETWORK,
+  chain: ChainName
+): Promise<number | null> => {
   const lastBlock = await database.getLastBlockByChain(chain);
-  const initialBlock = INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain];
+  const initialBlock = INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[network][chain];
   return lastBlock !== null
     ? Number(lastBlock) + 1
     : initialBlock !== undefined

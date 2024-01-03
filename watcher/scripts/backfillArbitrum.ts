@@ -7,8 +7,10 @@ import { initDb } from '../src/databases/utils';
 import { AXIOS_CONFIG_JSON } from '../src/consts';
 import { ArbitrumWatcher } from '../src/watchers/ArbitrumWatcher';
 import { LOG_MESSAGE_PUBLISHED_TOPIC } from '../src/watchers/EVMWatcher';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 
 // This script exists because the Arbitrum RPC node only supports a 10 block range which is super slow
+// This script only applies to Arbitrum mainnet
 
 (async () => {
   const db = initDb();
@@ -23,7 +25,7 @@ import { LOG_MESSAGE_PUBLISHED_TOPIC } from '../src/watchers/EVMWatcher';
   log.succeed(`Fetched ${blockNumbers.length} logs from Arbiscan`);
   // use the watcher to fetch corresponding blocks
   log = ora('Fetching blocks...').start();
-  const watcher = new ArbitrumWatcher();
+  const watcher = new ArbitrumWatcher(NETWORK.MAINNET);
   for (const blockNumber of blockNumbers) {
     log.text = `Fetching block ${blockNumber}`;
     const vaasByBlock = await watcher.getMessagesForBlocks(blockNumber, blockNumber);

@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import { ChainName, CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
-  INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN,
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { BlockResult, Provider } from 'near-api-js/lib/providers/provider';
@@ -17,6 +17,7 @@ import {
 import { getMessagesFromBlockResults } from '../src/watchers/NearWatcher';
 import { Transaction } from '../src/types/near';
 import { VaasByBlock } from '../src/databases/types';
+import { getNetworkFromEnv } from '../src/utils/environment';
 
 // This script exists because NEAR RPC nodes do not support querying blocks older than 5 epochs
 // (~2.5 days): https://docs.near.org/api/rpc/setup#querying-historical-data. This script fetches
@@ -30,10 +31,13 @@ const BATCH_SIZE = 100;
 
 (async () => {
   const db = initDb(false); // Don't start watching
+  const network = getNetworkFromEnv();
   const chain: ChainName = 'near';
-  const provider = await getNearProvider(NEAR_ARCHIVE_RPC);
+  const provider = await getNearProvider(network, NEAR_ARCHIVE_RPC);
   const fromBlock = Number(
-    (await db.getLastBlockByChain(chain)) ?? INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN[chain] ?? 0
+    (await db.getLastBlockByChain(chain)) ??
+      INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[network][chain] ??
+      0
   );
   const fromBlockTimestamp: number = await getTimestampByBlock(provider, fromBlock);
   console.log(`Last block seen: ${fromBlock} at ${fromBlockTimestamp}`);

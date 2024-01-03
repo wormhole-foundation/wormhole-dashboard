@@ -31,34 +31,68 @@ import {
   coalesceChainName,
 } from '@certusone/wormhole-sdk';
 
-export const INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN: {
-  [key in ChainName]?: string;
+export enum NETWORK {
+  MAINNET,
+  TESTNET,
+}
+
+export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
+  [key in NETWORK]: { [key in ChainName]?: string };
 } = {
-  ethereum: '12959638',
-  terra: '4810000', // not sure exactly but this should be before the first known message
-  bsc: '9745450',
-  polygon: '20629146',
-  avalanche: '8237163',
-  oasis: '1757',
-  algorand: '22931277',
-  fantom: '31817467',
-  karura: '1824665',
-  acala: '1144161',
-  klaytn: '90563824',
-  celo: '12947144',
-  moonbeam: '1486591',
-  terra2: '399813',
-  injective: '20908376',
-  arbitrum: '18128584',
-  optimism: '69401779',
-  aptos: '0', // block is 1094390 but AptosWatcher uses sequence number instead
-  near: '72767136',
-  xpla: '777549',
-  solana: '94401321', // https://explorer.solana.com/tx/KhLy688yDxbP7xbXVXK7TGpZU5DAFHbYiaoX16zZArxvVySz8i8g7N7Ss2noQYoq9XRbg6HDzrQBjUfmNcSWwhe
-  sui: '1485552', // https://explorer.sui.io/txblock/671SoTvVUvBZQWKXeameDvAwzHQvnr8Nj7dR9MUwm3CV?network=https%3A%2F%2Frpc.mainnet.sui.io
-  base: '1422314',
-  sei: '238594',
-  wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A
+  [NETWORK.MAINNET]: {
+    ethereum: '12959638',
+    terra: '4810000', // not sure exactly but this should be before the first known message
+    bsc: '9745450',
+    polygon: '20629146',
+    avalanche: '8237163',
+    oasis: '1757',
+    algorand: '22931277',
+    fantom: '31817467',
+    karura: '1824665',
+    acala: '1144161',
+    klaytn: '90563824',
+    celo: '12947144',
+    moonbeam: '1486591',
+    terra2: '399813',
+    injective: '20908376',
+    arbitrum: '18128584',
+    optimism: '69401779',
+    aptos: '0', // block is 1094390 but AptosWatcher uses sequence number instead
+    near: '72767136',
+    xpla: '777549',
+    solana: '94401321', // https://explorer.solana.com/tx/KhLy688yDxbP7xbXVXK7TGpZU5DAFHbYiaoX16zZArxvVySz8i8g7N7Ss2noQYoq9XRbg6HDzrQBjUfmNcSWwhe
+    sui: '1485552', // https://explorer.sui.io/txblock/671SoTvVUvBZQWKXeameDvAwzHQvnr8Nj7dR9MUwm3CV?network=https%3A%2F%2Frpc.mainnet.sui.io
+    base: '1422314',
+    sei: '238594',
+    wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A  },
+  },
+  [NETWORK.TESTNET]: {
+    ethereum: '0',
+    terra: '0',
+    bsc: '0',
+    polygon: '0',
+    avalanche: '0',
+    oasis: '0',
+    algorand: '0',
+    fantom: '0',
+    karura: '0',
+    acala: '0',
+    klaytn: '0',
+    celo: '0',
+    moonbeam: '0',
+    terra2: '0',
+    injective: '0',
+    arbitrum: '0',
+    optimism: '0',
+    aptos: '0',
+    near: '0',
+    xpla: '0',
+    solana: '0',
+    sui: '0',
+    base: '0',
+    sei: '0',
+    wormchain: '0',
+  },
 };
 
 export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {

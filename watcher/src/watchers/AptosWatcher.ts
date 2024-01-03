@@ -1,5 +1,8 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils';
-import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  NETWORK,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { AptosClient } from 'aptos';
 import { z } from 'zod';
 import { RPCS_BY_CHAIN } from '../consts';
@@ -20,9 +23,9 @@ export class AptosWatcher extends Watcher {
   client: AptosClient;
   maximumBatchSize: number = 25;
 
-  constructor() {
-    super('aptos');
-    this.client = new AptosClient(RPCS_BY_CHAIN[this.chain]!);
+  constructor(network: NETWORK) {
+    super(network, 'aptos');
+    this.client = new AptosClient(RPCS_BY_CHAIN[this.network][this.chain]!);
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -69,7 +72,7 @@ export class AptosWatcher extends Watcher {
       const initialSequence = z
         .number()
         .int()
-        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.aptos));
+        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[this.network].aptos));
       return (
         z.number().int().parse(Number(block)) > 1094390 && // initial deployment block
         Date.parse(z.string().datetime().parse(timestamp)) < Date.now() &&

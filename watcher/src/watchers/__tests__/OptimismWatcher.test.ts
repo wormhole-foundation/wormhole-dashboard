@@ -1,20 +1,25 @@
 import { expect, jest, test } from '@jest/globals';
-import { INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  NETWORK,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { EVMWatcher } from '../EVMWatcher';
 
 jest.setTimeout(60000);
 
-const initialOptimismBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_CHAIN.optimism);
+const initialOptimismBlock = Number(
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[NETWORK.MAINNET].optimism
+);
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new EVMWatcher('optimism');
+  const watcher = new EVMWatcher(NETWORK.MAINNET, 'optimism');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   console.log('blockNumber', blockNumber);
   expect(blockNumber).toBeGreaterThan(105235062);
 });
 
 test('getMessagesForBlocks', async () => {
-  const watcher = new EVMWatcher('optimism');
+  const watcher = new EVMWatcher(NETWORK.MAINNET, 'optimism');
   const vaasByBlock = await watcher.getMessagesForBlocks(105235070, 105235080);
   expect(vaasByBlock).toMatchObject({
     '105235070/2023-06-06T16:28:37.000Z': [],

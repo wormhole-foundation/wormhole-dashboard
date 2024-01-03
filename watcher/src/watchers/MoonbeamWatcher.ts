@@ -1,19 +1,20 @@
-import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import { NETWORK, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { EVMWatcher } from './EVMWatcher';
 
 export class MoonbeamWatcher extends EVMWatcher {
-  constructor() {
-    super('moonbeam');
+  constructor(network: NETWORK) {
+    super(network, 'moonbeam');
   }
   async getFinalizedBlockNumber(): Promise<number> {
     const latestBlock = await super.getFinalizedBlockNumber();
     let isBlockFinalized = false;
+    const rpc = RPCS_BY_CHAIN[this.network].moonbeam;
+    if (!rpc) {
+      throw new Error('Moonbeam RPC is not defined!');
+    }
     while (!isBlockFinalized) {
-      if (!RPCS_BY_CHAIN.moonbeam) {
-        throw new Error('Moonbeam RPC is not defined!');
-      }
       await sleep(100);
       // refetch the block by number to get an up-to-date hash
       try {
@@ -21,7 +22,7 @@ export class MoonbeamWatcher extends EVMWatcher {
         isBlockFinalized =
           (
             await axios.post(
-              RPCS_BY_CHAIN.moonbeam,
+              rpc,
               [
                 {
                   jsonrpc: '2.0',

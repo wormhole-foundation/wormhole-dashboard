@@ -10,12 +10,13 @@ import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { EventLog } from '../types/near';
 import { getNearProvider, isWormholePublishEventLog } from '../utils/near';
 import { Watcher } from './Watcher';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class NearWatcher extends Watcher {
   provider: Provider | null = null;
 
-  constructor() {
-    super('near');
+  constructor(network: NETWORK) {
+    super(network, 'near');
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -55,7 +56,8 @@ export class NearWatcher extends Watcher {
   }
 
   async getProvider(): Promise<Provider> {
-    return (this.provider = this.provider || (await getNearProvider(RPCS_BY_CHAIN.near!)));
+    return (this.provider =
+      this.provider || (await getNearProvider(this.network, RPCS_BY_CHAIN[this.network].near!)));
   }
 
   isValidVaaKey(key: string) {

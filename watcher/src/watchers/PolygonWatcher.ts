@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { ethers } from 'ethers';
-import { AXIOS_CONFIG_JSON, POLYGON_ROOT_CHAIN_ADDRESS, POLYGON_ROOT_CHAIN_RPC } from '../consts';
+import { AXIOS_CONFIG_JSON, POLYGON_ROOT_CHAIN_INFO } from '../consts';
 import { EVMWatcher } from './EVMWatcher';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class PolygonWatcher extends EVMWatcher {
-  constructor() {
-    super('polygon');
+  constructor(network: NETWORK) {
+    super(network, 'polygon');
   }
   async getFinalizedBlockNumber(): Promise<number> {
     this.logger.info('fetching last child block from Ethereum');
@@ -15,14 +16,14 @@ export class PolygonWatcher extends EVMWatcher {
     const callData = rootChain.encodeFunctionData('getLastChildBlock');
     const callResult = (
       await axios.post(
-        POLYGON_ROOT_CHAIN_RPC,
+        POLYGON_ROOT_CHAIN_INFO[this.network].rpc,
         [
           {
             jsonrpc: '2.0',
             id: 1,
             method: 'eth_call',
             params: [
-              { to: POLYGON_ROOT_CHAIN_ADDRESS, data: callData },
+              { to: POLYGON_ROOT_CHAIN_INFO[this.network].address, data: callData },
               'latest', // does the guardian use latest?
             ],
           },

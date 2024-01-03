@@ -5,6 +5,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { EventObjectsTypes, RawLogEvents } from './TerraExplorerWatcher';
 import { Watcher } from './Watcher';
+import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class InjectiveExplorerWatcher extends Watcher {
   // Arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
@@ -17,9 +18,9 @@ export class InjectiveExplorerWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor() {
-    super('injective');
-    this.rpc = RPCS_BY_CHAIN[this.chain];
+  constructor(network: NETWORK) {
+    super(network, 'injective');
+    this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }

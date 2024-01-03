@@ -7,7 +7,6 @@ import { CosmwasmWatcher } from './CosmwasmWatcher';
 import { EVMWatcher } from './EVMWatcher';
 import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
 import { MoonbeamWatcher } from './MoonbeamWatcher';
-import { PolygonWatcher } from './PolygonWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
 import { TerraExplorerWatcher } from './TerraExplorerWatcher';
 import { Watcher } from './Watcher';
@@ -23,13 +22,12 @@ export function makeFinalizedWatcher(chainName: ChainName): Watcher {
     return new EVMWatcher(chainName, 'finalized');
   } else if (chainName === 'bsc') {
     return new BSCWatcher();
-  } else if (chainName === 'polygon') {
-    return new PolygonWatcher();
   } else if (
     chainName === 'avalanche' ||
     chainName === 'oasis' ||
     chainName === 'fantom' ||
     chainName === 'klaytn' ||
+    chainName === 'polygon' ||
     chainName === 'celo' ||
     chainName === 'optimism' ||
     chainName === 'base'

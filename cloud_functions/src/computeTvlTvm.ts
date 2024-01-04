@@ -5,10 +5,10 @@ import { assertEnvironmentVariable } from './utils';
 import { TokenPrice } from '@wormhole-foundation/wormhole-monitor-database';
 import { Firestore } from 'firebase-admin/firestore';
 
-const WORMCHAIN_URL: string = 'https://tncnt-eu-wormchain-main-01.rpc.p2p.world';
-// If for some reason the above URL is not working, use this one:
-// const WORMCHAIN_URL: string = 'https://wormchain-rpc.quickapi.com';
-// In the future add the ability to have multiple URLs and try them all until one works.
+const WORMCHAIN_URLS: string[] = [
+  'https://tncnt-eu-wormchain-main-01.rpc.p2p.world',
+  'https://wormchain-rpc.quickapi.com',
+];
 const ACCOUNTANT_CONTRACT_ADDRESS: string =
   'wormhole14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9srrg465';
 const PAGE_LIMIT: number = 2000; // throws a gas limit error over this
@@ -29,23 +29,33 @@ const priceMap: Map<string, TokenPrice> = new Map<string, TokenPrice>(); // key 
 const accountMap: Map<Key, AccountEntry> = new Map<Key, AccountEntry>();
 
 async function getAccountantAccounts(): Promise<AccountEntry[]> {
-  const cosmWasmClient: CosmWasmClient = await CosmWasmClient.connect(WORMCHAIN_URL);
-  let accounts: AccountEntry[] = [];
-  let response: any;
-  let start_after: Key | undefined = undefined;
-  do {
-    response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
-      all_accounts: {
-        limit: PAGE_LIMIT,
-        start_after,
-      },
-    });
-    accounts = [...accounts, ...response.accounts];
-    if (response.accounts.length > 0) {
-      start_after = response.accounts[response.accounts.length - 1].key;
+  for (const url of WORMCHAIN_URLS) {
+    try {
+      const cosmWasmClient: CosmWasmClient = await CosmWasmClient.connect(url);
+      let accounts: AccountEntry[] = [];
+      let response: any;
+      let start_after: Key | undefined = undefined;
+      do {
+        response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
+          all_accounts: {
+            limit: PAGE_LIMIT,
+            start_after,
+          },
+        });
+        accounts = [...accounts, ...response.accounts];
+        if (response.accounts.length > 0) {
+          start_after = response.accounts[response.accounts.length - 1].key;
+        }
+      } while (response.accounts.length === PAGE_LIMIT);
+      if (accounts.length > 0) {
+        return accounts;
+      }
+    } catch (e) {
+      console.error(`Error getting accountant accounts from ${url}: ${e}`);
+      continue;
     }
-  } while (response.accounts.length === PAGE_LIMIT);
-  return accounts;
+  }
+  throw new Error('Unable to get accountant accounts from provisioned URLs.');
 }
 
 async function getTokenMetadata(): Promise<TokenMetaDatum[]> {

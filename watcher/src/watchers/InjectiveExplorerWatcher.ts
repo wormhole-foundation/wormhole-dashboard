@@ -57,7 +57,7 @@ export class InjectiveExplorerWatcher extends Watcher {
     let vaasByBlock: VaasByBlock = {};
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
 
-    const limit: number = 50;
+    const limit: number = 100;
     let done: boolean = false;
     let skip: number = 0;
     let lastBlockInserted: number = 0;

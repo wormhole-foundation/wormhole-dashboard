@@ -128,17 +128,17 @@ test('getFinalizedBlockNumber(injective)', async () => {
 
 test('getMessagesForBlocks(injective)', async () => {
   const watcher = new InjectiveExplorerWatcher();
-  const vaasByBlock = await watcher.getMessagesForBlocks(54960088, 54960089);
+  const vaasByBlock = await watcher.getMessagesForBlocks(56405501, 56405502);
   // const vaasByBlock = await watcher.getMessagesForBlocks(4209642, 4209643); // Testnet
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['54960088/2023-12-20T14:13:08.632Z']).toBeDefined();
-  expect(vaasByBlock['54960088/2023-12-20T14:13:08.632Z'].length).toEqual(1);
-  expect(vaasByBlock['54960088/2023-12-20T14:13:08.632Z'][0]).toEqual(
-    '0x6cd433b24d5cba6e4ca2ebcb14f03d2faa495994830e4a43c1505113b031b7cf:19/00000000000000000000000045dbea4617971d93188eda21530bc6503d153313/2135'
+  expect(vaasByBlock['56405501/2024-01-04T14:40:21.262Z']).toBeDefined();
+  expect(vaasByBlock['56405501/2024-01-04T14:40:21.262Z'].length).toEqual(1);
+  expect(vaasByBlock['56405501/2024-01-04T14:40:21.262Z'][0]).toEqual(
+    '0x1ae70e98a0597ae9a1a5e1d9c48ede546e622b668c027d09e4147004a5b2c9e3:19/00000000000000000000000045dbea4617971d93188eda21530bc6503d153313/3737'
   );
 });
 

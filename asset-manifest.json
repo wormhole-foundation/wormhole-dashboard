@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.1b7f5614.js",
+    "main.js": "/wormhole-dashboard/static/js/main.e6a7aeff.js",
     "static/js/915.dda1937c.chunk.js": "/wormhole-dashboard/static/js/915.dda1937c.chunk.js",
     "static/media/osmosis.svg": "/wormhole-dashboard/static/media/osmosis.e63cfefeb2a04452c70bc79d10edca03.svg",
     "static/media/wormchain.svg": "/wormhole-dashboard/static/media/wormchain.be86e5a58243fcf2111bbcaa83406d5d.svg",
@@ -13,6 +13,7 @@
     "static/media/injective.svg": "/wormhole-dashboard/static/media/injective.ac2f95a4532d20546ad21b59abc01d13.svg",
     "static/media/cosmoshub.svg": "/wormhole-dashboard/static/media/cosmoshub.4b82322ca52c6ab666e4f587199f361b.svg",
     "static/media/sei.svg": "/wormhole-dashboard/static/media/sei.6d79f511a38dc6c109bb784a5a897841.svg",
+    "static/media/scroll.svg": "/wormhole-dashboard/static/media/scroll.fc93c8ac1a5cd509b1b9175b2d50ac5f.svg",
     "static/media/neon.svg": "/wormhole-dashboard/static/media/neon.861e87e303680bb81dab5938d178bbf3.svg",
     "static/media/terra.svg": "/wormhole-dashboard/static/media/terra.77cd51a6fb8dbae70872b3d3b813c2ab.svg",
     "static/media/optimism.svg": "/wormhole-dashboard/static/media/optimism.74cb0da82a95d1f982ef9a903b7317f6.svg",
@@ -38,10 +39,10 @@
     "static/media/xpla.svg": "/wormhole-dashboard/static/media/xpla.39d25b51bf8a5b7f6aeb01cd57c5ec61.svg",
     "static/media/algorand.svg": "/wormhole-dashboard/static/media/algorand.699bf008d7073523b8edd75d8f3b38ac.svg",
     "static/media/eth.svg": "/wormhole-dashboard/static/media/eth.5a5de20bf3808241fc61ed9ad7680ab5.svg",
-    "main.1b7f5614.js.map": "/wormhole-dashboard/static/js/main.1b7f5614.js.map",
+    "main.e6a7aeff.js.map": "/wormhole-dashboard/static/js/main.e6a7aeff.js.map",
     "915.dda1937c.chunk.js.map": "/wormhole-dashboard/static/js/915.dda1937c.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.1b7f5614.js"
+    "static/js/main.e6a7aeff.js"
   ]
 }

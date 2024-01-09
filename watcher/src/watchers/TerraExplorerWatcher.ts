@@ -5,6 +5,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class TerraExplorerWatcher extends Watcher {
   // Arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
@@ -18,10 +19,15 @@ export class TerraExplorerWatcher extends Watcher {
 
   constructor(network: NETWORK, chain: CosmWasmChainName) {
     super(network, chain);
-    this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
+    if (chain === 'terra2') {
+      this.rpc = assertEnvironmentVariable('TERRA2_EXPLORER_RPC');
+    } else {
+      this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
+    }
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
+    this.logger.debug('explorer this.rpc = ' + this.rpc);
     this.latestBlockTag = 'v1/blocks/latest';
     this.getBlockTag = 'v1/blocks/';
     this.allTxsTag = 'v1/txs?';
@@ -149,11 +155,14 @@ export class TerraExplorerWatcher extends Watcher {
       // Need to create something for the last requested block because it will
       // become the new starting point for subsequent calls.
       this.logger.debug(`Adding filler for block ${toBlock}`);
-      const blkUrl = `${this.rpc}/${this.getBlockTag}${toBlock}`;
+      const blkUrl: string = `${this.rpc}/${this.getBlockTag}${toBlock}`;
+      console.log('blkUrl:', blkUrl);
+      this.logger.info('blkUrl:', blkUrl);
       const result: NewCosmwasmBlockResult = (await axios.get(blkUrl, AXIOS_CONFIG_JSON)).data;
       if (!result) {
         throw new Error(`Unable to get block information for block ${toBlock}`);
       }
+      this.logger.debug('result:', result);
       const blockKey = makeBlockKey(
         result.height.toString(),
         new Date(result.timestamp).toISOString()

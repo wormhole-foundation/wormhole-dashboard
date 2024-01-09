@@ -15,6 +15,7 @@ import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
 import { NearArchiveWatcher } from './NearArchiveWatcher';
 import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { TerraHybridWatcher } from './TerraHybridWatcher';
 
 export function makeFinalizedWatcher(network: NETWORK, chainName: ChainName): Watcher {
   if (chainName === 'solana') {
@@ -48,8 +49,10 @@ export function makeFinalizedWatcher(network: NETWORK, chainName: ChainName): Wa
     return new InjectiveExplorerWatcher(network);
   } else if (chainName === 'sei') {
     return new SeiExplorerWatcher(network);
-  } else if (chainName === 'terra' || chainName === 'terra2') {
+  } else if (chainName === 'terra') {
     return new TerraExplorerWatcher(network, chainName);
+  } else if (chainName === 'terra2') {
+    return new TerraHybridWatcher();
   } else if (chainName === 'xpla') {
     return new CosmwasmWatcher(network, chainName);
   } else if (chainName === 'sui') {

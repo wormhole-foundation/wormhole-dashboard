@@ -51,6 +51,7 @@ export class CosmwasmWatcher extends Watcher {
         this.latestBlockHeight = blockHeight;
         this.logger.debug('blockHeight = ' + blockHeight);
       }
+      this.logger.debug('returning blockHeight = ' + blockHeight);
       return blockHeight;
     }
     throw new Error(`Unable to parse result of ${this.latestBlockTag} on ${this.rpc}`);

@@ -6,7 +6,10 @@ import { Storage } from '@google-cloud/storage';
 // Read/write with cloud storage
 const storage = new Storage();
 // The ID of your GCS bucket
-const bucketName = 'wormhole-observed-blocks-cache';
+let bucketName: string = 'wormhole-observed-blocks-cache';
+if (assertEnvironmentVariable('NETWORK') === 'TESTNET') {
+  bucketName = 'wormhole-observed-blocks-cache-testnet';
+}
 const cacheBucket = storage.bucket(bucketName);
 const cacheFileName = 'message-counts-cache.json';
 const cloudStorageCache = cacheBucket.file(cacheFileName);

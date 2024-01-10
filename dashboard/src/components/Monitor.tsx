@@ -173,7 +173,10 @@ function DetailBlocks({ chain }: { chain: string }) {
       cancelled = true;
     };
   }, [chain, fromId, currentNetwork]);
-  const rawMessages = messagesWrapper.data;
+  let rawMessages = messagesWrapper.data;
+  if (rawMessages && rawMessages.length === 0) {
+    rawMessages = null;
+  }
   const lastMessageId = rawMessages && rawMessages[0].id;
   const handlePageClick = useCallback(() => {
     if (lastMessageId) {

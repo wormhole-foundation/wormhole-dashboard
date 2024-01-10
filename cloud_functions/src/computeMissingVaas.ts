@@ -6,7 +6,10 @@ import { ObservedMessage } from './types';
 
 // Read/write to cloud storage
 const storage = new Storage();
-const bucketName = 'wormhole-observed-blocks-cache';
+let bucketName: string = 'wormhole-observed-blocks-cache';
+if (assertEnvironmentVariable('NETWORK') === 'TESTNET') {
+  bucketName = 'wormhole-observed-blocks-cache-testnet';
+}
 const cacheBucket = storage.bucket(bucketName);
 const cacheFileName = 'missing-vaas-cache.json';
 // The ID of your GCS bucket

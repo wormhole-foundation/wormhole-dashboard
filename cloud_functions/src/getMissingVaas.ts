@@ -1,6 +1,7 @@
 import { ChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Storage } from '@google-cloud/storage';
 import { ObservedMessage } from './types';
+import { assertEnvironmentVariable } from './utils';
 
 // Read from cloud storage
 const storage = new Storage();
@@ -15,7 +16,10 @@ export type MissingVaasByChain = {
 
 export async function commonGetMissingVaas(): Promise<MissingVaasByChain> {
   // The ID of your GCS bucket
-  const bucketName = 'wormhole-observed-blocks-cache';
+  let bucketName: string = 'wormhole-observed-blocks-cache';
+  if (assertEnvironmentVariable('NETWORK') === 'TESTNET') {
+    bucketName = 'wormhole-observed-blocks-cache-testnet';
+  }
   const cacheBucket = storage.bucket(bucketName);
   const cacheFileName = 'missing-vaas-cache.json';
   const cloudStorageCache = cacheBucket.file(cacheFileName);

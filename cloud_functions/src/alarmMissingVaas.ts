@@ -4,7 +4,6 @@ import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './
 import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';
 import { explorerBlock, explorerTx } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
-import axios from 'axios';
 
 interface EnqueuedVAAResponse {
   sequence: string;

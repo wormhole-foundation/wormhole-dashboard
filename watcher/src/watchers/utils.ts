@@ -48,9 +48,9 @@ export function makeFinalizedWatcher(network: NETWORK, chainName: ChainName): Wa
     return new InjectiveExplorerWatcher(network);
   } else if (chainName === 'sei') {
     return new SeiExplorerWatcher(network);
-  } else if (chainName === 'terra' || chainName === 'terra2') {
+  } else if (chainName === 'terra') {
     return new TerraExplorerWatcher(network, chainName);
-  } else if (chainName === 'xpla') {
+  } else if (chainName === 'xpla' || chainName === 'terra2') {
     return new CosmwasmWatcher(network, chainName);
   } else if (chainName === 'sui') {
     return new SuiWatcher(network);

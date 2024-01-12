@@ -136,10 +136,7 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     ? `https://bigdipper.live/wormhole/transactions/${tx}`
     : '';
 
-export const explorerVaa = (key: string) =>
-  `https://wormhole.com/explorer/?emitterChain=${key.split('/')[0]}&emitterAddress=${
-    key.split('/')[1]
-  }&sequence=${key.split('/')[2]}`;
+export const explorerVaa = (key: string) => `https://wormholescan.io/#/tx/${key}`;
 
 export const getExplorerTxHash = (chain: ChainId, txHash: string) => {
   let explorerTxHash = '';

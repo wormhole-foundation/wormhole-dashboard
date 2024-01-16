@@ -82,6 +82,7 @@ const missingBlockSx: SxProps<Theme> = {
 };
 
 function BlockDetail({ chain, message }: { chain: string; message: ObservedMessage }) {
+  const { currentNetwork } = useNetworkContext();
   const vaaId = `${message.chain}/${message.emitter}/${message.seq}`;
   return (
     <Box>
@@ -110,7 +111,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
           gutterBottom
         >
           <IconButton
-            href={explorerVaa(vaaId)}
+            href={explorerVaa(currentNetwork.env, vaaId)}
             target="_blank"
             size="small"
             sx={inlineIconButtonSx}

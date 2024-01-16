@@ -37,7 +37,7 @@ import xplaIcon from '../images/xpla.svg';
 
 require('dotenv').config();
 
-export const WORMCHAIN_URL = 'https://wormchain.jumpisolated.com';
+export const WORMCHAIN_URL = 'https://tncnt-eu-wormchain-main-01.rpc.p2p.world';
 
 export const CHAIN_ICON_MAP: { [key: string]: string } = {
   1: solanaIcon,

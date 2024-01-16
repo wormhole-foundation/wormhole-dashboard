@@ -71,6 +71,13 @@ export const networkOptions: Network[] = [
   },
   {
     env: 'testnet',
+    endpoint: 'https://p2p-guardian-testnet-web.solana.p2p.org',
+    name: 'Testnet - P2P',
+    logo: '',
+    type: 'guardian',
+  },
+  {
+    env: 'testnet',
     endpoint: 'https://guardian.testnet.xlabs.xyz',
     name: 'Testnet - xLabs (LB)',
     logo: '',

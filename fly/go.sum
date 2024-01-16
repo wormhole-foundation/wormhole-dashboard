@@ -158,6 +158,8 @@ github.com/certusone/wormhole/node v0.0.0-20231114230026-dfbdc9afb434 h1:nPMCcuo
 github.com/certusone/wormhole/node v0.0.0-20231114230026-dfbdc9afb434/go.mod h1:Wnv48pOXu4Ia/s/yXIYmbl0eHibHu24JpfyvcrsIYog=
 github.com/certusone/wormhole/node v0.0.0-20231116150331-0cf298cabed5 h1:z/yIxzwh1Tx1wrnPEBum6b52pc3crJwaxFIK+P5gcJ8=
 github.com/certusone/wormhole/node v0.0.0-20231116150331-0cf298cabed5/go.mod h1:Wnv48pOXu4Ia/s/yXIYmbl0eHibHu24JpfyvcrsIYog=
+github.com/certusone/wormhole/node v0.0.0-20240112223139-a6cc3b1ce571 h1:mEeF8r/6dYc8JjJmem6DXvxnK1Vt+wZfHmnCCv53m8g=
+github.com/certusone/wormhole/node v0.0.0-20240112223139-a6cc3b1ce571/go.mod h1:wlhF32xzJsQ79Jx34Eqk+7gkMiZgLryMXEInVP+shKQ=
 github.com/cespare/cp v0.1.0 h1:SE+dxFebS7Iik5LK0tsi1k9ZCxEaFX4AjQmoyA+1dJk=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
@@ -977,6 +979,8 @@ github.com/wormhole-foundation/wormhole/sdk v0.0.0-20220926172624-4b38dc650bb0 h
 github.com/wormhole-foundation/wormhole/sdk v0.0.0-20220926172624-4b38dc650bb0/go.mod h1:Vg7Cbb370S+JihB+of1rWm9Aaxzf0GPPvKszPeSb7AE=
 github.com/wormhole-foundation/wormhole/sdk v0.0.0-20231114204301-fcd41cf8837b h1:jmuueiDkZiVpwMFgQzvTuChjDmdzV0xfosh3owjbM88=
 github.com/wormhole-foundation/wormhole/sdk v0.0.0-20231114204301-fcd41cf8837b/go.mod h1:pE/jYet19kY4P3V6mE2+01zvEfxdyBqv6L6HsnSa5uc=
+github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240112223139-a6cc3b1ce571 h1:7wBOv/UEJGCo9KRoU8coahV86D+sntTPz7Inry74prQ=
+github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240112223139-a6cc3b1ce571/go.mod h1:pE/jYet19kY4P3V6mE2+01zvEfxdyBqv6L6HsnSa5uc=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 h1:bAn7/zixMGCfxrRTfdpNzjtPYqr8smhKouy9mxVdGPU=
 github.com/yagipy/maintidx v1.0.0/go.mod h1:0qNf/I/CCZXSMhsRsrEPDZ+DkekpKLXAJfsTACwgXLk=

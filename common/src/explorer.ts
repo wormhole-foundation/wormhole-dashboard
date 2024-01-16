@@ -136,7 +136,10 @@ export const explorerTx = (chainId: ChainId, tx: string) =>
     ? `https://bigdipper.live/wormhole/transactions/${tx}`
     : '';
 
-export const explorerVaa = (key: string) => `https://wormholescan.io/#/tx/${key}`;
+export const explorerVaa = (network: string, key: string) =>
+  network === 'mainnet'
+    ? `https://wormholescan.io/#/tx/${key}`
+    : `https://wormholescan.io/#/tx/${key}?network=TESTNET`;
 
 export const getExplorerTxHash = (chain: ChainId, txHash: string) => {
   let explorerTxHash = '';

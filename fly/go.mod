@@ -8,14 +8,14 @@ require (
 	cloud.google.com/go/pubsub v1.33.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/buger/goterm v1.0.4
-	github.com/certusone/wormhole/node v0.0.0-20231116150331-0cf298cabed5
+	github.com/certusone/wormhole/node v0.0.0-20240112223139-a6cc3b1ce571
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/libp2p/go-libp2p v0.29.2
 	github.com/mr-tron/base58 v1.2.0
-	github.com/wormhole-foundation/wormhole/sdk v0.0.0-20231114204301-fcd41cf8837b
+	github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240112223139-a6cc3b1ce571
 	go.uber.org/zap v1.25.0
 	google.golang.org/api v0.126.0
 	google.golang.org/protobuf v1.31.0

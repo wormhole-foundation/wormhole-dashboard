@@ -21,7 +21,7 @@ export class ArbitrumWatcher extends EVMWatcher {
     this.latestL2Finalized = 0;
     this.l1L2Map = new Map<number, number>();
     this.lastEthTime = 0;
-    this.maximumBatchSize = 25;
+    this.maximumBatchSize = 1000;
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -58,7 +58,9 @@ export class ArbitrumWatcher extends EVMWatcher {
     // Only update the map, if the L2 block number is newer
     const inMapL2 = this.l1L2Map.get(associatedL1);
     if (!inMapL2 || inMapL2 < l2BlkNum) {
-      this.logger.debug(`Updating map with ${associatedL1} => ${l2BlkNum}`);
+      this.logger.debug(
+        `Updating map with ${associatedL1} => ${l2BlkNum}, size = ${this.l1L2Map.size}`
+      );
       this.l1L2Map.set(associatedL1, l2BlkNum);
     }
 

@@ -11,8 +11,6 @@ import { makeVaaKey } from '../databases/utils';
 import { AptosEvent } from '../types/aptos';
 import { Watcher } from './Watcher';
 
-const APTOS_CORE_BRIDGE_ADDRESS = CONTRACTS.MAINNET.aptos.core;
-const APTOS_EVENT_HANDLE = `${APTOS_CORE_BRIDGE_ADDRESS}::state::WormholeMessageHandle`;
 const APTOS_FIELD_NAME = 'event';
 
 /**
@@ -22,18 +20,23 @@ const APTOS_FIELD_NAME = 'event';
 export class AptosWatcher extends Watcher {
   client: AptosClient;
   maximumBatchSize: number = 25;
+  coreBridgeAddress: string;
+  eventHandle: string;
 
   constructor(network: NETWORK) {
     super(network, 'aptos');
     this.client = new AptosClient(RPCS_BY_CHAIN[this.network][this.chain]!);
+    this.coreBridgeAddress =
+      network === NETWORK.MAINNET ? CONTRACTS.MAINNET.aptos.core : CONTRACTS.TESTNET.aptos.core;
+    this.eventHandle = `${this.coreBridgeAddress}::state::WormholeMessageHandle`;
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
     return Number(
       (
         await this.client.getEventsByEventHandle(
-          APTOS_CORE_BRIDGE_ADDRESS,
-          APTOS_EVENT_HANDLE,
+          this.coreBridgeAddress,
+          this.eventHandle,
           APTOS_FIELD_NAME,
           { limit: 1 }
         )
@@ -44,8 +47,8 @@ export class AptosWatcher extends Watcher {
   async getMessagesForBlocks(fromSequence: number, toSequence: number): Promise<VaasByBlock> {
     const limit = toSequence - fromSequence + 1;
     const events: AptosEvent[] = (await this.client.getEventsByEventHandle(
-      APTOS_CORE_BRIDGE_ADDRESS,
-      APTOS_EVENT_HANDLE,
+      this.coreBridgeAddress,
+      this.eventHandle,
       APTOS_FIELD_NAME,
       { start: fromSequence, limit }
     )) as AptosEvent[];

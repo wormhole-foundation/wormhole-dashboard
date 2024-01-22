@@ -2,7 +2,7 @@ import { CHAIN_ID_TO_NAME, ChainId, ChainName } from '@certusone/wormhole-sdk';
 import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
 import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './utils';
 import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';
-import { explorerBlock, explorerTx } from '@wormhole-foundation/wormhole-monitor-common';
+import { NETWORK, explorerBlock, explorerTx } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
 
 interface EnqueuedVAAResponse {
@@ -33,6 +33,11 @@ interface GovernedVAA {
 
 // The key is the vaaKey
 type GovernedVAAMap = Map<string, GovernedVAA>;
+
+const network: NETWORK =
+  assertEnvironmentVariable('NETWORK').toLowerCase() === 'mainnet'
+    ? NETWORK.MAINNET
+    : NETWORK.TESTNET;
 
 export async function alarmMissingVaas(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -122,8 +127,10 @@ export async function alarmMissingVaas(req: any, res: any) {
                 txhash: msg.txHash,
                 vaaKey: vaaKey,
               });
-              alarmSlackInfo.msg = formatMessage(msg);
-              await formatAndSendToSlack(alarmSlackInfo);
+              if (network === NETWORK.MAINNET) {
+                alarmSlackInfo.msg = formatMessage(msg);
+                await formatAndSendToSlack(alarmSlackInfo);
+              }
             }
           }
         } else {
@@ -281,10 +288,9 @@ function convert(msg: ObservedMessage): FirestoreVAA {
 
 function formatMessage(msg: ObservedMessage): string {
   const cName: string = CHAIN_ID_TO_NAME[msg.chain as ChainId] as ChainName;
-  // const vaaKeyUrl: string = `https://wormhole.com/explorer/?emitterChain=${msg.chain}&emitterAddress=${msg.emitter}&sequence=${msg.seq}`;
   const vaaKeyUrl: string = `https://wormholescan.io/#/tx/${msg.chain}/${msg.emitter}/${msg.seq}`;
-  const txHashUrl: string = explorerTx(msg.chain as ChainId, msg.txHash);
-  const blockUrl: string = explorerBlock(msg.chain as ChainId, msg.block.toString());
+  const txHashUrl: string = explorerTx(network, msg.chain as ChainId, msg.txHash);
+  const blockUrl: string = explorerBlock(network, msg.chain as ChainId, msg.block.toString());
   const formattedMsg = `*Chain:* ${cName}(${msg.chain})\n*TxHash:* <${txHashUrl}|${msg.txHash}>\n*VAA Key:* <${vaaKeyUrl}|${msg.chain}/${msg.emitter}/${msg.seq}> \n*Block:* <${blockUrl}|${msg.block}> \n*Timestamp:* ${msg.timestamp}`;
   return formattedMsg;
 }
@@ -317,6 +323,7 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
     bannerTxt: 'Wormhole Missing VAA Alarm',
     msg: '',
   };
+  const envNetwork: string = network === NETWORK.MAINNET ? 'mainnet' : 'testnet';
 
   let alarmsToStore: AlarmedChainTime[] = [];
   // Read in the already alarmed chains.
@@ -344,7 +351,7 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
       const chainTime: Date = new Date(latestTime);
       const cName: string = CHAIN_ID_TO_NAME[chainId] as ChainName;
       const deltaTime: number = (now.getTime() - chainTime.getTime()) / (1000 * 60 * 60 * 24);
-      alarmSlackInfo.msg = `*Chain:* ${cName}(${chainId})\nThe watcher is behind by ${deltaTime} days.`;
+      alarmSlackInfo.msg = `*Chain:* ${cName}(${chainId})\nThe ${envNetwork} watcher is behind by ${deltaTime} days.`;
       await formatAndSendToSlack(alarmSlackInfo);
       alarmsToStore.push({ chain: chainId, alarmTime: now.toISOString() });
     }

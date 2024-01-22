@@ -46,6 +46,7 @@ import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import Table from './Table';
 import { CHAIN_ICON_MAP } from '../utils/consts';
+import { GetNetworkFromEnv } from '../utils/GetNetworkFromEnv';
 
 const calculatePercent = (notional: GovernorGetAvailableNotionalByChainResponse_Entry): number => {
   try {
@@ -133,12 +134,13 @@ const enqueuedColumns = [
     header: () => 'Transaction Hash',
     cell: (info) => {
       const chain = info.row.original.emitterChain;
-      const chainInfo = CHAIN_INFO_MAP[chain];
+      const network = GetNetworkFromEnv();
+      const chainInfo = CHAIN_INFO_MAP[network][chain];
       if (!chainInfo) return info.getValue();
-      const txHash = getExplorerTxHash(chainInfo.chainId, info.getValue());
+      const txHash = getExplorerTxHash(network, chainInfo.chainId, info.getValue());
       return (
         <Link
-          href={explorerTx(chainInfo.chainId, txHash)}
+          href={explorerTx(network, chainInfo.chainId, txHash)}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -170,7 +172,8 @@ const tokenColumns = [
     header: () => 'Token',
     cell: (info) => {
       const chain = info.row.original.originChainId;
-      const chainInfo = CHAIN_INFO_MAP[chain];
+      const network = GetNetworkFromEnv();
+      const chainInfo = CHAIN_INFO_MAP[network][chain];
       if (!chainInfo) return info.getValue();
       const chainId: ChainId = chainInfo.chainId;
       var tokenAddress: string = '';
@@ -184,7 +187,7 @@ const tokenColumns = [
       try {
         tokenAddress = tryHexToNativeAssetString(
           info.getValue().slice(2),
-          CHAIN_INFO_MAP[chain]?.chainId
+          CHAIN_INFO_MAP[network][chain]?.chainId
         );
       } catch (e) {
         console.log(e);
@@ -292,6 +295,7 @@ function Governor() {
     onGlobalFilterChange: setTokenGlobalFilter,
     onSortingChange: setTokenSorting,
   });
+  const network = GetNetworkFromEnv();
   return (
     <CollapsibleSection
       defaultExpanded={false}
@@ -320,7 +324,7 @@ function Governor() {
                     {CHAIN_ICON_MAP[chainId] ? (
                       <img
                         src={CHAIN_ICON_MAP[chainId]}
-                        alt={CHAIN_INFO_MAP[chainId].name}
+                        alt={CHAIN_INFO_MAP[network][chainId].name}
                         width={24}
                         height={24}
                       />

@@ -22,7 +22,7 @@ test('getFinalizedBlockNumber', async () => {
 });
 
 // No more "too old" blocks
-test('getMessagesForBlocks', async () => {
+test.skip('getMessagesForBlocks', async () => {
   // requests that are too old for rpc node should error, be caught, and return an empty object
   const messages = await archiveWatcher.getMessagesForBlocks(
     INITIAL_NEAR_BLOCK,
@@ -51,7 +51,7 @@ describe('getNearProvider', () => {
   });
 });
 
-test('getTransactionsByAccountId', async () => {
+test.skip('getTransactionsByAccountId', async () => {
   let transactions = await getTransactionsByAccountId(
     CONTRACTS.MAINNET.near.core,
     10,

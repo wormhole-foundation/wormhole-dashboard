@@ -20,6 +20,7 @@ import CollapsibleSection from './CollapsibleSection';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
 import { useSettings } from '../contexts/MonitorSettingsContext';
 import {
+  NETWORK,
   explorerBlock,
   explorerTx,
   explorerVaa,
@@ -83,6 +84,7 @@ const missingBlockSx: SxProps<Theme> = {
 
 function BlockDetail({ chain, message }: { chain: string; message: ObservedMessage }) {
   const { currentNetwork } = useNetworkContext();
+  const network: NETWORK = currentNetwork.env === 'mainnet' ? NETWORK.MAINNET : NETWORK.TESTNET;
   const vaaId = `${message.chain}/${message.emitter}/${message.seq}`;
   return (
     <Box>
@@ -96,7 +98,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
           gutterBottom
         >
           <IconButton
-            href={explorerTx(Number(chain) as ChainId, message.txHash)}
+            href={explorerTx(network, Number(chain) as ChainId, message.txHash)}
             target="_blank"
             size="small"
             sx={inlineIconButtonSx}
@@ -124,7 +126,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
       <Typography gutterBottom>
         Block {message.block}{' '}
         <IconButton
-          href={explorerBlock(Number(chain) as ChainId, message.block.toString())}
+          href={explorerBlock(network, Number(chain) as ChainId, message.block.toString())}
           target="_blank"
           size="small"
           sx={inlineIconButtonSx}

@@ -27,7 +27,7 @@ const supportedChains: ChainName[] =
         'oasis',
         'algorand',
         'fantom',
-        'karura',
+        // 'karura',
         'acala',
         'klaytn',
         'celo',

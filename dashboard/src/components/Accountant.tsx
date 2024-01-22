@@ -38,6 +38,7 @@ import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
 import useTokenData, { TokenDataEntry } from '../hooks/useTokenData';
 import numeral from 'numeral';
+import { GetNetworkFromEnv } from '../utils/GetNetworkFromEnv';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 type AccountWithTokenData = Account & {
@@ -145,12 +146,13 @@ const pendingTransferColumns = [
     cell: (info) => {
       const tx = '0x' + Buffer.from(info.getValue(), 'base64').toString('hex');
       const chain = info.row.original.key.emitter_chain;
-      const chainInfo = CHAIN_INFO_MAP[chain];
+      const network = GetNetworkFromEnv();
+      const chainInfo = CHAIN_INFO_MAP[network][chain];
       if (!chainInfo) return tx;
-      const txHash = getExplorerTxHash(chainInfo.chainId, tx);
+      const txHash = getExplorerTxHash(network, chainInfo.chainId, tx);
       return (
         <Link
-          href={explorerTx(chainInfo.chainId, txHash)}
+          href={explorerTx(network, chainInfo.chainId, txHash)}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -428,6 +430,7 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
       }, {} as { [chainId: number]: number }),
     [pendingTransferInfo]
   );
+  const network = GetNetworkFromEnv();
   return (
     <CollapsibleSection
       defaultExpanded={false}
@@ -456,9 +459,8 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
                     {CHAIN_ICON_MAP[chainId] ? (
                       <img
                         src={CHAIN_ICON_MAP[chainId]}
-                        alt={CHAIN_INFO_MAP[chainId].name}
+                        alt={CHAIN_INFO_MAP[network][chainId].name}
                         width={24}
-                        height={24}
                       />
                     ) : (
                       <Typography variant="body2">{chainId}</Typography>

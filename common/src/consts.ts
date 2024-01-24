@@ -31,15 +31,19 @@ import {
   coalesceChainName,
 } from '@certusone/wormhole-sdk';
 
-export enum NETWORK {
-  MAINNET,
-  TESTNET,
-}
+export type Environment = 'mainnet' | 'testnet' | 'devnet';
+export type Network = {
+  env: Environment;
+  endpoint: string;
+  name: string;
+  logo: string;
+  type: 'guardian' | 'cloudfunction';
+};
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
-  [key in NETWORK]: { [key in ChainName]?: string };
+  [key in Environment]: { [key in ChainName]?: string };
 } = {
-  [NETWORK.MAINNET]: {
+  ['mainnet']: {
     ethereum: '12959638',
     terra: '4810000', // not sure exactly but this should be before the first known message
     bsc: '9745450',
@@ -66,7 +70,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     sei: '238594',
     wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A  },
   },
-  [NETWORK.TESTNET]: {
+  ['testnet']: {
     ethereum: '0',
     terra: '0',
     bsc: '0',
@@ -93,6 +97,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     sei: '0',
     wormchain: '0',
   },
+  ['devnet']: {},
 };
 
 export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
@@ -179,8 +184,8 @@ export type CHAIN_INFO = {
   explorerStem: string;
 };
 
-export const CHAIN_INFO_MAP: { [key in NETWORK]: { [key: string]: CHAIN_INFO } } = {
-  [NETWORK.MAINNET]: {
+export const CHAIN_INFO_MAP: { [key in Environment]: { [key: string]: CHAIN_INFO } } = {
+  ['mainnet']: {
     1: {
       name: 'solana',
       evm: false,
@@ -371,7 +376,7 @@ export const CHAIN_INFO_MAP: { [key in NETWORK]: { [key: string]: CHAIN_INFO } }
       explorerStem: '',
     },
   },
-  [NETWORK.TESTNET]: {
+  ['testnet']: {
     // The chains not, currently, supported on testnet are commented out.
     1: {
       name: 'solana',
@@ -556,6 +561,7 @@ export const CHAIN_INFO_MAP: { [key in NETWORK]: { [key: string]: CHAIN_INFO } }
     //   explorerStem: '',
     // },
   },
+  ['devnet']: {},
 };
 
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';

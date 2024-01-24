@@ -7,7 +7,6 @@ import {
   Card,
   InputAdornment,
   LinearProgress,
-  Link,
   TextField,
   Tooltip,
   Typography,
@@ -29,16 +28,13 @@ import useGetAccountantPendingTransfers, {
 } from '../hooks/useGetAccountantPendingTransfers';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_ICON_MAP, GUARDIAN_SET_3 } from '../utils/consts';
-import {
-  CHAIN_INFO_MAP,
-  explorerTx,
-  getExplorerTxHash,
-} from '@wormhole-foundation/wormhole-monitor-common';
+import { CHAIN_INFO_MAP } from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
 import useTokenData, { TokenDataEntry } from '../hooks/useTokenData';
 import numeral from 'numeral';
-import { GetNetworkFromEnv } from '../utils/GetNetworkFromEnv';
+import { useCurrentEnvironment } from '../contexts/NetworkContext';
+import { ExplorerTxHash } from './ExplorerTxHash';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 type AccountWithTokenData = Account & {
@@ -143,23 +139,9 @@ const pendingTransferColumns = [
   }),
   pendingTransferColumnHelper.accessor('data.0.tx_hash', {
     header: () => 'Tx',
-    cell: (info) => {
-      const tx = '0x' + Buffer.from(info.getValue(), 'base64').toString('hex');
-      const chain = info.row.original.key.emitter_chain;
-      const network = GetNetworkFromEnv();
-      const chainInfo = CHAIN_INFO_MAP[network][chain];
-      if (!chainInfo) return tx;
-      const txHash = getExplorerTxHash(network, chainInfo.chainId, tx);
-      return (
-        <Link
-          href={explorerTx(network, chainInfo.chainId, txHash)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {txHash}
-        </Link>
-      );
-    },
+    cell: (info) => (
+      <ExplorerTxHash chain={info.row.original.key.emitter_chain} rawTxHash={info.getValue()} />
+    ),
   }),
   pendingTransferColumnHelper.accessor('data.0.signatures', {
     header: () => 'Signatures',
@@ -430,7 +412,7 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
       }, {} as { [chainId: number]: number }),
     [pendingTransferInfo]
   );
-  const network = GetNetworkFromEnv();
+  const network = useCurrentEnvironment();
   return (
     <CollapsibleSection
       defaultExpanded={false}

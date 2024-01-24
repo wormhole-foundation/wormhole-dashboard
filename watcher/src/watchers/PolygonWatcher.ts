@@ -2,10 +2,10 @@ import axios from 'axios';
 import { ethers } from 'ethers';
 import { AXIOS_CONFIG_JSON, POLYGON_ROOT_CHAIN_INFO } from '../consts';
 import { EVMWatcher } from './EVMWatcher';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class PolygonWatcher extends EVMWatcher {
-  constructor(network: NETWORK) {
+  constructor(network: Environment) {
     super(network, 'polygon');
   }
   async getFinalizedBlockNumber(): Promise<number> {

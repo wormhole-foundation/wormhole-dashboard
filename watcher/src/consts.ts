@@ -1,5 +1,5 @@
 import { ChainName, CONTRACTS, Network } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 import { AxiosRequestConfig } from 'axios';
 
 export const TIMEOUT = 0.5 * 1000;
@@ -25,8 +25,8 @@ export const TIMEOUT = 0.5 * 1000;
 // Arbitrum
 //  This node didn't work:  'https://arb1.arbitrum.io/rpc',
 
-export const RPCS_BY_CHAIN: { [key in NETWORK]: { [key in ChainName]?: string } } = {
-  [NETWORK.MAINNET]: {
+export const RPCS_BY_CHAIN: { [key in Environment]: { [key in ChainName]?: string } } = {
+  ['mainnet']: {
     ethereum: process.env.ETH_RPC,
     bsc: process.env.BSC_RPC || 'https://rpc.ankr.com/bsc',
     polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon',
@@ -54,7 +54,7 @@ export const RPCS_BY_CHAIN: { [key in NETWORK]: { [key in ChainName]?: string } 
     sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
     wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
   },
-  [NETWORK.TESTNET]: {
+  ['testnet']: {
     ethereum: process.env.ETH_RPC,
     bsc: process.env.BSC_RPC,
     polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon_mumbai',
@@ -81,43 +81,56 @@ export const RPCS_BY_CHAIN: { [key in NETWORK]: { [key in ChainName]?: string } 
     sei: process.env.SEI_RPC,
     wormchain: process.env.WORMCHAIN_RPC,
   },
+  ['devnet']: {},
 };
 
 // The following is obsolete, but I'm leaving it here for now in case we need it later.
 // Separating for now so if we max out infura we can keep Polygon going
-export const POLYGON_ROOT_CHAIN_INFO: { [key in NETWORK]: PolygonRootChainInfo } = {
-  [NETWORK.MAINNET]: {
+export const POLYGON_ROOT_CHAIN_INFO: { [key in Environment]: PolygonRootChainInfo } = {
+  ['mainnet']: {
     address: '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287',
     rpc: 'https://rpc.ankr.com/eth',
   },
-  [NETWORK.TESTNET]: {
+  ['testnet']: {
     address: '0x2890ba17efe978480615e330ecb65333b880928e',
     rpc: 'https://rpc.ankr.com/eth', // TODO:  Put testnet info here
   },
+  ['devnet']: {
+    address: '',
+    rpc: '',
+  },
 };
 
-export const ALGORAND_INFO: { [key in NETWORK]: AlgorandInfo } = {
-  [NETWORK.MAINNET]: {
+export const ALGORAND_INFO: { [key in Environment]: AlgorandInfo } = {
+  ['mainnet']: {
     appid: Number(CONTRACTS.MAINNET.algorand.core),
     algodToken: '',
-    algodServer: RPCS_BY_CHAIN[NETWORK.MAINNET].algorand
-      ? RPCS_BY_CHAIN[NETWORK.MAINNET].algorand
+    algodServer: RPCS_BY_CHAIN['mainnet'].algorand
+      ? (RPCS_BY_CHAIN['mainnet'].algorand as string)
       : '',
     algodPort: 443,
     server: 'https://mainnet-idx.algonode.cloud',
     port: 443,
     token: '',
   },
-  [NETWORK.TESTNET]: {
+  ['testnet']: {
     appid: Number(CONTRACTS.TESTNET.algorand.core),
     algodToken: '',
-    algodServer: RPCS_BY_CHAIN[NETWORK.TESTNET].algorand
-      ? RPCS_BY_CHAIN[NETWORK.TESTNET].algorand
+    algodServer: RPCS_BY_CHAIN['testnet'].algorand
+      ? (RPCS_BY_CHAIN['testnet'].algorand as string)
       : '',
     algodPort: 443,
-    // TODO: Change to testnet info here;
     server: 'https://testnet-idx.algonode.cloud',
     port: 443,
+    token: '',
+  },
+  ['devnet']: {
+    appid: 0,
+    algodToken: '',
+    algodServer: '',
+    algodPort: 0,
+    server: '',
+    port: 0,
     token: '',
   },
 };

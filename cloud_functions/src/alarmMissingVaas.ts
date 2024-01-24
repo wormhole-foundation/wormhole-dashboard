@@ -2,7 +2,12 @@ import { CHAIN_ID_TO_NAME, ChainId, ChainName } from '@certusone/wormhole-sdk';
 import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
 import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './utils';
 import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';
-import { NETWORK, explorerBlock, explorerTx } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  Environment,
+  getEnvironment,
+  explorerBlock,
+  explorerTx,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
 
 interface EnqueuedVAAResponse {
@@ -34,10 +39,7 @@ interface GovernedVAA {
 // The key is the vaaKey
 type GovernedVAAMap = Map<string, GovernedVAA>;
 
-const network: NETWORK =
-  assertEnvironmentVariable('NETWORK').toLowerCase() === 'mainnet'
-    ? NETWORK.MAINNET
-    : NETWORK.TESTNET;
+const network: Environment = getEnvironment();
 
 export async function alarmMissingVaas(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -127,7 +129,7 @@ export async function alarmMissingVaas(req: any, res: any) {
                 txhash: msg.txHash,
                 vaaKey: vaaKey,
               });
-              if (network === NETWORK.MAINNET) {
+              if (network === 'mainnet') {
                 alarmSlackInfo.msg = formatMessage(msg);
                 await formatAndSendToSlack(alarmSlackInfo);
               }
@@ -323,7 +325,6 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
     bannerTxt: 'Wormhole Missing VAA Alarm',
     msg: '',
   };
-  const envNetwork: string = network === NETWORK.MAINNET ? 'mainnet' : 'testnet';
 
   let alarmsToStore: AlarmedChainTime[] = [];
   // Read in the already alarmed chains.
@@ -351,7 +352,7 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
       const chainTime: Date = new Date(latestTime);
       const cName: string = CHAIN_ID_TO_NAME[chainId] as ChainName;
       const deltaTime: number = (now.getTime() - chainTime.getTime()) / (1000 * 60 * 60 * 24);
-      alarmSlackInfo.msg = `*Chain:* ${cName}(${chainId})\nThe ${envNetwork} watcher is behind by ${deltaTime} days.`;
+      alarmSlackInfo.msg = `*Chain:* ${cName}(${chainId})\nThe ${network} watcher is behind by ${deltaTime} days.`;
       await formatAndSendToSlack(alarmSlackInfo);
       alarmsToStore.push({ chain: chainId, alarmTime: now.toISOString() });
     }

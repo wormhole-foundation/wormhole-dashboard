@@ -1,4 +1,7 @@
-import { NETWORK, assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  Environment,
+  assertEnvironmentVariable,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 let loggingEnv: LoggingEnvironment | undefined = undefined;
 
@@ -20,14 +23,3 @@ export const getEnvironment = () => {
     return loggingEnv;
   }
 };
-
-export function getNetworkFromEnv(): NETWORK {
-  const networkEnv = assertEnvironmentVariable('NETWORK');
-  if (networkEnv === 'mainnet') {
-    return NETWORK.MAINNET;
-  }
-  if (networkEnv === 'testnet') {
-    return NETWORK.TESTNET;
-  }
-  throw new Error(`Invalid network ${networkEnv}`);
-}

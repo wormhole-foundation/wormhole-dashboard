@@ -10,7 +10,7 @@ import {
   WormholePublishEventLog,
 } from '../types/near';
 import { BlockId, BlockResult } from 'near-api-js/lib/providers/provider';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 // The following is obtained by going to: https://explorer.near.org/accounts/contract.wormhole_crypto.near
 // and watching the network tab in the browser to see where the explorer is going.
@@ -18,15 +18,9 @@ const NEAR_EXPLORER_TRANSACTION_URL =
   'https://explorer-backend-mainnet-prod-24ktefolwq-uc.a.run.app/trpc/transaction.listByAccountId';
 export const NEAR_ARCHIVE_RPC = 'https://archival-rpc.mainnet.near.org';
 
-export const getNearProvider = async (network: NETWORK, rpc: string): Promise<Provider> => {
+export const getNearProvider = async (network: Environment, rpc: string): Promise<Provider> => {
   let connection;
-  if (network === NETWORK.MAINNET) {
-    connection = await connect({ nodeUrl: rpc, networkId: 'mainnet' });
-  } else if (network === NETWORK.TESTNET) {
-    connection = await connect({ nodeUrl: rpc, networkId: 'testnet' });
-  } else {
-    throw new Error(`Invalid network ${network}`);
-  }
+  connection = await connect({ nodeUrl: rpc, networkId: network });
   const provider = connection.connection.provider;
   return provider;
 };

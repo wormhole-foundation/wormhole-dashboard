@@ -1,3 +1,5 @@
+import { Environment } from './consts';
+
 export async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
 }
@@ -13,3 +15,11 @@ export const padUint64 = (s: string): string => s.padStart(MAX_UINT_64.length, '
 // make a bigtable row key for the `signedVAAs` table
 export const makeSignedVAAsRowKey = (chain: number, emitter: string, sequence: string): string =>
   `${padUint16(chain.toString())}/${emitter}/${padUint64(sequence)}`;
+
+export function getEnvironment(): Environment {
+  const network: string = assertEnvironmentVariable('NETWORK').toLowerCase();
+  if (network === 'mainnet' || network === 'testnet' || network === 'devnet') {
+    return network;
+  }
+  throw new Error(`Unknown network: ${network}`);
+}

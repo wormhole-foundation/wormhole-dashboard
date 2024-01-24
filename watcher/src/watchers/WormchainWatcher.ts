@@ -4,7 +4,7 @@ import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { CosmwasmBlockResult, CosmwasmWatcher } from './CosmwasmWatcher';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class WormchainWatcher extends CosmwasmWatcher {
   latestBlockTag: string;
@@ -13,7 +13,7 @@ export class WormchainWatcher extends CosmwasmWatcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: NETWORK) {
+  constructor(network: Environment) {
     super(network, 'wormchain');
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {

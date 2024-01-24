@@ -7,7 +7,7 @@ import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 // This is the hash for topic[0] of the core contract event LogMessagePublished
 // https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/contracts/Implementation.sol#L12
@@ -31,7 +31,7 @@ export class EVMWatcher extends Watcher {
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
 
-  constructor(network: NETWORK, chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
+  constructor(network: Environment, chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
     super(network, chain);
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;

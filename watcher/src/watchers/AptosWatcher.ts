@@ -1,7 +1,7 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils';
 import {
+  Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
-  NETWORK,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { AptosClient } from 'aptos';
 import { z } from 'zod';
@@ -23,11 +23,11 @@ export class AptosWatcher extends Watcher {
   coreBridgeAddress: string;
   eventHandle: string;
 
-  constructor(network: NETWORK) {
+  constructor(network: Environment) {
     super(network, 'aptos');
     this.client = new AptosClient(RPCS_BY_CHAIN[this.network][this.chain]!);
     this.coreBridgeAddress =
-      network === NETWORK.MAINNET ? CONTRACTS.MAINNET.aptos.core : CONTRACTS.TESTNET.aptos.core;
+      network === 'mainnet' ? CONTRACTS.MAINNET.aptos.core : CONTRACTS.TESTNET.aptos.core;
     this.eventHandle = `${this.coreBridgeAddress}::state::WormholeMessageHandle`;
   }
 

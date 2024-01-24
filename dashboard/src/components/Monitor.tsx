@@ -20,12 +20,11 @@ import CollapsibleSection from './CollapsibleSection';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
 import { useSettings } from '../contexts/MonitorSettingsContext';
 import {
-  NETWORK,
   explorerBlock,
   explorerTx,
   explorerVaa,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { useNetworkContext } from '../contexts/NetworkContext';
+import { Environment, useCurrentEnvironment, useNetworkContext } from '../contexts/NetworkContext';
 
 type LastBlockByChain = { [chainId: string]: string };
 type CountsByChain = {
@@ -83,8 +82,7 @@ const missingBlockSx: SxProps<Theme> = {
 };
 
 function BlockDetail({ chain, message }: { chain: string; message: ObservedMessage }) {
-  const { currentNetwork } = useNetworkContext();
-  const network: NETWORK = currentNetwork.env === 'mainnet' ? NETWORK.MAINNET : NETWORK.TESTNET;
+  const network: Environment = useCurrentEnvironment();
   const vaaId = `${message.chain}/${message.emitter}/${message.seq}`;
   return (
     <Box>
@@ -113,7 +111,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
           gutterBottom
         >
           <IconButton
-            href={explorerVaa(currentNetwork.env, vaaId)}
+            href={explorerVaa(network, vaaId)}
             target="_blank"
             size="small"
             sx={inlineIconButtonSx}

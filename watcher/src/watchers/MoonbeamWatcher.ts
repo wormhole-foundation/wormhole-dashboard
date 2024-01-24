@@ -1,10 +1,10 @@
-import { NETWORK, sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { EVMWatcher } from './EVMWatcher';
 
 export class MoonbeamWatcher extends EVMWatcher {
-  constructor(network: NETWORK) {
+  constructor(network: Environment) {
     super(network, 'moonbeam');
   }
   async getFinalizedBlockNumber(): Promise<number> {

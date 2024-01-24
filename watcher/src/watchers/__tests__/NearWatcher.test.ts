@@ -1,9 +1,6 @@
 import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { describe, expect, jest, test } from '@jest/globals';
-import {
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
-  NETWORK,
-} from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
 import { RPCS_BY_CHAIN } from '../../consts';
 import { getNearProvider, getTransactionsByAccountId, NEAR_ARCHIVE_RPC } from '../../utils/near';
 import { getMessagesFromBlockResults } from '../NearWatcher';
@@ -12,9 +9,9 @@ import { NearArchiveWatcher } from '../NearArchiveWatcher';
 jest.setTimeout(60000);
 
 const INITIAL_NEAR_BLOCK = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[NETWORK.MAINNET].near ?? 0
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].near ?? 0
 );
-let archiveWatcher: NearArchiveWatcher = new NearArchiveWatcher(NETWORK.MAINNET);
+let archiveWatcher: NearArchiveWatcher = new NearArchiveWatcher('mainnet');
 
 test('getFinalizedBlockNumber', async () => {
   const blockNumber = await archiveWatcher.getFinalizedBlockNumber();
@@ -34,16 +31,13 @@ test.skip('getMessagesForBlocks', async () => {
 
 describe('getNearProvider', () => {
   test('with normal RPC', async () => {
-    const provider = await getNearProvider(
-      NETWORK.MAINNET,
-      RPCS_BY_CHAIN[NETWORK.MAINNET]['near']!
-    );
+    const provider = await getNearProvider('mainnet', RPCS_BY_CHAIN['mainnet']['near']!);
     // grab last block from core contract
     expect(await provider.block({ finality: 'final' })).toBeTruthy();
   });
 
   test('with archive RPC', async () => {
-    const provider = await getNearProvider(NETWORK.MAINNET, NEAR_ARCHIVE_RPC);
+    const provider = await getNearProvider('mainnet', NEAR_ARCHIVE_RPC);
     // grab first block with activity from core contract
     expect(
       await provider.block({ blockId: 'Asie8hpJFKaipvw8jh1wPfBwwbjP6JUfsQdCuQvwr3Sz' })
@@ -82,7 +76,7 @@ describe('getMessagesFromBlockResults', () => {
   });
 
   test.skip('with ArchiveProvider', async () => {
-    const provider = await getNearProvider(NETWORK.MAINNET, NEAR_ARCHIVE_RPC);
+    const provider = await getNearProvider('mainnet', NEAR_ARCHIVE_RPC);
     const messages = await getMessagesFromBlockResults(provider, [
       await provider.block({ blockId: 'Bzjemj99zxe1h8kVp8H2hwVifmbQL8HT34LyPHzEK5qp' }),
       await provider.block({ blockId: '4SHFxSo8DdP8DhMauS5iFqfmdLwLET3W3e8Lg9PFvBSn' }),

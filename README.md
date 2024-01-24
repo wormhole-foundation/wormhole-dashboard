@@ -79,15 +79,13 @@ To add a new function:
 
 To run it locally:
 
-<!-- TODO: Document this -->
-
 1. Make sure to authenticate your GCP account.
 2. Update the `start` script in `./cloud_functions/package.json`
    ```json
    {
      "scripts": {
-      // other scripts
-       "start": "npx functions-framework --target=newFunction [--signature-type=http]",
+       "...": "...",
+       "start": "npx functions-framework --target=newFunction [--signature-type=http]"
      }
    }
    ```

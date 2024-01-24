@@ -1,18 +1,15 @@
 import { expect, jest, test } from '@jest/globals';
-import {
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
-  NETWORK,
-} from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
 import { SuiWatcher } from '../SuiWatcher';
 
 jest.setTimeout(60000);
 
 const INITAL_SEQUENCE_NUMBER = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[NETWORK.MAINNET].sui ?? 1581000
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].sui ?? 1581000
 );
 
 test('getFinalizedSequenceNumber', async () => {
-  const watcher = new SuiWatcher(NETWORK.MAINNET);
+  const watcher = new SuiWatcher('mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   console.log('Received blockNumber:', blockNumber);
   expect(blockNumber).toBeGreaterThan(INITAL_SEQUENCE_NUMBER);
@@ -21,7 +18,7 @@ test('getFinalizedSequenceNumber', async () => {
 // This test will fail as time goes on because getMessagesForBlocks() grabs the latest and
 // works backwards.  This will cause a 429 until we clear that up.
 test.skip('getMessagesForBlocks', async () => {
-  const watcher = new SuiWatcher(NETWORK.MAINNET);
+  const watcher = new SuiWatcher('mainnet');
   const messages = await watcher.getMessagesForBlocks(1581997, 1581997);
   console.log(messages);
   const entries = Object.entries(messages);

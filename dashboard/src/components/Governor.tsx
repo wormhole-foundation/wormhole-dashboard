@@ -1,11 +1,4 @@
 import {
-  ChainId,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_NEAR,
-  CHAIN_ID_TERRA2,
-  tryHexToNativeAssetString,
-} from '@certusone/wormhole-sdk';
-import {
   GovernorGetAvailableNotionalByChainResponse_Entry,
   GovernorGetEnqueuedVAAsResponse_Entry,
   GovernorGetTokenListResponse_Entry,
@@ -37,16 +30,14 @@ import numeral from 'numeral';
 import React, { useCallback, useMemo, useState } from 'react';
 import useGovernorInfo from '../hooks/useGovernorInfo';
 import chainIdToName from '../utils/chainIdToName';
-import {
-  CHAIN_INFO_MAP,
-  explorerTx,
-  getExplorerTxHash,
-} from '@wormhole-foundation/wormhole-monitor-common';
+import { CHAIN_INFO_MAP } from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import Table from './Table';
 import { CHAIN_ICON_MAP } from '../utils/consts';
-import { GetNetworkFromEnv } from '../utils/GetNetworkFromEnv';
+import { useCurrentEnvironment } from '../contexts/NetworkContext';
+import { ExplorerTxHash } from './ExplorerTxHash';
+import { ExplorerAssetURL } from './ExplorerAssetURL';
 
 const calculatePercent = (notional: GovernorGetAvailableNotionalByChainResponse_Entry): number => {
   try {
@@ -132,22 +123,9 @@ const enqueuedColumns = [
   }),
   enqueuedColumnHelper.accessor('txHash', {
     header: () => 'Transaction Hash',
-    cell: (info) => {
-      const chain = info.row.original.emitterChain;
-      const network = GetNetworkFromEnv();
-      const chainInfo = CHAIN_INFO_MAP[network][chain];
-      if (!chainInfo) return info.getValue();
-      const txHash = getExplorerTxHash(network, chainInfo.chainId, info.getValue());
-      return (
-        <Link
-          href={explorerTx(network, chainInfo.chainId, txHash)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {txHash}
-        </Link>
-      );
-    },
+    cell: (info) => (
+      <ExplorerTxHash chain={info.row.original.emitterChain} rawTxHash={info.getValue()} />
+    ),
   }),
   enqueuedColumnHelper.accessor('releaseTime', {
     header: () => 'Release Time',
@@ -170,38 +148,9 @@ const tokenColumns = [
   }),
   tokenColumnHelper.accessor('originAddress', {
     header: () => 'Token',
-    cell: (info) => {
-      const chain = info.row.original.originChainId;
-      const network = GetNetworkFromEnv();
-      const chainInfo = CHAIN_INFO_MAP[network][chain];
-      if (!chainInfo) return info.getValue();
-      const chainId: ChainId = chainInfo.chainId;
-      var tokenAddress: string = '';
-      if (
-        chainId === CHAIN_ID_ALGORAND ||
-        chainId === CHAIN_ID_NEAR ||
-        chainId === CHAIN_ID_TERRA2
-      ) {
-        return info.getValue();
-      }
-      try {
-        tokenAddress = tryHexToNativeAssetString(
-          info.getValue().slice(2),
-          CHAIN_INFO_MAP[network][chain]?.chainId
-        );
-      } catch (e) {
-        console.log(e);
-        tokenAddress = info.getValue();
-      }
-
-      const explorerString = chainInfo?.explorerStem;
-      const url = `${explorerString}/address/${tokenAddress}`;
-      return (
-        <Link href={url} target="_blank" rel="noopener noreferrer">
-          {tokenAddress}
-        </Link>
-      );
-    },
+    cell: (info) => (
+      <ExplorerAssetURL chain={info.row.original.originChainId} assetAddr={info.getValue()} />
+    ),
   }),
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
@@ -295,7 +244,7 @@ function Governor() {
     onGlobalFilterChange: setTokenGlobalFilter,
     onSortingChange: setTokenSorting,
   });
-  const network = GetNetworkFromEnv();
+  const network = useCurrentEnvironment();
   return (
     <CollapsibleSection
       defaultExpanded={false}

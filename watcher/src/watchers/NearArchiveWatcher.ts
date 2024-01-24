@@ -15,12 +15,15 @@ import {
   isWormholePublishEventLog,
 } from '../utils/near';
 import { Watcher } from './Watcher';
-import { NETWORK, assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  Environment,
+  assertEnvironmentVariable,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 export class NearArchiveWatcher extends Watcher {
   provider: Provider | null = null;
 
-  constructor(network: NETWORK) {
+  constructor(network: Environment) {
     super(network, 'near');
   }
 

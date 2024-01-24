@@ -4,17 +4,16 @@ dotenv.config();
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { initDb } from './databases/utils';
 import { makeFinalizedWatcher } from './watchers/utils';
-import { getNetworkFromEnv } from './utils/environment';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment, getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
 
 initDb();
 
-const network = getNetworkFromEnv();
+const network: Environment = getEnvironment();
 
 // NOTE:  supportedChains is in chainId order
 
 const supportedChains: ChainName[] =
-  network === NETWORK.TESTNET
+  network === 'testnet'
     ? [
         // NOTE:  The commented out chains are left in there to easily
         //        identify which chains are not supported on testnet.

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { EVMWatcher } from './EVMWatcher';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class ArbitrumWatcher extends EVMWatcher {
   rpc: string | undefined;
@@ -10,7 +10,7 @@ export class ArbitrumWatcher extends EVMWatcher {
   l1L2Map: Map<number, number>;
   lastEthTime: number;
 
-  constructor(network: NETWORK) {
+  constructor(network: Environment) {
     super(network, 'arbitrum');
 
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];

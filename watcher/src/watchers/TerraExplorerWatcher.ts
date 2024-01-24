@@ -4,7 +4,7 @@ import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class TerraExplorerWatcher extends Watcher {
   // Arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
@@ -16,7 +16,7 @@ export class TerraExplorerWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: NETWORK, chain: CosmWasmChainName) {
+  constructor(network: Environment, chain: CosmWasmChainName) {
     super(network, chain);
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {

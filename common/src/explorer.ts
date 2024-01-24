@@ -31,10 +31,10 @@ import {
   CHAIN_ID_XPLA,
 } from '@certusone/wormhole-sdk';
 import { base58 } from 'ethers/lib/utils';
-import { CHAIN_INFO_MAP, NETWORK } from './consts';
+import { CHAIN_INFO_MAP, Environment } from './consts';
 
-export const explorerBlock = (network: NETWORK, chainId: ChainId, block: string) =>
-  network === NETWORK.MAINNET
+export const explorerBlock = (network: Environment, chainId: ChainId, block: string) =>
+  network === 'mainnet'
     ? chainId === CHAIN_ID_ETH
       ? `https://etherscan.io/block/${block}`
       : chainId === CHAIN_ID_BSC
@@ -120,8 +120,8 @@ export const explorerBlock = (network: NETWORK, chainId: ChainId, block: string)
     ? `https://goerli.basescan.org/block/${block}`
     : '';
 
-export const explorerTx = (network: NETWORK, chainId: ChainId, tx: string) =>
-  network === NETWORK.MAINNET
+export const explorerTx = (network: Environment, chainId: ChainId, tx: string) =>
+  network === 'mainnet'
     ? chainId === CHAIN_ID_ETH
       ? `https://etherscan.io/tx/${tx}`
       : chainId === CHAIN_ID_BSC
@@ -212,7 +212,7 @@ export const explorerVaa = (network: string, key: string) =>
     ? `https://wormholescan.io/#/tx/${key}`
     : `https://wormholescan.io/#/tx/${key}?network=TESTNET`;
 
-export const getExplorerTxHash = (network: NETWORK, chain: ChainId, txHash: string) => {
+export const getExplorerTxHash = (network: Environment, chain: ChainId, txHash: string) => {
   let explorerTxHash = '';
   if (isCosmWasmChain(chain)) {
     explorerTxHash = txHash.slice(2);

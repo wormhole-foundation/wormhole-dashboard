@@ -10,12 +10,12 @@ import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { EventLog } from '../types/near';
 import { getNearProvider, isWormholePublishEventLog } from '../utils/near';
 import { Watcher } from './Watcher';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 export class NearWatcher extends Watcher {
   provider: Provider | null = null;
 
-  constructor(network: NETWORK) {
+  constructor(network: Environment) {
     super(network, 'near');
   }
 

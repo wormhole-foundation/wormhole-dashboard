@@ -14,9 +14,9 @@ import { SuiWatcher } from './SuiWatcher';
 import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
 import { NearArchiveWatcher } from './NearArchiveWatcher';
-import { NETWORK } from '@wormhole-foundation/wormhole-monitor-common';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
-export function makeFinalizedWatcher(network: NETWORK, chainName: ChainName): Watcher {
+export function makeFinalizedWatcher(network: Environment, chainName: ChainName): Watcher {
   if (chainName === 'solana') {
     return new SolanaWatcher(network);
   } else if (chainName === 'ethereum' || chainName === 'karura' || chainName === 'acala') {

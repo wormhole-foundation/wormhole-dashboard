@@ -1,7 +1,7 @@
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
+  Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
-  NETWORK,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { z } from 'zod';
@@ -12,11 +12,11 @@ import { getLogger, WormholeLogger } from '../utils/logger';
 
 export class Watcher {
   chain: ChainName;
-  network: NETWORK;
+  network: Environment;
   logger: WormholeLogger;
   maximumBatchSize: number = 100;
 
-  constructor(network: NETWORK, chain: ChainName) {
+  constructor(network: Environment, chain: ChainName) {
     this.network = network;
     this.chain = chain;
     this.logger = getLogger(chain);

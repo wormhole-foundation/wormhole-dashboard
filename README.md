@@ -56,3 +56,43 @@ Displays a visualization of the database.
 ```bash
 npm start -w web
 ```
+
+# Cloud Functions
+
+## Development
+
+### TypeScript
+
+`./cloud_functions` stores the TypeScript Google Cloud Functions.
+
+To add a new function:
+
+1. Create a new file under `./cloud_functions/src`.
+   > CRON jobs are generally prefixed with `compute`
+2. Register new function in `./cloud_functions/src/index.ts`
+
+   ```ts
+   export const { newFunction } = require('./newFunction');
+
+   functions.http('newFunction', newFunction);
+   ```
+
+To run it locally:
+
+<!-- TODO: Document this -->
+
+1. Make sure to authenticate your GCP account.
+2. Update the `start` script in `./cloud_functions/package.json`
+   ```json
+   {
+     "scripts": {
+      // other scripts
+       "start": "npx functions-framework --target=newFunction [--signature-type=http]",
+     }
+   }
+   ```
+3. To run the function locally, run in `./cloud_functions`:
+
+   ```
+   npm run start
+   ```

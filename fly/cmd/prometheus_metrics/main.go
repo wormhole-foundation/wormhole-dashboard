@@ -5,17 +5,21 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
+	"strconv"
 	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/p2p"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
+	promremotew "github.com/certusone/wormhole/node/pkg/telemetry/prom_remote_write"
 	eth_common "github.com/ethereum/go-ethereum/common"
 	ipfslog "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
-
+	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 	"go.uber.org/zap"
 )
 
@@ -32,6 +36,96 @@ var (
 	logLevel     string
 )
 
+// Guardian address to index map
+var guardianIndexMap = map[string]int{
+	strings.ToLower("0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5"): 0,
+	strings.ToLower("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157"): 1,
+	strings.ToLower("0x114De8460193bdf3A2fCf81f86a09765F4762fD1"): 2,
+	strings.ToLower("0x107A0086b32d7A0977926A205131d8731D39cbEB"): 3,
+	strings.ToLower("0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2"): 4,
+	strings.ToLower("0x11b39756C042441BE6D8650b69b54EbE715E2343"): 5,
+	strings.ToLower("0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd"): 6,
+	strings.ToLower("0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20"): 7,
+	strings.ToLower("0x74a3bf913953D695260D88BC1aA25A4eeE363ef0"): 8,
+	strings.ToLower("0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e"): 9,
+	strings.ToLower("0xAF45Ced136b9D9e24903464AE889F5C8a723FC14"): 10,
+	strings.ToLower("0xf93124b7c738843CBB89E864c862c38cddCccF95"): 11,
+	strings.ToLower("0xD2CC37A4dc036a8D232b48f62cDD4731412f4890"): 12,
+	strings.ToLower("0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811"): 13,
+	strings.ToLower("0x71AA1BE1D36CaFE3867910F99C09e347899C19C3"): 14,
+	strings.ToLower("0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf"): 15,
+	strings.ToLower("0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8"): 16,
+	strings.ToLower("0x5E1487F35515d02A92753504a8D75471b9f49EdB"): 17,
+	strings.ToLower("0x6FbEBc898F403E4773E95feB15E80C9A99c8348d"): 18,
+}
+
+var guardianIndexToNameMap = map[int]string{
+	0:  "Jump Crypto",
+	1:  "Staked",
+	2:  "Figment",
+	3:  "ChainodeTech",
+	4:  "Inotel",
+	5:  "HashQuark",
+	6:  "ChainLayer",
+	7:  "xLabs",
+	8:  "Forbole",
+	9:  "Staking Fund",
+	10: "MoonletWallet",
+	11: "P2P Validator",
+	12: "01node",
+	13: "MCF-V2-MAINNET",
+	14: "Everstake",
+	15: "Chorus One",
+	16: "syncnode",
+	17: "Triton",
+	18: "Staking Facilities",
+	19: "Totals:",
+}
+
+var guardianObservations = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "guardian_observations_total",
+		Help: "Total number of observations received from each guardian on each chain",
+	},
+	[]string{"guardian_address", "chain"},
+)
+
+func init() {
+	// Register the Prometheus counter vector.
+	prometheus.MustRegister(guardianObservations)
+}
+
+func initPromScraper(promRemoteURL *string, logger *zap.Logger) {
+	usingPromRemoteWrite := *promRemoteURL != ""
+	if usingPromRemoteWrite {
+		var info promremotew.PromTelemetryInfo
+		info.PromRemoteURL = *promRemoteURL
+		info.Labels = map[string]string{
+			"product": "wormhole-fly",
+		}
+
+		promLogger := logger.With(zap.String("component", "prometheus_scraper"))
+		errC := make(chan error)
+		common.StartRunnable(rootCtx, errC, false, "prometheus_scraper", func(ctx context.Context) error {
+			t := time.NewTicker(15 * time.Second)
+
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				case <-t.C:
+					err := promremotew.ScrapeAndSendLocalMetrics(ctx, info, promLogger)
+					if err != nil {
+						promLogger.Error("ScrapeAndSendLocalMetrics error", zap.Error(err))
+						continue
+					}
+					logger.Debug("ScrapeAndSendLocalMetrics success at %s", zap.Time("time", time.Now()))
+				}
+			}
+		})
+	}
+}
+
 func main() {
 	// TODO: pass in config instead of hard-coding it
 	p2pNetworkID = "/wormhole/mainnet/2"
@@ -41,6 +135,7 @@ func main() {
 	logLevel = "info"
 	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
 	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
+	promRemoteWriteUrl := flag.String("promRemoteWriteUrl", "http://localhost:9090/api/v1/write", "Prometheus remote write URL")
 	flag.Parse()
 	if *rpcUrl == "" {
 		fmt.Println("rpcUrl must be specified")
@@ -101,7 +196,8 @@ func main() {
 	}
 	gst.Set(&gs)
 
-	obsvByHash := map[string]map[string]time.Time{}
+	// Start Prometheus scraper
+	initPromScraper(promRemoteWriteUrl, logger)
 
 	// Ignore observations
 	go func() {
@@ -110,16 +206,18 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case o := <-obsvC:
-				if o.Msg.MessageId[:3] != "26/" && o.Msg.MessageId[:2] != "7/" {
+				// Ignore observations from pythnnet
+				// Pythnet sends too many observations that could deteriorate the performance of the fly node
+				if o.Msg.MessageId[:3] != "26/" {
 					ga := eth_common.BytesToAddress(o.Msg.Addr).String()
-					// logger.Warn("observation", zap.String("id",o.MessageId), zap.String("addr",ga))
-					if _, ok := obsvByHash[o.Msg.MessageId]; !ok {
-						obsvByHash[o.Msg.MessageId] = map[string]time.Time{}
+					chainID := strings.Split(o.Msg.MessageId, "/")[0]
+					ui64, err := strconv.ParseUint(chainID, 10, 16)
+					if err != nil {
+						panic(err)
 					}
-					if _, ok := obsvByHash[o.Msg.MessageId][ga]; !ok {
-						obsvByHash[o.Msg.MessageId][ga] = time.Now()
-					}
-					logger.Warn("status", zap.String("id", o.Msg.MessageId), zap.Any("msg", obsvByHash[o.Msg.MessageId]))
+					chainName := vaa.ChainID(ui64).String()
+					fmt.Printf("Received observation from ga %s guardian %s on chain %s\n", ga, guardianIndexToNameMap[guardianIndexMap[ga]], chainName)
+					guardianObservations.WithLabelValues(guardianIndexToNameMap[guardianIndexMap[strings.ToLower(ga)]], chainName).Inc()
 				}
 			}
 		}

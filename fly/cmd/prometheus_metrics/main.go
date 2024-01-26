@@ -216,7 +216,6 @@ func main() {
 						panic(err)
 					}
 					chainName := vaa.ChainID(ui64).String()
-					fmt.Printf("Received observation from ga %s guardian %s on chain %s\n", ga, guardianIndexToNameMap[guardianIndexMap[ga]], chainName)
 					guardianObservations.WithLabelValues(guardianIndexToNameMap[guardianIndexMap[strings.ToLower(ga)]], chainName).Inc()
 				}
 			}

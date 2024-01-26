@@ -5,8 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
@@ -90,9 +90,18 @@ var guardianObservations = prometheus.NewCounterVec(
 	[]string{"guardian_address", "chain"},
 )
 
+var guardianChainHeight = prometheus.NewGaugeVec(
+    prometheus.GaugeOpts{
+        Name: "guardian_chain_height",
+        Help: "Current height of each guardian on each chain over time",
+    },
+    []string{"guardian_address", "chain"},
+)
+
 func init() {
 	// Register the Prometheus counter vector.
 	prometheus.MustRegister(guardianObservations)
+	prometheus.MustRegister(guardianChainHeight)
 }
 
 func initPromScraper(promRemoteURL *string, logger *zap.Logger) {
@@ -251,7 +260,15 @@ func main() {
 			select {
 			case <-rootCtx.Done():
 				return
-			case <-heartbeatC:
+			case hb := <-heartbeatC:
+				for _, network := range hb.Networks {
+					guardianChainHeight.With(
+						prometheus.Labels{
+							"guardian_address": guardianIndexToNameMap[guardianIndexMap[strings.ToLower(hb.GuardianAddr)]],
+							"chain": vaa.ChainID(network.Id).String(),
+							},
+						).Set(float64(network.Height))
+				}
 			}
 		}
 	}()

@@ -87,7 +87,7 @@ var guardianObservations = prometheus.NewCounterVec(
 		Name: "guardian_observations_total",
 		Help: "Total number of observations received from each guardian on each chain",
 	},
-	[]string{"guardian_address", "chain"},
+	[]string{"guardian", "chain"},
 )
 
 var guardianChainHeight = prometheus.NewGaugeVec(
@@ -95,7 +95,7 @@ var guardianChainHeight = prometheus.NewGaugeVec(
 		Name: "guardian_chain_height",
 		Help: "Current height of each guardian on each chain over time",
 	},
-	[]string{"guardian_address", "chain"},
+	[]string{"guardian", "chain"},
 )
 
 func init() {
@@ -241,7 +241,7 @@ func main() {
 					chainName := vaa.ChainID(ui64).String()
 					guardianName, ok := guardianIndexToNameMap[guardianIndexMap[strings.ToLower(ga)]]
 					if !ok {
-						logger.Error("guardian name not found", zap.String("guardian_address", ga))
+						logger.Error("guardian name not found", zap.String("guardian", ga))
 					}
 					guardianObservations.WithLabelValues(guardianName, chainName).Inc()
 				}
@@ -282,7 +282,7 @@ func main() {
 				for _, network := range hb.Networks {
 					guardianChainHeight.With(
 						prometheus.Labels{
-							"guardian_address": guardianIndexToNameMap[guardianIndexMap[strings.ToLower(hb.GuardianAddr)]],
+							"guardian": guardianIndexToNameMap[guardianIndexMap[strings.ToLower(hb.GuardianAddr)]],
 							"chain":            vaa.ChainID(network.Id).String(),
 						},
 					).Set(float64(network.Height))

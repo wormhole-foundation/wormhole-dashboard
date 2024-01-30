@@ -91,11 +91,11 @@ var guardianObservations = prometheus.NewCounterVec(
 )
 
 var guardianChainHeight = prometheus.NewGaugeVec(
-    prometheus.GaugeOpts{
-        Name: "guardian_chain_height",
-        Help: "Current height of each guardian on each chain over time",
-    },
-    []string{"guardian_address", "chain"},
+	prometheus.GaugeOpts{
+		Name: "guardian_chain_height",
+		Help: "Current height of each guardian on each chain over time",
+	},
+	[]string{"guardian_address", "chain"},
 )
 
 func init() {
@@ -123,7 +123,21 @@ func initPromScraper(promRemoteURL *string, logger *zap.Logger) {
 				case <-ctx.Done():
 					return nil
 				case <-t.C:
+					for i := 1; i < 36; i++ {
+						if i == 26 {
+							continue
+						}
+						chainName := vaa.ChainID(i).String()
+						if strings.HasPrefix(chainName, "unknown chain ID:") {
+							continue
+						}
+						// when there are no observations in any guardian for a particular chain for a period of time,
+						// the chain label will not be present in the metrics.
+						// adding this will make sure chain labels are present regardless
+						guardianObservations.WithLabelValues("N/A", chainName).Add(0)
+					}
 					err := promremotew.ScrapeAndSendLocalMetrics(ctx, info, promLogger)
+
 					if err != nil {
 						promLogger.Error("ScrapeAndSendLocalMetrics error", zap.Error(err))
 						continue
@@ -208,7 +222,7 @@ func main() {
 	// Start Prometheus scraper
 	initPromScraper(promRemoteWriteUrl, logger)
 
-	// Ignore observations
+	// WIP(bing): add metrics for guardian observations
 	go func() {
 		for {
 			select {
@@ -225,7 +239,11 @@ func main() {
 						panic(err)
 					}
 					chainName := vaa.ChainID(ui64).String()
-					guardianObservations.WithLabelValues(guardianIndexToNameMap[guardianIndexMap[strings.ToLower(ga)]], chainName).Inc()
+					guardianName, ok := guardianIndexToNameMap[guardianIndexMap[strings.ToLower(ga)]]
+					if !ok {
+						logger.Error("guardian name not found", zap.String("guardian_address", ga))
+					}
+					guardianObservations.WithLabelValues(guardianName, chainName).Inc()
 				}
 			}
 		}
@@ -265,9 +283,9 @@ func main() {
 					guardianChainHeight.With(
 						prometheus.Labels{
 							"guardian_address": guardianIndexToNameMap[guardianIndexMap[strings.ToLower(hb.GuardianAddr)]],
-							"chain": vaa.ChainID(network.Id).String(),
-							},
-						).Set(float64(network.Height))
+							"chain":            vaa.ChainID(network.Id).String(),
+						},
+					).Set(float64(network.Height))
 				}
 			}
 		}

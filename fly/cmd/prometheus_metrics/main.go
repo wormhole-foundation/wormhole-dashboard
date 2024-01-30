@@ -97,7 +97,6 @@ func initPromScraper(promRemoteURL *string, logger *zap.Logger) {
 						promLogger.Error("ScrapeAndSendLocalMetrics error", zap.Error(err))
 						continue
 					}
-					logger.Debug("ScrapeAndSendLocalMetrics success at %s", zap.Time("time", time.Now()))
 				}
 			}
 		})

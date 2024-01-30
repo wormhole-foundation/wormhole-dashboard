@@ -91,11 +91,11 @@ var guardianObservations = prometheus.NewCounterVec(
 )
 
 var guardianChainHeight = prometheus.NewGaugeVec(
-    prometheus.GaugeOpts{
-        Name: "guardian_chain_height",
-        Help: "Current height of each guardian on each chain over time",
-    },
-    []string{"guardian_address", "chain"},
+	prometheus.GaugeOpts{
+		Name: "guardian_chain_height",
+		Help: "Current height of each guardian on each chain over time",
+	},
+	[]string{"guardian_address", "chain"},
 )
 
 func init() {
@@ -249,7 +249,31 @@ func main() {
 			select {
 			case <-rootCtx.Done():
 				return
-			case <-signedInC:
+			case signedVAA := <-signedInC:
+				gossipVaa, err := vaa.Unmarshal(signedVAA.Vaa)
+
+				if err != nil {
+					logger.Error("Failed to unmarshal VAA", zap.Error(err))
+					continue
+				}
+
+				if gossipVaa.EmitterChain == 26 {
+					continue
+				}
+
+				signedVAAs, err := utils.GetObservationsByMessageId(gossipVaa.EmitterChain, gossipVaa.EmitterAddress, gossipVaa.Sequence)
+
+				if err != nil {
+					logger.Error("Failed to get signed VAA", zap.Error(err))
+					continue
+				}
+
+				if len(gossipVaa.Signatures) != len(signedVAAs) {
+					logger.Sugar().Infof("Number of signatures in VAA %s does not match number of signed VAAs", gossipVaa.MessageID())
+					logger.Sugar().Infof("Number of signatures in VAA: %d", len(gossipVaa.Signatures))
+					logger.Sugar().Infof("Number of signed VAAs: %d", len(signedVAAs))
+					continue
+				}
 			}
 		}
 	}()
@@ -265,9 +289,9 @@ func main() {
 					guardianChainHeight.With(
 						prometheus.Labels{
 							"guardian_address": guardianIndexToNameMap[guardianIndexMap[strings.ToLower(hb.GuardianAddr)]],
-							"chain": vaa.ChainID(network.Id).String(),
-							},
-						).Set(float64(network.Height))
+							"chain":            vaa.ChainID(network.Id).String(),
+						},
+					).Set(float64(network.Height))
 				}
 			}
 		}

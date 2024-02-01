@@ -148,12 +148,16 @@ export const AXIOS_CONFIG_JSON: AxiosRequestConfig = {
   headers: { 'Accept-Encoding': 'application/json' },
 };
 
-export const GUARDIAN_RPC_HOSTS = [
-  'https://api.wormholescan.io',
-  'https://wormhole-v2-mainnet-api.mcf.rocks',
-  'https://wormhole-v2-mainnet-api.chainlayer.network',
-  'https://wormhole-v2-mainnet-api.staking.fund',
-];
+export const GUARDIAN_RPC_HOSTS: { [key in Environment]: string[] } = {
+  ['mainnet']: [
+    'https://api.wormholescan.io',
+    'https://wormhole-v2-mainnet-api.mcf.rocks',
+    'https://wormhole-v2-mainnet-api.chainlayer.network',
+    'https://wormhole-v2-mainnet-api.staking.fund',
+  ],
+  ['testnet']: ['https://api.testnet.wormholescan.io'],
+  ['devnet']: [],
+};
 
 export type AlgorandInfo = {
   appid: number;

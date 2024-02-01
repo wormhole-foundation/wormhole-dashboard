@@ -7,6 +7,7 @@ import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { makeSignedVAAsRowKey, parseMessageId } from '../src/databases/utils';
 import { AXIOS_CONFIG_JSON, GUARDIAN_RPC_HOSTS } from '../src/consts';
 import { parseVaa } from '@certusone/wormhole-sdk';
+import { Environment, getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
 
 // This script checks for messages which don't have VAAs and attempts to fetch the VAAs from the guardians
 // This is useful for cases where the VAA doesn't exist in bigtable (perhaps due to an outage) but is available
@@ -22,6 +23,7 @@ const missingVaas: { [id: string]: string | undefined } = {};
   if (!bt.bigtable) {
     throw new Error('bigtable is undefined');
   }
+  const environment: Environment = getEnvironment();
   const now = Math.floor(Date.now() / 1000);
   try {
     let log = ora('Fetching messages without a signed VAA...').start();
@@ -37,7 +39,7 @@ const missingVaas: { [id: string]: string | undefined } = {};
       const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
       const id = makeSignedVAAsRowKey(chain, emitter, sequence.toString());
       let vaaBytes: string | null = null;
-      for (const host of GUARDIAN_RPC_HOSTS) {
+      for (const host of GUARDIAN_RPC_HOSTS[environment]) {
         log.text = `Searching for VAA ${search}/${total} (${host})...`;
         try {
           const result = await axios.get(

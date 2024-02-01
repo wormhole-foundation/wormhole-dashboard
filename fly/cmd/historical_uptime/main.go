@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -16,8 +16,10 @@ import (
 	promremotew "github.com/certusone/wormhole/node/pkg/telemetry/prom_remote_write"
 	eth_common "github.com/ethereum/go-ethereum/common"
 	ipfslog "github.com/ipfs/go-log/v2"
+	"github.com/joho/godotenv"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
@@ -27,45 +29,71 @@ import (
 var (
 	rootCtx       context.Context
 	rootCtxCancel context.CancelFunc
+
+	p2pNetworkID   string
+	p2pPort        uint
+	p2pBootstrap   string
+	nodeKeyPath    string
+	logLevel       string
+	ethRpcUrl      string
+	coreBridgeAddr string
+	promRemoteURL  string
 )
 
 var (
-	p2pNetworkID string
-	p2pPort      uint
-	p2pBootstrap string
-	nodeKeyPath  string
-	logLevel     string
+	guardianObservations = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "guardian_observations_total",
+			Help: "Total number of observations received from each guardian on each chain",
+		},
+		[]string{"guardian", "chain"},
+	)
+
+	guardianChainHeight = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "guardian_chain_height",
+			Help: "Current height of each guardian on each chain over time",
+		},
+		[]string{"guardian", "chain"},
+	)
 )
 
-var guardianObservations = prometheus.NewCounterVec(
-	prometheus.CounterOpts{
-		Name: "guardian_observations_total",
-		Help: "Total number of observations received from each guardian on each chain",
-	},
-	[]string{"guardian", "chain"},
-)
+const PYTHNET_CHAIN_ID = int(vaa.ChainIDPythNet)
 
-var guardianChainHeight = prometheus.NewGaugeVec(
-	prometheus.GaugeOpts{
-		Name: "guardian_chain_height",
-		Help: "Current height of each guardian on each chain over time",
-	},
-	[]string{"guardian", "chain"},
-)
-
-func init() {
-	// Register the Prometheus counter vector.
-	prometheus.MustRegister(guardianObservations)
-	prometheus.MustRegister(guardianChainHeight)
+func loadEnvVars() {
+	err := godotenv.Load() // By default loads .env
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	p2pNetworkID = verifyEnvVar("P2P_NETWORK_ID")
+	port, err := strconv.ParseUint(verifyEnvVar("P2P_PORT"), 10, 32)
+	if err != nil {
+		log.Fatal("Error parsing P2P_PORT")
+	}
+	p2pPort = uint(port)
+	nodeKeyPath = verifyEnvVar("NODE_KEY_PATH")
+	logLevel = verifyEnvVar("LOG_LEVEL")
+	ethRpcUrl = verifyEnvVar("ETH_RPC_URL")
+	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
+	promRemoteURL = verifyEnvVar("PROM_REMOTE_URL")
 }
 
-func initPromScraper(promRemoteURL *string, logger *zap.Logger) {
-	usingPromRemoteWrite := *promRemoteURL != ""
+func verifyEnvVar(key string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		log.Fatalf("%s must be specified", key)
+	}
+	return value
+}
+
+func initPromScraper(promRemoteURL string, logger *zap.Logger) {
+	usingPromRemoteWrite := promRemoteURL != ""
 	if usingPromRemoteWrite {
 		var info promremotew.PromTelemetryInfo
-		info.PromRemoteURL = *promRemoteURL
+		info.PromRemoteURL = promRemoteURL
 		info.Labels = map[string]string{
-			"product": "wormhole-fly",
+			"network": p2pNetworkID,
+			"product": "historical_uptime",
 		}
 
 		promLogger := logger.With(zap.String("component", "prometheus_scraper"))
@@ -79,17 +107,20 @@ func initPromScraper(promRemoteURL *string, logger *zap.Logger) {
 					return nil
 				case <-t.C:
 					for i := 1; i < 36; i++ {
-						if i == 26 {
+						if i == PYTHNET_CHAIN_ID {
 							continue
 						}
 						chainName := vaa.ChainID(i).String()
 						if strings.HasPrefix(chainName, "unknown chain ID:") {
 							continue
 						}
+
 						// when there are no observations in any guardian for a particular chain for a period of time,
 						// the chain label will not be present in the metrics.
 						// adding this will make sure chain labels are present regardless
-						guardianObservations.WithLabelValues("N/A", chainName).Add(0)
+						for _, guardianName := range common.GetGuardianIndexToNameMap() {
+							guardianObservations.WithLabelValues(guardianName, chainName).Add(0)
+						}
 					}
 					err := promremotew.ScrapeAndSendLocalMetrics(ctx, info, promLogger)
 
@@ -104,35 +135,18 @@ func initPromScraper(promRemoteURL *string, logger *zap.Logger) {
 }
 
 func main() {
-	// TODO: pass in config instead of hard-coding it
-	p2pNetworkID = "/wormhole/mainnet/2"
+	loadEnvVars()
 	p2pBootstrap = "/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC,/dns4/wormhole.mcf.rocks/udp/8999/quic/p2p/12D3KooWDZVv7BhZ8yFLkarNdaSWaB43D6UbQwExJ8nnGAEmfHcU,/dns4/wormhole-v2-mainnet-bootstrap.staking.fund/udp/8999/quic/p2p/12D3KooWG8obDX9DNi1KUwZNu9xkGwfKqTp2GFwuuHpWZ3nQruS1"
-	p2pPort = 8999
-	nodeKeyPath = "/tmp/node.key"
-	logLevel = "info"
-	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
-	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
-	promRemoteWriteUrl := flag.String("promRemoteWriteUrl", "http://localhost:9090/api/v1/write", "Prometheus remote write URL")
-	flag.Parse()
-	if *rpcUrl == "" {
-		fmt.Println("rpcUrl must be specified")
-		os.Exit(1)
-	}
-	if *coreBridgeAddr == "" {
-		fmt.Println("coreBridgeAddr must be specified")
-		os.Exit(1)
-	}
+
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
 		fmt.Println("Invalid log level")
 		os.Exit(1)
 	}
 
-	logger := ipfslog.Logger("wormhole-fly").Desugar()
+	logger := ipfslog.Logger("historical-uptime").Desugar()
 
 	ipfslog.SetAllLoggers(lvl)
-
-	// ctx := context.Background()
 
 	// Node's main lifecycle context.
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
@@ -162,7 +176,7 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
+	idx, sgs, err := utils.FetchCurrentGuardianSet(ethRpcUrl, coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}
@@ -174,7 +188,7 @@ func main() {
 	gst.Set(&gs)
 
 	// Start Prometheus scraper
-	initPromScraper(promRemoteWriteUrl, logger)
+	initPromScraper(promRemoteURL, logger)
 
 	// WIP(bing): add metrics for guardian observations
 	go func() {
@@ -185,7 +199,7 @@ func main() {
 			case o := <-obsvC:
 				// Ignore observations from pythnnet
 				// Pythnet sends too many observations that could deteriorate the performance of the fly node
-				if o.Msg.MessageId[:3] != "26/" {
+				if o.Msg.MessageId[:3] != strconv.Itoa(PYTHNET_CHAIN_ID) + "/" {
 					ga := eth_common.BytesToAddress(o.Msg.Addr).String()
 					chainID := strings.Split(o.Msg.MessageId, "/")[0]
 					ui64, err := strconv.ParseUint(chainID, 10, 16)
@@ -196,6 +210,7 @@ func main() {
 					guardianName, ok := common.GetGuardianName(ga)
 					if !ok {
 						logger.Error("guardian name not found", zap.String("guardian", ga))
+						continue // Skip setting the metric if guardianName is not found
 					}
 					guardianObservations.WithLabelValues(guardianName, chainName).Inc()
 				}
@@ -237,6 +252,7 @@ func main() {
 					guardianName, ok := common.GetGuardianName(hb.GuardianAddr)
 					if !ok {
 						logger.Error("guardian name not found", zap.String("guardian", hb.GuardianAddr))
+						continue // Skip setting the metric if guardianName is not found
 					}
 
 					guardianChainHeight.With(

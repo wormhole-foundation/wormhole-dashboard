@@ -63,33 +63,65 @@ func TestQueryMessagesByIndex(t *testing.T) {
 	db := OpenDb(zap.NewNop(), nil)
 	defer db.db.Close()
 
-	// Create a message with LastObservedAt set to 30 hours ago
-	message0 := getMessage(0, time.Now().Add(-30*time.Hour), false)
+	// Store the time for consistent comparison
+	observedTime := time.Now().Add(-30 * time.Hour)
+
+	// Create messages
+	message0 := getMessage(0, observedTime, false)
 	err := db.SaveMessage(message0)
 	require.NoError(t, err)
 
-	// Create a message with LastObservedAt set to 30 hours ago but with metrics checked
-	message1 := getMessage(1, time.Now().Add(-30*time.Hour), true)
+	message1 := getMessage(1, observedTime, true)
 	err = db.SaveMessage(message1)
 	require.NoError(t, err)
 
-	// Create a message with LastObservedAt set to 10 hours ago
 	message2 := getMessage(2, time.Now().Add(-10*time.Hour), false)
 	err = db.SaveMessage(message2)
 	require.NoError(t, err)
 
+	// Query messages
 	result, err := db.QueryMessagesByIndex(false, 30*time.Hour)
 	require.NoError(t, err)
+	require.Len(t, result, 1, "expected 1 message")
 
-	length := len(result)
-	require.Equal(t, 1, length, "expected 1 message")
+	// Check if the message0 is in the result
+	require.Equal(t, message0.MessageID, result[0].MessageID)
+	require.True(t, observedTime.Equal(result[0].LastObservedAt), "message0 should be found in the result set")
+}
 
-	found := false
-	for _, msg := range result {
-		if msg.MessageID == message0.MessageID && msg.LastObservedAt.Equal(message0.LastObservedAt) && msg.MetricsChecked == true {
-			found = true
-			break
+func TestRemoveObservationsByIndex(t *testing.T) {
+	db := OpenDb(zap.NewNop(), nil)
+	defer db.db.Close()
+
+	testCases := []struct {
+		messageID       int
+		timeOffset      time.Duration
+		metricsChecked  bool
+		expectEmpty     bool
+	}{
+		{0, -49 * time.Hour, true, true},
+		{1, -40 * time.Hour, true, false},
+		{2, -50 * time.Hour, false, false},
+		{3, -72 * time.Hour, true, true},
+		{4, -96 * time.Hour, true, true},
+	}
+
+	for _, tc := range testCases {
+		message := getMessage(tc.messageID, time.Now().Add(tc.timeOffset), tc.metricsChecked)
+		err := db.SaveMessage(message)
+		require.NoError(t, err)
+	}
+
+	err := db.RemoveObservationsByIndex(true, 48*time.Hour)
+	require.NoError(t, err)
+
+	for _, tc := range testCases {
+		messageFromDb, err := db.GetMessage(fmt.Sprintf("messageId%d", tc.messageID))
+		require.NoError(t, err)
+		if tc.expectEmpty {
+			require.Empty(t, messageFromDb.Observations, "expected observations to be removed for message", tc.messageID)
+		} else {
+			require.NotEmpty(t, messageFromDb.Observations, "expected observations to be present for message", tc.messageID)
 		}
 	}
-	require.True(t, found, "message found in the result set")
 }

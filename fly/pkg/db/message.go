@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 )
@@ -154,42 +155,91 @@ func (db *Database) AppendObservationIfNotExist(messageID string, observation Ob
 	})
 }
 
-// QueryMessagesByIndex retrieves messages based on indexed attributes.
-func (db *Database) QueryMessagesByIndex(metricsChecked bool, cutOffTime time.Duration) ([]*Message, error) {
-	var messages []*Message
-	now := time.Now()
+// batchUpdateMessages performs batch updates on a slice of messages.
+func (db *Database) batchUpdateMessages(messages []*Message) error {
+	for i := 0; i < len(messages); i += common.MessageUpdateBatchSize {
+		end := i + common.MessageUpdateBatchSize
+		if end > len(messages) {
+			end = len(messages)
+		}
+		if err := db.updateMessagesBatch(messages[i:end]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-	// Start a read-only transaction
-	err := db.db.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false // Only keys are needed
+// updateMessagesBatch updates a batch of messages in a single transaction.
+func (db *Database) updateMessagesBatch(messagesBatch []*Message) error {
+	return db.db.Update(func(txn *badger.Txn) error {
+		for _, message := range messagesBatch {
+			data, err := json.Marshal(message)
+			if err != nil {
+				return fmt.Errorf("failed to marshal message: %w", err)
+			}
+			if err := txn.Set([]byte(message.MessageID), data); err != nil {
+				return fmt.Errorf("failed to save message: %w", err)
+			}
+		}
+		return nil
+	})
+}
+
+// iterateIndex iterates over a metricsChecked index and applies a callback function to each item.
+func (db *Database) iterateIndex(metricsChecked bool, callback func(item *badger.Item) error) error {
+	opts := badger.DefaultIteratorOptions
+	opts.PrefetchValues = false // Only keys are needed
+	return db.db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(opts)
 		defer it.Close()
 
 		metricsCheckedPrefix := fmt.Sprintf("metricsChecked|%t|", metricsChecked)
-
-		// Iterate over the metricsChecked index
 		for it.Seek([]byte(metricsCheckedPrefix)); it.ValidForPrefix([]byte(metricsCheckedPrefix)); it.Next() {
-			item := it.Item()
-			key := item.Key()
-
-			// Extract MessageID from the key and query lastObservedAt index
-			_, messageID, err := parseMetricsCheckedIndexKey(key)
-			if err != nil {
-				return fmt.Errorf("failed to parse index key: %w", err)
+			if err := callback(it.Item()); err != nil {
+				return err
 			}
+		}
+		return nil
+	})
+}
 
-			message, err := db.GetMessage(messageID)
-			if err != nil {
-				return fmt.Errorf("failed to get message by ID: %w", err)
-			}
 
-			// Check if the last observed timestamp is before the specified hours
-			if message.LastObservedAt.Before(now.Add(-cutOffTime)) {
-				message.MetricsChecked = true
-				db.SaveMessage(message)
-				messages = append(messages, message)
-			}
+// processMessage retrieves a message from the database and applies an update function to it if the message is older than the cut-off time
+func (db *Database) processMessage(messageID string, now time.Time, cutOffTime time.Duration, updateFunc func(*Message) bool) (*Message, error) {
+	message, err := db.GetMessage(messageID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get message by ID: %w", err)
+	}
+
+	if message.LastObservedAt.Before(now.Add(-cutOffTime)) && updateFunc(message) {
+		return message, nil
+	}
+	return nil, nil
+}
+
+// QueryMessagesByIndex retrieves messages based on indexed attributes.
+func (db *Database) QueryMessagesByIndex(metricsChecked bool, cutOffTime time.Duration) ([]*Message, error) {
+	var messagesToUpdate []*Message
+	now := time.Now()
+
+	err := db.iterateIndex(metricsChecked, func(item *badger.Item) error {
+		key := item.Key()
+		_, messageID, err := parseMetricsCheckedIndexKey(key)
+		if err != nil {
+			return fmt.Errorf("failed to parse index key: %w", err)
+		}
+
+		message, err := db.processMessage(messageID, now, cutOffTime, func(m *Message) bool {
+			m.MetricsChecked = true
+			return true
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if message != nil {
+			messagesToUpdate = append(messagesToUpdate, message)
 		}
 
 		return nil
@@ -199,5 +249,44 @@ func (db *Database) QueryMessagesByIndex(metricsChecked bool, cutOffTime time.Du
 		return nil, fmt.Errorf("failed to query messages: %w", err)
 	}
 
-	return messages, nil
+	if err := db.batchUpdateMessages(messagesToUpdate); err != nil {
+		return nil, fmt.Errorf("failed to batch update messages: %w", err)
+	}
+
+	return messagesToUpdate, nil
+}
+
+// RemoveObservationsByIndex removes observations from messages based on indexed attributes.
+func (db *Database) RemoveObservationsByIndex(metricsChecked bool, cutOffTime time.Duration) error {
+	var messagesToUpdate []*Message
+	now := time.Now()
+
+	err := db.iterateIndex(metricsChecked, func(item *badger.Item) error {
+		key := item.Key()
+		_, messageID, err := parseMetricsCheckedIndexKey(key)
+		if err != nil {
+			return fmt.Errorf("failed to parse index key: %w", err)
+		}
+
+		message, err := db.processMessage(messageID, now, cutOffTime, func(m *Message) bool {
+			m.Observations = nil
+			return true
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if message != nil {
+			messagesToUpdate = append(messagesToUpdate, message)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return db.batchUpdateMessages(messagesToUpdate)
 }

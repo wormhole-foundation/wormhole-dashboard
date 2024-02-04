@@ -31,6 +31,7 @@ var (
 	rootCtx       context.Context
 	rootCtxCancel context.CancelFunc
 
+	dataDir        string
 	p2pNetworkID   string
 	p2pPort        uint
 	p2pBootstrap   string
@@ -74,6 +75,7 @@ func loadEnvVars() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+	dataDir = verifyEnvVar("DATA_DIR")
 	p2pNetworkID = verifyEnvVar("P2P_NETWORK_ID")
 	port, err := strconv.ParseUint(verifyEnvVar("P2P_PORT"), 10, 32)
 	if err != nil {
@@ -95,7 +97,7 @@ func verifyEnvVar(key string) string {
 	return value
 }
 
-func initPromScraper(promRemoteURL string, logger *zap.Logger) {
+func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) {
 	usingPromRemoteWrite := promRemoteURL != ""
 	if usingPromRemoteWrite {
 		var info promremotew.PromTelemetryInfo
@@ -106,7 +108,7 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger) {
 		}
 
 		promLogger := logger.With(zap.String("component", "prometheus_scraper"))
-		errC := make(chan error)
+
 		node_common.StartRunnable(rootCtx, errC, false, "prometheus_scraper", func(ctx context.Context) error {
 			t := time.NewTicker(15 * time.Second)
 
@@ -144,8 +146,8 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger) {
 	}
 }
 
-func initObservationScraper(db *db.Database, logger *zap.Logger) {
-	node_common.StartRunnable(rootCtx, nil, false, "observation_scraper", func(ctx context.Context) error {
+func initObservationScraper(db *db.Database, logger *zap.Logger, errC chan error) {
+	node_common.StartRunnable(rootCtx, errC, false, "observation_scraper", func(ctx context.Context) error {
 		t := time.NewTicker(15 * time.Second)
 
 		for {
@@ -173,6 +175,25 @@ func initObservationScraper(db *db.Database, logger *zap.Logger) {
 			}
 		}
 	})
+}
+
+func initDatabaseCleanUp(db *db.Database, logger *zap.Logger, errC chan error) {
+	node_common.StartRunnable(rootCtx, errC, false, "db_cleanup", func(ctx context.Context) error {
+		t := time.NewTicker(common.DatabaseCleanUpInterval)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-t.C:
+				err := db.RemoveObservationsByIndex(true, common.ExpiryDuration)
+				if err != nil {
+					logger.Error("RemoveObservationsByIndex error", zap.Error(err))
+				}
+			}
+		}
+	})
+
 }
 
 func main() {
@@ -228,11 +249,23 @@ func main() {
 	}
 	gst.Set(&gs)
 
-	db := db.OpenDb(logger, nil)
-
+	db := db.OpenDb(logger, &dataDir)
+	promErrC := make(chan error)
 	// Start Prometheus scraper
-	initPromScraper(promRemoteURL, logger)
-	initObservationScraper(db, logger)
+	initPromScraper(promRemoteURL, logger, promErrC)
+	initObservationScraper(db, logger, promErrC)
+	initDatabaseCleanUp(db, logger, promErrC)
+
+	go func() {
+		for {
+			select {
+			case <-rootCtx.Done():
+				return
+			case err := <-promErrC:
+				logger.Error("error from prometheus scraper", zap.Error(err))
+			}
+		}
+	}()
 
 	// WIP(bing): add metrics for guardian observations
 	go func() {

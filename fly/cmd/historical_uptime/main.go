@@ -14,13 +14,14 @@ import (
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	"github.com/certusone/wormhole/node/pkg/supervisor"
 	promremotew "github.com/certusone/wormhole/node/pkg/telemetry/prom_remote_write"
-	eth_common "github.com/ethereum/go-ethereum/common"
 	ipfslog "github.com/ipfs/go-log/v2"
 	"github.com/joho/godotenv"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/db"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/historical_uptime"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 	"go.uber.org/zap"
@@ -53,6 +54,14 @@ var (
 		prometheus.GaugeOpts{
 			Name: "guardian_chain_height",
 			Help: "Current height of each guardian on each chain over time",
+		},
+		[]string{"guardian", "chain"},
+	)
+
+	guardianMissedObservations = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "guardian_missed_observations_total",
+			Help: "Total number of observations missed by each guardian on each chain",
 		},
 		[]string{"guardian", "chain"},
 	)
@@ -120,6 +129,7 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger) {
 						// adding this will make sure chain labels are present regardless
 						for _, guardianName := range common.GetGuardianIndexToNameMap() {
 							guardianObservations.WithLabelValues(guardianName, chainName).Add(0)
+							guardianMissedObservations.WithLabelValues(guardianName, chainName).Add(0)
 						}
 					}
 					err := promremotew.ScrapeAndSendLocalMetrics(ctx, info, promLogger)
@@ -132,6 +142,37 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger) {
 			}
 		})
 	}
+}
+
+func initObservationScraper(db *db.Database, logger *zap.Logger) {
+	node_common.StartRunnable(rootCtx, nil, false, "observation_scraper", func(ctx context.Context) error {
+		t := time.NewTicker(15 * time.Second)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-t.C:
+				messages, err := db.QueryMessagesByIndex(false, common.ExpiryDuration)
+				if err != nil {
+					logger.Error("QueryMessagesByIndex error", zap.Error(err))
+					continue
+				}
+
+				// Tally the number of messages for each chain
+				messagesPerChain := historical_uptime.TallyMessagesPerChain(logger, messages)
+
+				// Initialize the missing observations count for each guardian for each chain
+				guardianMissingObservations := historical_uptime.InitializeMissingObservationsCount(logger, messages, messagesPerChain)
+
+				// Decrement the missing observations count for each observed message
+				historical_uptime.DecrementMissingObservationsCount(logger, guardianMissingObservations, messages)
+
+				// Update the metrics with the final count of missing observations
+				historical_uptime.UpdateMetrics(guardianMissedObservations, guardianMissingObservations)
+			}
+		}
+	})
 }
 
 func main() {
@@ -180,15 +221,18 @@ func main() {
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}
-	logger.Info("guardian set", zap.Uint32("index", idx), zap.Any("gs", sgs))
+
 	gs := node_common.GuardianSet{
 		Keys:  sgs.Keys,
 		Index: idx,
 	}
 	gst.Set(&gs)
 
+	db := db.OpenDb(logger, nil)
+
 	// Start Prometheus scraper
 	initPromScraper(promRemoteURL, logger)
+	initObservationScraper(db, logger)
 
 	// WIP(bing): add metrics for guardian observations
 	go func() {
@@ -197,23 +241,7 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case o := <-obsvC:
-				// Ignore observations from pythnnet
-				// Pythnet sends too many observations that could deteriorate the performance of the fly node
-				if o.Msg.MessageId[:3] != strconv.Itoa(PYTHNET_CHAIN_ID) + "/" {
-					ga := eth_common.BytesToAddress(o.Msg.Addr).String()
-					chainID := strings.Split(o.Msg.MessageId, "/")[0]
-					ui64, err := strconv.ParseUint(chainID, 10, 16)
-					if err != nil {
-						panic(err)
-					}
-					chainName := vaa.ChainID(ui64).String()
-					guardianName, ok := common.GetGuardianName(ga)
-					if !ok {
-						logger.Error("guardian name not found", zap.String("guardian", ga))
-						continue // Skip setting the metric if guardianName is not found
-					}
-					guardianObservations.WithLabelValues(guardianName, chainName).Inc()
-				}
+				historical_uptime.ProcessObservation(*db, logger, *o)
 			}
 		}
 	}()

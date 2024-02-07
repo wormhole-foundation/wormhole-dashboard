@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { PagerDutyInfo, SlackInfo } from './types';
+import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 export async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
@@ -86,14 +87,14 @@ export async function formatAndSendToSlack(info: SlackInfo): Promise<any> {
   return responseData;
 }
 
-export async function isVAASigned(vaaKey: string): Promise<boolean> {
-  const url: string = WormholescanRPC + 'v1/signed_vaa/' + vaaKey;
+export async function isVAASigned(env: Environment, vaaKey: string): Promise<boolean> {
+  const url: string = WormholescanRPC + 'v1/signed_vaa/' + vaaKey + '?network=' + env.toUpperCase();
   try {
     const response = await axios.get(url);
     // curl -X 'GET' \
     // 'https://api.wormholescan.io/v1/signed_vaa/1/ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5/319118' \
     // -H 'accept: application/json'
-    // This function will return true if the get returns 200
+    // This function will return true if the GET returns 200
     // Otherwise, it will return false
     if (response.status === 200) {
       return true;

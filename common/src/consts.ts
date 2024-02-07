@@ -191,7 +191,7 @@ export const CHAIN_INFO_MAP: { [key in Environment]: { [key: string]: CHAIN_INFO
       evm: false,
       chainId: CHAIN_ID_SOLANA,
       endpointUrl: process.env.REACT_APP_SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
-      explorerStem: `https://solscan.io`,
+      explorerStem: `https://solana.fm`,
     },
     2: {
       name: 'eth',

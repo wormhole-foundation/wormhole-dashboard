@@ -117,7 +117,7 @@ export async function alarmMissingVaas(req: any, res: any) {
                 console.log(`skipping over ${vaaKey} because it is governed`);
                 continue;
               }
-              if (await isVAASigned(vaaKey)) {
+              if (await isVAASigned(getEnvironment(), vaaKey)) {
                 console.log(`skipping over ${vaaKey} because it is signed`);
                 continue;
               }
@@ -249,7 +249,7 @@ async function getAndProcessReobsVAAs(): Promise<Map<string, ReobserveInfo>> {
         if (data) {
           const vaas: ReobserveInfo[] = data.VAAs;
           vaas.forEach(async (vaa) => {
-            if (!(await isVAASigned(vaa.vaaKey))) {
+            if (!(await isVAASigned(getEnvironment(), vaa.vaaKey))) {
               console.log('keeping reobserved VAA in firestore', vaa.vaaKey);
               current.set(vaa.txhash, vaa);
             } else {

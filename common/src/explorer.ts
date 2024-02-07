@@ -36,7 +36,7 @@ import { CHAIN_INFO_MAP, Environment } from './consts';
 export const explorerBlock = (network: Environment, chainId: ChainId, block: string) =>
   network === 'mainnet'
     ? chainId === CHAIN_ID_SOLANA
-      ? `https://solscan.io/block/${block}`
+      ? `https://solana.fm/block/${block}`
       : chainId === CHAIN_ID_ETH
       ? `https://etherscan.io/block/${block}`
       : chainId === CHAIN_ID_TERRA
@@ -135,7 +135,7 @@ export const explorerBlock = (network: Environment, chainId: ChainId, block: str
 export const explorerTx = (network: Environment, chainId: ChainId, tx: string) =>
   network === 'mainnet'
     ? chainId === CHAIN_ID_SOLANA
-      ? `https://solscan.io/account/${tx}`
+      ? `https://solana.fm/tx/${tx}`
       : chainId === CHAIN_ID_ETH
       ? `https://etherscan.io/tx/${tx}`
       : chainId === CHAIN_ID_TERRA

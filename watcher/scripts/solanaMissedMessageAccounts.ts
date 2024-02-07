@@ -6,7 +6,10 @@ import { Connection } from '@solana/web3.js';
 import axios from 'axios';
 import ora from 'ora';
 import { RPCS_BY_CHAIN } from '../src/consts';
-import { isLegacyMessage, normalizeCompileInstruction } from '../src/utils/solana';
+import {
+  isLegacyMessage,
+  normalizeCompileInstruction,
+} from '@wormhole-foundation/wormhole-monitor-common/src/solana';
 
 // This script finds the message accounts which correspond to solana misses
 

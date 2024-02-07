@@ -13,7 +13,10 @@ import { z } from 'zod';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { isLegacyMessage, normalizeCompileInstruction } from '../utils/solana';
+import {
+  isLegacyMessage,
+  normalizeCompileInstruction,
+} from '@wormhole-foundation/wormhole-monitor-common/src/solana';
 import { Watcher } from './Watcher';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 

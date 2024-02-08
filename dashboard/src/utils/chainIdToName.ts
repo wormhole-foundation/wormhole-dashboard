@@ -8,6 +8,9 @@ const chainIdToNameMap: { [chainId: string]: string } = {
   4002: 'kujira',
   4003: 'neutron',
   4004: 'celestia',
+  4005: 'stargaze',
+  4006: 'seda',
+  4007: 'dymension',
 };
 const chainIdToName = (chainId: number) => chainIdToNameMap[chainId] || 'Unknown';
 export default chainIdToName;

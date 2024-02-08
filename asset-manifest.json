@@ -1,11 +1,13 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.eb1ed42a.js",
+    "main.js": "/wormhole-dashboard/static/js/main.21b0edbd.js",
     "static/js/915.dda1937c.chunk.js": "/wormhole-dashboard/static/js/915.dda1937c.chunk.js",
     "static/media/osmosis.svg": "/wormhole-dashboard/static/media/osmosis.e63cfefeb2a04452c70bc79d10edca03.svg",
+    "static/media/dymension2.svg": "/wormhole-dashboard/static/media/dymension2.53975f485b10fc318e9617137738d311.svg",
     "static/media/wormchain.svg": "/wormhole-dashboard/static/media/wormchain.be86e5a58243fcf2111bbcaa83406d5d.svg",
     "static/media/celestia.svg": "/wormhole-dashboard/static/media/celestia.ea60ee4ef34dc708d156f0b4bb7fe9be.svg",
     "static/media/kujira.svg": "/wormhole-dashboard/static/media/kujira.1cc5094ac1cb9771b6846ea16759e0c3.svg",
+    "static/media/seda.svg": "/wormhole-dashboard/static/media/seda.30608e68e42295e0af7a12c23223e2df.svg",
     "static/media/moonbeam.svg": "/wormhole-dashboard/static/media/moonbeam.d537e3282e2645ee2f1df9f7c3711f5a.svg",
     "static/media/mantle-mnt-logo.svg": "/wormhole-dashboard/static/media/mantle-mnt-logo.ced12d220ef3dc8c97faeca6deb49f44.svg",
     "static/media/terra2.svg": "/wormhole-dashboard/static/media/terra2.3b8a4497121229ac69ab6afa1c4e9317.svg",
@@ -35,14 +37,15 @@
     "static/media/fantom.svg": "/wormhole-dashboard/static/media/fantom.9248a2ffc8ffd648deb33b2ae9f8a95a.svg",
     "static/media/near.svg": "/wormhole-dashboard/static/media/near.bd102ec18374f08bd0c3f993edef5ca7.svg",
     "static/media/neutron.svg": "/wormhole-dashboard/static/media/neutron.5783588e449c38c4d8c036cff64cd3cb.svg",
+    "static/media/stargaze_white.svg": "/wormhole-dashboard/static/media/stargaze_white.6fc60f6c75403769c9a181132508be2a.svg",
     "static/media/avax.svg": "/wormhole-dashboard/static/media/avax.1e98fe3597e8eaf3f1fbacc3013f2d2f.svg",
     "static/media/xpla.svg": "/wormhole-dashboard/static/media/xpla.39d25b51bf8a5b7f6aeb01cd57c5ec61.svg",
     "static/media/algorand.svg": "/wormhole-dashboard/static/media/algorand.699bf008d7073523b8edd75d8f3b38ac.svg",
     "static/media/eth.svg": "/wormhole-dashboard/static/media/eth.5a5de20bf3808241fc61ed9ad7680ab5.svg",
-    "main.eb1ed42a.js.map": "/wormhole-dashboard/static/js/main.eb1ed42a.js.map",
+    "main.21b0edbd.js.map": "/wormhole-dashboard/static/js/main.21b0edbd.js.map",
     "915.dda1937c.chunk.js.map": "/wormhole-dashboard/static/js/915.dda1937c.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.eb1ed42a.js"
+    "static/js/main.21b0edbd.js"
   ]
 }

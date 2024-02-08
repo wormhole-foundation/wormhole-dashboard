@@ -56,6 +56,7 @@ export class Watcher {
     let retry = 0;
     while (true) {
       try {
+        this.logger.debug(`fromBlock = ${fromBlock}, toBlock = ${toBlock}`);
         if (fromBlock !== null && toBlock !== null && fromBlock <= toBlock) {
           // fetch logs for the block range, inclusive of toBlock
           toBlock = Math.min(fromBlock + this.maximumBatchSize - 1, toBlock);
@@ -67,6 +68,7 @@ export class Watcher {
         try {
           this.logger.info('fetching finalized block');
           toBlock = await this.getFinalizedBlockNumber();
+          this.logger.debug(`finalized block = ${toBlock}`);
           if (fromBlock === null) {
             // handle first loop on a fresh chain without initial block set
             fromBlock = toBlock;

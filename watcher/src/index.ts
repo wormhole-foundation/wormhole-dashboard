@@ -42,6 +42,7 @@ const supportedChains: ChainName[] =
         'base',
         'sei',
         // 'wormchain',
+        'sepolia',
       ]
     : [
         // This is the list of chains supported in MAINNET.

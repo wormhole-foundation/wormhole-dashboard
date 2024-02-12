@@ -28,7 +28,7 @@ export const TIMEOUT = 0.5 * 1000;
 export const RPCS_BY_CHAIN: { [key in Environment]: { [key in ChainName]?: string } } = {
   ['mainnet']: {
     ethereum: process.env.ETH_RPC,
-    bsc: process.env.BSC_RPC || 'https://rpc.ankr.com/bsc',
+    bsc: process.env.BSC_RPC || 'https://bsc.publicnode.com',
     polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon',
     avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche',
     oasis: process.env.OASIS_RPC || 'https://emerald.oasis.dev',

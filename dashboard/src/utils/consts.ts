@@ -9,6 +9,7 @@ import bscIcon from '../images/bsc.svg';
 import celestiaIcon from '../images/celestia.svg';
 import celoIcon from '../images/celo.svg';
 import cosmoshubIcon from '../images/cosmoshub.svg';
+import dymensionIcon from '../images/dymension2.svg';
 import ethIcon from '../images/eth.svg';
 import evmosIcon from '../images/evmos.svg';
 import fantomIcon from '../images/fantom.svg';
@@ -27,8 +28,10 @@ import osmosisIcon from '../images/osmosis.svg';
 import polygonIcon from '../images/polygon.svg';
 import pythnetIcon from '../images/pyth_logomark_white.svg';
 import scrollIcon from '../images/scroll.svg';
+import sedaIcon from '../images/seda.svg';
 import seiIcon from '../images/sei.svg';
 import solanaIcon from '../images/solana.svg';
+import stargazeIcon from '../images/stargaze_white.svg';
 import suiIcon from '../images/sui.svg';
 import terraIcon from '../images/terra.svg';
 import terra2Icon from '../images/terra2.svg';
@@ -76,6 +79,9 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   4002: kujiraIcon,
   4003: neutronIcon,
   4004: celestiaIcon,
+  4005: stargazeIcon,
+  4006: sedaIcon,
+  4007: dymensionIcon,
   10002: ethIcon,
   10003: arbitrumIcon,
   10004: baseIcon,

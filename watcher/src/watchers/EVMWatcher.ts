@@ -1,5 +1,5 @@
 import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
-import { CONTRACTS, EVMChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { CONTRACTS, Contracts, EVMChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Log } from '@ethersproject/abstract-provider';
 import axios from 'axios';
 import { BigNumber } from 'ethers';
@@ -206,7 +206,13 @@ export class EVMWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const address = CONTRACTS.MAINNET[this.chain].core;
+    const contracts: Contracts =
+      this.network === 'mainnet'
+        ? CONTRACTS.MAINNET[this.chain]
+        : this.network === 'testnet'
+        ? CONTRACTS.TESTNET[this.chain]
+        : CONTRACTS.DEVNET[this.chain];
+    const address = contracts.core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }

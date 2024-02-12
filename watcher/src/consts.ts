@@ -80,6 +80,7 @@ export const RPCS_BY_CHAIN: { [key in Environment]: { [key in ChainName]?: strin
     base: process.env.BASE_RPC,
     sei: process.env.SEI_RPC,
     wormchain: process.env.WORMCHAIN_RPC,
+    sepolia: process.env.SEPOLIA_RPC,
   },
   ['devnet']: {},
 };

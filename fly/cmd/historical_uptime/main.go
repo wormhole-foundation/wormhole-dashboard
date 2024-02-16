@@ -59,6 +59,14 @@ var (
 		[]string{"guardian", "chain"},
 	)
 
+	guardianHeartbeats = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "guardian_heartbeats",
+			Help: "Heartbeat count of each guardian on each chain over time",
+		},
+		[]string{"guardian"},
+	)
+
 	guardianMissedObservations = promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "guardian_missed_observations_total",
@@ -309,13 +317,13 @@ func main() {
 			case <-rootCtx.Done():
 				return
 			case hb := <-heartbeatC:
-				for _, network := range hb.Networks {
-					guardianName, ok := common.GetGuardianName(hb.GuardianAddr)
-					if !ok {
-						logger.Error("guardian name not found", zap.String("guardian", hb.GuardianAddr))
-						continue // Skip setting the metric if guardianName is not found
-					}
+				guardianName, ok := common.GetGuardianName(hb.GuardianAddr)
+				if !ok {
+					logger.Error("guardian name not found", zap.String("guardian", hb.GuardianAddr))
+					continue // Skip setting the metric if guardianName is not found
+				}
 
+				for _, network := range hb.Networks {
 					guardianChainHeight.With(
 						prometheus.Labels{
 							"guardian": guardianName,
@@ -323,6 +331,14 @@ func main() {
 						},
 					).Set(float64(network.Height))
 				}
+
+				guardianHeartbeats.With(
+					prometheus.Labels{
+						"guardian": guardianName,
+					},
+				).Set(float64(hb.Counter))
+
+
 			}
 		}
 	}()

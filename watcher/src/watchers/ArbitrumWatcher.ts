@@ -17,7 +17,10 @@ export class ArbitrumWatcher extends EVMWatcher {
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
-    this.evmWatcher = new EVMWatcher(network, 'ethereum', 'finalized');
+    this.evmWatcher =
+      network === 'mainnet'
+        ? new EVMWatcher(network, 'ethereum', 'finalized')
+        : new EVMWatcher(network, 'sepolia', 'finalized');
     this.latestL2Finalized = 0;
     this.l1L2Map = new Map<number, number>();
     this.lastEthTime = 0;

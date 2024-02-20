@@ -80,6 +80,7 @@ export const RPCS_BY_CHAIN: { [key in Environment]: { [key in ChainName]?: strin
     base: process.env.BASE_RPC,
     sei: process.env.SEI_RPC,
     wormchain: process.env.WORMCHAIN_RPC,
+    sepolia: process.env.SEPOLIA_RPC,
   },
   ['devnet']: {},
 };
@@ -135,8 +136,12 @@ export const ALGORAND_INFO: { [key in Environment]: AlgorandInfo } = {
   },
 };
 
-export const SEI_EXPLORER_GRAPHQL = 'https://pacific-1-graphql.alleslabs.dev/v1/graphql';
-export const SEI_EXPLORER_TXS = 'https://celatone-api-prod.alleslabs.dev/v1/sei/pacific-1/txs/';
+export const SEI_EXPLORER_GRAPHQL_MAINNET = 'https://pacific-1-graphql.alleslabs.dev/v1/graphql';
+export const SEI_EXPLORER_TXS_MAINNET =
+  'https://celatone-api-prod.alleslabs.dev/v1/sei/pacific-1/txs/';
+export const SEI_EXPLORER_GRAPHQL_TESTNET = 'https://atlantic-2-graphql.alleslabs.dev/v1/graphql';
+export const SEI_EXPLORER_TXS_TESTNET =
+  'https://celatone-api-prod.alleslabs.dev/v1/sei/atlantic-2/txs/';
 
 export const DB_SOURCE =
   process.env.NODE_ENV === 'test' ? 'local' : process.env.DB_SOURCE || 'local';

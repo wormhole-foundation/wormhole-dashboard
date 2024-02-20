@@ -41,7 +41,7 @@ function Home({
           <Divider />
           <MonitorSettingsProvider>
             <CollapsibleSection header="Monitor">
-              <Monitor />
+              <Monitor governorInfo={governorInfo} />
             </CollapsibleSection>
           </MonitorSettingsProvider>
         </>

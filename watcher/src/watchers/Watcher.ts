@@ -74,6 +74,7 @@ export class Watcher {
             fromBlock = toBlock;
           }
           retry = 0;
+          this.logger.debug(`fromBlock = ${fromBlock}, toBlock = ${toBlock}`);
           await sleep(TIMEOUT);
         } catch (e) {
           // skip attempting to fetch messages until getting the finalized block succeeds

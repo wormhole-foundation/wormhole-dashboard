@@ -56,6 +56,8 @@ export function makeFinalizedWatcher(network: Environment, chainName: ChainName)
     return new SuiWatcher(network);
   } else if (chainName === 'wormchain') {
     return new WormchainWatcher(network);
+  } else if (chainName === 'sepolia' && network === 'testnet') {
+    return new EVMWatcher(network, chainName, 'finalized');
   } else {
     throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
   }

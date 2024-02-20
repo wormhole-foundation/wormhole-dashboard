@@ -25,6 +25,7 @@ import {
   explorerVaa,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Environment, useCurrentEnvironment, useNetworkContext } from '../contexts/NetworkContext';
+import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 
 type LastBlockByChain = { [chainId: string]: string };
 type CountsByChain = {
@@ -291,7 +292,7 @@ function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
   ) : null;
 }
 
-function Misses() {
+function Misses({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
   const { currentNetwork } = useNetworkContext();
   const { showAllMisses } = useSettings();
   const [missesWrapper, setMissesWrapper] = useState<DataWrapper<MissesByChain>>(
@@ -329,7 +330,17 @@ function Misses() {
         .map(([chain, info]) => {
           const filteredMisses = showAllMisses
             ? info.messages
-            : info.messages.filter((message) => message.timestamp < twoHoursAgo);
+            : info.messages
+                .filter((message) => message.timestamp < twoHoursAgo)
+                .filter(
+                  (message) =>
+                    !governorInfo?.enqueuedVAAs.some(
+                      (enqueuedVAA) =>
+                        enqueuedVAA.emitterChain === message.chain &&
+                        enqueuedVAA.emitterAddress === message.emitter &&
+                        enqueuedVAA.sequence === message.seq
+                    )
+                );
           return filteredMisses.length === 0 ? null : (
             <CollapsibleSection
               key={chain}
@@ -400,7 +411,7 @@ function SettingsButton() {
   );
 }
 
-function Monitor() {
+function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
   const { currentNetwork } = useNetworkContext();
   const [lastBlockByChainWrapper, setLastBlockByChainWrapper] = useState<
     DataWrapper<LastBlockByChain>
@@ -466,7 +477,7 @@ function Monitor() {
         <SettingsButton />
       </Box>
       <Box mb={2}>
-        <Misses />
+        <Misses governorInfo={governorInfo} />
       </Box>
       <Typography variant="h4">Chains</Typography>
       <Box pl={0.5}>

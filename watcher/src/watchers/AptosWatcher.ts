@@ -61,7 +61,8 @@ export class AptosWatcher extends Watcher {
         ]);
         const timestamp = new Date(Number(block.block_timestamp) / 1000).toISOString();
         const blockKey = [block.block_height, timestamp, sequence_number].join('/'); // use custom block key for now so we can include sequence number
-        const emitter = data.sender.padStart(64, '0');
+        // Data.sender is a decimal as a string.  It needs to be hexadecimal.
+        const emitter = BigInt(data.sender).toString(16).padStart(64, '0');
         const vaaKey = makeVaaKey(transaction.hash, this.chain, emitter, data.sequence);
         vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] ?? []), vaaKey];
       })

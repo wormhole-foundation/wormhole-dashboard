@@ -11,7 +11,11 @@ export class ArbitrumWatcher extends EVMWatcher {
   lastEthTime: number;
 
   constructor(network: Environment) {
-    super(network, 'arbitrum');
+    if (network === 'mainnet') {
+      super(network, 'arbitrum');
+    } else {
+      super(network, 'arbitrum_sepolia');
+    }
 
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {

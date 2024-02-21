@@ -56,8 +56,19 @@ export function makeFinalizedWatcher(network: Environment, chainName: ChainName)
     return new SuiWatcher(network);
   } else if (chainName === 'wormchain') {
     return new WormchainWatcher(network);
-  } else if (chainName === 'sepolia' && network === 'testnet') {
-    return new EVMWatcher(network, chainName, 'finalized');
+  } else if (network === 'testnet') {
+    // These are testnet only chains
+    if (chainName === 'sepolia' || chainName === 'holesky') {
+      return new EVMWatcher(network, chainName, 'finalized');
+    } else if (chainName === 'arbitrum_sepolia') {
+      return new ArbitrumWatcher(network);
+    } else if (chainName === 'optimism_sepolia' || chainName === 'base_sepolia') {
+      return new EVMWatcher(network, chainName);
+    } else {
+      throw new Error(
+        `Attempted to create finalized watcher for unsupported testnet chain ${chainName}`
+      );
+    }
   } else {
     throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
   }

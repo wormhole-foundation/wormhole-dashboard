@@ -18,7 +18,7 @@ const supportedChains: ChainName[] =
         // NOTE:  The commented out chains are left in there to easily
         //        identify which chains are not supported on testnet.
         'solana',
-        'ethereum',
+        // 'ethereum',
         // 'terra',
         'bsc',
         'polygon',
@@ -43,6 +43,10 @@ const supportedChains: ChainName[] =
         'sei',
         // 'wormchain',
         'sepolia',
+        'arbitrum_sepolia',
+        'base_sepolia',
+        'optimism_sepolia',
+        'holesky',
       ]
     : [
         // This is the list of chains supported in MAINNET.

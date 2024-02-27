@@ -69,3 +69,45 @@ func UpdateMetrics(guardianMissedObservations *prometheus.CounterVec, guardianMi
 		}
 	}
 }
+
+func computeMaxChainHeights(guardianChainHeights common.GuardianChainHeights) common.ChainHeights {
+	maxChainHeights := make(common.ChainHeights)
+
+	for chainId, guardianHeights  := range guardianChainHeights {
+		highest := uint64(0)
+
+		for _, guardianHeight := range guardianHeights {
+			if highest < guardianHeight {
+				highest = guardianHeight
+			}
+		}
+
+		maxChainHeights[chainId] = highest
+	}
+
+	return maxChainHeights
+}
+
+func computeGuardianChainHeightDifferences(guardianChainHeights common.GuardianChainHeights, maxChainHeights common.ChainHeights) common.GuardianChainHeights {
+	heightDifferences := make(common.GuardianChainHeights)
+
+	for chainId, guardianHeights := range guardianChainHeights {
+		for guardian, height := range guardianHeights {
+			if heightDifferences[chainId] == nil {
+				heightDifferences[chainId] = make(common.GuardianHeight)
+			}
+
+			// maxChainHeights[chain] always guaranteed to be at least height since it's computed in `computeMaxChainHeights`
+			heightDifferences[chainId][guardian] = maxChainHeights[chainId] - height
+		}
+	}
+
+	return heightDifferences
+}
+
+func GetGuardianHeightDifferencesByChain(guardianChainHeights common.GuardianChainHeights) common.GuardianChainHeights {
+	maxChainHeights := computeMaxChainHeights(guardianChainHeights)
+	return computeGuardianChainHeightDifferences(guardianChainHeights, maxChainHeights)
+}
+
+

@@ -59,6 +59,14 @@ var (
 		[]string{"guardian", "chain"},
 	)
 
+	guardianChainHeightDifferences = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "guardian_chain_height_differences",
+			Help: "Current height difference of each guardian from max height on each chain over time",
+		},
+		[]string{"guardian", "chain"},
+	)
+
 	guardianHeartbeats = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "guardian_heartbeats",
@@ -77,6 +85,11 @@ var (
 )
 
 const PYTHNET_CHAIN_ID = int(vaa.ChainIDPythNet)
+
+var (
+	// guardianChainHeights indexes current chain height by chain id and guardian name
+	guardianChainHeights = make(common.GuardianChainHeights)
+)
 
 func loadEnvVars() {
 	err := godotenv.Load() // By default loads .env
@@ -105,6 +118,18 @@ func verifyEnvVar(key string) string {
 	return value
 }
 
+func recordGuardianHeightDifferences() {
+	guardianHeightDifferencesByChain := historical_uptime.GetGuardianHeightDifferencesByChain(guardianChainHeights)
+
+	for chainId, guardianHeightDifferences := range guardianHeightDifferencesByChain {
+		chainName := vaa.ChainID(chainId).String()
+
+		for guardian, heightDifference := range guardianHeightDifferences {
+			guardianChainHeightDifferences.WithLabelValues(guardian, chainName).Set(float64(heightDifference))
+		}
+	}
+}
+
 func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) {
 	usingPromRemoteWrite := promRemoteURL != ""
 	if usingPromRemoteWrite {
@@ -125,6 +150,7 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) 
 				case <-ctx.Done():
 					return nil
 				case <-t.C:
+					recordGuardianHeightDifferences()
 					for i := 1; i < 36; i++ {
 						if i == PYTHNET_CHAIN_ID {
 							continue
@@ -324,6 +350,11 @@ func main() {
 				}
 
 				for _, network := range hb.Networks {
+					if guardianChainHeights[network.Id] == nil {
+						guardianChainHeights[network.Id] = make(common.GuardianHeight)
+					}
+
+					guardianChainHeights[network.Id][guardianName] = uint64(network.Height)
 					guardianChainHeight.With(
 						prometheus.Labels{
 							"guardian": guardianName,
@@ -337,7 +368,6 @@ func main() {
 						"guardian": guardianName,
 					},
 				).Set(float64(hb.Counter))
-
 
 			}
 		}

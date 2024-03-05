@@ -47,7 +47,7 @@ export const RPCS_BY_CHAIN: { [key in Environment]: { [key in ChainName]?: strin
     terra2: process.env.TERRA2_RPC || 'https://phoenix-lcd.terra.dev',
     // terra: 'https://columbus-fcd.terra.dev',
     terra: process.env.TERRA_RPC || 'https://terra-classic-fcd.publicnode.com',
-    injective: process.env.INJECTIVE_RPC || 'https://api.injective.network',
+    injective: process.env.INJECTIVE_RPC || 'https://sentry.exchange.grpc-web.injective.network',
     solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
     sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
     base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',

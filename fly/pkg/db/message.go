@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
 	"github.com/dgraph-io/badger/v3"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 )
 
@@ -203,7 +203,6 @@ func (db *Database) iterateIndex(metricsChecked bool, callback func(item *badger
 	})
 }
 
-
 // processMessage retrieves a message from the database and applies an update function to it if the message is older than the cut-off time
 func (db *Database) processMessage(messageID string, now time.Time, cutOffTime time.Duration, updateFunc func(*Message) bool) (*Message, error) {
 	message, err := db.GetMessage(messageID)
@@ -240,6 +239,13 @@ func (db *Database) QueryMessagesByIndex(metricsChecked bool, cutOffTime time.Du
 
 		if message != nil {
 			messagesToUpdate = append(messagesToUpdate, message)
+
+			if (len(messagesToUpdate) % common.MessageUpdateBatchSize) == 0 {
+				if err := db.batchUpdateMessages(messagesToUpdate); err != nil {
+					return fmt.Errorf("failed to batch update messages: %w", err)
+				}
+				messagesToUpdate = messagesToUpdate[:0]
+			}
 		}
 
 		return nil
@@ -256,11 +262,12 @@ func (db *Database) QueryMessagesByIndex(metricsChecked bool, cutOffTime time.Du
 	return messagesToUpdate, nil
 }
 
-// RemoveObservationsByIndex removes observations from messages based on indexed attributes.
-func (db *Database) RemoveObservationsByIndex(metricsChecked bool, cutOffTime time.Duration) error {
-	var messagesToUpdate []*Message
+// removeMessagesByIndex dynamically deletes messages in batches based on indexed attributes.
+func (db *Database) RemoveMessagesByIndex(metricsChecked bool, cutOffTime time.Duration) error {
+	messageIDsToDelete := make([]string, 0)
 	now := time.Now()
 
+	// Iterate over the index to find messages to delete
 	err := db.iterateIndex(metricsChecked, func(item *badger.Item) error {
 		key := item.Key()
 		_, messageID, err := parseMetricsCheckedIndexKey(key)
@@ -269,7 +276,7 @@ func (db *Database) RemoveObservationsByIndex(metricsChecked bool, cutOffTime ti
 		}
 
 		message, err := db.processMessage(messageID, now, cutOffTime, func(m *Message) bool {
-			m.Observations = nil
+			// return true since we just want to delete the message, no updating is needed
 			return true
 		})
 
@@ -278,7 +285,15 @@ func (db *Database) RemoveObservationsByIndex(metricsChecked bool, cutOffTime ti
 		}
 
 		if message != nil {
-			messagesToUpdate = append(messagesToUpdate, message)
+			messageIDsToDelete = append(messageIDsToDelete, messageID)
+		}
+
+		// Delete messages in batches to reduce total memory usage at a time
+		if len(messageIDsToDelete) >= common.MessageUpdateBatchSize {
+			if err := db.deleteMessagesBatch(messageIDsToDelete); err != nil {
+				return fmt.Errorf("failed to delete messages: %w", err)
+			}
+			messageIDsToDelete = make([]string, 0)
 		}
 
 		return nil
@@ -288,5 +303,24 @@ func (db *Database) RemoveObservationsByIndex(metricsChecked bool, cutOffTime ti
 		return err
 	}
 
-	return db.batchUpdateMessages(messagesToUpdate)
+	return db.deleteMessagesBatch(messageIDsToDelete)
+}
+
+func (db *Database) deleteMessagesBatch(messageIDs []string) error {
+	return db.db.Update(func(txn *badger.Txn) error {
+		for _, messageID := range messageIDs {
+			err := txn.Delete([]byte(messageID))
+			// deleting the message should delete the index as well
+			mcKey := fmt.Sprintf(metricsCheckedIndexKeyFmt, true, messageID)
+			if err := txn.Delete([]byte(mcKey)); err != nil {
+				return fmt.Errorf("failed to delete index for messageID %s: %w", messageID, err)
+			}
+			if err != nil {
+				// Depending on your error handling strategy, you might want to log this error
+				// and continue, or you might want to return the error immediately.
+				return fmt.Errorf("failed to delete messageID %s: %w", messageID, err)
+			}
+		}
+		return nil
+	})
 }

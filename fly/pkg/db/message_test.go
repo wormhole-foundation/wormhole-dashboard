@@ -112,16 +112,16 @@ func TestRemoveObservationsByIndex(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	err := db.RemoveObservationsByIndex(true, 48*time.Hour)
+	err := db.RemoveMessagesByIndex(true, 48*time.Hour)
 	require.NoError(t, err)
 
 	for _, tc := range testCases {
-		messageFromDb, err := db.GetMessage(fmt.Sprintf("messageId%d", tc.messageID))
-		require.NoError(t, err)
+		_, err := db.GetMessage(fmt.Sprintf("messageId%d", tc.messageID))
+		// err should return message not found
 		if tc.expectEmpty {
-			require.Empty(t, messageFromDb.Observations, "expected observations to be removed for message", tc.messageID)
+			require.ErrorIs(t, err, ErrMessageNotFound)
 		} else {
-			require.NotEmpty(t, messageFromDb.Observations, "expected observations to be present for message", tc.messageID)
+			require.NoError(t, err)
 		}
 	}
 }

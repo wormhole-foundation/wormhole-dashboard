@@ -220,7 +220,7 @@ func initDatabaseCleanUp(db *db.Database, logger *zap.Logger, errC chan error) {
 			case <-ctx.Done():
 				return nil
 			case <-t.C:
-				err := db.RemoveObservationsByIndex(true, common.ExpiryDuration)
+				err := db.RemoveMessagesByIndex(true, common.ExpiryDuration)
 				if err != nil {
 					logger.Error("RemoveObservationsByIndex error", zap.Error(err))
 				}

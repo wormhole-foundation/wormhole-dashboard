@@ -36,6 +36,7 @@ export class BigtableDatabase extends Database {
   bigtable: Bigtable;
   firestoreDb: FirebaseFirestore.Firestore;
   latestCollectionName: string;
+  latestNTTCollectionName: string;
   pubsubSignedVAATopic: string;
   pubsub: PubSub;
   constructor() {
@@ -45,6 +46,7 @@ export class BigtableDatabase extends Database {
     this.vaasByTxHashTableId = assertEnvironmentVariable('BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID');
     this.instanceId = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
+    this.latestNTTCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_NTT_COLLECTION');
     this.pubsubSignedVAATopic = assertEnvironmentVariable('PUBSUB_SIGNED_VAA_TOPIC');
     try {
       this.bigtable = new Bigtable();
@@ -60,11 +62,11 @@ export class BigtableDatabase extends Database {
     }
   }
 
-  async getLastBlockByChain(chain: ChainName): Promise<string | null> {
+  async getLastBlockByChain(chain: ChainName, isNTT: boolean): Promise<string | null> {
     const chainId = coalesceChainId(chain);
-    const lastObservedBlock = this.firestoreDb
-      .collection(this.latestCollectionName)
-      .doc(chainId.toString());
+    const lastObservedBlock = isNTT
+      ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(chainId.toString())
+      : this.firestoreDb.collection(this.latestCollectionName).doc(chainId.toString());
     const lastObservedBlockByChain = await lastObservedBlock.get();
     const blockKeyData = lastObservedBlockByChain.data();
     const lastBlockKey = blockKeyData?.lastBlockKey;
@@ -76,16 +78,16 @@ export class BigtableDatabase extends Database {
     return null;
   }
 
-  async storeLatestBlock(chain: ChainName, lastBlockKey: string): Promise<void> {
+  async storeLatestBlock(chain: ChainName, lastBlockKey: string, isNTT: boolean): Promise<void> {
     if (this.firestoreDb === undefined) {
       this.logger.error('no firestore db set');
       return;
     }
     const chainId = coalesceChainId(chain);
     this.logger.info(`storing last block=${lastBlockKey} for chain=${chainId}`);
-    const lastObservedBlock = this.firestoreDb
-      .collection(this.latestCollectionName)
-      .doc(`${chainId.toString()}`);
+    const lastObservedBlock = isNTT
+      ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(`${chainId.toString()}`)
+      : this.firestoreDb.collection(this.latestCollectionName).doc(`${chainId.toString()}`);
     await lastObservedBlock.set({ lastBlockKey });
   }
 
@@ -156,7 +158,7 @@ export class BigtableDatabase extends Database {
       if (blockKeys.length) {
         const lastBlockKey = blockKeys[blockKeys.length - 1];
         this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlockKey}`);
-        await this.storeLatestBlock(chain, lastBlockKey);
+        await this.storeLatestBlock(chain, lastBlockKey, false);
       }
     }
   }

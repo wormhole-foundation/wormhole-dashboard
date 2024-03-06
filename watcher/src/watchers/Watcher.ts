@@ -7,7 +7,7 @@ import {
 import { z } from 'zod';
 import { TIMEOUT } from '../consts';
 import { VaasByBlock } from '../databases/types';
-import { getResumeBlockByChain, storeVaasByBlock } from '../databases/utils';
+import { getResumeBlockByChain, storeLatestBlock, storeVaasByBlock } from '../databases/utils';
 import { getLogger, WormholeLogger } from '../utils/logger';
 
 export class Watcher {
@@ -15,11 +15,13 @@ export class Watcher {
   network: Environment;
   logger: WormholeLogger;
   maximumBatchSize: number = 100;
+  isNTT: boolean = false;
 
-  constructor(network: Environment, chain: ChainName) {
+  constructor(network: Environment, chain: ChainName, isNTT: boolean = false) {
     this.network = network;
     this.chain = chain;
-    this.logger = getLogger(chain);
+    this.isNTT = isNTT;
+    this.logger = isNTT ? getLogger('NTT_' + chain) : getLogger(chain);
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -27,6 +29,10 @@ export class Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+    throw new Error('Not Implemented');
+  }
+
+  async getNttMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
     throw new Error('Not Implemented');
   }
 
@@ -52,7 +58,11 @@ export class Watcher {
 
   async watch(): Promise<void> {
     let toBlock: number | null = null;
-    let fromBlock: number | null = await getResumeBlockByChain(this.network, this.chain);
+    let fromBlock: number | null = await getResumeBlockByChain(
+      this.network,
+      this.chain,
+      this.isNTT
+    );
     let retry = 0;
     while (true) {
       try {
@@ -61,8 +71,13 @@ export class Watcher {
           // fetch logs for the block range, inclusive of toBlock
           toBlock = Math.min(fromBlock + this.maximumBatchSize - 1, toBlock);
           this.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
-          const vaasByBlock = await this.getMessagesForBlocks(fromBlock, toBlock);
-          await storeVaasByBlock(this.chain, vaasByBlock);
+          if (this.isNTT) {
+            const blockKey = await this.getNttMessagesForBlocks(fromBlock, toBlock);
+            await storeLatestBlock(this.chain, blockKey, true);
+          } else {
+            const vaasByBlock = await this.getMessagesForBlocks(fromBlock, toBlock);
+            await storeVaasByBlock(this.chain, vaasByBlock);
+          }
           fromBlock = toBlock + 1;
         }
         try {

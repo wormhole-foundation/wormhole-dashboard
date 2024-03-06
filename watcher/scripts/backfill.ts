@@ -33,7 +33,7 @@ import { VaasByBlock } from '../src/databases/types';
   const lastBlockEntries = Object.entries(localDb.lastBlockByChain);
   for (const [chain, blockKey] of lastBlockEntries) {
     console.log('backfilling last block for', chain, blockKey);
-    await remoteDb.storeLatestBlock(coalesceChainName(Number(chain) as ChainId), blockKey);
+    await remoteDb.storeLatestBlock(coalesceChainName(Number(chain) as ChainId), blockKey, false);
     await sleep(500);
   }
 })();

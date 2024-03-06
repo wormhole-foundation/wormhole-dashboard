@@ -100,6 +100,20 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   ['devnet']: {},
 };
 
+export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
+  [key in Environment]: { [key in ChainName]?: string };
+} = {
+  ['mainnet']: {},
+  ['testnet']: {
+    solana: '284788472',
+    sepolia: '5472203',
+    arbitrum_sepolia: '22501243',
+    base_sepolia: '7249669',
+    optimism_sepolia: '9232548',
+  },
+  ['devnet']: {},
+};
+
 export const TOKEN_BRIDGE_EMITTERS: { [key in ChainName]?: string } = {
   solana: 'ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5',
   ethereum: '0000000000000000000000003ee18b2214aff97000d974cf647e7c347e8fa585',
@@ -176,6 +190,15 @@ export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
   6: CHAIN_ID_BASE,
   7: CHAIN_ID_POLYGON,
 };
+
+// TODO: This should be needed by processVaa.ts, if we go down that path
+export const NTT_EMITTERS: { [key in ChainName]?: string } = {
+  // TODO: add NTT emitters
+};
+
+export const isNTTEmitter = (chain: ChainId | ChainName, emitter: string) =>
+  NTT_EMITTERS[coalesceChainName(chain)]?.toLowerCase() === emitter.toLowerCase();
+
 export type CHAIN_INFO = {
   name: string;
   evm: boolean;

@@ -27,6 +27,7 @@
     "@google-cloud/pubsub": "^3.4.1",
     "@mysten/sui.js": "^0.33.0",
     "@solana/web3.js": "^1.73.0",
+    "@types/bn.js": "^5.1.5",
     "@wormhole-foundation/wormhole-monitor-common": "^0.0.1",
     "algosdk": "^2.4.0",
     "aptos": "^1.4.0",

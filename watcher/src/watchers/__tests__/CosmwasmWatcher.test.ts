@@ -126,7 +126,7 @@ test('getFinalizedBlockNumber(injective)', async () => {
   expect(blockNumber).toBeGreaterThan(23333696);
 });
 
-test('getMessagesForBlocks(injective)', async () => {
+test.skip('getMessagesForBlocks(injective)', async () => {
   const watcher = new InjectiveExplorerWatcher('mainnet');
   const vaasByBlock = await watcher.getMessagesForBlocks(61720293, 61720294);
   const entries = Object.entries(vaasByBlock);

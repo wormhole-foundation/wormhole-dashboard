@@ -14,10 +14,13 @@ export class Database {
     }
     return filteredVaasByBlock;
   }
-  async getLastBlockByChain(chain: ChainName): Promise<string | null> {
+  async getLastBlockByChain(chain: ChainName, isNTT: boolean): Promise<string | null> {
     throw new Error('Not Implemented');
   }
   async storeVaasByBlock(chain: ChainName, vaasByBlock: VaasByBlock): Promise<void> {
+    throw new Error('Not Implemented');
+  }
+  async storeLatestBlock(chain: ChainName, lastBlockKey: string, isNTT: boolean): Promise<void> {
     throw new Error('Not Implemented');
   }
 }

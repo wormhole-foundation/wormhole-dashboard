@@ -1,7 +1,7 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
-import { ACCOUNTANT_CONTRACT_ADDRESS, WORMCHAIN_URL } from '../utils/consts';
+import { TESTNET_WORMCHAIN_URL, WORMCHAIN_URL } from '../utils/consts';
 
 const POLL_INTERVAL_MS = 10 * 1000;
 const PAGE_LIMIT = 2000; // throws a gas limit error over this
@@ -25,24 +25,26 @@ export type PendingTransfer = {
   ];
 };
 
-const useGetAccountantPendingTransfers = (): PendingTransfer[] => {
+const useGetAccountantPendingTransfers = (contractAddress: string): PendingTransfer[] => {
   const { currentNetwork } = useNetworkContext();
   const [accountantInfo, setAccountantInfo] = useState<PendingTransfer[]>([]);
 
   useEffect(() => {
-    if (currentNetwork.name !== 'Mainnet') {
+    if (currentNetwork.name !== 'Mainnet' && currentNetwork.name !== 'Testnet') {
       return;
     }
     let cancelled = false;
     (async () => {
       while (!cancelled) {
         try {
-          const cosmWasmClient = await CosmWasmClient.connect(WORMCHAIN_URL);
+          const cosmWasmClient = await CosmWasmClient.connect(
+            currentNetwork.name === 'Mainnet' ? WORMCHAIN_URL : TESTNET_WORMCHAIN_URL
+          );
           let pending: PendingTransfer[] = [];
           let response;
           let start_after = undefined;
           do {
-            response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
+            response = await cosmWasmClient.queryContractSmart(contractAddress, {
               all_pending_transfers: {
                 limit: PAGE_LIMIT,
                 start_after,
@@ -69,7 +71,7 @@ const useGetAccountantPendingTransfers = (): PendingTransfer[] => {
     return () => {
       cancelled = true;
     };
-  }, [currentNetwork]);
+  }, [currentNetwork, contractAddress]);
 
   return accountantInfo;
 };

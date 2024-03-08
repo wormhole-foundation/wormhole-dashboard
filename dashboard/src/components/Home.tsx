@@ -11,6 +11,10 @@ import Governor from './Governor';
 import Guardians from './Guardians';
 import MainnetGovernor from './MainnetGovernor';
 import Monitor from './Monitor';
+import {
+  ACCOUNTANT_CONTRACT_ADDRESS,
+  NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET,
+} from '../utils/consts';
 
 function Home({
   heartbeats,
@@ -37,7 +41,7 @@ function Home({
         <>
           <MainnetGovernor governorInfo={governorInfo} />
           <Divider />
-          <Accountant governorInfo={governorInfo} />
+          <Accountant governorInfo={governorInfo} accountantAddress={ACCOUNTANT_CONTRACT_ADDRESS} />
           <Divider />
           <MonitorSettingsProvider>
             <CollapsibleSection header="Monitor">
@@ -47,6 +51,12 @@ function Home({
         </>
       ) : currentNetwork.name === 'Testnet' ? (
         <>
+          <Accountant
+            governorInfo={governorInfo}
+            accountantAddress={NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET}
+            isNTT
+          />
+          <Divider />
           <MonitorSettingsProvider>
             <CollapsibleSection header="Monitor">
               <Monitor />

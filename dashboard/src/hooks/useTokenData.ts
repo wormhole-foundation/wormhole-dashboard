@@ -17,10 +17,11 @@ export type TokenDataByChainAddress = {
   [chainAddress: string]: TokenDataEntry;
 };
 
-function useTokenData(): TokenDataByChainAddress | null {
+function useTokenData(skip?: boolean): TokenDataByChainAddress | null {
   const { currentNetwork } = useNetworkContext();
   const [tokenData, setTokenData] = useState<TokenDataByChainAddress | null>(null);
   useEffect(() => {
+    if (skip) return;
     let cancelled = false;
     (async () => {
       while (!cancelled) {
@@ -41,7 +42,7 @@ function useTokenData(): TokenDataByChainAddress | null {
     return () => {
       cancelled = true;
     };
-  }, [currentNetwork]);
+  }, [currentNetwork, skip]);
   return tokenData;
 }
 export default useTokenData;

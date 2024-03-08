@@ -263,25 +263,37 @@ const overviewColumns = [
   }),
 ];
 
-function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
-  const pendingTransferInfo = useGetAccountantPendingTransfers();
+function Accountant({
+  governorInfo,
+  accountantAddress,
+  isNTT,
+}: {
+  governorInfo?: CloudGovernorInfo;
+  accountantAddress: string;
+  isNTT?: boolean;
+}) {
+  const pendingTransferInfo = useGetAccountantPendingTransfers(accountantAddress);
 
-  const accountsInfo = useGetAccountantAccounts();
+  const accountsInfo = useGetAccountantAccounts(accountantAddress);
 
-  const tokenData = useTokenData();
+  const tokenData = useTokenData(isNTT);
+
+  const governorInfoIsDefined = !!governorInfo;
 
   const pendingTransfersForAcct: PendingTransferForAcct[] = useMemo(
     () =>
       pendingTransferInfo.map((transfer) => ({
         ...transfer,
-        isEnqueuedInGov: !!governorInfo.enqueuedVAAs.find(
-          (vaa) =>
-            vaa.emitterChain === transfer.key.emitter_chain &&
-            vaa.emitterAddress === transfer.key.emitter_address &&
-            vaa.sequence === transfer.key.sequence.toString()
-        ),
+        isEnqueuedInGov:
+          governorInfoIsDefined &&
+          !!governorInfo.enqueuedVAAs.find(
+            (vaa) =>
+              vaa.emitterChain === transfer.key.emitter_chain &&
+              vaa.emitterAddress === transfer.key.emitter_address &&
+              vaa.sequence === transfer.key.sequence.toString()
+          ),
       })),
-    [pendingTransferInfo, governorInfo.enqueuedVAAs]
+    [pendingTransferInfo, governorInfoIsDefined, governorInfo?.enqueuedVAAs]
   );
 
   const guardianSigningStats: GuardianSigningStat[] = useMemo(() => {
@@ -424,7 +436,7 @@ function Accountant({ governorInfo }: { governorInfo: CloudGovernorInfo }) {
             paddingRight: 1,
           }}
         >
-          <Box>Accountant</Box>
+          <Box>{isNTT ? 'NTT ' : ''}Accountant</Box>
           <Box flexGrow={1} />
           <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
             {Object.keys(pendingByChain)

@@ -41,6 +41,9 @@ import xplaIcon from '../images/xpla.svg';
 require('dotenv').config();
 
 export const WORMCHAIN_URL = 'https://tncnt-eu-wormchain-main-01.rpc.p2p.world';
+export const TESTNET_WORMCHAIN_URL = `https://corsproxy.io/?${encodeURIComponent(
+  'https://gateway.testnet.xlabs.xyz'
+)}`;
 
 export const CHAIN_ICON_MAP: { [key: string]: string } = {
   1: solanaIcon,
@@ -92,6 +95,8 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';
 export const ACCOUNTANT_CONTRACT_ADDRESS =
   'wormhole14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9srrg465';
+export const NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET =
+  'wormhole169tvyx49zmjqhlv7mzwj8j2weprascc0jq3rdglw9pynldqx34nscvhc7k';
 
 export const GUARDIAN_SET_3 = [
   {

@@ -14,11 +14,11 @@ import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import {
+  Environment,
   isLegacyMessage,
   normalizeCompileInstruction,
-} from '@wormhole-foundation/wormhole-monitor-common/src/solana';
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { Watcher } from './Watcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 
 const WORMHOLE_PROGRAM_ID = CONTRACTS.MAINNET.solana.core;
 const COMMITMENT: Commitment = 'finalized';

@@ -41,6 +41,8 @@ type GovernedVAAMap = Map<string, GovernedVAA>;
 
 const network: Environment = getEnvironment();
 
+const MAX_VAAS_TO_ALARM = 100;
+
 export async function alarmMissingVaas(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') {
@@ -94,7 +96,9 @@ export async function alarmMissingVaas(req: any, res: any) {
         const chainId = chain as unknown as ChainId;
         const msgs = messages[chainId];
         if (msgs && msgs.messages) {
+          console.log(`Attempting to look at ${msgs.messages.length} messages...`);
           for (let i = 0; i < msgs.messages.length; i++) {
+            console.log(`Looking at message #${i + 1}...`);
             // Check the timestamp and only send messages that are older than 2 hours
             const msg: ObservedMessage = msgs.messages[i];
             // If there is a reference time for this chain, use it.  Otherwise, use the current time.
@@ -124,6 +128,7 @@ export async function alarmMissingVaas(req: any, res: any) {
               let firestoreMsg: FirestoreVAA = convert(msg);
               firestoreMap.set(vaaKey, firestoreMsg);
               firestoreVAAs.push(firestoreMsg);
+              console.log(`Adding msg ${i + 1} to reobsMap.`);
               reobsMap.set(msg.txHash, {
                 chain: msg.chain,
                 txhash: msg.txHash,
@@ -134,9 +139,17 @@ export async function alarmMissingVaas(req: any, res: any) {
                 await formatAndSendToSlack(alarmSlackInfo);
               }
             }
+            if (reobsMap.size >= MAX_VAAS_TO_ALARM) {
+              console.log(`Breaking out due to hitting ${MAX_VAAS_TO_ALARM} limit.`);
+              break;
+            }
           }
         } else {
           console.log('skipping over messages for chain', chainId);
+        }
+        if (reobsMap.size >= MAX_VAAS_TO_ALARM) {
+          console.log(`Breaking out due to hitting ${MAX_VAAS_TO_ALARM} limit.`);
+          break;
         }
       }
     }

@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/src/index.js",
+    "start": "node --max-old-space-size=8192 dist/src/index.js",
     "dev": "ts-node src/index.ts",
     "test": "jest",
     "check-solana": "ts-node scripts/checkSolana.ts",
@@ -15,6 +15,9 @@
     "backfill-near": "ts-node scripts/backfillNear.ts",
     "backfill-signed-vaas": "ts-node scripts/backfillSignedVAAs",
     "backfill-vaas-by-tx-hash": "ts-node scripts/backfillVAAsByTxHash.ts",
+    "delete-messages-by-chain": "ts-node scripts/deleteMessagesByChain.ts",
+    "update-rows": "ts-node scripts/updateRows.ts",
+    "paul": "ts-node scripts/paulScript2.ts",
     "locate-message-gaps": "ts-node scripts/locateMessageGaps.ts",
     "fetch-missing-vaas": "ts-node scripts/fetchMissingVAAs.ts",
     "update-found-vaas": "ts-node scripts/updateFoundVAAs.ts",

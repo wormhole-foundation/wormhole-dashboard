@@ -10,7 +10,7 @@ import { Log } from '@ethersproject/abstract-provider';
 import axios from 'axios';
 import { BigNumber } from 'ethers';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
-import { makeBlockKey } from '../databases/utils';
+import { extractBlockFromKey, makeBlockKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 import {
   Environment,
@@ -25,13 +25,14 @@ import {
   OutboundTransferRateLimitedTopic,
   TransferRedeemedTopic,
   TransferSentTopic,
+  createNewLifeCycle,
   getNttManagerMessageDigest,
 } from '../NTTConsts';
 import { NativeTokenTransfer, NttManagerMessage, WormholeTransceiverMessage } from './NTTPayloads';
 import { RELAYER_CONTRACTS, parseWormholeLog } from '@certusone/wormhole-sdk/lib/cjs/relayer';
-import { Firestore } from 'firebase-admin/firestore';
 import knex, { Knex } from 'knex';
 import { WormholeLogger } from '../utils/logger';
+import { formatIntoTimestamp } from '../utils/timestamp';
 
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
   '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
@@ -52,7 +53,6 @@ export class NTTWatcher extends Watcher {
   finalizedBlockTag: BlockTag;
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
-  lifecycleMap: Map<string, LifeCycle>; // digest -> lifecycle
   pg: Knex;
 
   constructor(network: Environment, chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
@@ -60,7 +60,6 @@ export class NTTWatcher extends Watcher {
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
-    this.lifecycleMap = new Map<string, LifeCycle>();
     this.pg = knex({
       client: 'pg',
       connection: {
@@ -238,9 +237,10 @@ export class NTTWatcher extends Watcher {
     return block.number;
   }
 
+  // This only needs to return the latest block looked at.
   async getNttMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
-    const nttAddress = NTT_CONTRACT[this.network][this.chain];
-    if (!nttAddress) {
+    const nttAddresses = NTT_CONTRACT[this.network][this.chain];
+    if (!nttAddresses) {
       throw new Error(`NTT manager contract not defined for ${this.network}`);
     }
     const contracts: Contracts =
@@ -253,282 +253,220 @@ export class NTTWatcher extends Watcher {
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }
-    // Get and filter logs
-    const logs: Log[] = (await this.getLogs(fromBlock, toBlock, nttAddress, [])).filter(isNTTEvent);
-    const timestampsByBlock: { [block: number]: string } = {};
-    // fetch timestamps for each block
-    this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
-    const blocks = await this.getBlocks(fromBlock, toBlock);
-    for (const block of blocks) {
-      const timestamp = new Date(block.timestamp * 1000).toISOString();
-      timestampsByBlock[block.number] = timestamp;
-    }
-    this.logger.info(`processing ${logs.length} logs`);
-    let newEntry: boolean = false;
-    for (const log of logs) {
-      this.logger.debug('log:', log);
-      const blockNumber = log.blockNumber;
-      const txhash = log.transactionHash;
-      this.logger.debug(`blockNumber: ${blockNumber}, txhash: ${txhash}`);
-      if (log.topics[0] === TransferSentTopic) {
-        this.logger.debug('***********TransferSentTopic***************');
-        const decodedTransfer: decodedTransferSent = decodeNttTransferSent(log.data);
-        this.logger.debug('decodedTransfer:', decodedTransfer);
-        if (decodedTransfer.recipient === '') {
-          this.logger.error('Could not decode transfer');
-          continue;
-        }
-        const nttTransferKey = makeNttTransferKey(
-          nttAddress,
-          decodedTransfer.recipient,
-          decodedTransfer.msgSequence
-        );
-        const coreLogs = await this.getLogs(blockNumber, blockNumber, address, [
-          LOG_MESSAGE_PUBLISHED_TOPIC,
-        ]);
-        for (const coreLog of coreLogs) {
-          if (coreLog.transactionHash !== txhash) {
-            this.logger.error(
-              `Mismatched transaction hashes: ${coreLog.transactionHash} vs ${txhash}`
-            );
+    let blockKey: string = '';
+    for (const nttAddress of nttAddresses) {
+      // Get and filter logs
+      const logs: Log[] = (await this.getLogs(fromBlock, toBlock, nttAddress, [])).filter(
+        isNTTEvent
+      );
+      const timestampsByBlock: { [block: number]: string } = {};
+      // fetch timestamps for each block
+      this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
+      const blocks = await this.getBlocks(fromBlock, toBlock);
+      for (const block of blocks) {
+        const timestamp = new Date(block.timestamp * 1000).toISOString();
+        timestampsByBlock[block.number] = timestamp;
+      }
+      this.logger.info(`processing ${logs.length} logs`);
+      for (const log of logs) {
+        this.logger.debug('log:', log);
+        const blockNumber = log.blockNumber;
+        const txhash = log.transactionHash;
+        this.logger.debug(`blockNumber: ${blockNumber}, txhash: ${txhash}`);
+        if (log.topics[0] === TransferSentTopic) {
+          this.logger.debug('***********TransferSentTopic***************');
+          const decodedTransfer: decodedTransferSent = decodeNttTransferSent(log.data);
+          this.logger.debug('decodedTransfer:', decodedTransfer);
+          if (decodedTransfer.recipient === '') {
+            this.logger.error('Could not decode transfer');
             continue;
           }
-          // this.logger.debug('coreLog:', coreLog);
-          let emitter = coreLog.topics[1].slice(2);
-          // this.logger.debug(`emitter: ${emitter}`);
-          // If this emitter is a relayer, parse differently
-          if (isRelayer(this.network, this.chain, emitter)) {
-            this.logger.debug('Relayer detected');
-            let {
-              args: { sequence, payload },
-            } = wormholeInterface.parseLog(coreLog);
-            const vaaId = makeVaaId(coalesceChainId(this.chain), emitter, sequence);
-            // this.logger.debug('payload:', payload);
-            // Strip off leading 0x, if present
-            if (payload.startsWith('0x')) {
-              payload = payload.slice(2);
-            }
-            let { type, parsed } = parseWormholeLog(coreLog);
-            // this.logger.debug('type:', type);
-            // this.logger.debug('parsed:', parsed);
-            let payloadBuffer;
-            if (typeof parsed === 'string') {
-              // this.logger.debug('parsed is a string');
-              payloadBuffer = Buffer.from(parsed, 'hex');
-            } else if ('payload' in parsed) {
-              // this.logger.debug('parsed is an object');
-              payloadBuffer = parsed.payload;
-              // this.logger.debug('payloadBuffer:', payloadBuffer.toString('hex'));
-            } else {
-              this.logger.error('Could not parse payload');
+          const nttTransferKey = makeNttTransferKey(
+            nttAddress,
+            decodedTransfer.recipient,
+            decodedTransfer.msgSequence
+          );
+          const coreLogs = await this.getLogs(blockNumber, blockNumber, address, [
+            LOG_MESSAGE_PUBLISHED_TOPIC,
+          ]);
+          for (const coreLog of coreLogs) {
+            if (coreLog.transactionHash !== txhash) {
+              this.logger.error(
+                `Mismatched transaction hashes: ${coreLog.transactionHash} vs ${txhash}`
+              );
               continue;
             }
-            // this.logger.debug('payloadBuffer:', payloadBuffer);
-            // This payload is a transceiver message
-            // Use the payload to create a digest
-            try {
-              const transceiverMessage = WormholeTransceiverMessage.deserialize(
-                payloadBuffer,
-                (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
-              );
-              const calculatedDigest = getNttManagerMessageDigest(
-                coalesceChainId(this.chain),
-                transceiverMessage.ntt_managerPayload
-              );
-              const sourceToken: string =
-                transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
-              const lc: LifeCycle = {
-                srcChainId: coalesceChainId(this.chain),
-                destChainId: decodedTransfer.recipientChain,
-                sourceToken,
-                tokenAmount: BigInt(decodedTransfer.amount),
-                transferSentTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
-                redeemedTxhash: '',
-                nttTransferKey,
-                vaaId,
-                digest: calculatedDigest,
-                transferTime: timestampsByBlock[blockNumber],
-                redeemTime: '',
-                inboundTransferQueuedTime: '',
-                outboundTransferQueuedTime: '',
-                outboundTransferRateLimitedTime: '',
-              };
-              this.lifecycleMap.set(calculatedDigest, lc);
-              // await saveToFirestore(lc); // Here for testing
-              await saveToPG(this.pg, lc, TransferSentTopic, this.logger);
-              newEntry = true;
-              this.logger.debug(
-                `For txhash ${txhash}, correlating nttTransferKey ${nttTransferKey} to vaaId ${vaaId} and digest ${calculatedDigest}`
-              );
-            } catch (e) {
-              this.logger.error('Error:', e);
-            }
-          } else {
-            this.logger.debug('Not a relayer');
-            let {
-              args: { sequence, payload },
-            } = wormholeInterface.parseLog(coreLog);
-            const vaaId = makeVaaId(coalesceChainId(this.chain), emitter, sequence);
-            // this.logger.debug('payload:', payload);
-            // Strip off leading 0x, if present
-            if (payload.startsWith('0x')) {
-              payload = payload.slice(2);
-            }
-            const payloadBuffer = Buffer.from(payload, 'hex');
-            // this.logger.debug('payloadBuffer:', payloadBuffer);
-            // This payload is a transceiver message
-            // Use the payload to create a digest
-            try {
-              const transceiverMessage = WormholeTransceiverMessage.deserialize(
-                payloadBuffer,
-                (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
-              );
-              const calculatedDigest = getNttManagerMessageDigest(
-                coalesceChainId(this.chain),
-                transceiverMessage.ntt_managerPayload
-              );
-              const sourceToken: string =
-                transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
-              const lc: LifeCycle = {
-                srcChainId: coalesceChainId(this.chain),
-                destChainId: decodedTransfer.recipientChain,
-                sourceToken,
-                tokenAmount: BigInt(decodedTransfer.amount),
-                transferSentTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
-                redeemedTxhash: '',
-                nttTransferKey,
-                vaaId,
-                digest: calculatedDigest,
-                transferTime: timestampsByBlock[blockNumber],
-                redeemTime: '',
-                inboundTransferQueuedTime: '',
-                outboundTransferQueuedTime: '',
-                outboundTransferRateLimitedTime: '',
-              };
-              this.lifecycleMap.set(calculatedDigest, lc);
-              // await saveToFirestore(lc); // Here for testing.
-              await saveToPG(this.pg, lc, TransferSentTopic, this.logger);
-              newEntry = true;
-              this.logger.debug(
-                `For txhash ${txhash}, correlating nttTransferKey ${nttTransferKey} to vaaId ${vaaId} and digest ${calculatedDigest}`
-              );
-            } catch (e) {
-              this.logger.error('Error:', e);
+            let emitter = coreLog.topics[1].slice(2);
+            // If this emitter is a relayer, parse differently
+            const isRelay: boolean = isRelayer(this.network, this.chain, emitter);
+            if (isRelay) {
+              this.logger.debug('Relayer detected');
+              let {
+                args: { sequence, payload },
+              } = wormholeInterface.parseLog(coreLog);
+              const vaaId = makeVaaId(coalesceChainId(this.chain), emitter, sequence);
+              // Strip off leading 0x, if present
+              if (payload.startsWith('0x')) {
+                payload = payload.slice(2);
+              }
+              let { type, parsed } = parseWormholeLog(coreLog);
+              let payloadBuffer;
+              if (typeof parsed === 'string') {
+                payloadBuffer = Buffer.from(parsed, 'hex');
+              } else if ('payload' in parsed) {
+                payloadBuffer = parsed.payload;
+              } else {
+                this.logger.error('Could not parse payload');
+                continue;
+              }
+              // This payload is a transceiver message
+              // Use the payload to create a digest
+              try {
+                const transceiverMessage = WormholeTransceiverMessage.deserialize(
+                  payloadBuffer,
+                  (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
+                );
+                const calculatedDigest = getNttManagerMessageDigest(
+                  coalesceChainId(this.chain),
+                  transceiverMessage.ntt_managerPayload
+                );
+                const sourceToken: string =
+                  transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
+                const lc: LifeCycle = {
+                  srcChainId: coalesceChainId(this.chain),
+                  destChainId: decodedTransfer.recipientChain,
+                  sourceToken,
+                  tokenAmount: BigInt(decodedTransfer.amount),
+                  transferSentTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
+                  transferBlockHeight: BigInt(blockNumber),
+                  redeemedTxhash: '',
+                  redeemedBlockHeight: 0n,
+                  nttTransferKey,
+                  vaaId,
+                  digest: calculatedDigest,
+                  isRelay,
+                  transferTime: timestampsByBlock[blockNumber],
+                  redeemTime: '',
+                  inboundTransferQueuedTime: '',
+                  outboundTransferQueuedTime: '',
+                  outboundTransferReleasableTime: '',
+                };
+                await saveToPG(this.pg, lc, TransferSentTopic, this.logger);
+                this.logger.debug(
+                  `For txhash ${txhash}, correlating nttTransferKey ${nttTransferKey} to vaaId ${vaaId} and digest ${calculatedDigest}`
+                );
+              } catch (e) {
+                this.logger.error('Error:', e);
+              }
+            } else {
+              this.logger.debug('Not a relayer');
+              let {
+                args: { sequence, payload },
+              } = wormholeInterface.parseLog(coreLog);
+              const vaaId = makeVaaId(coalesceChainId(this.chain), emitter, sequence);
+              // Strip off leading 0x, if present
+              if (payload.startsWith('0x')) {
+                payload = payload.slice(2);
+              }
+              const payloadBuffer = Buffer.from(payload, 'hex');
+              // This payload is a transceiver message
+              // Use the payload to create a digest
+              try {
+                const transceiverMessage = WormholeTransceiverMessage.deserialize(
+                  payloadBuffer,
+                  (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
+                );
+                const calculatedDigest = getNttManagerMessageDigest(
+                  coalesceChainId(this.chain),
+                  transceiverMessage.ntt_managerPayload
+                );
+                const sourceToken: string =
+                  transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
+                const lc: LifeCycle = {
+                  srcChainId: coalesceChainId(this.chain),
+                  destChainId: decodedTransfer.recipientChain,
+                  sourceToken,
+                  tokenAmount: BigInt(decodedTransfer.amount),
+                  transferSentTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
+                  transferBlockHeight: BigInt(blockNumber),
+                  redeemedTxhash: '',
+                  redeemedBlockHeight: 0n,
+                  nttTransferKey,
+                  vaaId,
+                  digest: calculatedDigest,
+                  isRelay,
+                  transferTime: timestampsByBlock[blockNumber],
+                  redeemTime: '',
+                  inboundTransferQueuedTime: '',
+                  outboundTransferQueuedTime: '',
+                  outboundTransferReleasableTime: '',
+                };
+                await saveToPG(this.pg, lc, TransferSentTopic, this.logger);
+                this.logger.debug(
+                  `For txhash ${txhash}, correlating nttTransferKey ${nttTransferKey} to vaaId ${vaaId} and digest ${calculatedDigest}`
+                );
+              } catch (e) {
+                this.logger.error('Error:', e);
+              }
             }
           }
-        }
-      } else if (log.topics[0] === TransferRedeemedTopic) {
-        this.logger.debug('***********TransferRedeemedTopic***************');
-        let digest: string = log.topics[1];
-        if (digest.startsWith('0x')) {
-          digest = digest.slice(2);
-        }
-        this.logger.debug('digest:', digest);
-        // Check if we have a lifecycle for this digest
-        const lc = this.lifecycleMap.get(digest);
-        if (lc) {
+        } else if (log.topics[0] === TransferRedeemedTopic) {
+          this.logger.debug('***********TransferRedeemedTopic***************');
+          let digest: string = log.topics[1];
+          if (digest.startsWith('0x')) {
+            digest = digest.slice(2);
+          }
+          this.logger.debug('digest:', digest);
+          let lc: LifeCycle = createNewLifeCycle();
+          lc.redeemedTxhash = txhash.startsWith('0x') ? txhash.slice(2) : txhash;
+          lc.redeemedBlockHeight = BigInt(blockNumber);
+          lc.digest = digest;
           lc.redeemTime = timestampsByBlock[blockNumber];
-          this.lifecycleMap.set(digest, lc);
-          // await saveToFirestore(lc); // Here for testing
+          lc.destChainId = coalesceChainId(this.chain);
           await saveToPG(this.pg, lc, TransferRedeemedTopic, this.logger);
-          newEntry = true;
-          this.logger.debug(`For digest ${digest}, found lifecycle`);
-        } else {
-          this.logger.error(`TransferRedeemedTopic: Could not find lifecycle for digest ${digest}`);
-          const lc: LifeCycle = {
-            transferSentTxhash: '',
-            redeemedTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
-            sourceToken: '',
-            nttTransferKey: '',
-            vaaId: '',
-            digest: digest,
-            transferTime: '',
-            redeemTime: timestampsByBlock[blockNumber],
-            srcChainId: 0,
-            destChainId: coalesceChainId(this.chain),
-            tokenAmount: 0n,
-            inboundTransferQueuedTime: '',
-            outboundTransferQueuedTime: '',
-            outboundTransferRateLimitedTime: '',
-          };
-          this.lifecycleMap.set(digest, lc);
-          // await saveToFirestore(lc); // Here for testing
-          await saveToPG(this.pg, lc, TransferRedeemedTopic, this.logger);
-          newEntry = true;
-        }
-      } else if (log.topics[0] === InboundTransferQueuedTopic) {
-        this.logger.debug('***********InboundTransferQueuedTopic***************');
-        let digest: string = log.data;
-        if (digest.startsWith('0x')) {
-          digest = digest.slice(2);
-        }
-        this.logger.debug('digest:', digest);
-        // Check if we have a lifecycle for this digest
-        const lc = this.lifecycleMap.get(digest);
-        if (lc) {
+        } else if (log.topics[0] === InboundTransferQueuedTopic) {
+          this.logger.debug('***********InboundTransferQueuedTopic***************');
+          let digest: string = log.data;
+          if (digest.startsWith('0x')) {
+            digest = digest.slice(2);
+          }
+          this.logger.debug('digest:', digest);
+          // Check if we have a lifecycle for this digest
+          let lc: LifeCycle = createNewLifeCycle();
+          lc.digest = digest;
           lc.inboundTransferQueuedTime = timestampsByBlock[blockNumber];
-          this.lifecycleMap.set(digest, lc);
-          // await saveToFirestore(lc); // Here for testing
           await saveToPG(this.pg, lc, InboundTransferQueuedTopic, this.logger);
-          newEntry = true;
-          this.logger.debug(`For digest ${digest}, found lifecycle`);
-        } else {
-          this.logger.error(
-            `InboundTransferQueuedTopic: Could not find lifecycle for digest ${digest}`
-          );
-        }
-      } else if (log.topics[0] === OutboundTransferQueuedTopic) {
-        this.logger.debug('***********OutboundTransferQueuedTopic***************');
-        let digest: string = log.data;
-        if (digest.startsWith('0x')) {
-          digest = digest.slice(2);
-        }
-        this.logger.debug('digest:', digest);
-        // Check if we have a lifecycle for this digest
-        const lc = this.lifecycleMap.get(digest);
-        if (lc) {
+        } else if (log.topics[0] === OutboundTransferQueuedTopic) {
+          this.logger.debug('***********OutboundTransferQueuedTopic***************');
+          let digest: string = log.data;
+          if (digest.startsWith('0x')) {
+            digest = digest.slice(2);
+          }
+          this.logger.debug('digest:', digest);
+          let lc: LifeCycle = createNewLifeCycle();
+          lc.digest = digest;
           lc.outboundTransferQueuedTime = timestampsByBlock[blockNumber];
-          this.lifecycleMap.set(digest, lc);
-          // await saveToFirestore(lc); // Here for testing
           await saveToPG(this.pg, lc, OutboundTransferQueuedTopic, this.logger);
-          newEntry = true;
-          this.logger.debug(`For digest ${digest}, found lifecycle`);
-        } else {
-          this.logger.error(
-            `OutboundTransferQueuedTopic: Could not find lifecycle for digest ${digest}`
-          );
-        }
-      } else if (log.topics[0] === OutboundTransferRateLimitedTopic) {
-        this.logger.debug('***********OutboundTransferRateLimitedTopic***************');
-        let digest: string = log.data;
-        if (digest.startsWith('0x')) {
-          digest = digest.slice(2);
-        }
-        this.logger.debug('digest:', digest);
-        // Check if we have a lifecycle for this digest
-        const lc = this.lifecycleMap.get(digest);
-        if (lc) {
-          lc.outboundTransferRateLimitedTime = timestampsByBlock[blockNumber];
-          this.lifecycleMap.set(digest, lc);
-          // await saveToFirestore(lc); // Here for testing
+        } else if (log.topics[0] === OutboundTransferRateLimitedTopic) {
+          this.logger.debug('***********OutboundTransferRateLimitedTopic***************');
+          let digest: string = log.data;
+          if (digest.startsWith('0x')) {
+            digest = digest.slice(2);
+          }
+          this.logger.debug('digest:', digest);
+          let lc: LifeCycle = createNewLifeCycle();
+          lc.digest = digest;
+          lc.outboundTransferReleasableTime = timestampsByBlock[blockNumber];
           await saveToPG(this.pg, lc, OutboundTransferRateLimitedTopic, this.logger);
-          newEntry = true;
-          this.logger.debug(`For digest ${digest}, found lifecycle`);
-        } else {
-          this.logger.error(
-            `OutboundTransferRateLimitedTopic: Could not find lifecycle for digest ${digest}`
-          );
         }
       }
-    }
-    // Here for testing
-    // if (newEntry) {
-    //   dumpLifecycleMap(this.lifecycleMap);
-    //   await sleep(3000);
-    // }
 
-    // Create blockKey
-    const blockKey = makeBlockKey(toBlock.toString(), timestampsByBlock[toBlock]);
+      // Only update blockKey if we have a newer block
+      if (blockKey === '' || toBlock > extractBlockFromKey(blockKey)) {
+        // Create blockKey
+        blockKey = makeBlockKey(toBlock.toString(), timestampsByBlock[toBlock]);
+      }
+    }
     return blockKey;
   }
 }
@@ -548,8 +486,6 @@ function decodeNttTransferSent(data: string): decodedTransferSent {
   if (data.startsWith('0x')) {
     data = data.slice(2);
   }
-  // this.logger.debug('data:', data);
-  // this.logger.debug('data.length:', data.length);
   let retVal: decodedTransferSent = {
     recipient: '',
     amount: '',
@@ -584,31 +520,6 @@ function isNTTEvent(log: Log): boolean {
   return NTT_TOPICS.some((topic) => log.topics[0].includes(topic));
 }
 
-function dumpLifecycleMap(lcMap: Map<string, LifeCycle>) {
-  console.log('Lifecycle Map:');
-  for (const [digest, lc] of lcMap) {
-    console.log(digest, lc);
-  }
-}
-
-async function saveToFirestore(lc: LifeCycle) {
-  console.log('Saving to Firestore:', lc);
-  const COLLECTION: string = 'nttLifecycle';
-  // Document ID is the digest
-  const firestore = new Firestore();
-  const collectionRef = firestore.collection(COLLECTION);
-  const document = collectionRef.doc(lc.digest);
-  const doc = await document.get();
-  if (doc.exists) {
-    console.log('Document exists');
-    lc = mergeLifecycles(lc, doc.data() as LifeCycle);
-  }
-  // Now save to firestore
-  console.log('Attempting to save to firestore...');
-  const res = await document.set(lc);
-  console.log('Firestore response:', res);
-}
-
 async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger: WormholeLogger) {
   if (!pg) {
     throw new Error('pg not initialized');
@@ -628,10 +539,13 @@ async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger
         from_token: lc.sourceToken,
         token_amount: lc.tokenAmount,
         transfer_sent_txhash: lc.transferSentTxhash,
+        transfer_block_height: lc.transferBlockHeight,
         redeemed_txhash: lc.redeemedTxhash,
+        redeemed_block_height: lc.redeemedBlockHeight,
         ntt_transfer_key: lc.nttTransferKey,
         vaa_id: lc.vaaId,
         digest: lc.digest,
+        is_relay: lc.isRelay,
         transfer_time: lc.transferTime.length > 0 ? formatIntoTimestamp(lc.transferTime) : null,
         redeem_time: lc.redeemTime.length > 0 ? formatIntoTimestamp(lc.redeemTime) : null,
         inbound_transfer_queued_time:
@@ -642,9 +556,9 @@ async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger
           lc.outboundTransferQueuedTime.length > 0
             ? formatIntoTimestamp(lc.outboundTransferQueuedTime)
             : null,
-        outbound_transfer_rate_limited_time:
-          lc.outboundTransferRateLimitedTime.length > 0
-            ? formatIntoTimestamp(lc.outboundTransferRateLimitedTime)
+        outbound_transfer_releasable_time:
+          lc.outboundTransferReleasableTime.length > 0
+            ? formatIntoTimestamp(lc.outboundTransferReleasableTime)
             : null,
       });
       return;
@@ -660,6 +574,8 @@ async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger
           from_token: lc.sourceToken,
           token_amount: lc.tokenAmount,
           transfer_sent_txhash: lc.transferSentTxhash,
+          transfer_block_height: lc.transferBlockHeight,
+          is_relay: lc.isRelay,
           ntt_transfer_key: lc.nttTransferKey,
           vaa_id: lc.vaaId,
           transfer_time: formatIntoTimestamp(lc.transferTime),
@@ -670,6 +586,7 @@ async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger
         .update({
           to_chain: lc.destChainId,
           redeemed_txhash: lc.redeemedTxhash,
+          redeemed_block_height: lc.redeemedBlockHeight,
           redeem_time: formatIntoTimestamp(lc.redeemTime),
         });
     } else if (initiatingEvent === InboundTransferQueuedTopic) {
@@ -688,56 +605,12 @@ async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger
       await trx('life_cycle')
         .where('digest', lc.digest)
         .update({
-          outbound_transfer_rate_limited_time: formatIntoTimestamp(
-            lc.outboundTransferRateLimitedTime
-          ),
+          outbound_transfer_releasable_time: formatIntoTimestamp(lc.outboundTransferReleasableTime),
         });
     } else {
       logger.error(`saveToPG: Unknown initiating event: ${initiatingEvent} and lifeCycle: ${lc}`);
     }
   });
-}
-
-function formatIntoTimestamp(timestamp: string): string {
-  if (timestamp === '') {
-    return 'NULL';
-  }
-  // Expected input format is:2024-03-01T02:30:45.000Z
-  // Convert the 'T' to a space
-  let parts = timestamp.split('T');
-  // Remove the trailing 'Z'
-  parts[1] = parts[1].slice(0, -1);
-  return parts.join(' ');
-}
-
-function mergeLifecycles(lc: LifeCycle, existing: LifeCycle): LifeCycle {
-  let merged: LifeCycle = {
-    srcChainId: lc.srcChainId !== 0 ? lc.srcChainId : existing.srcChainId,
-    destChainId: lc.destChainId !== 0 ? lc.destChainId : existing.destChainId,
-    sourceToken: lc.sourceToken !== '' ? lc.sourceToken : existing.sourceToken,
-    tokenAmount: lc.tokenAmount !== 0n ? lc.tokenAmount : existing.tokenAmount,
-    transferSentTxhash:
-      lc.transferSentTxhash !== '' ? lc.transferSentTxhash : existing.transferSentTxhash,
-    redeemedTxhash: lc.redeemedTxhash !== '' ? lc.redeemedTxhash : existing.redeemedTxhash,
-    nttTransferKey: lc.nttTransferKey !== '' ? lc.nttTransferKey : existing.nttTransferKey,
-    vaaId: lc.vaaId !== '' ? lc.vaaId : existing.vaaId,
-    digest: lc.digest,
-    transferTime: lc.transferTime !== '' ? lc.transferTime : existing.transferTime,
-    redeemTime: lc.redeemTime !== '' ? lc.redeemTime : existing.redeemTime,
-    inboundTransferQueuedTime:
-      lc.inboundTransferQueuedTime !== ''
-        ? lc.inboundTransferQueuedTime
-        : existing.inboundTransferQueuedTime,
-    outboundTransferQueuedTime:
-      lc.outboundTransferQueuedTime !== ''
-        ? lc.outboundTransferQueuedTime
-        : existing.outboundTransferQueuedTime,
-    outboundTransferRateLimitedTime:
-      lc.outboundTransferRateLimitedTime !== ''
-        ? lc.outboundTransferRateLimitedTime
-        : existing.outboundTransferRateLimitedTime,
-  };
-  return merged;
 }
 
 function isRelayer(network: Environment, chain: ChainName, emitter: string): boolean {

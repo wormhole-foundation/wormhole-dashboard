@@ -39,6 +39,7 @@ export type Network = {
   logo: string;
   type: 'guardian' | 'cloudfunction';
 };
+export type Mode = 'vaa' | 'ntt';
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   [key in Environment]: { [key in ChainName]?: string };
@@ -106,7 +107,7 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
 } = {
   ['mainnet']: {},
   ['testnet']: {
-    solana: '284788472',
+    solana: '285100152',
     sepolia: '5472203',
     arbitrum_sepolia: '22501243',
     base_sepolia: '7249669',
@@ -191,14 +192,6 @@ export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
   6: CHAIN_ID_BASE,
   7: CHAIN_ID_POLYGON,
 };
-
-// TODO: This should be needed by processVaa.ts, if we go down that path
-export const NTT_EMITTERS: { [key in ChainName]?: string } = {
-  // TODO: add NTT emitters
-};
-
-export const isNTTEmitter = (chain: ChainId | ChainName, emitter: string) =>
-  NTT_EMITTERS[coalesceChainName(chain)]?.toLowerCase() === emitter.toLowerCase();
 
 export type CHAIN_INFO = {
   name: string;

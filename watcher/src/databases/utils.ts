@@ -46,6 +46,10 @@ export function parseMessageId(id: string): {
 // TODO: should this be a composite key or should the value become more complex
 export const makeBlockKey = (block: string, timestamp: string): string => `${block}/${timestamp}`;
 
+export const extractBlockFromKey = (key: string): number => {
+  return parseInt(key.split('/')[0]);
+};
+
 export const makeVaaKey = (
   transactionHash: string,
   chain: ChainId | ChainName,

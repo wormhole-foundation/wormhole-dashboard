@@ -4,11 +4,17 @@ dotenv.config();
 import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { initDb } from './databases/utils';
 import { makeFinalizedNTTWatcher, makeFinalizedWatcher } from './watchers/utils';
-import { Environment, getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  Environment,
+  Mode,
+  getEnvironment,
+  getMode,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 initDb();
 
 const network: Environment = getEnvironment();
+const mode: Mode = getMode();
 
 // NOTE:  supportedChains is in chainId order
 
@@ -78,21 +84,19 @@ const supportedChains: ChainName[] =
         'wormchain',
       ];
 
-for (const chain of supportedChains) {
-  makeFinalizedWatcher(network, chain).watch();
-}
-
 const supportedNTTChains: ChainName[] =
   network === 'testnet'
-    ? [
-        //'solana',
-        'sepolia',
-        'arbitrum_sepolia',
-        'base_sepolia',
-        'optimism_sepolia',
-      ]
+    ? ['solana', 'sepolia', 'arbitrum_sepolia', 'base_sepolia', 'optimism_sepolia']
     : [];
 
-for (const chain of supportedNTTChains) {
-  makeFinalizedNTTWatcher(network, chain).watch();
+if (mode === 'vaa') {
+  for (const chain of supportedChains) {
+    makeFinalizedWatcher(network, chain).watch();
+  }
+} else if (mode === 'ntt') {
+  for (const chain of supportedNTTChains) {
+    makeFinalizedNTTWatcher(network, chain).watch();
+  }
+} else {
+  throw new Error(`Unknown mode: ${mode}`);
 }

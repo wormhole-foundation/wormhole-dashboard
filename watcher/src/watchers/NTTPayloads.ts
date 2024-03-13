@@ -3,6 +3,8 @@
 // File: solana/ts/sdk/payloads/common.ts
 //
 
+import { ChainId } from '@certusone/wormhole-sdk';
+import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
 export class TransceiverMessage<A> {
@@ -95,6 +97,8 @@ export class NttManagerMessage<A> {
     this.payload = payload;
   }
 
+  // This is the deserializer for the NttManagerMessage struct.
+  // It follows the platform independent wire format.
   static deserialize = <A>(
     data: Buffer,
     deserializer: (data: Buffer) => A
@@ -103,6 +107,20 @@ export class NttManagerMessage<A> {
     const sender = data.subarray(32, 64);
     const payloadLen = data.readUint16BE(64);
     const payload = deserializer(data.subarray(66, 66 + payloadLen));
+    return new NttManagerMessage(id, sender, payload);
+  };
+
+  // This is a different deserialization method from the one above.
+  // This follows the Solana account serialization format (Borsh encoding).
+  // This is used to deserialize the transceiverMessage account data into ValidatedTransceiverMessage.
+  // ref: https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/programs/example-native-token-transfers/src/messages.rs#L7
+  static deserializeAccountFormat = <A>(
+    data: Buffer,
+    deserializer: (data: Buffer) => A
+  ): NttManagerMessage<A> => {
+    const id = data.subarray(0, 32);
+    const sender = data.subarray(32, 64);
+    const payload = deserializer(data.subarray(64));
     return new NttManagerMessage(id, sender, payload);
   };
 
@@ -135,6 +153,10 @@ export class NativeTokenTransfer {
     this.recipientChain = recipientChain;
   }
 
+  // This is the deserializer for the NativeTokenTransfer struct.
+  // It follows the platform independent wire format through which both EVM and Solana implementations can communicate.
+  // On Solana, the serialization is done manually via `Writeable` trait.
+  // ref: https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/modules/ntt-messages/src/ntt.rs#L62
   static deserialize = (data: Buffer): NativeTokenTransfer => {
     const prefix = data.subarray(0, 4);
     if (!prefix.equals(NativeTokenTransfer.prefix)) {
@@ -144,6 +166,19 @@ export class NativeTokenTransfer {
     const sourceToken = data.subarray(13, 45);
     const recipientAddress = data.subarray(45, 77);
     const recipientChain = data.readUInt16BE(77);
+    return new NativeTokenTransfer(sourceToken, amount, recipientChain, recipientAddress);
+  };
+
+  // This is a different deserialization method from the one above.
+  // This follows the Solana account serialization format (Borsh encoding).
+  // This is used to deserialize the NTT struct from transceiverMessage account data.
+  // Notice that the account format has no prefix as it uses Anchor Serialization and Deserialization.
+  // ref: https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/modules/ntt-messages/src/ntt.rs#L11
+  static deserializeAccountFormat = (data: Buffer): NativeTokenTransfer => {
+    const amount = TrimmedAmount.deserializeAccount(data.subarray(0, 9));
+    const sourceToken = data.subarray(9, 41);
+    const recipientChain = data.readUInt16LE(41);
+    const recipientAddress = data.subarray(43, 75);
     return new NativeTokenTransfer(sourceToken, amount, recipientChain, recipientAddress);
   };
 
@@ -169,9 +204,20 @@ export class TrimmedAmount {
     this.decimals = decimals;
   }
 
+  // Similar to the NativeTokenTransfer, this deserializer follows the platform independent wire format.
+  // writable ref: https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/modules/ntt-messages/src/trimmed_amount.rs#L107
   static deserialize(data: Buffer): TrimmedAmount {
     const decimals = data.readUInt8(0);
     const amount = data.readBigUInt64BE(1);
+    return new TrimmedAmount(amount, decimals);
+  }
+
+  // This is a different deserialization method from the one above.
+  // This follows the Solana account serialization format (Borsh encoding).
+  // This is used to deserialize the TrimmedAmount struct from NativeTokenTransfer account data.
+  static deserializeAccount(data: Buffer): TrimmedAmount {
+    const amount = data.readBigUInt64LE(0);
+    const decimals = data.readUInt8(8);
     return new TrimmedAmount(amount, decimals);
   }
 
@@ -181,4 +227,63 @@ export class TrimmedAmount {
     buffer.writeBigUInt64BE(amount.amount, 1);
     return buffer;
   }
+}
+
+// Another TransceiverMessage struct found in the TransceiverMessageAccount used in some instructions:
+// 1. ReceiveWormholeMessage
+// 2. Redeem
+// It uses little endian as it follows the Solana account serialization format (Borsh encoding)
+// This is a different struct from TransceiverMessage we defined above.
+// ref: https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/programs/example-native-token-transfers/src/messages.rs#L7
+export class ValidatedTransceiverMessage<A> {
+  chainId: ChainId;
+  sourceNttManager: Buffer;
+  recipientNttManager: Buffer;
+  ntt_managerPayload: NttManagerMessage<A>;
+
+  constructor(
+    chainId: ChainId,
+    sourceNttManager: Buffer,
+    recipientNttManager: Buffer,
+    ntt_managerPayload: NttManagerMessage<A>
+  ) {
+    this.chainId = chainId;
+    this.sourceNttManager = sourceNttManager;
+    this.recipientNttManager = recipientNttManager;
+    this.ntt_managerPayload = ntt_managerPayload;
+  }
+
+  static deserialize<A>(
+    data: Buffer,
+    deserializer: (data: Buffer) => NttManagerMessage<A>
+  ): ValidatedTransceiverMessage<A> | null {
+    let msg: ValidatedTransceiverMessage<A> | null = null;
+    try {
+      const fromChain = data.readUInt16LE(8);
+      const sourceNttManager = data.subarray(10, 42);
+      const recipientNttManager = data.subarray(42, 74);
+      const nttManagerPayload = data.subarray(74);
+      const ntt_managerPayload = deserializer(nttManagerPayload);
+
+      msg = new ValidatedTransceiverMessage(
+        fromChain as ChainId,
+        sourceNttManager,
+        recipientNttManager,
+        ntt_managerPayload
+      );
+    } catch (e) {
+      console.log(`error`, e);
+    }
+    return msg;
+  }
+}
+
+export interface OutboxItem {
+  amount: TrimmedAmount;
+  sender: PublicKey;
+  recipientChain: ChainId;
+  recipientNttManager: Buffer;
+  recipientAddress: Buffer;
+  releaseTimestamp: bigint;
+  released: boolean;
 }

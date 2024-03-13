@@ -63,6 +63,7 @@ export class Watcher {
       this.chain,
       this.isNTT
     );
+
     let retry = 0;
     while (true) {
       try {

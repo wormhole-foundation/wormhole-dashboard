@@ -131,14 +131,32 @@ export const NTT_TOPICS = [
   TransferRedeemedTopic,
 ];
 
-export const NTT_CONTRACT: { [key in Environment]: { [key in ChainName]?: string } } = {
+export const TransferLockIx = 'transferLock';
+export const TransferBurnIx = 'transferBurn';
+export const RedeemIx = 'redeem';
+export const ReleaseInboundMintIx = 'releaseInboundMint';
+export const ReleaseInboundUnlockIx = 'releaseInboundUnlock';
+export const ReceiveWormholeMessageIx = 'receiveWormholeMessage';
+export const ReleaseWormholeOutboundIx = 'releaseWormholeOutbound';
+
+export const NTT_SOLANA_IXS = [
+  TransferLockIx,
+  TransferBurnIx,
+  RedeemIx,
+  ReleaseInboundMintIx,
+  ReleaseInboundUnlockIx,
+  ReceiveWormholeMessageIx,
+  ReleaseWormholeOutboundIx,
+];
+
+export const NTT_CONTRACT: { [key in Environment]: { [key in ChainName]?: string[] } } = {
   ['mainnet']: {},
   ['testnet']: {
-    solana: 'nTTh3bZ5Aer6xboWZe39RDEft4MeVxSQ8D1EYAVLZw9',
-    sepolia: '0xB231aD95f2301bc82eA44c515001F0F746D637e0',
-    arbitrum_sepolia: '0xEec94CD3083e067398256a79CcA7e740C5c8ef81',
-    base_sepolia: '0xB03b030b2f5B40819Df76467d67eD1C85Ff66fAD',
-    optimism_sepolia: '0x7f430D4e7939D994C0955A01FC75D9DE33F12D11',
+    solana: ['nTTh3bZ5Aer6xboWZe39RDEft4MeVxSQ8D1EYAVLZw9'],
+    sepolia: ['0xB231aD95f2301bc82eA44c515001F0F746D637e0'],
+    arbitrum_sepolia: ['0xEec94CD3083e067398256a79CcA7e740C5c8ef81'],
+    base_sepolia: ['0xB03b030b2f5B40819Df76467d67eD1C85Ff66fAD'],
+    optimism_sepolia: ['0x7f430D4e7939D994C0955A01FC75D9DE33F12D11'],
   },
   ['devnet']: {},
 };
@@ -160,13 +178,16 @@ export type LifeCycle = {
   sourceToken: string;
   tokenAmount: bigint;
   transferSentTxhash: string;
+  transferBlockHeight: bigint;
   redeemedTxhash: string;
+  redeemedBlockHeight: bigint;
   nttTransferKey: string;
   vaaId: string;
   digest: string;
+  isRelay: boolean;
   transferTime: string;
   redeemTime: string;
   inboundTransferQueuedTime: string;
   outboundTransferQueuedTime: string;
-  outboundTransferRateLimitedTime: string;
+  outboundTransferReleasableTime: string;
 };

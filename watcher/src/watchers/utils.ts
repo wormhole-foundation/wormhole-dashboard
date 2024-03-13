@@ -17,6 +17,7 @@ import { NearArchiveWatcher } from './NearArchiveWatcher';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 import { NTTWatcher } from './NTTWatcher';
 import { NTTArbitrumWatcher } from './NTTArbitrumWatcher';
+import { NTTSolanaWatcher } from './NTTSolanaWatcher';
 
 export function makeFinalizedWatcher(network: Environment, chainName: ChainName): Watcher {
   if (chainName === 'solana') {
@@ -89,6 +90,8 @@ export function makeFinalizedNTTWatcher(network: Environment, chainName: ChainNa
       return new NTTWatcher(network, chainName);
     } else if (chainName === 'arbitrum_sepolia') {
       return new NTTArbitrumWatcher(network);
+    } else if (chainName === 'solana') {
+      return new NTTSolanaWatcher(network);
     } else {
       throw new Error(
         `Attempted to create finalized watcher for unsupported testnet chain ${chainName}`

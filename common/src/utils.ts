@@ -1,4 +1,4 @@
-import { Environment } from './consts';
+import { Environment, Mode } from './consts';
 
 export async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
@@ -22,4 +22,12 @@ export function getEnvironment(): Environment {
     return network;
   }
   throw new Error(`Unknown network: ${network}`);
+}
+
+export function getMode(): Mode {
+  const mode: string = assertEnvironmentVariable('MODE').toLowerCase();
+  if (mode === 'vaa' || mode === 'ntt') {
+    return mode;
+  }
+  throw new Error(`Unknown mode: ${mode}`);
 }

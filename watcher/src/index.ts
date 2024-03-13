@@ -83,13 +83,7 @@ for (const chain of supportedChains) {
 
 const supportedNTTChains: ChainName[] =
   network === 'testnet'
-    ? [
-        //'solana',
-        'sepolia',
-        'arbitrum_sepolia',
-        'base_sepolia',
-        'optimism_sepolia',
-      ]
+    ? ['solana', 'sepolia', 'arbitrum_sepolia', 'base_sepolia', 'optimism_sepolia']
     : [];
 
 for (const chain of supportedNTTChains) {

@@ -131,6 +131,24 @@ export const NTT_TOPICS = [
   TransferRedeemedTopic,
 ];
 
+export const TransferLockIx = 'transferLock';
+export const TransferBurnIx = 'transferBurn';
+export const RedeemIx = 'redeem';
+export const ReleaseInboundMintIx = 'releaseInboundMint';
+export const ReleaseInboundUnlockIx = 'releaseInboundUnlock';
+export const ReceiveWormholeMessageIx = 'receiveWormholeMessage';
+export const ReleaseWormholeOutboundIx = 'releaseWormholeOutbound';
+
+export const NTT_SOLANA_IXS = [
+  TransferLockIx,
+  TransferBurnIx,
+  RedeemIx,
+  ReleaseInboundMintIx,
+  ReleaseInboundUnlockIx,
+  ReceiveWormholeMessageIx,
+  ReleaseWormholeOutboundIx,
+];
+
 export const NTT_CONTRACT: { [key in Environment]: { [key in ChainName]?: string } } = {
   ['mainnet']: {},
   ['testnet']: {

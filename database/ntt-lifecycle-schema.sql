@@ -16,3 +16,13 @@ CREATE TABLE life_cycle (
   outbound_transfer_rate_limited_time TIMESTAMP,
 	PRIMARY KEY (digest)
 );
+
+-- This is needed since releaseInboundMint/releaseInboundUnlock does not reference the digest
+-- The redeem stage refers to both digest and inboxItem. Since inboxItem is unique for every transfer
+-- we can use it as a primary key.
+-- Row will be deleted when the transfer is fully redeemed, aka releaseInboundMint/releaseInboundUnlock is called.
+CREATE TABLE inbox_item_to_lifecycle_digest (
+    inbox_item VARCHAR(96) NOT NULL,
+    digest VARCHAR(96) NOT NULL,
+    PRIMARY KEY (inbox_item),
+);

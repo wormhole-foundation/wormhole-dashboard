@@ -6,7 +6,6 @@
   "types": "dist/src/index.d.ts",
   "scripts": {
     "backfill-transfer-data": "ts-node scripts/backfillTransferData.ts",
-    "update-token-metadata": "ts-node scripts/updateTokenMetadata.ts",
     "backfill-price-history": "ts-node scripts/backfillPriceHistory.ts"
   },
   "dependencies": {

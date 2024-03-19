@@ -1,6 +1,9 @@
 package historical_uptime
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/db"
@@ -73,7 +76,7 @@ func UpdateMetrics(guardianMissedObservations *prometheus.CounterVec, guardianMi
 func computeMaxChainHeights(guardianChainHeights common.GuardianChainHeights) common.ChainHeights {
 	maxChainHeights := make(common.ChainHeights)
 
-	for chainId, guardianHeights  := range guardianChainHeights {
+	for chainId, guardianHeights := range guardianChainHeights {
 		highest := uint64(0)
 
 		for _, guardianHeight := range guardianHeights {
@@ -110,4 +113,11 @@ func GetGuardianHeightDifferencesByChain(guardianChainHeights common.GuardianCha
 	return computeGuardianChainHeightDifferences(guardianChainHeights, maxChainHeights)
 }
 
-
+func GenerateRandomID() string {
+	b := make([]byte, 8) // Generates a 16-character hex string
+	_, err := rand.Read(b)
+	if err != nil {
+		panic("failed to generate random ID: " + err.Error())
+	}
+	return hex.EncodeToString(b)
+}

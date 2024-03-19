@@ -309,7 +309,7 @@ const FIND_MSGS = [
     throw new Error('bigtable is undefined');
   }
   const instance = bt.bigtable.instance(bt.instanceId);
-  const messageTable = instance.table(bt.tableId);
+  const messageTable = instance.table(bt.msgTableId);
   try {
     const observedMessages = (
       await messageTable.getRows({ prefixes: ['00002/', '00004/', '00005/', '00006/'] })

@@ -17,7 +17,6 @@
     "check-solana": "ts-node scripts/checkSolana.ts",
     "delete-messages-by-chain": "ts-node scripts/deleteMessagesByChain.ts",
     "dump-messages": "ts-node scripts/dumpMessages.ts",
-    "dump-transfer-data": "ts-node scripts/dumpTransferData.ts",
     "dump-vaas": "ts-node scripts/dumpVAAs.ts",
     "fetch-missing-vaas": "ts-node scripts/fetchMissingVAAs.ts",
     "locate-message-gaps": "ts-node scripts/locateMessageGaps.ts",

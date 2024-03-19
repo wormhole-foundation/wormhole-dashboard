@@ -13,6 +13,7 @@ import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../src/consts';
 import { LOG_MESSAGE_PUBLISHED_TOPIC, wormholeInterface } from '../src/watchers/EVMWatcher';
 import { Log } from '@ethersproject/abstract-provider';
+import { getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
 
 const misses: { chain: ChainId; txHash: string }[] = [
   { chain: 11, txHash: '0x14180a4b1b056c71d473348203976f5b250e1c7342abd1947fa7de79195a91d4' },
@@ -142,8 +143,9 @@ export function serializeVAA(vaa: VAA<Other>) {
 }
 
 (async () => {
+  const network = getEnvironment();
   for (const miss of misses) {
-    const rpc = RPCS_BY_CHAIN[coalesceChainName(miss.chain)];
+    const rpc = RPCS_BY_CHAIN[network][coalesceChainName(miss.chain)];
     if (!isEVMChain(miss.chain)) {
       console.error('unsupported chain (non EVM)', miss.chain);
       continue;

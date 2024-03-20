@@ -90,6 +90,7 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   10004: baseIcon,
   10005: optimismIcon,
   10006: ethIcon,
+  10007: polygonIcon,
 };
 
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';

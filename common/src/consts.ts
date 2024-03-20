@@ -105,7 +105,7 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
 } = {
   ['mainnet']: {},
   ['testnet']: {
-    solana: '284788472',
+    solana: '285100152',
     sepolia: '5472203',
     arbitrum_sepolia: '22501243',
     base_sepolia: '7249669',

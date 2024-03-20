@@ -80,7 +80,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   lifecycleMap: Map<string, LifeCycle>; // digest -> lifecycle
 
   constructor(network: Environment) {
-    super(network);
+    super(network, true);
     this.rpc = RPCS_BY_CHAIN[this.network].solana!;
     this.programId = NTT_CONTRACT[this.network].solana!;
     this.lifecycleMap = new Map<string, LifeCycle>();
@@ -526,6 +526,10 @@ export class NTTSolanaWatcher extends SolanaWatcher {
         });
 
       this.logger.info(`processing ${signatures.length} transactions`);
+
+      if (signatures.length === 0) {
+        break;
+      }
 
       const results = await this.getConnection().getTransactions(
         signatures.map((s) => s.signature),

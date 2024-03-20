@@ -254,7 +254,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       transceiverMessageAccountKey
     );
     const digest = getNttManagerMessageDigest(
-      coalesceChainId(this.chain),
+      coalesceChainId(transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId),
       transceiverMessage.ntt_managerPayload
     );
 
@@ -382,7 +382,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
         parsedVaa.sequence
       }`,
       digest: getNttManagerMessageDigest(
-        coalesceChainId(this.chain),
+        coalesceChainId(parsedVaa.emitterChain as ChainId),
         transceiverMessage.ntt_managerPayload
       ),
       transferTime: '',
@@ -571,7 +571,10 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       currSignature = signatures.at(-1)?.signature;
     }
 
-    const lastBlockKey = makeBlockKey(toSlot.toString(), new Date(toBlock.blockTime! * 1000).toISOString());
+    const lastBlockKey = makeBlockKey(
+      toSlot.toString(),
+      new Date(toBlock.blockTime! * 1000).toISOString()
+    );
     return lastBlockKey;
   }
 

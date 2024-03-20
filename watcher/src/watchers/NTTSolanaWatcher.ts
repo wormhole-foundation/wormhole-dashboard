@@ -508,7 +508,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
 
   async getNttMessagesForBlocks(fromSlot: number, toSlot: number): Promise<string> {
     this.logger.info(`fetching info for blocks ${fromSlot} to ${toSlot}`);
-    const { fromSignature, toSignature } = await findFromSignatureAndToSignature(
+    const { fromSignature, toSignature, toBlock } = await findFromSignatureAndToSignature(
       this.getConnection(),
       fromSlot,
       toSlot
@@ -571,7 +571,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       currSignature = signatures.at(-1)?.signature;
     }
 
-    const lastBlockKey = makeBlockKey(toSlot.toString(), new Date(toSlot! * 1000).toISOString());
+    const lastBlockKey = makeBlockKey(toSlot.toString(), new Date(toBlock.blockTime! * 1000).toISOString());
     return lastBlockKey;
   }
 

@@ -112,5 +112,5 @@ export const findFromSignatureAndToSignature = async (
   const toSignature =
     fromBlock.transactions[fromBlock.transactions.length - 1].transaction.signatures[0];
 
-  return { fromSignature, toSignature };
+  return { fromSignature, toSignature, toBlock };
 };

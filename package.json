@@ -15,7 +15,7 @@
     "database"
   ],
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.10.10"
+    "@certusone/wormhole-sdk": "^0.10.13"
   },
   "devDependencies": {
     "prettier": "^2.8.1",

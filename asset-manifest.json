@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.07433152.js",
+    "main.js": "/wormhole-dashboard/static/js/main.dcada792.js",
     "static/js/915.dda1937c.chunk.js": "/wormhole-dashboard/static/js/915.dda1937c.chunk.js",
     "static/media/osmosis.svg": "/wormhole-dashboard/static/media/osmosis.e63cfefeb2a04452c70bc79d10edca03.svg",
     "static/media/dymension2.svg": "/wormhole-dashboard/static/media/dymension2.53975f485b10fc318e9617137738d311.svg",
@@ -42,10 +42,10 @@
     "static/media/xpla.svg": "/wormhole-dashboard/static/media/xpla.39d25b51bf8a5b7f6aeb01cd57c5ec61.svg",
     "static/media/algorand.svg": "/wormhole-dashboard/static/media/algorand.699bf008d7073523b8edd75d8f3b38ac.svg",
     "static/media/eth.svg": "/wormhole-dashboard/static/media/eth.5a5de20bf3808241fc61ed9ad7680ab5.svg",
-    "main.07433152.js.map": "/wormhole-dashboard/static/js/main.07433152.js.map",
+    "main.dcada792.js.map": "/wormhole-dashboard/static/js/main.dcada792.js.map",
     "915.dda1937c.chunk.js.map": "/wormhole-dashboard/static/js/915.dda1937c.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.07433152.js"
+    "static/js/main.dcada792.js"
   ]
 }

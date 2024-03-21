@@ -96,6 +96,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     base: '0',
     sei: '0',
     wormchain: '0',
+    polygon_sepolia: '2379275',
   },
   ['devnet']: {},
 };

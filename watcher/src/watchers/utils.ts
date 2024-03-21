@@ -62,7 +62,11 @@ export function makeFinalizedWatcher(network: Environment, chainName: ChainName)
       return new EVMWatcher(network, chainName, 'finalized');
     } else if (chainName === 'arbitrum_sepolia') {
       return new ArbitrumWatcher(network);
-    } else if (chainName === 'optimism_sepolia' || chainName === 'base_sepolia') {
+    } else if (
+      chainName === 'optimism_sepolia' ||
+      chainName === 'base_sepolia' ||
+      chainName === 'polygon_sepolia'
+    ) {
       return new EVMWatcher(network, chainName);
     } else {
       throw new Error(

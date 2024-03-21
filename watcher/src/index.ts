@@ -47,6 +47,7 @@ const supportedChains: ChainName[] =
         'base_sepolia',
         'optimism_sepolia',
         'holesky',
+        'polygon_sepolia',
       ]
     : [
         // This is the list of chains supported in MAINNET.

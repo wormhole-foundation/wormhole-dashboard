@@ -61,7 +61,7 @@ export type ExampleNativeTokenTransfers = OmitGenerics<RawExampleNativeTokenTran
 
 export class NTTSolanaWatcher extends SolanaWatcher {
   readonly rpc: string;
-  readonly programId: string;
+  readonly programIds: string[];
   readonly program: Program<ExampleNativeTokenTransfers>;
   readonly provider: AnchorProvider;
   readonly borsh: BorshCoder;
@@ -82,7 +82,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   constructor(network: Environment) {
     super(network, true);
     this.rpc = RPCS_BY_CHAIN[this.network].solana!;
-    this.programId = NTT_CONTRACT[this.network].solana!;
+    this.programIds = NTT_CONTRACT[this.network].solana!;
     this.lifecycleMap = new Map<string, LifeCycle>();
     this.connection = new Connection(this.rpc, COMMITMENT);
 
@@ -514,61 +514,63 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       toSlot
     );
 
-    let numSignatures = this.getSignaturesLimit;
-    let currSignature: string | undefined = fromSignature;
+    for (const programId of this.programIds) {
+      let numSignatures = this.getSignaturesLimit;
+      let currSignature: string | undefined = fromSignature;
 
-    while (numSignatures === this.getSignaturesLimit) {
-      const signatures: ConfirmedSignatureInfo[] =
-        await this.getConnection().getSignaturesForAddress(new PublicKey(this.programId), {
-          before: currSignature,
-          until: toSignature,
-          limit: this.getSignaturesLimit,
-        });
+      while (numSignatures === this.getSignaturesLimit) {
+        const signatures: ConfirmedSignatureInfo[] =
+          await this.getConnection().getSignaturesForAddress(new PublicKey(programId), {
+            before: currSignature,
+            until: toSignature,
+            limit: this.getSignaturesLimit,
+          });
 
-      this.logger.info(`processing ${signatures.length} transactions`);
+        this.logger.info(`processing ${signatures.length} transactions`);
 
-      if (signatures.length === 0) {
-        break;
-      }
-
-      const results = await this.getConnection().getTransactions(
-        signatures.map((s) => s.signature),
-        {
-          maxSupportedTransactionVersion: 0,
-        }
-      );
-
-      if (results.length !== signatures.length) {
-        throw new Error(`solana: failed to fetch tx for signatures`);
-      }
-
-      for (const res of results) {
-        if (res?.meta?.err) {
-          // skip errored txs
-          continue;
-        }
-        if (!res || !res.blockTime) {
-          throw new Error(
-            `solana: failed to fetch tx for signature ${
-              res?.transaction.signatures[0] || 'unknown'
-            }`
-          );
+        if (signatures.length === 0) {
+          break;
         }
 
-        const message = res.transaction.message;
-        const instructions = message.compiledInstructions;
+        const results = await this.getConnection().getTransactions(
+          signatures.map((s) => s.signature),
+          {
+            maxSupportedTransactionVersion: 0,
+          }
+        );
 
-        for (const instruction of instructions) {
-          try {
-            await this.parseInstruction(res, instruction);
-          } catch (error) {
-            this.logger.error('error:', error);
+        if (results.length !== signatures.length) {
+          throw new Error(`solana: failed to fetch tx for signatures`);
+        }
+
+        for (const res of results) {
+          if (res?.meta?.err) {
+            // skip errored txs
+            continue;
+          }
+          if (!res || !res.blockTime) {
+            throw new Error(
+              `solana: failed to fetch tx for signature ${
+                res?.transaction.signatures[0] || 'unknown'
+              }`
+            );
+          }
+
+          const message = res.transaction.message;
+          const instructions = message.compiledInstructions;
+
+          for (const instruction of instructions) {
+            try {
+              await this.parseInstruction(res, instruction);
+            } catch (error) {
+              this.logger.error('error:', error);
+            }
           }
         }
-      }
 
-      numSignatures = signatures.length;
-      currSignature = signatures.at(-1)?.signature;
+        numSignatures = signatures.length;
+        currSignature = signatures.at(-1)?.signature;
+      }
     }
 
     const lastBlockKey = makeBlockKey(

@@ -60,5 +60,71 @@ test('deserializeValidatedTransceiverMessage', async () => {
 // It is just an entrypoint to test the whole thing with a local postgres database.
 test.skip('getNttMessagesForBlock', async () => {
   const watcher = new NTTSolanaWatcher('testnet');
-  await watcher.getNttMessagesForBlocks(285100152, 285101059);
+  const latestSlot = await watcher.getConnection().getSlot();
+  await watcher.getNttMessagesForBlocks(285100152, latestSlot);
+});
+
+test('parseReceiveWormholeMessageIx', async () => {
+  const watcher = new NTTSolanaWatcher('testnet');
+  const txHashes = [
+    // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5
+    '22to1Yq258rRRDYX1UzKfH1knSH4acBzdQSYFjKrTU4vwqw98ALyPSmtpqWddPXjciwK8tEHLYzq3MRpFmd3U6x2',
+    // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/6
+    '3S3WBRjMnt1ACDRVf9uvp2osbRaRLLzAky1uzxG4ZvVVxAJ8mEvGdjUQXqRBxmPVPERvZAsh1jFQubZQfwgMtm4N',
+  ];
+
+  const digests = [
+    // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5
+    'b716dc9a0cc692c0f59438c579c435412bfeeb2f853db8cffdafc7ddb365a353',
+    // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/6
+    'dd82e60dfb79e5776089f2d8d466e03479431739cb2af2990d1d6e5756bc1720',
+  ];
+
+  const txs = await watcher.getConnection().getTransactions(txHashes, {
+    maxSupportedTransactionVersion: 0,
+  });
+
+  if (!txs) {
+    throw new Error('Unable to get transaction');
+  }
+
+  let ix = txs[0]!.transaction.message.compiledInstructions[0];
+  let message = await watcher.parseInstruction(txs[0]!, ix);
+  expect(message?.digest).toBe(digests[0]);
+
+  ix = txs[1]!.transaction.message.compiledInstructions[0];
+  message = await watcher.parseInstruction(txs[1]!, ix);
+  expect(message?.digest).toBe(digests[1]);
+});
+
+test('parseRedeemIx', async () => {
+  const watcher = new NTTSolanaWatcher('testnet');
+  const txHashes = [
+    // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5
+    '22to1Yq258rRRDYX1UzKfH1knSH4acBzdQSYFjKrTU4vwqw98ALyPSmtpqWddPXjciwK8tEHLYzq3MRpFmd3U6x2',
+    // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/6
+    '3S3WBRjMnt1ACDRVf9uvp2osbRaRLLzAky1uzxG4ZvVVxAJ8mEvGdjUQXqRBxmPVPERvZAsh1jFQubZQfwgMtm4N',
+  ];
+
+  const digests = [
+    // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5
+    'b716dc9a0cc692c0f59438c579c435412bfeeb2f853db8cffdafc7ddb365a353',
+    // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/6
+    'dd82e60dfb79e5776089f2d8d466e03479431739cb2af2990d1d6e5756bc1720',
+  ];
+  const txs = await watcher.getConnection().getTransactions(txHashes, {
+    maxSupportedTransactionVersion: 0,
+  });
+
+  if (!txs) {
+    throw new Error('Unable to get transaction');
+  }
+
+  let ix = txs[0]!.transaction.message.compiledInstructions[1];
+  let message = await watcher.parseInstruction(txs[0]!, ix);
+  expect(message?.digest).toBe(digests[0]);
+
+  ix = txs[1]!.transaction.message.compiledInstructions[1];
+  message = await watcher.parseInstruction(txs[1]!, ix);
+  expect(message?.digest).toBe(digests[1]);
 });

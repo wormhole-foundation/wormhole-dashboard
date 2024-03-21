@@ -254,7 +254,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       transceiverMessageAccountKey
     );
     const digest = getNttManagerMessageDigest(
-      coalesceChainId(transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId),
+      coalesceChainId(transceiverMessage.chainId as ChainId),
       transceiverMessage.ntt_managerPayload
     );
 
@@ -418,7 +418,6 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
     const vaaId = `${postMessage.message.emitterChain}/${emitterHex}/${seq}`;
-    console.log('vaaId:', vaaId);
 
     let lc: LifeCycle = {
       srcChainId: coalesceChainId(this.chain),
@@ -451,7 +450,8 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   // through Redeem but not from ReleaseInboundMint/ReleaseInboundUnlock. However, we can link Redeem and
   // ReleaseInboundMint/ReleaseInboundUnlock through the inboxItem (account is seeded by ntt_manager_payload)
   // ref: https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/programs/example-native-token-transfers/src/instructions/redeem.rs#L60
-  private async parseInstruction(
+  // This is not private so we can use it in tests
+  async parseInstruction(
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction
   ) {

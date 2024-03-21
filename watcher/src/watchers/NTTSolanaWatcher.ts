@@ -177,7 +177,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     const config = await this.program.account.config.fetch(configAccount);
     const outboxItemAccount = await this.program.account.outboxItem.fetch(outboxAccount);
 
-    const transferTime = new Date(transaction.blockTime * 1000).getTime().toString();
+    const outboxQueuedTime = String(transaction.blockTime * 1000);
     const outboxReleaseTime = (outboxItemAccount.releaseTimestamp.toNumber() * 1000).toString();
 
     const nttManagerMessage: NttManagerMessage<NativeTokenTransfer> = {
@@ -201,17 +201,17 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       destChainId: coalesceChainId(nttManagerMessage.payload.recipientChain as ChainId),
       sourceToken: config.mint.toBuffer().toString('hex'),
       tokenAmount: BigInt(outboxItemAccount.amount.amount.toString()),
-      transferSentTxhash: transaction.transaction.signatures[0],
+      transferSentTxhash: '',
       nttTransferKey: `${this.programId}/${nttManagerMessage.payload.recipientAddress.toString(
         'hex'
       )}/${nttManagerMessage.id.toString('hex')}`,
       vaaId: '',
       digest: digest,
-      transferTime,
+      transferTime: '',
       redeemTime: '',
       redeemedTxhash: '',
       inboundTransferQueuedTime: '',
-      outboundTransferQueuedTime: transferTime,
+      outboundTransferQueuedTime: outboxQueuedTime,
       outboundTransferRateLimitedTime: outboxReleaseTime,
     };
 
@@ -300,7 +300,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       throw new Error('blockTime is null');
     }
 
-    const redeemTime = new Date(transaction.blockTime * 1000).getTime().toString();
+    const redeemTime = String(transaction.blockTime * 1000);
     const redeemTxhash = transaction.transaction.signatures[0];
 
     let lc: LifeCycle = {
@@ -400,9 +400,14 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   // parsedReleaseWormholeOutboundIx parses the instruction for ReleaseWormholeOutbound.
   // Significant data here is the vaaId as we cannot find it in any of the outbound lifecycle on Solana.
   private async parsedReleaseWormholeOutboundIx(
+    transaction: VersionedTransactionResponse,
     accountKeys: PublicKey[],
     instructionAccountKeyIndexes: number[]
   ): Promise<LifeCycle> {
+    if (!transaction.blockTime) {
+      throw new Error('blockTime is null');
+    }
+
     const wormholeMessageAccount = accountKeys[instructionAccountKeyIndexes[4]];
     const emitter = accountKeys[instructionAccountKeyIndexes[5]];
 
@@ -426,14 +431,14 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       ),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
       tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.amount,
-      transferSentTxhash: '',
+      transferSentTxhash: transaction.transaction.signatures[0],
       nttTransferKey: `${this.programId}/${recipient}/${seq}`,
       vaaId: vaaId,
       digest: getNttManagerMessageDigest(
         coalesceChainId(this.chain),
         transceiverMessage.ntt_managerPayload
       ),
-      transferTime: '',
+      transferTime: String(transaction.blockTime * 1000),
       redeemTime: '',
       redeemedTxhash: '',
       inboundTransferQueuedTime: '',
@@ -493,6 +498,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
           );
         case ReleaseWormholeOutboundIx:
           return this.parsedReleaseWormholeOutboundIx(
+            res,
             res.transaction.message.getAccountKeys().staticAccountKeys,
             instruction.accountKeyIndexes
           );
@@ -689,19 +695,21 @@ export class NTTSolanaWatcher extends SolanaWatcher {
             to_chain: lc.destChainId,
             from_token: lc.sourceToken,
             token_amount: lc.tokenAmount,
-            transfer_sent_txhash: lc.transferSentTxhash,
             ntt_transfer_key: lc.nttTransferKey,
             digest: lc.digest,
-            transfer_time: millisecondsToTimestamp(lc.transferTime),
             outbound_transfer_queued_time: millisecondsToTimestamp(lc.outboundTransferQueuedTime),
             outbound_transfer_rate_limited_time: millisecondsToTimestamp(
               lc.outboundTransferRateLimitedTime
             ),
           });
       } else if (initiatingEvent === ReleaseWormholeOutboundIx) {
-        await trx('life_cycle').where('digest', lc.digest).update({
-          vaa_id: lc.vaaId,
-        });
+        await trx('life_cycle')
+          .where('digest', lc.digest)
+          .update({
+            vaa_id: lc.vaaId,
+            transfer_sent_txhash: lc.transferSentTxhash,
+            transfer_time: millisecondsToTimestamp(lc.transferTime),
+          });
       } else if (initiatingEvent === ReceiveWormholeMessageIx) {
         await trx('life_cycle').where('digest', lc.digest).update({
           vaa_id: lc.vaaId,

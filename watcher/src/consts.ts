@@ -85,6 +85,7 @@ export const RPCS_BY_CHAIN: { [key in Environment]: { [key in ChainName]?: strin
     optimism_sepolia: process.env.OPTIMISM_SEPOLIA_RPC,
     holesky: process.env.HOLESKY_RPC,
     sepolia: process.env.SEPOLIA_RPC,
+    polygon_sepolia: process.env.POLYGON_SEPOLIA_RPC || 'https://rpc-amoy.polygon.technology',
   },
   ['devnet']: {},
 };

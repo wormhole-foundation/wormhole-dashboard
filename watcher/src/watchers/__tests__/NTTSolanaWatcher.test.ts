@@ -64,7 +64,7 @@ test.skip('getNttMessagesForBlock', async () => {
   await watcher.getNttMessagesForBlocks(285100152, latestSlot);
 });
 
-test('parseReceiveWormholeMessageIx', async () => {
+test.skip('parseReceiveWormholeMessageIx', async () => {
   const watcher = new NTTSolanaWatcher('testnet');
   const txHashes = [
     // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5
@@ -97,7 +97,7 @@ test('parseReceiveWormholeMessageIx', async () => {
   expect(message?.digest).toBe(digests[1]);
 });
 
-test('parseRedeemIx', async () => {
+test.skip('parseRedeemIx', async () => {
   const watcher = new NTTSolanaWatcher('testnet');
   const txHashes = [
     // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5

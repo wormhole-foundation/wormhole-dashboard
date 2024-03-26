@@ -20,8 +20,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
-	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/db"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/bigtable"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/historical_uptime"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/types"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 	"go.uber.org/zap"
@@ -31,7 +32,6 @@ var (
 	rootCtx       context.Context
 	rootCtxCancel context.CancelFunc
 
-	dataDir        string
 	p2pNetworkID   string
 	p2pPort        uint
 	p2pBootstrap   string
@@ -40,6 +40,12 @@ var (
 	ethRpcUrl      string
 	coreBridgeAddr string
 	promRemoteURL  string
+
+	gcpProjectId         string
+	useBigtableEmulator  bool        // only use this in local development
+	bigTableEmulatorHost string = "" // required if using emulator
+	gcpCredentialsFile   string = "" // required if not using emulator
+	bigTableInstanceId   string
 )
 
 var (
@@ -96,7 +102,6 @@ func loadEnvVars() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	dataDir = verifyEnvVar("DATA_DIR")
 	p2pNetworkID = verifyEnvVar("P2P_NETWORK_ID")
 	port, err := strconv.ParseUint(verifyEnvVar("P2P_PORT"), 10, 32)
 	if err != nil {
@@ -108,6 +113,18 @@ func loadEnvVars() {
 	ethRpcUrl = verifyEnvVar("ETH_RPC_URL")
 	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
 	promRemoteURL = verifyEnvVar("PROM_REMOTE_URL")
+
+	gcpProjectId = verifyEnvVar("GCP_PROJECT_ID")
+	bigTableInstanceId = verifyEnvVar("BIGTABLE_INSTANCE_ID")
+	useBigtableEmulator, err = strconv.ParseBool(verifyEnvVar("USE_BIGTABLE_EMULATOR"))
+	if err != nil {
+		log.Fatal("Error parsing USE_BIGTABLE_EMULATOR")
+	}
+	if useBigtableEmulator {
+		bigTableEmulatorHost = verifyEnvVar("BIGTABLE_EMULATOR_HOST")
+	} else {
+		gcpCredentialsFile = verifyEnvVar("GCP_CREDENTIALS_FILE")
+	}
 }
 
 func verifyEnvVar(key string) string {
@@ -180,7 +197,7 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) 
 	}
 }
 
-func initObservationScraper(db *db.Database, logger *zap.Logger, errC chan error) {
+func initObservationScraper(db *bigtable.BigtableDB, logger *zap.Logger, errC chan error) {
 	node_common.StartRunnable(rootCtx, errC, false, "observation_scraper", func(ctx context.Context) error {
 		t := time.NewTicker(15 * time.Second)
 
@@ -189,10 +206,25 @@ func initObservationScraper(db *db.Database, logger *zap.Logger, errC chan error
 			case <-ctx.Done():
 				return nil
 			case <-t.C:
-				messages, err := db.QueryMessagesByIndex(false, common.ExpiryDuration)
+				messageObservations := make(map[types.MessageID][]*types.Observation)
+
+				messages, err := db.GetUnprocessedMessagesBeforeCutOffTime(ctx, time.Now().Add(-common.ExpiryDuration))
 				if err != nil {
 					logger.Error("QueryMessagesByIndex error", zap.Error(err))
 					continue
+				}
+
+				for _, message := range messages {
+					observations, err := db.GetObservationsByMessageID(ctx, string(message.MessageID))
+					if err != nil {
+						logger.Error("GetObservationsByMessageID error",
+							zap.Error(err),
+							zap.String("messageId", string(message.MessageID)),
+						)
+						continue
+					}
+
+					messageObservations[message.MessageID] = observations
 				}
 
 				// Tally the number of messages for each chain
@@ -202,32 +234,13 @@ func initObservationScraper(db *db.Database, logger *zap.Logger, errC chan error
 				guardianMissingObservations := historical_uptime.InitializeMissingObservationsCount(logger, messages, messagesPerChain)
 
 				// Decrement the missing observations count for each observed message
-				historical_uptime.DecrementMissingObservationsCount(logger, guardianMissingObservations, messages)
+				historical_uptime.DecrementMissingObservationsCount(logger, guardianMissingObservations, messageObservations)
 
 				// Update the metrics with the final count of missing observations
 				historical_uptime.UpdateMetrics(guardianMissedObservations, guardianMissingObservations)
 			}
 		}
 	})
-}
-
-func initDatabaseCleanUp(db *db.Database, logger *zap.Logger, errC chan error) {
-	node_common.StartRunnable(rootCtx, errC, false, "db_cleanup", func(ctx context.Context) error {
-		t := time.NewTicker(common.DatabaseCleanUpInterval)
-
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case <-t.C:
-				err := db.RemoveObservationsByIndex(true, common.ExpiryDuration)
-				if err != nil {
-					logger.Error("RemoveObservationsByIndex error", zap.Error(err))
-				}
-			}
-		}
-	})
-
 }
 
 func main() {
@@ -283,12 +296,14 @@ func main() {
 	}
 	gst.Set(&gs)
 
-	db := db.OpenDb(logger, &dataDir)
+	db, err := bigtable.NewBigtableDB(rootCtx, gcpProjectId, bigTableInstanceId, gcpCredentialsFile, bigTableEmulatorHost, useBigtableEmulator)
+	if err != nil {
+		logger.Fatal("Failed to create bigtable db", zap.Error(err))
+	}
 	promErrC := make(chan error)
 	// Start Prometheus scraper
 	initPromScraper(promRemoteURL, logger, promErrC)
 	initObservationScraper(db, logger, promErrC)
-	initDatabaseCleanUp(db, logger, promErrC)
 
 	go func() {
 		for {

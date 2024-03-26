@@ -152,7 +152,10 @@ const pendingTransferColumns = [
   pendingTransferColumnHelper.accessor('data.0.tx_hash', {
     header: () => 'Tx',
     cell: (info) => (
-      <ExplorerTxHash chain={info.row.original.key.emitter_chain} rawTxHash={info.getValue()} />
+      <ExplorerTxHash
+        chain={info.row.original.key.emitter_chain}
+        rawTxHash={'0x' + Buffer.from(info.getValue(), 'base64').toString('hex')}
+      />
     ),
   }),
   pendingTransferColumnHelper.accessor('data.0.signatures', {

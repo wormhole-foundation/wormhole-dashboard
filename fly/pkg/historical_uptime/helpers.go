@@ -1,16 +1,13 @@
 package historical_uptime
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
-	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/db"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/types"
 	"go.uber.org/zap"
 )
 
-func TallyMessagesPerChain(logger *zap.Logger, messages []*db.Message) map[string]int {
+func TallyMessagesPerChain(logger *zap.Logger, messages []*types.Message) map[string]int {
 	messagesPerChain := make(map[string]int)
 	for _, message := range messages {
 		chainID, err := message.MessageID.ChainID()
@@ -24,7 +21,7 @@ func TallyMessagesPerChain(logger *zap.Logger, messages []*db.Message) map[strin
 	return messagesPerChain
 }
 
-func InitializeMissingObservationsCount(logger *zap.Logger, messages []*db.Message, messagesPerChain map[string]int) map[string]map[string]int {
+func InitializeMissingObservationsCount(logger *zap.Logger, messages []*types.Message, messagesPerChain map[string]int) map[string]map[string]int {
 	guardianMissingObservations := make(map[string]map[string]int)
 	for _, message := range messages {
 		chainID, err := message.MessageID.ChainID()
@@ -46,15 +43,15 @@ func InitializeMissingObservationsCount(logger *zap.Logger, messages []*db.Messa
 	return guardianMissingObservations
 }
 
-func DecrementMissingObservationsCount(logger *zap.Logger, guardianMissingObservations map[string]map[string]int, messages []*db.Message) {
-	for _, message := range messages {
-		chainID, err := message.MessageID.ChainID()
+func DecrementMissingObservationsCount(logger *zap.Logger, guardianMissingObservations map[string]map[string]int, messageObservations map[types.MessageID][]*types.Observation) {
+	for messageID, observations := range messageObservations {
+		chainID, err := messageID.ChainID()
 		if err != nil {
-			logger.Error("Invalid chain ID", zap.String("messageID", string(message.MessageID)))
+			logger.Error("Invalid chain ID", zap.String("messageID", string(messageID)))
 			continue
 		}
 
-		for _, observation := range message.Observations {
+		for _, observation := range observations {
 			guardianName, ok := common.GetGuardianName(observation.GuardianAddr)
 			if !ok {
 				logger.Error("Unknown guardian address", zap.String("guardianAddr", observation.GuardianAddr))
@@ -111,13 +108,4 @@ func computeGuardianChainHeightDifferences(guardianChainHeights common.GuardianC
 func GetGuardianHeightDifferencesByChain(guardianChainHeights common.GuardianChainHeights) common.GuardianChainHeights {
 	maxChainHeights := computeMaxChainHeights(guardianChainHeights)
 	return computeGuardianChainHeightDifferences(guardianChainHeights, maxChainHeights)
-}
-
-func GenerateRandomID() string {
-	b := make([]byte, 8) // Generates a 16-character hex string
-	_, err := rand.Read(b)
-	if err != nil {
-		panic("failed to generate random ID: " + err.Error())
-	}
-	return hex.EncodeToString(b)
 }

@@ -2,23 +2,17 @@ package bigtable
 
 import (
 	"context"
-
 	"fmt"
 	"os"
 	"testing"
 	"time"
 
-	"cloud.google.com/go/bigtable"
 	"github.com/stretchr/testify/assert"
-	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/historical_uptime"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/types"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 )
 
-const (
-	ProjectID    = "test-project"
-	InstanceID   = "test-instance"
-	EmulatorHost = "localhost:8086"
-)
-
+// To test files: go test -v pkg/bigtable/message_test.go pkg/bigtable/message.go pkg/bigtable/message_index.go pkg/bigtable/test_setup.go pkg/bigtable/observation.go
 var db *BigtableDB
 
 // Note that this test file assumes that the Bigtable emulator is running locally.
@@ -26,7 +20,7 @@ var db *BigtableDB
 // After the test, we delete the tables.
 func TestMain(m *testing.M) {
 	// Set up the Bigtable emulator
-	err := setupEmulator()
+	err := SetupEmulator()
 	if err != nil {
 		fmt.Printf("Failed to set up the emulator: %v\n", err)
 		os.Exit(1)
@@ -34,7 +28,7 @@ func TestMain(m *testing.M) {
 
 	// Create a Bigtable client
 	ctx := context.Background()
-	db, err = NewBigtableDB(ctx, ProjectID, InstanceID, "", EmulatorHost)
+	db, err = NewBigtableDB(ctx, ProjectID, InstanceID, "", EmulatorHost, true)
 	if err != nil {
 		fmt.Printf("Failed to create Bigtable client: %v\n", err)
 		os.Exit(1)
@@ -43,139 +37,111 @@ func TestMain(m *testing.M) {
 
 	// Run the tests
 	exitCode := m.Run()
-	err = cleanUp()
+	err = CleanUp()
 	if err != nil {
 		fmt.Printf("Failed to cleanup the Bigtable client: %v\n", err)
 	}
 	os.Exit(exitCode)
 }
 
-// setupEmulator sets up the Bigtable emulator and creates the necessary tables.
-func setupEmulator() error {
-	// Set the environment variable for the emulator host
-	os.Setenv("BIGTABLE_EMULATOR_HOST", EmulatorHost)
-
-	adminClient, err := bigtable.NewAdminClient(context.Background(), ProjectID, InstanceID)
-	if err != nil {
-		return fmt.Errorf("failed to create admin client: %v", err)
-	}
-	defer adminClient.Close()
-
-	tables := []struct {
-		name           string
-		columnFamilies []string
-	}{
-		{name: MessageTableName, columnFamilies: []string{"messageData"}},
-		{name: MessageIndexTableName, columnFamilies: []string{"indexData"}},
-		{name: ObservationTableName, columnFamilies: []string{"observationData"}},
-	}
-	for _, table := range tables {
-		tableInfo, err := adminClient.TableInfo(context.Background(), table.name)
-		if err == nil {
-			fmt.Printf("Table %q already exists: %v\n", table, tableInfo)
-			continue
-		}
-		if err := adminClient.CreateTable(context.Background(), table.name); err != nil {
-			return fmt.Errorf("failed to create table %q: %v", table, err)
-		}
-		for _, family := range table.columnFamilies {
-			if err := adminClient.CreateColumnFamily(context.Background(), table.name, family); err != nil {
-				return fmt.Errorf("failed to create column family %q in table %q: %v", family, table.name, err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func cleanUp() error {
-	adminClient, err := bigtable.NewAdminClient(context.Background(), ProjectID, InstanceID)
-	if err != nil {
-		return fmt.Errorf("failed to create admin client: %v", err)
-	}
-	defer adminClient.Close()
-
-	adminClient.DeleteTable(context.Background(), MessageTableName)
-	adminClient.DeleteTable(context.Background(), MessageIndexTableName)
-	adminClient.DeleteTable(context.Background(), ObservationTableName)
-
-	return nil
-}
-
-func TestSaveMessage(t *testing.T) {
+func TestCreateMessageAndIndex(t *testing.T) {
 	ctx := context.Background()
-	db, err := NewBigtableDB(ctx, ProjectID, InstanceID, "", EmulatorHost)
-	assert.NoError(t, err)
-	defer db.Close()
+	defer ClearTables()
 
-	messageID := historical_uptime.GenerateRandomID()
+	messageID := utils.GenerateRandomID()
 
-	message := &Message{
-		MessageID:      MessageID(messageID),
+	message := &types.Message{
+		MessageID:      types.MessageID(messageID),
 		LastObservedAt: time.Now(),
 		MetricsChecked: true,
 	}
 
-	err = db.SaveMessage(ctx, message)
+	err := db.CreateMessageAndMessageIndex(ctx, message)
 	assert.NoError(t, err)
 
-	table := db.client.Open(MessageTableName)
+	msg, err := db.GetMessage(ctx, types.MessageID(messageID))
+	assert.NoError(t, err)
+	assert.NotNil(t, msg)
+	assert.Equal(t, message.MessageID, msg.MessageID)
+	assert.Equal(t, message.LastObservedAt.Unix(), msg.LastObservedAt.Unix())
+	assert.Equal(t, message.MetricsChecked, msg.MetricsChecked)
+
+	// Verify that the message index is saved as well for this messageID
+	table := db.client.Open(MessageIndexTableName)
 	row, err := table.ReadRow(ctx, messageID)
 	assert.NoError(t, err)
 	assert.NotNil(t, row)
+}
 
-	// Verify the message index
-	table = db.client.Open(MessageIndexTableName)
-	row, err = table.ReadRow(ctx, messageID)
+func TestUpdateMessage(t *testing.T) {
+	ctx := context.Background()
+	defer ClearTables()
+
+	messageID := utils.GenerateRandomID()
+	message := &types.Message{
+		MessageID:      types.MessageID(messageID),
+		LastObservedAt: time.Now(),
+		MetricsChecked: false,
+	}
+
+	err := db.CreateMessageAndMessageIndex(ctx, message)
 	assert.NoError(t, err)
-	assert.NotNil(t, row)
+
+	// Update the message
+	message.LastObservedAt = time.Now().Add(1 * time.Hour)
+	message.MetricsChecked = true
+	err = db.CreateMessageAndMessageIndex(ctx, message)
+	assert.NoError(t, err)
+
+	// Verify that the message has the updated fields
+	msg, err := db.GetMessage(ctx, types.MessageID(messageID))
+	assert.NoError(t, err)
+	assert.NotNil(t, msg)
+	assert.True(t, message.LastObservedAt.UTC().Equal(msg.LastObservedAt.UTC()))
+	assert.True(t, msg.MetricsChecked)
 }
 
 func TestGetMessage(t *testing.T) {
 	ctx := context.Background()
-	db, err := NewBigtableDB(ctx, ProjectID, InstanceID, "", EmulatorHost)
-	assert.NoError(t, err)
-	defer db.Close()
+	defer ClearTables()
 
-	messageID := historical_uptime.GenerateRandomID()
+	messageID := utils.GenerateRandomID()
 
 	// Create a sample message
-	message := &Message{
-		MessageID:      MessageID(messageID),
+	message := &types.Message{
+		MessageID:      types.MessageID(messageID),
 		LastObservedAt: time.Now(),
 		MetricsChecked: true,
 	}
-	err = db.SaveMessage(ctx, message)
+	err := db.CreateMessageAndMessageIndex(ctx, message)
 	assert.NoError(t, err)
 
-	retrievedMessage, err := db.GetMessage(ctx, MessageID(messageID))
+	retrievedMessage, err := db.GetMessage(ctx, types.MessageID(messageID))
 	assert.NoError(t, err)
 	assert.NotNil(t, retrievedMessage)
 	assert.Equal(t, message.MessageID, retrievedMessage.MessageID)
-	assert.Equal(t, message.LastObservedAt.Unix(), retrievedMessage.LastObservedAt.Unix())
+	assert.True(t, message.LastObservedAt.UTC().Equal(retrievedMessage.LastObservedAt))
 	assert.Equal(t, message.MetricsChecked, retrievedMessage.MetricsChecked)
 }
 
 func TestDeleteMessageIndex(t *testing.T) {
 	ctx := context.Background()
-	db, err := NewBigtableDB(ctx, ProjectID, InstanceID, "", EmulatorHost)
-	assert.NoError(t, err)
-	defer db.Close()
+	defer ClearTables()
 
-	messageID := historical_uptime.GenerateRandomID()
+	messageID := utils.GenerateRandomID()
 	// Create a sample message
-	message := &Message{
-		MessageID:      MessageID(messageID),
+	message := &types.Message{
+		MessageID:      types.MessageID(messageID),
 		LastObservedAt: time.Now(),
 		MetricsChecked: true,
 	}
-	err = db.SaveMessage(ctx, message)
+	err := db.CreateMessageAndMessageIndex(ctx, message)
 	assert.NoError(t, err)
 
-	err = db.DeleteMessageIndex(ctx, MessageID(messageID))
+	err = db.DeleteMessageIndex(ctx, types.MessageID(messageID))
 	assert.NoError(t, err)
 
-	// Verify the deleted message index
+	// Verify that the deleted message index is not in the table
 	table := db.client.Open(MessageIndexTableName)
 	row, err := table.ReadRow(ctx, messageID)
 	assert.Nil(t, err)
@@ -183,47 +149,148 @@ func TestDeleteMessageIndex(t *testing.T) {
 }
 
 func TestSaveObservationAndUpdateMessage(t *testing.T) {
-	// Create a Bigtable client
-	ctx := context.Background()
-	db, err := NewBigtableDB(ctx, ProjectID, InstanceID, "", EmulatorHost)
-	assert.NoError(t, err)
-	defer db.Close()
-
-	messageID := historical_uptime.GenerateRandomID()
-	guardianAddr := "guardian1"
-	signature := historical_uptime.GenerateRandomID()
-
-	observation := &Observation{
-		MessageID:    MessageID(messageID),
-		GuardianAddr: guardianAddr,
-		Signature:    signature,
-		ObservedAt:   time.Now(),
-		Status:       1,
+	tests := []struct {
+		name                        string
+		observations                []types.Observation
+		expectedLastObservedAtIndex int
+	}{
+		{
+			name: "Same guardian, no updates",
+			observations: []types.Observation{
+				{
+					MessageID:    "message1",
+					GuardianAddr: "guardian1",
+					Status:       1,
+					ObservedAt:   time.Now(),
+				},
+				{
+					MessageID:    "message1",
+					GuardianAddr: "guardian1",
+					Status:       1,
+					ObservedAt:   time.Now().Add(1 * time.Hour),
+				},
+			},
+			// The last observed time should be the same as the initial observation
+			// Since the second observation is the same, it should not be accounted for
+			expectedLastObservedAtIndex: 0,
+		},
+		{
+			name: "Different guardians, new observations",
+			observations: []types.Observation{
+				{
+					// Initial observation for guardian1
+					MessageID:    "message1",
+					GuardianAddr: "guardian1",
+					Status:       1,
+					ObservedAt:   time.Now(),
+				},
+				{
+					// New observation for guardian2
+					MessageID:    "message1",
+					GuardianAddr: "guardian2",
+					Status:       1,
+					ObservedAt:   time.Now().Add(1 * time.Hour),
+				},
+			},
+			// We want to verify that the last observed time is the time of the last observation
+			// Since the second observation is for a different guardian, it should be accounted for
+			expectedLastObservedAtIndex: 1,
+		},
 	}
 
-	err = db.SaveObservationAndUpdateMessage(ctx, observation)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			defer ClearTables()
+
+			signature := utils.GenerateRandomID()
+			for _, obs := range tc.observations {
+				obs.Signature = signature
+
+				err := db.SaveObservationAndUpdateMessage(ctx, &obs)
+				assert.NoError(t, err)
+			}
+
+			// Verify the updated message with the last observation
+			lastObservation := tc.observations[tc.expectedLastObservedAtIndex]
+			message, err := db.GetMessage(ctx, types.MessageID("message1"))
+			assert.NoError(t, err)
+			assert.NotNil(t, message)
+			assert.True(t, message.LastObservedAt.UTC().Equal(lastObservation.ObservedAt.UTC()))
+		})
+	}
+}
+
+func TestGetUnprocessedMessagesBeforeCutOffTime(t *testing.T) {
+	// Create a Bigtable client
+	ctx := context.Background()
+	defer ClearTables()
+
+	messageIDSet := make(map[string]struct{})
+	for i := 0; i < 10; i++ {
+		messageID := utils.GenerateRandomID()
+		guardianAddr := fmt.Sprintf("guardian%d", i)
+		signature := utils.GenerateRandomID()
+
+		observation := &types.Observation{
+			MessageID:    types.MessageID(messageID),
+			GuardianAddr: guardianAddr,
+			Signature:    signature,
+			ObservedAt:   time.Now(),
+			Status:       1,
+		}
+		err := db.SaveObservationAndUpdateMessage(ctx, observation)
+		assert.NoError(t, err)
+
+		messageIDSet[messageID] = struct{}{}
+	}
+
+	// Verify that the message indexes are saved
+	messageIndexes, err := db.GetAllMessageIndexes(ctx)
+	assert.NoError(t, err)
+	assert.Len(t, messageIndexes, 10)
+
+	messages, err := db.GetUnprocessedMessagesBeforeCutOffTime(ctx, time.Now())
+	assert.NoError(t, err)
+	assert.Len(t, messages, 10)
+
+	// Verify that the messages are the same as the ones saved
+	for _, message := range messages {
+		_, ok := messageIDSet[string(message.MessageID)]
+		assert.Equal(t, ok, true)
+	}
+
+	// Verify that the message indexes are deleted
+	messageIndexes, err = db.GetAllMessageIndexes(ctx)
+	assert.NoError(t, err)
+	assert.Len(t, messageIndexes, 0)
+}
+
+func TestSaveMessages(t *testing.T) {
+	ctx := context.Background()
+	defer ClearTables()
+
+	messages := []*types.Message{}
+	for i := 0; i < 10; i++ {
+		messageID := utils.GenerateRandomID()
+		message := types.Message{
+			MessageID:      types.MessageID(messageID),
+			LastObservedAt: time.Now(),
+			MetricsChecked: true,
+		}
+		messages = append(messages, &message)
+	}
+
+	err := db.SaveMessages(ctx, messages)
 	assert.NoError(t, err)
 
-	// Verify the saved observation
-	observationTable := db.client.Open(ObservationTableName)
-	observationRow, err := observationTable.ReadRow(ctx, messageID+"_"+guardianAddr)
-	assert.NoError(t, err)
-	assert.NotNil(t, observationRow)
-
-	// Verify the updated message
-	messageTable := db.client.Open(MessageTableName)
-	messageRow, err := messageTable.ReadRow(ctx, messageID)
-	assert.NoError(t, err)
-	assert.NotNil(t, messageRow)
-
-	// Simulate if the same observation comes in again
-	observation.ObservedAt = time.Now()
-	err = db.SaveObservationAndUpdateMessage(ctx, observation)
-	assert.NoError(t, err)
-
-	// Verify that the observation is not saved again
-	savedObservation, err := db.GetObservation(ctx, messageID, guardianAddr)
-	assert.NoError(t, err)
-	assert.NotNil(t, savedObservation)
-	assert.Equal(t, observation.ObservedAt.Unix(), savedObservation.ObservedAt.Unix())
+	// Verify that the messages are saved correctly
+	for _, message := range messages {
+		msg, err := db.GetMessage(ctx, message.MessageID)
+		assert.NoError(t, err)
+		assert.NotNil(t, msg)
+		assert.Equal(t, message.MessageID, msg.MessageID)
+		assert.Equal(t, message.LastObservedAt.Unix(), msg.LastObservedAt.Unix())
+		assert.Equal(t, message.MetricsChecked, msg.MetricsChecked)
+	}
 }

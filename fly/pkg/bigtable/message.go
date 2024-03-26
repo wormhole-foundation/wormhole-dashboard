@@ -2,33 +2,15 @@ package bigtable
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"cloud.google.com/go/bigtable"
+	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/types"
 	"google.golang.org/api/option"
 )
-
-// GuardianObservation represents an observation made by a guardian.
-type Observation struct {
-	MessageID    MessageID         `json:"messageId"`
-	GuardianAddr string            `json:"guardianAddr"`
-	Signature    string            `json:"signature"`
-	ObservedAt   time.Time         `json:"observedAt"`
-	Status       ObservationStatus `json:"status"`
-}
-
-type ObservationStatus int
-
-// Message represents the data structure for a message in the Observations table.
-type Message struct {
-	MessageID      MessageID `json:"messageId"`
-	LastObservedAt time.Time `json:"lastObservedAt"`
-	MetricsChecked bool      `json:"metricsChecked"`
-}
-
-type MessageID string
 
 type BigtableDB struct {
 	client *bigtable.Client
@@ -40,17 +22,18 @@ const (
 	MessageIndexTableName = "historical_uptime_message_index"
 )
 
-func NewBigtableDB(ctx context.Context, projectID, instanceID, credentialsFile, emulatorHost string) (*BigtableDB, error) {
+func NewBigtableDB(ctx context.Context, projectID, instanceID, credentialsFile, emulatorHost string, useBigtableEmulator bool) (*BigtableDB, error) {
 	var client *bigtable.Client
 	var err error
 
-	if credentialsFile != "" {
+	if !useBigtableEmulator && credentialsFile != "" {
 		client, err = bigtable.NewClient(ctx, projectID, instanceID, option.WithCredentialsFile(credentialsFile))
-	} else if emulatorHost != "" {
+	} else if useBigtableEmulator && emulatorHost != "" {
 		client, err = bigtable.NewClient(ctx, projectID, instanceID, option.WithoutAuthentication(), option.WithEndpoint(emulatorHost))
 	} else {
-		client, err = bigtable.NewClient(ctx, projectID, instanceID)
+		return nil, errors.New("invalid Bigtable configuration, if using emulator, set emulatorHost, else set credentialsFile")
 	}
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Bigtable client: %v", err)
 	}
@@ -66,76 +49,77 @@ func (db *BigtableDB) Close() error {
 	return db.client.Close()
 }
 
-// SaveMessage saves the message to the `messages` table.
+// CreateMessageAndMessageIndex saves the message to the `messages` table if doesn't exist.
 // It also saves the message index to the `messageIndex` table. This is used to keep track of messages that are not processed.
-func (db *BigtableDB) SaveMessage(ctx context.Context, message *Message) error {
+func (db *BigtableDB) CreateMessageAndMessageIndex(ctx context.Context, message *types.Message) error {
 	tableName := MessageTableName
 	columnFamily := "messageData"
 
 	rowKey := string(message.MessageID)
-	lastObservedAtBytes, err := message.LastObservedAt.MarshalBinary()
+	// bigtable keeps the time in original timezone settings, so we need to convert it to UTC to be consistent
+	lastObservedAtBytes, err := message.LastObservedAt.UTC().MarshalBinary()
 	if err != nil {
-		return fmt.Errorf("failed to marshal LastObservedAt: %v", err)
+		return err
 	}
 
+	// Setting the timestamp to 0 to prevent storing multiple versions of the same message.
+	// We only need the latest version of the message.
+	timestamp := bigtable.Timestamp(0)
 	mut := bigtable.NewMutation()
-	mut.Set(columnFamily, "lastObservedAt", bigtable.Now(), lastObservedAtBytes)
-	mut.Set(columnFamily, "metricsChecked", bigtable.Now(), []byte(strconv.FormatBool(message.MetricsChecked)))
+	mut.Set(columnFamily, "lastObservedAt", timestamp, lastObservedAtBytes)
+	mut.Set(columnFamily, "metricsChecked", timestamp, []byte(strconv.FormatBool(message.MetricsChecked)))
 
 	err = db.client.Open(tableName).Apply(ctx, rowKey, mut)
 	if err != nil {
-		return fmt.Errorf("failed to save message: %v", err)
+		return err
 	}
 
 	err = db.SaveMessageIndex(ctx, message.MessageID)
 	if err != nil {
-		return fmt.Errorf("failed to save message index: %v", err)
+		return err
 	}
 
 	return nil
 }
 
-// MessageIndex is used to keep track of messages that are not processed (i.e. missing observation is not accounted for)
-// This index is to reduce the data scanned when querying from the `messages` table to process.
-// We might want to consider adding `lastObservedAt` to the index to further reduce the data scanned. A tradeoff is that
-// we need to update the index whenever the `lastObservedAt` is updated, which is whenever a new observation is added.
-// This could be a performance hit if we have a lot of observations.
-func (db *BigtableDB) SaveMessageIndex(ctx context.Context, messageID MessageID) error {
-	tableName := MessageIndexTableName
-	columnFamily := "indexData"
+func (db *BigtableDB) SaveMessages(ctx context.Context, messages []*types.Message) error {
+	tableName := MessageTableName
+	columnFamily := "messageData"
 
-	rowKey := string(messageID)
+	var rowKeys []string
+	var muts []*bigtable.Mutation
 
-	mut := bigtable.NewMutation()
-	// bigtable doesn't allow empty mutations, so we need to set a placeholder value
-	mut.Set(columnFamily, "placeholder", bigtable.Now(), nil)
-	err := db.client.Open(tableName).Apply(ctx, rowKey, mut)
+	timestamp := bigtable.Timestamp(0)
+	for _, message := range messages {
+		rowKey := string(message.MessageID)
+		rowKeys = append(rowKeys, rowKey)
+
+		lastObservedAtBytes, err := message.LastObservedAt.UTC().MarshalBinary()
+		if err != nil {
+			return err
+		}
+
+		mut := bigtable.NewMutation()
+		mut.Set(columnFamily, "lastObservedAt", timestamp, lastObservedAtBytes)
+		mut.Set(columnFamily, "metricsChecked", timestamp, []byte(strconv.FormatBool(message.MetricsChecked)))
+		muts = append(muts, mut)
+	}
+
+	errs, err := db.client.Open(tableName).ApplyBulk(ctx, rowKeys, muts)
 	if err != nil {
-		return fmt.Errorf("failed to save message index: %v", err)
+		return fmt.Errorf("failed to save messages: %v", err)
+	}
+
+	for _, err := range errs {
+		if err != nil {
+			return fmt.Errorf("failed to save message: %v", err)
+		}
 	}
 
 	return nil
 }
 
-// DeleteMessageIndex deletes the message index for the given messageID. This is used when the message is processed and
-// missing observation is accounted for.
-func (db *BigtableDB) DeleteMessageIndex(ctx context.Context, messageID MessageID) error {
-	tableName := MessageIndexTableName
-
-	rowKey := string(messageID)
-
-	mut := bigtable.NewMutation()
-	mut.DeleteRow()
-
-	err := db.client.Open(tableName).Apply(ctx, rowKey, mut)
-	if err != nil {
-		return fmt.Errorf("failed to delete message index: %v", err)
-	}
-
-	return nil
-}
-
-func (db *BigtableDB) GetMessage(ctx context.Context, messageID MessageID) (*Message, error) {
+func (db *BigtableDB) GetMessage(ctx context.Context, messageID types.MessageID) (*types.Message, error) {
 	tableName := MessageTableName
 	rowKey := string(messageID)
 
@@ -146,21 +130,80 @@ func (db *BigtableDB) GetMessage(ctx context.Context, messageID MessageID) (*Mes
 	}
 
 	if len(row) == 0 {
-		return nil, fmt.Errorf("message not found: %s", messageID)
+		return nil, nil
 	}
 
-	var message Message
-	message.MessageID = messageID
-	for _, item := range row["messageData"] {
-		switch item.Column {
+	message, err := db.bigtableRowToMessage(row)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert row to message: %v", err)
+	}
+
+	return message, nil
+}
+
+// GetUnprocessedMessagesBeforeCutOffTime returns all messages that have a message index, aka not processed older than the cutOffTime.
+// Here we do not need to filter by `metricsChecked“ field since we assume that the messages in messageIndex table have the `metricsChecked` field set to false.
+func (db *BigtableDB) GetUnprocessedMessagesBeforeCutOffTime(ctx context.Context, cutOffTime time.Time) ([]*types.Message, error) {
+	// Step 1: Get all message indexes
+	messageIndexes, err := db.GetAllMessageIndexes(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get message indexes: %v", err)
+	}
+
+	// Step 2: Use the row keys from messageIndex to get the messages
+	rowKeys := make([]string, len(messageIndexes))
+	for i, index := range messageIndexes {
+		rowKeys[i] = string(index)
+	}
+
+	messages, err := db.GetMessagesByRowKeys(ctx, rowKeys)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get messages: %v", err)
+	}
+
+	// Step 3: Filter messages based on cutOffTime
+	var filteredMessages []*types.Message
+	var checkedMessagesId []types.MessageID
+	for _, message := range messages {
+		if message.LastObservedAt.Before(cutOffTime) {
+			filteredMessages = append(filteredMessages, message)
+			checkedMessagesId = append(checkedMessagesId, message.MessageID)
+			message.MetricsChecked = true
+		}
+	}
+
+	// Step 4: Delete the message indexes
+	err = db.DeleteMessageIndexes(ctx, checkedMessagesId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete message indexes: %v", err)
+	}
+
+	// Step 5: Mark the messages as processed after deleting message indexes
+	err = db.SaveMessages(ctx, filteredMessages)
+	if err != nil {
+		return nil, fmt.Errorf("failed to save messages: %v", err)
+	}
+
+	return filteredMessages, nil
+}
+
+// This works on the assumption that there is only one version of the message.
+// If there are multiple versions of the message, this will return which version is read last.
+func (db *BigtableDB) bigtableRowToMessage(row bigtable.Row) (*types.Message, error) {
+	var message types.Message
+	message.MessageID = types.MessageID(row.Key())
+
+	for _, column := range row["messageData"] {
+		switch column.Column {
 		case "messageData:lastObservedAt":
-			var t time.Time
-			if err := t.UnmarshalBinary(item.Value); err != nil {
+			var lastObservedAt time.Time
+			if err := lastObservedAt.UnmarshalBinary(column.Value); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal LastObservedAt: %v", err)
 			}
-			message.LastObservedAt = t
+			// bigtable keeps the time in original timezone settings, so we need to convert it to UTC to be consistent
+			message.LastObservedAt = lastObservedAt.UTC()
 		case "messageData:metricsChecked":
-			metricsChecked, err := strconv.ParseBool(string(item.Value))
+			metricsChecked, err := strconv.ParseBool(string(column.Value))
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse MetricsChecked: %v", err)
 			}
@@ -171,88 +214,31 @@ func (db *BigtableDB) GetMessage(ctx context.Context, messageID MessageID) (*Mes
 	return &message, nil
 }
 
-// SaveObservationAndUpdateMessage saves the observation only if it doesn't already exist.
-// It also updates the lastObservedAt of the message.
-func (db *BigtableDB) SaveObservationAndUpdateMessage(ctx context.Context, observation *Observation) error {
-	tableName := ObservationTableName
-	columnFamily := "observationData"
-
-	rowKey := string(observation.MessageID) + "_" + observation.GuardianAddr
-
-	// First, check if the observation already exists
+func (db *BigtableDB) GetMessagesByRowKeys(ctx context.Context, rowKeys []string) ([]*types.Message, error) {
+	tableName := MessageTableName
 	table := db.client.Open(tableName)
-	row, err := table.ReadRow(ctx, rowKey)
-	if err != nil {
-		return fmt.Errorf("failed to read observation: %v", err)
-	}
 
-	// If the observation already exists, return without updating
-	if len(row) > 0 {
-		return nil
-	}
+	var messages []*types.Message
+	var errors []error
 
-	timeBinary, err := observation.ObservedAt.MarshalBinary()
-	if err != nil {
-		return fmt.Errorf("failed to marshal ObservedAt: %v", err)
-	}
-
-	mut := bigtable.NewMutation()
-	mut.Set(columnFamily, "signature", bigtable.Now(), []byte(observation.Signature))
-	mut.Set(columnFamily, "observedAt", bigtable.Now(), timeBinary)
-	mut.Set(columnFamily, "status", bigtable.Now(), []byte(strconv.Itoa(int(observation.Status))))
-
-	err = db.client.Open(tableName).Apply(ctx, rowKey, mut)
-	if err != nil {
-		return fmt.Errorf("failed to save observation: %v", err)
-	}
-
-	messageRowKey := string(observation.MessageID)
-	messageMut := bigtable.NewMutation()
-	messageMut.Set("messageData", "lastObservedAt", bigtable.Now(), timeBinary)
-
-	err = db.client.Open(MessageTableName).Apply(ctx, messageRowKey, messageMut)
-	if err != nil {
-		return fmt.Errorf("failed to update message: %v", err)
-	}
-
-	return nil
-}
-
-func (db *BigtableDB) GetObservation(ctx context.Context, messageID, guardianAddr string) (*Observation, error) {
-	tableName := ObservationTableName
-	rowKey := messageID + "_" + guardianAddr
-
-	table := db.client.Open(tableName)
-	row, err := table.ReadRow(ctx, rowKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read observation: %v", err)
-	}
-
-	if len(row) == 0 {
-		return nil, fmt.Errorf("observation not found: %s", rowKey)
-	}
-
-	var observation Observation
-	observation.MessageID = MessageID(messageID)
-	observation.GuardianAddr = guardianAddr
-	for _, item := range row["observationData"] {
-		switch item.Column {
-		case "observationData:signature":
-			observation.Signature = string(item.Value)
-		case "observationData:observedAt":
-			var t time.Time
-			if err := t.UnmarshalBinary(item.Value); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal LastObservedAt: %v", err)
-			}
-			observation.ObservedAt = t
-		case "observationData:status":
-			status, err := strconv.Atoi(string(item.Value))
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse Status: %v", err)
-			}
-			observation.Status = ObservationStatus(status)
+	err := table.ReadRows(ctx, bigtable.RowList(rowKeys), func(row bigtable.Row) bool {
+		message, err := db.bigtableRowToMessage(row)
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to convert row to message: %v", err))
+			return true
 		}
+
+		messages = append(messages, message)
+		return true
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to read messages: %v", err)
 	}
 
-	return &observation, nil
+	if len(errors) > 0 {
+		fmt.Printf("Errors occurred while reading messages: %v", errors)
+	}
+
+	return messages, nil
 }

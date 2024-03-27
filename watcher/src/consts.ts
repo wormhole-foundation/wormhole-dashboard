@@ -1,8 +1,13 @@
-import { ChainName, CONTRACTS, Network } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { ChainName, CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 import { AxiosRequestConfig } from 'axios';
 
 export const TIMEOUT = 0.5 * 1000;
+export const HB_INTERVAL = 5 * 60 * 1000; // 5 Minutes
+export type WorkerData = {
+  network: Environment;
+  chain: ChainName;
+};
 
 // Notes about RPCs
 // Ethereum

@@ -10,6 +10,7 @@ import {
   getEnvironment,
   getMode,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import { startSupervisor } from './workers/supervisor';
 
 initDb();
 
@@ -100,3 +101,4 @@ if (mode === 'vaa') {
 } else {
   throw new Error(`Unknown mode: ${mode}`);
 }
+startSupervisor(supportedChains);

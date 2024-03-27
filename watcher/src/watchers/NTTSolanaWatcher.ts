@@ -13,11 +13,18 @@ import {
   findFromSignatureAndToSignature,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { RPCS_BY_CHAIN } from '../consts';
-import { LifeCycle, NTT_CONTRACT, getNttManagerMessageDigest } from '../NTTConsts';
+import {
+  LifeCycle,
+  NTT_CONTRACT,
+  NTT_QUOTER_CONTRACT,
+  RequestRelayIx,
+  getNttManagerMessageDigest,
+} from '../NTTConsts';
 import { SolanaWatcher } from './SolanaWatcher';
 import { makeBlockKey } from '../databases/utils';
 import { Program, BorshCoder, AnchorProvider, Wallet } from '@coral-xyz/anchor';
-import IDL from '../idls/example_native_token_transfers.json';
+import NTT_IDL from '../idls/example_native_token_transfers.json';
+import NTT_QUOTER_IDL from '../idls/ntt_quoter.json';
 import { type ExampleNativeTokenTransfers as RawExampleNativeTokenTransfers } from '../types/example_native_token_transfers';
 import {
   TransferLockIx,
@@ -39,10 +46,10 @@ import {
   WormholeTransceiverMessage,
 } from './NTTPayloads';
 import { ChainId, coalesceChainId } from '@certusone/wormhole-sdk';
-import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes';
 import knex, { Knex } from 'knex';
 import { WormholeLogger } from '../utils/logger';
 import { millisecondsToTimestamp } from '../utils/timestamp';
+import { NttQuoter } from '../quoters/NTTSolanaQuoter';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
@@ -62,9 +69,11 @@ export type ExampleNativeTokenTransfers = OmitGenerics<RawExampleNativeTokenTran
 export class NTTSolanaWatcher extends SolanaWatcher {
   readonly rpc: string;
   readonly programIds: string[];
+  readonly quoterProgramId: string;
   readonly program: Program<ExampleNativeTokenTransfers>;
+  readonly NttQuoter: NttQuoter;
   readonly provider: AnchorProvider;
-  readonly borsh: BorshCoder;
+  readonly nttBorsh: BorshCoder;
   // program: Program;
   // this is set as a class field so we can modify it in tests
   getSignaturesLimit = GET_SIGNATURES_LIMIT;
@@ -77,6 +86,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   pg: Knex;
 
   // NTT specific
+  // TODO: delete this
   lifecycleMap: Map<string, LifeCycle>; // digest -> lifecycle
 
   constructor(network: Environment) {
@@ -85,6 +95,11 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     this.programIds = NTT_CONTRACT[this.network].solana!;
     this.lifecycleMap = new Map<string, LifeCycle>();
     this.connection = new Connection(this.rpc, COMMITMENT);
+
+    // Initialize the NttQuoter
+    // Required to check if a relay was requested
+    this.quoterProgramId = NTT_QUOTER_CONTRACT[this.network].solana!;
+    this.NttQuoter = new NttQuoter(this.connection, this.quoterProgramId);
 
     // We are using the Anchor framework to interact with the NTT program
     // This provides a fairly easy way to deserialize the accounts specified in the IDL file
@@ -97,8 +112,8 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       wallet,
       AnchorProvider.defaultOptions()
     );
-    this.program = new Program(IDL as any, new PublicKey(this.programId), this.provider);
-    this.borsh = new BorshCoder(IDL as any);
+    this.program = new Program(NTT_IDL as any, new PublicKey(this.programId), this.provider);
+    this.nttBorsh = new BorshCoder(NTT_IDL as any);
 
     this.pg = knex({
       client: 'pg',
@@ -195,6 +210,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     };
 
     const digest = getNttManagerMessageDigest(coalesceChainId(this.chain), nttManagerMessage);
+    await this.saveOutboxItemToDigest(outboxAccount.toBase58(), digest, this.pg);
 
     const lc: LifeCycle = {
       srcChainId: coalesceChainId(this.chain),
@@ -376,6 +392,12 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     const recipient =
       transceiverMessage.ntt_managerPayload.payload.recipientAddress.toString('hex');
     const parsedVaa = postMessage.message;
+    const digest = getNttManagerMessageDigest(
+      coalesceChainId(parsedVaa.emitterChain as ChainId),
+      transceiverMessage.ntt_managerPayload
+    );
+
+    await this.deleteOutboxItemToDigestByKey('digest', digest, this.pg);
 
     let lc: LifeCycle = {
       srcChainId: coalesceChainId(parsedVaa.emitterChain as ChainId),
@@ -392,10 +414,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       vaaId: `${parsedVaa.emitterChain}/${parsedVaa.emitterAddress.toString('hex')}/${
         parsedVaa.sequence
       }`,
-      digest: getNttManagerMessageDigest(
-        coalesceChainId(parsedVaa.emitterChain as ChainId),
-        transceiverMessage.ntt_managerPayload
-      ),
+      digest: digest,
       isRelay: false,
       transferTime: '',
       redeemTime: '',
@@ -467,6 +486,38 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     return lc;
   }
 
+  private async parseRequestRelayIx(
+    accountKeys: PublicKey[],
+    instructionAccountKeyIndexes: number[]
+  ) {
+    const quoterAccount = accountKeys[instructionAccountKeyIndexes[4]];
+    const wasRelayRequested = (await this.NttQuoter.wasRelayRequested(quoterAccount)) !== null;
+    const digest = await this.getDigestFromOutboxItem(quoterAccount.toBase58(), this.pg);
+
+    let lc: LifeCycle = {
+      srcChainId: 0,
+      destChainId: 0,
+      sourceToken: '',
+      tokenAmount: 0n,
+      transferSentTxhash: '',
+      transferBlockHeight: 0n,
+      nttTransferKey: '',
+      vaaId: '',
+      digest: digest,
+      isRelay: wasRelayRequested,
+      transferTime: '',
+      redeemTime: '',
+      redeemedTxhash: '',
+      redeemedBlockHeight: 0n,
+      inboundTransferQueuedTime: '',
+      outboundTransferQueuedTime: '',
+      outboundTransferReleasableTime: '',
+    };
+
+    await this.saveToPG(this.pg, lc, RequestRelayIx, this.logger);
+    return lc;
+  }
+
   // These are each of the instructions that we care about. We can get ntt_managerMessage from Transfer
   // through Redeem but not from ReleaseInboundMint/ReleaseInboundUnlock. However, we can link Redeem and
   // ReleaseInboundMint/ReleaseInboundUnlock through the inboxItem (account is seeded by ntt_manager_payload)
@@ -476,8 +527,9 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction
   ) {
-    const decodedData = this.borsh.instruction.decode(Buffer.from(instruction.data), 'base58');
-    if (decodedData === null) {
+    const decodedData = this.nttBorsh.instruction.decode(Buffer.from(instruction.data), 'base58');
+    const decodedDataQuoter = this.NttQuoter.borsh.instruction.decode(Buffer.from(instruction.data), 'base58');
+    if (decodedData === null || decodedDataQuoter === null) {
       this.logger.debug('decodedData is null');
       return;
     }
@@ -518,6 +570,11 @@ export class NTTSolanaWatcher extends SolanaWatcher {
             res.transaction.message.getAccountKeys().staticAccountKeys,
             instruction.accountKeyIndexes
           );
+        case RequestRelayIx:
+          return this.parseRequestRelayIx(
+            res.transaction.message.getAccountKeys().staticAccountKeys,
+            instruction.accountKeyIndexes
+          );
         default:
           return null;
       }
@@ -528,6 +585,61 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     }
   }
 
+  async fetchAndProcessMessages(fromSignature: string | undefined, toSignature: string, programId: PublicKey): Promise<ConfirmedSignatureInfo[]> {
+    let signatures: ConfirmedSignatureInfo[] = await this.getConnection().getSignaturesForAddress(
+      new PublicKey(programId),
+      {
+        before: fromSignature,
+        until: toSignature,
+        limit: this.getSignaturesLimit,
+      }
+    );
+
+    this.logger.info(`processing ${signatures.length} quoter transactions`);
+
+    if (signatures.length === 0) {
+      return [];
+    }
+
+    // We want to sort them by chronological order and process them from the oldest to the newest
+    signatures = signatures.reverse();
+    let results = await this.getConnection().getTransactions(
+      signatures.map((s) => s.signature),
+      {
+        maxSupportedTransactionVersion: 0,
+      }
+    );
+
+    if (results.length !== signatures.length) {
+      throw new Error(`solana: failed to fetch tx for signatures`);
+    }
+
+    for (const res of results) {
+      if (res?.meta?.err) {
+        // skip errored txs
+        continue;
+      }
+      if (!res || !res.blockTime) {
+        throw new Error(
+          `solana: failed to fetch tx for signature ${res?.transaction.signatures[0] || 'unknown'}`
+        );
+      }
+
+      const message = res.transaction.message;
+      const instructions = message.compiledInstructions;
+
+      for (const instruction of instructions) {
+        try {
+          await this.parseInstruction(res, instruction);
+        } catch (error) {
+          this.logger.error('error:', error);
+        }
+      }
+    }
+
+    return signatures;
+  }
+
   async getNttMessagesForBlocks(fromSlot: number, toSlot: number): Promise<string> {
     this.logger.info(`fetching info for blocks ${fromSlot} to ${toSlot}`);
     const { fromSignature, toSignature, toBlock } = await findFromSignatureAndToSignature(
@@ -536,63 +648,26 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       toSlot
     );
 
+    // check ntt program
     for (const programId of this.programIds) {
       let numSignatures = this.getSignaturesLimit;
       let currSignature: string | undefined = fromSignature;
 
       while (numSignatures === this.getSignaturesLimit) {
-        const signatures: ConfirmedSignatureInfo[] =
-          await this.getConnection().getSignaturesForAddress(new PublicKey(programId), {
-            before: currSignature,
-            until: toSignature,
-            limit: this.getSignaturesLimit,
-          });
-
-        this.logger.info(`processing ${signatures.length} transactions`);
-
-        if (signatures.length === 0) {
-          break;
-        }
-
-        const results = await this.getConnection().getTransactions(
-          signatures.map((s) => s.signature),
-          {
-            maxSupportedTransactionVersion: 0,
-          }
-        );
-
-        if (results.length !== signatures.length) {
-          throw new Error(`solana: failed to fetch tx for signatures`);
-        }
-
-        for (const res of results) {
-          if (res?.meta?.err) {
-            // skip errored txs
-            continue;
-          }
-          if (!res || !res.blockTime) {
-            throw new Error(
-              `solana: failed to fetch tx for signature ${
-                res?.transaction.signatures[0] || 'unknown'
-              }`
-            );
-          }
-
-          const message = res.transaction.message;
-          const instructions = message.compiledInstructions;
-
-          for (const instruction of instructions) {
-            try {
-              await this.parseInstruction(res, instruction);
-            } catch (error) {
-              this.logger.error('error:', error);
-            }
-          }
-        }
-
+        const signatures = await this.fetchAndProcessMessages(currSignature, toSignature, new PublicKey(programId));
         numSignatures = signatures.length;
         currSignature = signatures.at(-1)?.signature;
       }
+    }
+
+    // check quoter program
+    let numSignatures = this.getSignaturesLimit;
+    let currSignature: string | undefined = fromSignature;
+
+    while (numSignatures === this.getSignaturesLimit) {
+      const signatures = await this.fetchAndProcessMessages(currSignature, toSignature, new PublicKey(this.quoterProgramId));
+      numSignatures = signatures.length;
+      currSignature = signatures.at(-1)?.signature;
     }
 
     const lastBlockKey = makeBlockKey(
@@ -650,6 +725,51 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     }
 
     await pg('inbox_item_to_lifecycle_digest').where('inbox_item', InboxItem).delete();
+  }
+
+  async getDigestFromOutboxItem(OutboxItem: string, pg: Knex): Promise<string> {
+    if (!OutboxItem) {
+      throw new Error('OutboxItem is required');
+    }
+
+    const result = await pg('outbox_item_to_lifecycle_digest')
+      .where('outbox_item', OutboxItem)
+      .select('digest')
+      .first();
+
+    if (!result) {
+      throw new Error(`No digest found for OutboxItem: ${OutboxItem}`);
+    }
+
+    return result.digest;
+  }
+
+  async saveOutboxItemToDigest(OutboxItem: string, digest: string, pg: Knex): Promise<void> {
+    if (!OutboxItem) {
+      throw new Error('OutboxItem is required');
+    }
+
+    if (!digest) {
+      throw new Error('digest is required');
+    }
+
+    await pg('outbox_item_to_lifecycle_digest')
+      .insert({
+        outbox_item: OutboxItem,
+        digest: digest,
+      })
+      .onConflict('outbox_item')
+      .merge({
+        digest: digest,
+      });
+  }
+
+  async deleteOutboxItemToDigestByKey(columnName: string, value: string, pg: Knex): Promise<void> {
+    if (!columnName || !value) {
+      throw new Error('column_name and value is required');
+    }
+
+    await pg('outbox_item_to_lifecycle_digest').where(columnName, value).delete();
   }
 
   async saveToPG(
@@ -732,7 +852,11 @@ export class NTTSolanaWatcher extends SolanaWatcher {
             transfer_block_height: lc.transferBlockHeight,
             transfer_time: millisecondsToTimestamp(lc.transferTime),
           });
-      } else if (initiatingEvent === ReceiveWormholeMessageIx) {
+      } else if (initiatingEvent === RequestRelayIx) {
+        await trx('life_cycle').where('digest', lc.digest).update({
+          is_relay: lc.isRelay,
+        });
+      }else if (initiatingEvent === ReceiveWormholeMessageIx) {
         await trx('life_cycle').where('digest', lc.digest).update({
           vaa_id: lc.vaaId,
         });

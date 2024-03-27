@@ -5,11 +5,15 @@ import {
   MessageV0,
   VersionedBlockResponse,
   SolanaJSONRPCError,
+  PublicKey,
+  PublicKeyInitData,
 } from '@solana/web3.js';
 import { decode } from 'bs58';
 import { Connection } from '@solana/web3.js';
 import { RPCS_BY_CHAIN } from '@certusone/wormhole-sdk/lib/cjs/relayer';
 import { CONTRACTS } from '@certusone/wormhole-sdk';
+import { encoding } from '@wormhole-foundation/sdk-base';
+import { BN } from '@coral-xyz/anchor';
 
 export const isLegacyMessage = (message: Message | MessageV0): message is Message => {
   return message.version === 'legacy';
@@ -114,3 +118,29 @@ export const findFromSignatureAndToSignature = async (
 
   return { fromSignature, toSignature, toBlock };
 };
+
+// copied from https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/ts/sdk/utils.ts#L38-L52
+export const U64 = {
+  MAX: new BN((2n ** 64n - 1n).toString()),
+  to: (amount: number, unit: number) => {
+    const ret = new BN(Math.round(amount * unit));
+
+    if (ret.isNeg()) throw new Error('Value negative');
+
+    if (ret.bitLength() > 64) throw new Error('Value too large');
+
+    return ret;
+  },
+  from: (amount: BN, unit: number) => amount.toNumber() / unit,
+};
+
+// copied from https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/ts/sdk/utils.ts#L55-L56
+type Seed = Uint8Array | string;
+export function derivePda(seeds: Seed | readonly Seed[], programId: PublicKeyInitData) {
+  const toBytes = (s: string | Uint8Array) =>
+    typeof s === 'string' ? encoding.bytes.encode(s) : s;
+  return PublicKey.findProgramAddressSync(
+    Array.isArray(seeds) ? seeds.map(toBytes) : [toBytes(seeds as Seed)],
+    new PublicKey(programId)
+  )[0];
+}

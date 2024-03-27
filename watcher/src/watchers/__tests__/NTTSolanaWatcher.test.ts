@@ -55,13 +55,12 @@ test('deserializeValidatedTransceiverMessage', async () => {
   );
 });
 
-// testing two transactions listed above
 // This test is working, but testing it is not very useful since the return value is just the lastBlockKey.
 // It is just an entrypoint to test the whole thing with a local postgres database.
 test.skip('getNttMessagesForBlock', async () => {
   const watcher = new NTTSolanaWatcher('testnet');
   const latestSlot = await watcher.getConnection().getSlot();
-  await watcher.getNttMessagesForBlocks(285100152, latestSlot);
+  await watcher.getNttMessagesForBlocks(286868903, 288234170);
 });
 
 test.skip('parseTransferLockIx should have no transfer details', async () => {
@@ -206,4 +205,32 @@ test.skip('parseRedeemIx', async () => {
   ix = txs[1]!.transaction.message.compiledInstructions[1];
   message = await watcher.parseInstruction(txs[1]!, ix);
   expect(message?.digest).toBe(digests[1]);
+});
+
+test.skip('parseRequestRelay', async () => {
+  const watcher = new NTTSolanaWatcher('testnet');
+  const txHashes = [
+    // 1/7e6436b671cce379a1fa9833783e28b36d39a00e2cdc6bfeab5d2d836eb61c7f/29
+    'uqKyFZHhZCFusb1YH9K7rzXqDLXsfzh778ZM2bQv2tDYznyktYVEzQ86FCesDCWD9B5RTkbxGNxfCjF2GN5ALL2',
+  ];
+
+  const digests = [
+    // 1/7e6436b671cce379a1fa9833783e28b36d39a00e2cdc6bfeab5d2d836eb61c7f/29
+    'da32304804be70175afe945ec5d55431b833a2bf0e1c5ecc5f47fdef53c80752',
+  ];
+  const txs = await watcher.getConnection().getTransactions(txHashes, {
+    maxSupportedTransactionVersion: 0,
+  });
+
+  if (!txs) {
+    throw new Error('Unable to get transaction');
+  }
+
+  // let it save outbox_item_to_lifecycle_digest in the database
+  let ix = txs[0]!.transaction.message.compiledInstructions[1];
+  let message = await watcher.parseInstruction(txs[0]!, ix);
+
+  ix = txs[0]!.transaction.message.compiledInstructions[3];
+  message = await watcher.parseInstruction(txs[0]!, ix);
+  expect(message?.digest).toBe(digests[0]);
 });

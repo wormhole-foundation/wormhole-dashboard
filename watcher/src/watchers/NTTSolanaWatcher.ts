@@ -24,7 +24,6 @@ import { SolanaWatcher } from './SolanaWatcher';
 import { makeBlockKey } from '../databases/utils';
 import { Program, BorshCoder, AnchorProvider, Wallet } from '@coral-xyz/anchor';
 import NTT_IDL from '../idls/example_native_token_transfers.json';
-import NTT_QUOTER_IDL from '../idls/ntt_quoter.json';
 import { type ExampleNativeTokenTransfers as RawExampleNativeTokenTransfers } from '../types/example_native_token_transfers';
 import {
   TransferLockIx,
@@ -85,15 +84,10 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   maximumBatchSize = 100_000;
   pg: Knex;
 
-  // NTT specific
-  // TODO: delete this
-  lifecycleMap: Map<string, LifeCycle>; // digest -> lifecycle
-
   constructor(network: Environment) {
     super(network, true);
     this.rpc = RPCS_BY_CHAIN[this.network].solana!;
     this.programIds = NTT_CONTRACT[this.network].solana!;
-    this.lifecycleMap = new Map<string, LifeCycle>();
     this.connection = new Connection(this.rpc, COMMITMENT);
 
     // Initialize the NttQuoter
@@ -210,6 +204,9 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     };
 
     const digest = getNttManagerMessageDigest(coalesceChainId(this.chain), nttManagerMessage);
+
+    // We save the digest to the outboxItem so we can link the lifecycle to the outboxItem later in the relayRequest ix
+    // This is because the relayRequest ix does not contain the necessary information to create the digest, only outboxItem
     await this.saveOutboxItemToDigest(outboxAccount.toBase58(), digest, this.pg);
 
     const lc: LifeCycle = {
@@ -233,8 +230,6 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       outboundTransferQueuedTime: outboxQueuedTime,
       outboundTransferReleasableTime: outboxReleaseTime,
     };
-
-    this.lifecycleMap.set(digest, lc);
 
     await this.saveToPG(this.pg, lc, TransferLockIx, this.logger);
     return lc;
@@ -397,8 +392,6 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       transceiverMessage.ntt_managerPayload
     );
 
-    await this.deleteOutboxItemToDigestByKey('digest', digest, this.pg);
-
     let lc: LifeCycle = {
       srcChainId: coalesceChainId(parsedVaa.emitterChain as ChainId),
       destChainId: coalesceChainId(
@@ -490,10 +483,15 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     accountKeys: PublicKey[],
     instructionAccountKeyIndexes: number[]
   ) {
-    const quoterAccount = accountKeys[instructionAccountKeyIndexes[4]];
-    const wasRelayRequested = (await this.NttQuoter.wasRelayRequested(quoterAccount)) !== null;
-    const digest = await this.getDigestFromOutboxItem(quoterAccount.toBase58(), this.pg);
+    // TODO: update this index when xLabs deploy quoter 0.1.0. The correct index is 4.
+    const outboxItem = accountKeys[instructionAccountKeyIndexes[3]];
+    const wasRelayRequested = (await this.NttQuoter.wasRelayRequested(outboxItem)) !== null;
+    const digest = await this.getDigestFromOutboxItem(outboxItem.toBase58(), this.pg);
 
+    // We know for sure that the relay was requested, so we can delete the outboxItem
+    await this.deleteOutboxItemToDigestByKey('outbox_item', outboxItem.toBase58(), this.pg);
+
+    // All we really want to know is that a relay was requested
     let lc: LifeCycle = {
       srcChainId: 0,
       destChainId: 0,
@@ -526,16 +524,21 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   async parseInstruction(
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction
-  ) {
+  ): Promise<LifeCycle | null> {
     const decodedData = this.nttBorsh.instruction.decode(Buffer.from(instruction.data), 'base58');
-    const decodedDataQuoter = this.NttQuoter.borsh.instruction.decode(Buffer.from(instruction.data), 'base58');
-    if (decodedData === null || decodedDataQuoter === null) {
+    const decodedDataQuoter = this.NttQuoter.borsh.instruction.decode(
+      Buffer.from(instruction.data),
+      'base58'
+    );
+
+    const ixName = decodedData?.name || decodedDataQuoter?.name;
+    if (!ixName) {
       this.logger.debug('decodedData is null');
-      return;
+      return null;
     }
 
     try {
-      switch (decodedData.name) {
+      switch (ixName) {
         case TransferLockIx:
           return this.parseTransferLockIx(
             res,
@@ -581,11 +584,17 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     } catch (error) {
       // we do not want to throw an error here as we want to continue processing the rest of the instructions
       // TODO: we should probably have a dlq for these errors
-      this.logger.error(`error at ${decodedData.name}:`, error);
+      this.logger.error(`error at ${ixName} for ${res.transaction.signatures[0]}:`, error);
     }
+
+    return null;
   }
 
-  async fetchAndProcessMessages(fromSignature: string | undefined, toSignature: string, programId: PublicKey): Promise<ConfirmedSignatureInfo[]> {
+  async fetchAndProcessMessages(
+    fromSignature: string | undefined,
+    toSignature: string,
+    programId: PublicKey
+  ): Promise<ConfirmedSignatureInfo[]> {
     let signatures: ConfirmedSignatureInfo[] = await this.getConnection().getSignaturesForAddress(
       new PublicKey(programId),
       {
@@ -595,15 +604,14 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       }
     );
 
-    this.logger.info(`processing ${signatures.length} quoter transactions`);
+    this.logger.info(`processing ${signatures.length} transactions`);
 
     if (signatures.length === 0) {
       return [];
     }
 
     // We want to sort them by chronological order and process them from the oldest to the newest
-    signatures = signatures.reverse();
-    let results = await this.getConnection().getTransactions(
+    const results = await this.getConnection().getTransactions(
       signatures.map((s) => s.signature),
       {
         maxSupportedTransactionVersion: 0,
@@ -628,7 +636,14 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       const message = res.transaction.message;
       const instructions = message.compiledInstructions;
 
-      for (const instruction of instructions) {
+      // filter out instructions that are not for the program we are interested in
+      const programIdIndex = res.transaction.message.staticAccountKeys.findIndex((i) =>
+        i.equals(programId)
+      );
+
+      const programInstructions = instructions.filter((i) => i.programIdIndex === programIdIndex);
+
+      for (const instruction of programInstructions) {
         try {
           await this.parseInstruction(res, instruction);
         } catch (error) {
@@ -654,7 +669,11 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       let currSignature: string | undefined = fromSignature;
 
       while (numSignatures === this.getSignaturesLimit) {
-        const signatures = await this.fetchAndProcessMessages(currSignature, toSignature, new PublicKey(programId));
+        const signatures: ConfirmedSignatureInfo[] = await this.fetchAndProcessMessages(
+          currSignature,
+          toSignature,
+          new PublicKey(programId)
+        );
         numSignatures = signatures.length;
         currSignature = signatures.at(-1)?.signature;
       }
@@ -665,7 +684,11 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     let currSignature: string | undefined = fromSignature;
 
     while (numSignatures === this.getSignaturesLimit) {
-      const signatures = await this.fetchAndProcessMessages(currSignature, toSignature, new PublicKey(this.quoterProgramId));
+      const signatures: ConfirmedSignatureInfo[] = await this.fetchAndProcessMessages(
+        currSignature,
+        toSignature,
+        new PublicKey(this.quoterProgramId)
+      );
       numSignatures = signatures.length;
       currSignature = signatures.at(-1)?.signature;
     }
@@ -764,6 +787,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       });
   }
 
+  // We should invoke this function when the transfer goes to the EVM side, that is when we know the relay will not be requested anymore
   async deleteOutboxItemToDigestByKey(columnName: string, value: string, pg: Knex): Promise<void> {
     if (!columnName || !value) {
       throw new Error('column_name and value is required');
@@ -856,7 +880,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
         await trx('life_cycle').where('digest', lc.digest).update({
           is_relay: lc.isRelay,
         });
-      }else if (initiatingEvent === ReceiveWormholeMessageIx) {
+      } else if (initiatingEvent === ReceiveWormholeMessageIx) {
         await trx('life_cycle').where('digest', lc.digest).update({
           vaa_id: lc.vaaId,
         });

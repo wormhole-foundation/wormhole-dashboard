@@ -25,9 +25,9 @@ CREATE TABLE life_cycle (
 -- we can use it as a primary key.
 -- Row will be deleted when the transfer is fully redeemed, aka releaseInboundMint/releaseInboundUnlock is called.
 CREATE TABLE inbox_item_to_lifecycle_digest (
-    inbox_item VARCHAR(96) NOT NULL,
-    digest VARCHAR(96) NOT NULL,
-    PRIMARY KEY (inbox_item)
+  inbox_item VARCHAR(96) NOT NULL,
+  digest VARCHAR(96) NOT NULL,
+  PRIMARY KEY (inbox_item)
 );
 
 -- This is needed since requestRelay does not reference the digest
@@ -36,8 +36,7 @@ CREATE TABLE inbox_item_to_lifecycle_digest (
 -- Row will be deleted when the requestRelay is executed or when receiveWormhole is called.
 -- We will truly know if the transfer is relayed when the transfer reaches the dest chain.
 CREATE TABLE outbox_item_to_lifecycle_digest (
-    outbox_item VARCHAR(96) NOT NULL,
-    digest VARCHAR(96) NOT NULL,
-    PRIMARY KEY (outbox_item)
-    INDEX idx_digest (digest)
+  outbox_item VARCHAR(96) NOT NULL,
+  digest VARCHAR(96) NOT NULL,
+  PRIMARY KEY (outbox_item)
 );

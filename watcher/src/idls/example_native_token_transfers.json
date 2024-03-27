@@ -706,8 +706,13 @@
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false
+          "accounts": [
+            {
+              "name": "config",
+              "isMut": false,
+              "isSigner": false
+            }
+          ]
         },
         {
           "name": "peer",
@@ -767,7 +772,7 @@
         },
         {
           "name": "emitter",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -845,7 +850,7 @@
         },
         {
           "name": "emitter",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -916,7 +921,7 @@
         },
         {
           "name": "emitter",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1653,6 +1658,21 @@
       "code": 6016,
       "name": "InvalidDeployer",
       "msg": "InvalidDeployer"
+    },
+    {
+      "code": 6017,
+      "name": "BadAmountAfterTransfer",
+      "msg": "BadAmountAfterTransfer"
+    },
+    {
+      "code": 6018,
+      "name": "BadAmountAfterBurn",
+      "msg": "BadAmountAfterBurn"
+    },
+    {
+      "code": 6019,
+      "name": "ZeroThreshold",
+      "msg": "ZeroThreshold"
     }
   ]
 }

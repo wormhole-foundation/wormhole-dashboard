@@ -14,16 +14,15 @@ export class NttQuoter {
   private readonly program: Program<Idl>;
   readonly borsh: BorshCoder;
 
-
   constructor(connection: Connection, programId: PublicKeyInitData) {
     this.program = new Program<Idl>(IDL as Idl, new PublicKey(programId), { connection });
     this.instance = derivePda([SEED_PREFIX_INSTANCE], this.program.programId);
-	this.borsh = new BorshCoder(IDL as any);
+    this.borsh = new BorshCoder(IDL as any);
   }
 
   // ---- admin/assistant (=authority) relevant functions ----
 
-  //returns null if no relay was requested, otherwise it the requested gas dropoff (in eth),
+  //  returns null if no relay was requested, otherwise it the requested gas dropoff (in eth),
   //  which can be 0, so a strict === null check is required!
   async wasRelayRequested(outboxItem: PublicKey) {
     const relayRequest = await this.program.account.relayRequest.fetchNullable(

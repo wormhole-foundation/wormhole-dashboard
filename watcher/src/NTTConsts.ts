@@ -148,7 +148,7 @@ export const NTT_SOLANA_IXS = [
   ReleaseInboundUnlockIx,
   ReceiveWormholeMessageIx,
   ReleaseWormholeOutboundIx,
-  RequestRelayIx
+  RequestRelayIx,
 ];
 
 export const NTT_CONTRACT: { [key in Environment]: { [key in ChainName]?: string[] } } = {
@@ -169,7 +169,7 @@ export const NTT_QUOTER_CONTRACT: { [key in Environment]: { [key in ChainName]?:
     solana: 'NqTdGLLL6b6bFo7YESNEezocgF8onH5cst5EdH791en',
   },
   ['devnet']: {},
-}
+};
 
 export const getNttManagerMessageDigest = (
   emitterChain: number,

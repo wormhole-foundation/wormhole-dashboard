@@ -9,6 +9,7 @@ import { TIMEOUT } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { getResumeBlockByChain, storeLatestBlock, storeVaasByBlock } from '../databases/utils';
 import { getLogger, WormholeLogger } from '../utils/logger';
+import { parentPort } from 'worker_threads';
 
 export class Watcher {
   chain: ChainName;
@@ -104,6 +105,9 @@ export class Watcher {
         const expoBacko = TIMEOUT * 2 ** retry;
         this.logger.warn(`backing off for ${expoBacko}ms`);
         await sleep(expoBacko);
+      }
+      if (parentPort) {
+        parentPort.postMessage('heartbeat');
       }
     }
   }

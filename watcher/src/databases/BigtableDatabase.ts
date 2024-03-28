@@ -184,15 +184,25 @@ export class BigtableDatabase extends Database {
     }
   }
 
+  /**
+   * Returns message table rows where `hasSignedVAA === 0`. Note, this does not return all columns.
+   */
   async fetchMissingVaaMessages(): Promise<BigtableMessagesResultRow[]> {
     const instance = this.bigtable.instance(this.instanceId);
     const messageTable = instance.table(this.msgTableId);
-    // TODO: how to filter to only messages with hasSignedVaa === 0
-    const observedMessages = (await messageTable.getRows())[0] as BigtableMessagesResultRow[];
-    const missingVaaMessages = observedMessages.filter(
-      (x) => x.data.info.hasSignedVaa?.[0].value === 0
-    );
-    return missingVaaMessages;
+    const observedMessages = (
+      await messageTable.getRows({
+        filter: [
+          {
+            column: /^hasSignedVaa$/,
+          },
+          {
+            value: { start: { value: 0, inclusive: true }, end: { value: 1, inclusive: false } },
+          },
+        ],
+      })
+    )[0] as BigtableMessagesResultRow[];
+    return observedMessages;
   }
 
   async watchMissing(): Promise<void> {

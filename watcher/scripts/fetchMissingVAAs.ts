@@ -27,8 +27,14 @@ const missingVaas: { [id: string]: string | undefined } = {};
   const now = Math.floor(Date.now() / 1000);
   try {
     let log = ora('Fetching messages without a signed VAA...').start();
+    // @ts-ignore
+    const beforeFetch = performance.now();
     const missingVaaMessages = await bt.fetchMissingVaaMessages();
-    log.succeed();
+    // @ts-ignore
+    const afterFetch = performance.now();
+    log.succeed(
+      `Fetched messages without a signed VAA in ${((afterFetch - beforeFetch) / 1000).toFixed(2)}s`
+    );
     const total = missingVaaMessages.length;
     let found = 0;
     let search = 0;
@@ -64,7 +70,8 @@ const missingVaas: { [id: string]: string | undefined } = {};
           tooNew++;
         }
       } else {
-        missingVaas[id] = observedMessage.data.info.txHash?.[0].value;
+        // TODO: txHash is no longer returned, do a bulk lookup at the end
+        missingVaas[id] = observedMessage.data.info.txHash?.[0].value || '';
       }
     }
     log.succeed();

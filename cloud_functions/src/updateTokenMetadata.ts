@@ -11,6 +11,7 @@ import {
   fetchCoins,
   getNativeAddress,
 } from '@wormhole-foundation/wormhole-monitor-database';
+import { isTokenDenylisted } from './consts';
 
 const coinGeckoCoinIdCache = new Map<string, string>();
 
@@ -82,7 +83,12 @@ export async function updateTokenMetadata(req: any, res: any) {
         native_address = await getNativeAddress(token_chain, token_address);
         shouldUpdate ||= native_address !== null;
       }
-      if (coin_gecko_coin_id === null && native_address !== null) {
+      if (
+        coin_gecko_coin_id === null &&
+        native_address !== null &&
+        // TODO: this is a hack to avoid updating tokens that are denylisted
+        !isTokenDenylisted(token_chain, native_address)
+      ) {
         coin_gecko_coin_id = findCoinGeckoCoinId(token_chain, native_address, coinGeckoCoins);
         shouldUpdate ||= coin_gecko_coin_id !== null;
       }

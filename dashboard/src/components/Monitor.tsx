@@ -23,6 +23,8 @@ import {
   explorerBlock,
   explorerTx,
   explorerVaa,
+  MISS_THRESHOLD_IN_MINS,
+  MISS_THRESHOLD_LABEL,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Environment, useCurrentEnvironment, useNetworkContext } from '../contexts/NetworkContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
@@ -248,8 +250,8 @@ function DetailBlocks({ chain }: { chain: string }) {
 
 function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
   const now = new Date();
-  now.setHours(now.getHours() - 2);
-  const twoHoursAgo = now.toISOString();
+  now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
+  const missThreshold = now.toISOString();
   const { showAllMisses } = useSettings();
   return (
     <pre>
@@ -257,7 +259,7 @@ function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
         .map(([chain, info]) => {
           const filteredMisses = showAllMisses
             ? info.messages
-            : info.messages.filter((message) => message.timestamp < twoHoursAgo);
+            : info.messages.filter((message) => message.timestamp < missThreshold);
           return filteredMisses.length === 0
             ? null
             : filteredMisses
@@ -323,15 +325,15 @@ function Misses({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
     };
   }, [currentNetwork]);
   const now = new Date();
-  now.setHours(now.getHours() - 2);
-  const twoHoursAgo = now.toISOString();
+  now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
+  const missThreshold = now.toISOString();
   const missesElements = misses
     ? Object.entries(misses)
         .map(([chain, info]) => {
           const filteredMisses = showAllMisses
             ? info.messages
             : info.messages
-                .filter((message) => message.timestamp < twoHoursAgo)
+                .filter((message) => message.timestamp < missThreshold)
                 .filter(
                   (message) =>
                     !governorInfo?.enqueuedVAAs.some(
@@ -396,7 +398,9 @@ function Misses({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
       ) : missesElements.length ? (
         missesElements
       ) : (
-        <Typography pl={0.5}>No misses{showAllMisses ? '' : ' > 2 Hours'}!</Typography>
+        <Typography pl={0.5}>
+          No misses{showAllMisses ? '' : ` > ${MISS_THRESHOLD_LABEL}`}!
+        </Typography>
       )}
     </>
   );

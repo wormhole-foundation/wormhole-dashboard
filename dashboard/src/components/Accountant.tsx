@@ -5,6 +5,11 @@ import {
   AccordionSummary,
   Box,
   Card,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
   InputAdornment,
   LinearProgress,
   TextField,
@@ -20,14 +25,19 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
 } from '../hooks/useGetAccountantPendingTransfers';
 import chainIdToName from '../utils/chainIdToName';
-import { CHAIN_ICON_MAP, GUARDIAN_SET_3 } from '../utils/consts';
+import {
+  ACCOUNTANT_CONTRACT_ADDRESS,
+  CHAIN_ICON_MAP,
+  GUARDIAN_SET_3,
+  WORMCHAIN_URL,
+} from '../utils/consts';
 import { CHAIN_INFO_MAP } from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
@@ -35,6 +45,8 @@ import useTokenData, { TokenDataEntry } from '../hooks/useTokenData';
 import numeral from 'numeral';
 import { useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ExplorerTxHash } from './ExplorerTxHash';
+import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { useDebounce } from 'use-debounce';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 type AccountWithTokenData = Account & {
@@ -140,7 +152,10 @@ const pendingTransferColumns = [
   pendingTransferColumnHelper.accessor('data.0.tx_hash', {
     header: () => 'Tx',
     cell: (info) => (
-      <ExplorerTxHash chain={info.row.original.key.emitter_chain} rawTxHash={info.getValue()} />
+      <ExplorerTxHash
+        chain={info.row.original.key.emitter_chain}
+        rawTxHash={'0x' + Buffer.from(info.getValue(), 'base64').toString('hex')}
+      />
     ),
   }),
   pendingTransferColumnHelper.accessor('data.0.signatures', {
@@ -263,6 +278,110 @@ const overviewColumns = [
   }),
 ];
 
+function AccountantSearch() {
+  const [raw_emitter_chain, setChain] = useState<number | undefined>();
+  const [raw_emitter_address, setAddress] = useState<string>('');
+  const [raw_sequence, setSequence] = useState<number | undefined>();
+  const [response, setResponse] = useState<any>(null);
+  const handleChain = useCallback((event: any) => {
+    if (!event.target.value) {
+      setChain(undefined);
+    }
+    try {
+      const n = parseInt(event.target.value);
+      if (!isNaN(n)) {
+        setChain(n);
+      }
+    } catch (e) {}
+  }, []);
+  const handleAddress = useCallback((event: any) => {
+    setAddress(event.target.value);
+  }, []);
+  const handleSequence = useCallback((event: any) => {
+    if (!event.target.value) {
+      setSequence(undefined);
+    }
+    try {
+      const n = parseInt(event.target.value);
+      if (!isNaN(n)) {
+        setSequence(n);
+      }
+    } catch (e) {}
+  }, []);
+  const [emitter_chain] = useDebounce(raw_emitter_chain, 500);
+  const [emitter_address] = useDebounce(raw_emitter_address, 500);
+  const [sequence] = useDebounce(raw_sequence, 500);
+  useEffect(() => {
+    if (emitter_chain && emitter_address && sequence) {
+      setResponse(null);
+      let cancelled = false;
+      (async () => {
+        try {
+          const cosmWasmClient = await CosmWasmClient.connect(WORMCHAIN_URL);
+          const response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
+            transfer_status: {
+              emitter_chain,
+              emitter_address,
+              sequence,
+            },
+          });
+          if (!cancelled) {
+            setResponse(response);
+          }
+        } catch (error) {
+          if (!cancelled) {
+            setResponse({});
+          }
+          console.error(error);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [emitter_chain, emitter_address, sequence]);
+  return (
+    <>
+      <Typography variant="subtitle1">Transfer Key</Typography>
+      <TextField
+        sx={{ mt: 1 }}
+        label="Chain"
+        fullWidth
+        onChange={handleChain}
+        value={raw_emitter_chain}
+        size="small"
+      />
+      <TextField
+        sx={{ mt: 1 }}
+        label="Address"
+        fullWidth
+        onChange={handleAddress}
+        value={raw_emitter_address}
+        size="small"
+      />
+      <TextField
+        sx={{ mt: 1 }}
+        label="Sequence"
+        fullWidth
+        onChange={handleSequence}
+        value={raw_sequence}
+        size="small"
+      />
+      {emitter_chain && emitter_address && sequence ? (
+        response ? (
+          <pre>{JSON.stringify(response, undefined, 2)}</pre>
+        ) : (
+          <CircularProgress sx={{ mt: 2 }} />
+        )
+      ) : (
+        <Typography sx={{ mt: 2 }}>Enter a transfer key above</Typography>
+      )}
+    </>
+  );
+}
+
+const MemoizedAccountantSearch = memo(AccountantSearch);
+
 function Accountant({
   governorInfo,
   accountantAddress,
@@ -272,6 +391,15 @@ function Accountant({
   accountantAddress: string;
   isNTT?: boolean;
 }) {
+  const [open, setOpen] = useState(false);
+  const handleOpen = useCallback((event: any) => {
+    event.stopPropagation();
+    setOpen(true);
+  }, []);
+  const handleClose = useCallback((event: any) => {
+    setOpen(false);
+  }, []);
+
   const pendingTransferInfo = useGetAccountantPendingTransfers(accountantAddress);
 
   const accountsInfo = useGetAccountantAccounts(accountantAddress);
@@ -426,111 +554,126 @@ function Accountant({
   );
   const network = useCurrentEnvironment();
   return (
-    <CollapsibleSection
-      defaultExpanded={false}
-      header={
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            paddingRight: 1,
-          }}
-        >
-          <Box>{isNTT ? 'NTT ' : ''}Accountant</Box>
-          <Box flexGrow={1} />
-          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-            {Object.keys(pendingByChain)
-              .sort()
-              .map((chainId) => (
-                <Box key={chainId} display="flex" alignItems="center">
-                  <Box
-                    ml={2}
-                    display="flex"
-                    alignItems="center"
-                    borderRadius="50%"
-                    sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
-                  >
-                    {CHAIN_ICON_MAP[chainId] ? (
-                      <img
-                        src={CHAIN_ICON_MAP[chainId]}
-                        alt={CHAIN_INFO_MAP[network][chainId].name}
-                        width={24}
-                      />
-                    ) : (
-                      <Typography variant="body2">{chainId}</Typography>
-                    )}
+    <>
+      <CollapsibleSection
+        defaultExpanded={false}
+        header={
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              paddingRight: 1,
+            }}
+          >
+            <Box>{isNTT ? 'NTT ' : ''}Accountant</Box>
+            {isNTT ? null : (
+              <Box ml={1}>
+                <IconButton onClick={handleOpen} size="small">
+                  <Search fontSize="inherit" />
+                </IconButton>
+              </Box>
+            )}
+            <Box flexGrow={1} />
+            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+              {Object.keys(pendingByChain)
+                .sort()
+                .map((chainId) => (
+                  <Box key={chainId} display="flex" alignItems="center">
+                    <Box
+                      ml={2}
+                      display="flex"
+                      alignItems="center"
+                      borderRadius="50%"
+                      sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
+                    >
+                      {CHAIN_ICON_MAP[chainId] ? (
+                        <img
+                          src={CHAIN_ICON_MAP[chainId]}
+                          alt={CHAIN_INFO_MAP[network][chainId].name}
+                          width={24}
+                        />
+                      ) : (
+                        <Typography variant="body2">{chainId}</Typography>
+                      )}
+                    </Box>
+                    <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                      {pendingByChain[Number(chainId)]}
+                    </Typography>
                   </Box>
-                  <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
-                    {pendingByChain[Number(chainId)]}
-                  </Typography>
-                </Box>
-              ))}
+                ))}
+            </Box>
           </Box>
-        </Box>
-      }
-    >
-      {pendingTransferInfo.length ? (
+        }
+      >
+        {pendingTransferInfo.length ? (
+          <Box mb={2}>
+            <Card>
+              <Table<GuardianSigningStat> table={guardianSigning} />
+            </Card>
+          </Box>
+        ) : null}
         <Box mb={2}>
           <Card>
-            <Table<GuardianSigningStat> table={guardianSigning} />
+            <Table<PendingTransferForAcct>
+              table={pendingTransfer}
+              paginated={!!pendingTransferInfo.length}
+              showRowCount={!!pendingTransferInfo.length}
+            />
+            {pendingTransferInfo.length === 0 ? (
+              <Typography variant="body2" sx={{ py: 1, textAlign: 'center' }}>
+                No pending transfers
+              </Typography>
+            ) : null}
           </Card>
         </Box>
-      ) : null}
-      <Box mb={2}>
-        <Card>
-          <Table<PendingTransferForAcct>
-            table={pendingTransfer}
-            paginated={!!pendingTransferInfo.length}
-            showRowCount={!!pendingTransferInfo.length}
-          />
-          {pendingTransferInfo.length === 0 ? (
-            <Typography variant="body2" sx={{ py: 1, textAlign: 'center' }}>
-              No pending transfers
-            </Typography>
-          ) : null}
-        </Card>
-      </Box>
-      <Box mt={2}>
-        <Card>
-          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography>Overview</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Table<ChainTvlTvm> table={overview} />
-            </AccordionDetails>
-          </Accordion>
-        </Card>
-      </Box>
-      <Box mt={2}>
-        <Card>
-          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Typography>Accounts ({accountsInfo.length})</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <TextField
-                type="search"
-                value={accountsGlobalFilter}
-                onChange={handleAccountsGlobalFilterChange}
-                margin="dense"
-                size="small"
-                sx={{ mb: 1 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                }}
-                placeholder="Search Token"
-              />
-              <Table<AccountWithTokenData> table={accounts} paginated noWrap />
-            </AccordionDetails>
-          </Accordion>
-        </Card>
-      </Box>
-    </CollapsibleSection>
+        <Box mt={2}>
+          <Card>
+            <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography>Overview</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Table<ChainTvlTvm> table={overview} />
+              </AccordionDetails>
+            </Accordion>
+          </Card>
+        </Box>
+        <Box mt={2}>
+          <Card>
+            <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography>Accounts ({accountsInfo.length})</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <TextField
+                  type="search"
+                  value={accountsGlobalFilter}
+                  onChange={handleAccountsGlobalFilterChange}
+                  margin="dense"
+                  size="small"
+                  sx={{ mb: 1 }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search />
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder="Search Token"
+                />
+                <Table<AccountWithTokenData> table={accounts} paginated noWrap />
+              </AccordionDetails>
+            </Accordion>
+          </Card>
+        </Box>
+      </CollapsibleSection>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle>Accountant Transfer Search</DialogTitle>
+        <DialogContent>
+          <MemoizedAccountantSearch />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 export default Accountant;

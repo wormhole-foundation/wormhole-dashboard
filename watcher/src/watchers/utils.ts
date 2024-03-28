@@ -15,6 +15,9 @@ import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
 import { NearArchiveWatcher } from './NearArchiveWatcher';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { NTTWatcher } from './NTTWatcher';
+import { NTTArbitrumWatcher } from './NTTArbitrumWatcher';
+import { NTTSolanaWatcher } from './NTTSolanaWatcher';
 
 export function makeFinalizedWatcher(network: Environment, chainName: ChainName): Watcher {
   if (chainName === 'solana') {
@@ -62,8 +65,33 @@ export function makeFinalizedWatcher(network: Environment, chainName: ChainName)
       return new EVMWatcher(network, chainName, 'finalized');
     } else if (chainName === 'arbitrum_sepolia') {
       return new ArbitrumWatcher(network);
-    } else if (chainName === 'optimism_sepolia' || chainName === 'base_sepolia') {
+    } else if (
+      chainName === 'optimism_sepolia' ||
+      chainName === 'base_sepolia' ||
+      chainName === 'polygon_sepolia'
+    ) {
       return new EVMWatcher(network, chainName);
+    } else {
+      throw new Error(
+        `Attempted to create finalized watcher for unsupported testnet chain ${chainName}`
+      );
+    }
+  } else {
+    throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
+  }
+}
+
+export function makeFinalizedNTTWatcher(network: Environment, chainName: ChainName): Watcher {
+  if (network === 'testnet') {
+    // These are testnet only chains
+    if (chainName === 'sepolia' || chainName === 'holesky') {
+      return new NTTWatcher(network, chainName, 'finalized');
+    } else if (chainName === 'base_sepolia' || chainName === 'optimism_sepolia') {
+      return new NTTWatcher(network, chainName);
+    } else if (chainName === 'arbitrum_sepolia') {
+      return new NTTArbitrumWatcher(network);
+    } else if (chainName === 'solana') {
+      return new NTTSolanaWatcher(network);
     } else {
       throw new Error(
         `Attempted to create finalized watcher for unsupported testnet chain ${chainName}`

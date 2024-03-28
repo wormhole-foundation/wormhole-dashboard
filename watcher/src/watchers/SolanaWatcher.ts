@@ -38,8 +38,8 @@ export class SolanaWatcher extends Watcher {
 
   connection: Connection | undefined;
 
-  constructor(network: Environment) {
-    super(network, 'solana');
+  constructor(network: Environment, isNTT: boolean = false) {
+    super(network, 'solana', isNTT);
     this.rpc = RPCS_BY_CHAIN[this.network].solana!;
     this.programId = WORMHOLE_PROGRAM_ID;
   }

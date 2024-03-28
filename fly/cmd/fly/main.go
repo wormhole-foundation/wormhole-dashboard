@@ -209,7 +209,7 @@ func main() {
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
 	idx, sgs, err := utils.FetchCurrentGuardianSet(rpcUrl, coreBridgeAddr)
 	if err != nil {
-		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
+		logger.Fatal("Failed to fetch guardian set", zap.String("rpc", rpcUrl), zap.Error(err))
 	}
 	logger.Info("guardian set", zap.Uint32("index", idx), zap.Any("gs", sgs))
 	gs := common.GuardianSet{

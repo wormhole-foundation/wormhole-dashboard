@@ -18,6 +18,7 @@ import (
 
 	ipfslog "github.com/ipfs/go-log/v2"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
@@ -68,6 +69,7 @@ func main() {
 		localContext, localCancel := context.WithCancel(rootCtx)
 		defer localCancel()
 		hbReceived := false
+		var addrInfo peer.AddrInfo
 		observationsReceived := 0
 		components := p2p.DefaultComponents()
 		components.Port = p2pPort
@@ -108,8 +110,11 @@ func main() {
 				switch m := msg.Message.(type) {
 				case *gossipv1.GossipMessage_SignedHeartbeat:
 					logger.Debug("received heartbeat")
-					if !hbReceived && bytes.Equal(m.SignedHeartbeat.GuardianAddr, guardianPubKey) {
-						hbReceived = true
+					if bytes.Equal(m.SignedHeartbeat.GuardianAddr, guardianPubKey) {
+						addrInfo = host.Peerstore().PeerInfo(envelope.GetFrom())
+						if !hbReceived {
+							hbReceived = true
+						}
 					}
 				case *gossipv1.GossipMessage_SignedObservation:
 					logger.Debug("received observation")
@@ -135,7 +140,7 @@ func main() {
 		logger.Info("local context cancelled")
 
 		if hbReceived {
-			fmt.Println("✅ guardian heartbeat received")
+			fmt.Println("✅ guardian heartbeat received", addrInfo.String())
 		} else {
 			fmt.Println("❌ NO HEARTBEAT RECEIVED")
 		}

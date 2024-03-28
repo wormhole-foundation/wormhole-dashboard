@@ -245,6 +245,21 @@ export function makeCache() {
       lastUpdated: 0,
       lastRowKey: '',
     },
+    4005: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
+    4006: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
+    4007: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
     10002: {
       messages: [],
       lastUpdated: 0,
@@ -266,6 +281,11 @@ export function makeCache() {
       lastRowKey: '',
     },
     10006: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
+    10007: {
       messages: [],
       lastUpdated: 0,
       lastRowKey: '',
@@ -358,3 +378,13 @@ export type SlackInfo = {
   msg: string;
   bannerTxt: string;
 };
+
+export interface EventData {
+  blockNumber: number;
+  txHash: string;
+  from: string;
+  to: string;
+  token: string;
+  amount: string;
+  isDeposit: boolean;
+}

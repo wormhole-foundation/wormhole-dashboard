@@ -39,6 +39,10 @@ export type Network = {
   logo: string;
   type: 'guardian' | 'cloudfunction';
 };
+export type Mode = 'vaa' | 'ntt';
+
+export const MISS_THRESHOLD_IN_MINS = 30;
+export const MISS_THRESHOLD_LABEL = '30 minutes';
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   [key in Environment]: { [key in ChainName]?: string };
@@ -64,7 +68,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     aptos: '0', // block is 1094390 but AptosWatcher uses sequence number instead
     near: '72767136',
     xpla: '777549',
-    solana: '94401321', // https://explorer.solana.com/tx/KhLy688yDxbP7xbXVXK7TGpZU5DAFHbYiaoX16zZArxvVySz8i8g7N7Ss2noQYoq9XRbg6HDzrQBjUfmNcSWwhe
+    solana: '94396403', // https://explorer.solana.com/tx/2L8rQY94W2d44sycRkhHA1PyXdh5z6ND541ftDDk1dgBcv6RLR9a3zUgTJispPmXjkmqdqd5EDytXcnP5PC2AmEJ
     sui: '1485552', // https://explorer.sui.io/txblock/671SoTvVUvBZQWKXeameDvAwzHQvnr8Nj7dR9MUwm3CV?network=https%3A%2F%2Frpc.mainnet.sui.io
     base: '1422314',
     sei: '238594',
@@ -96,6 +100,21 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     base: '0',
     sei: '0',
     wormchain: '0',
+    polygon_sepolia: '2379275',
+  },
+  ['devnet']: {},
+};
+
+export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
+  [key in Environment]: { [key in ChainName]?: string };
+} = {
+  ['mainnet']: {},
+  ['testnet']: {
+    solana: '285100152',
+    sepolia: '5472203',
+    arbitrum_sepolia: '22501243',
+    base_sepolia: '7249669',
+    optimism_sepolia: '9232548',
   },
   ['devnet']: {},
 };
@@ -176,6 +195,7 @@ export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
   6: CHAIN_ID_BASE,
   7: CHAIN_ID_POLYGON,
 };
+
 export type CHAIN_INFO = {
   name: string;
   evm: boolean;

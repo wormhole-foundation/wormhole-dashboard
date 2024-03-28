@@ -10,20 +10,21 @@ import {
   isLegacyMessage,
   normalizeCompileInstruction,
 } from '@wormhole-foundation/wormhole-monitor-common/src/solana';
+import { MISS_THRESHOLD_IN_MINS } from '@wormhole-foundation/wormhole-monitor-common';
 
 // This script finds the message accounts which correspond to solana misses
 
 (async () => {
   const now = new Date();
-  now.setHours(now.getHours() - 2);
-  const twoHoursAgo = now.toISOString();
+  now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
+  const missThreshold = now.toISOString();
   let log = ora('Fetching Solana misses').start();
   try {
     const response = await axios.get(
       'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net/missing-vaas'
     );
     const solanaTxHashes = response.data[1].messages
-      .filter((m: any) => m.timestamp < twoHoursAgo)
+      .filter((m: any) => m.timestamp < missThreshold)
       .map((m: any) => m.txHash);
     log.succeed();
     log = ora('Fetching message accounts').start();

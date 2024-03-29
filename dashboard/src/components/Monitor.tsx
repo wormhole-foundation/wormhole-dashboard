@@ -1,5 +1,5 @@
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
-import { ArrowDownward, ArrowUpward, Code, Launch, Settings } from '@mui/icons-material';
+import { ArrowDownward, ArrowUpward, Code, Launch } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -23,8 +23,8 @@ import {
 } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSettings } from '../contexts/MonitorSettingsContext';
 import { Environment, useCurrentEnvironment, useNetworkContext } from '../contexts/NetworkContext';
+import { useSettingsContext } from '../contexts/SettingsContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMonitorInfo';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
@@ -118,7 +118,9 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
 
 function DetailBlocks({ chain }: { chain: string }) {
   const { currentNetwork } = useNetworkContext();
-  const { showDetails } = useSettings();
+  const {
+    settings: { showMonitorDetails: showDetails },
+  } = useSettingsContext();
   const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
     getEmptyDataWrapper()
   );
@@ -226,7 +228,9 @@ function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
   const now = new Date();
   now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
   const missThreshold = now.toISOString();
-  const { showAllMisses } = useSettings();
+  const {
+    settings: { showAllMisses },
+  } = useSettingsContext();
   return (
     <pre>
       {Object.entries(misses)
@@ -275,7 +279,9 @@ function Misses({
   governorInfo?: CloudGovernorInfo | null;
   missesWrapper: DataWrapper<MissesByChain>;
 }) {
-  const { showAllMisses } = useSettings();
+  const {
+    settings: { showAllMisses },
+  } = useSettingsContext();
   const misses = missesWrapper.data;
   const now = new Date();
   now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
@@ -359,105 +365,93 @@ function Misses({
   );
 }
 
-function SettingsButton() {
-  const open = useSettings().open;
-  return (
-    <IconButton onClick={open}>
-      <Settings />
-    </IconButton>
-  );
-}
-
 function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
   const { lastBlockByChainWrapper, messageCountsWrapper, missesWrapper } = useMonitorInfo();
   const lastBlockByChain = lastBlockByChainWrapper.data;
   const messageCounts = messageCountsWrapper.data;
   return (
-    <Card sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', mb: 1, alignItems: 'center' }}>
-        <div></div>
-        <Box sx={{ flexGrow: 1 }} />
-        <SettingsButton />
-      </Box>
-      <Box mb={2}>
-        <Misses governorInfo={governorInfo} missesWrapper={missesWrapper} />
-      </Box>
-      <Typography variant="h4">Chains</Typography>
-      <Box pl={0.5}>
-        {lastBlockByChainWrapper.receivedAt ? (
-          <Typography variant="body2">
-            Last retrieved latest blocks at{' '}
-            <Box component="span" sx={{ display: 'inline-block' }}>
-              {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
-            </Box>{' '}
-            {lastBlockByChainWrapper.error ? (
-              <Typography component="span" color="error" variant="body2">
-                {lastBlockByChainWrapper.error}
-              </Typography>
-            ) : null}
-          </Typography>
-        ) : (
-          <Typography variant="body2">Loading last block by chain...</Typography>
-        )}
-        {messageCountsWrapper.receivedAt ? (
-          <Typography variant="body2">
-            Last retrieved message counts at{' '}
-            <Box component="span" sx={{ display: 'inline-block' }}>
-              {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
-            </Box>{' '}
-            {messageCountsWrapper.error ? (
-              <Typography component="span" color="error" variant="body2">
-                {messageCountsWrapper.error}
-              </Typography>
-            ) : null}
-          </Typography>
-        ) : (
-          <Typography variant="body2">Loading message counts by chain...</Typography>
-        )}
-      </Box>
-      {lastBlockByChainWrapper.isFetching ? (
-        <CircularProgress />
-      ) : (
-        lastBlockByChain &&
-        Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
-          <CollapsibleSection
-            key={chain}
-            defaultExpanded={false}
-            header={
-              <div>
-                <Typography variant="h5" sx={{ mb: 0.5 }}>
-                  {coalesceChainName(Number(chain) as ChainId)} ({chain})
+    <CollapsibleSection header="Monitor">
+      <Card sx={{ p: 2 }}>
+        <Box mb={2}>
+          <Misses governorInfo={governorInfo} missesWrapper={missesWrapper} />
+        </Box>
+        <Typography variant="h4">Chains</Typography>
+        <Box pl={0.5}>
+          {lastBlockByChainWrapper.receivedAt ? (
+            <Typography variant="body2">
+              Last retrieved latest blocks at{' '}
+              <Box component="span" sx={{ display: 'inline-block' }}>
+                {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
+              </Box>{' '}
+              {lastBlockByChainWrapper.error ? (
+                <Typography component="span" color="error" variant="body2">
+                  {lastBlockByChainWrapper.error}
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 0.5 }}>
-                  Last Indexed Block - {lastBlock.split('/')[0]}
-                  {' - '}
-                  {new Date(lastBlock.split('/')[1]).toLocaleString()}
+              ) : null}
+            </Typography>
+          ) : (
+            <Typography variant="body2">Loading last block by chain...</Typography>
+          )}
+          {messageCountsWrapper.receivedAt ? (
+            <Typography variant="body2">
+              Last retrieved message counts at{' '}
+              <Box component="span" sx={{ display: 'inline-block' }}>
+                {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
+              </Box>{' '}
+              {messageCountsWrapper.error ? (
+                <Typography component="span" color="error" variant="body2">
+                  {messageCountsWrapper.error}
                 </Typography>
-                {messageCounts?.[Number(chain) as ChainId] ? (
-                  <Typography
-                    component="div"
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Box sx={missingBlockSx} />
-                    &nbsp;= {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
-                    &nbsp;&nbsp;
-                    <Box sx={doneBlockSx} />
-                    &nbsp;={' '}
-                    {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
-                      (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas || 0)}
+              ) : null}
+            </Typography>
+          ) : (
+            <Typography variant="body2">Loading message counts by chain...</Typography>
+          )}
+        </Box>
+        {lastBlockByChainWrapper.isFetching ? (
+          <CircularProgress />
+        ) : (
+          lastBlockByChain &&
+          Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
+            <CollapsibleSection
+              key={chain}
+              defaultExpanded={false}
+              header={
+                <div>
+                  <Typography variant="h5" sx={{ mb: 0.5 }}>
+                    {coalesceChainName(Number(chain) as ChainId)} ({chain})
                   </Typography>
-                ) : null}
-              </div>
-            }
-          >
-            <DetailBlocks chain={chain} />
-          </CollapsibleSection>
-        ))
-      )}
-    </Card>
+                  <Typography variant="body2" sx={{ mb: 0.5 }}>
+                    Last Indexed Block - {lastBlock.split('/')[0]}
+                    {' - '}
+                    {new Date(lastBlock.split('/')[1]).toLocaleString()}
+                  </Typography>
+                  {messageCounts?.[Number(chain) as ChainId] ? (
+                    <Typography
+                      component="div"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Box sx={missingBlockSx} />
+                      &nbsp;= {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
+                      &nbsp;&nbsp;
+                      <Box sx={doneBlockSx} />
+                      &nbsp;={' '}
+                      {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
+                        (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas || 0)}
+                    </Typography>
+                  ) : null}
+                </div>
+              }
+            >
+              <DetailBlocks chain={chain} />
+            </CollapsibleSection>
+          ))
+        )}
+      </Card>
+    </CollapsibleSection>
   );
 }
 

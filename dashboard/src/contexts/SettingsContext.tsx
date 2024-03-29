@@ -10,6 +10,8 @@ type Settings = {
   defaultEndpoint?: string;
   theme: Theme;
   showChainName?: boolean;
+  showAllMisses?: boolean;
+  showMonitorDetails?: boolean;
 };
 
 type SettingsContextValue = {
@@ -19,6 +21,8 @@ type SettingsContextValue = {
   updateDefaultEndpoint(value: string): void;
   updateTheme(value: Theme): void;
   updateShowChainName(value: boolean): void;
+  updateShowAllMisses(value: boolean): void;
+  updateShowMonitorDetails(value: boolean): void;
 };
 
 const isTheme = (arg: any): arg is Theme => {
@@ -55,6 +59,8 @@ const SettingsContext = React.createContext<SettingsContextValue>({
   updateDefaultEndpoint: (value: string) => {},
   updateTheme: (value: Theme) => {},
   updateShowChainName: (value: boolean) => {},
+  updateShowAllMisses: (value: boolean) => {},
+  updateShowMonitorDetails: (value: boolean) => {},
 });
 
 export const SettingsContextProvider = ({ children }: { children: ReactNode }) => {
@@ -74,6 +80,12 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
   const updateShowChainName = useCallback((value: boolean) => {
     setSettings((settings) => ({ ...settings, showChainName: value }));
   }, []);
+  const updateShowAllMisses = useCallback((value: boolean) => {
+    setSettings((settings) => ({ ...settings, showAllMisses: value }));
+  }, []);
+  const updateShowMonitorDetails = useCallback((value: boolean) => {
+    setSettings((settings) => ({ ...settings, showMonitorDetails: value }));
+  }, []);
   // sync settings to state
   useEffect(() => {
     saveSettings(settings);
@@ -86,6 +98,8 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateDefaultEndpoint,
       updateTheme,
       updateShowChainName,
+      updateShowAllMisses,
+      updateShowMonitorDetails,
     }),
     [
       settings,
@@ -94,6 +108,8 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateDefaultEndpoint,
       updateTheme,
       updateShowChainName,
+      updateShowAllMisses,
+      updateShowMonitorDetails,
     ]
   );
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

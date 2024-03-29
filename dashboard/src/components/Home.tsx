@@ -1,20 +1,18 @@
 import { Divider } from '@mui/material';
-import { MonitorSettingsProvider } from '../contexts/MonitorSettingsContext';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import useCloudGovernorInfo from '../hooks/useCloudGovernorInfo';
-import { Heartbeat } from '../utils/getLastHeartbeats';
-import Accountant from './Accountant';
-import Chains from './Chains';
-import CollapsibleSection from './CollapsibleSection';
-import Governor from './Governor';
-import Guardians from './Guardians';
-import MainnetGovernor from './MainnetGovernor';
-import Monitor from './Monitor';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET,
 } from '../utils/consts';
+import { Heartbeat } from '../utils/getLastHeartbeats';
+import Accountant from './Accountant';
+import Chains from './Chains';
+import Governor from './Governor';
+import Guardians from './Guardians';
+import MainnetGovernor from './MainnetGovernor';
+import Monitor from './Monitor';
 
 function Home({
   heartbeats,
@@ -43,11 +41,7 @@ function Home({
           <Divider />
           <Accountant governorInfo={governorInfo} accountantAddress={ACCOUNTANT_CONTRACT_ADDRESS} />
           <Divider />
-          <MonitorSettingsProvider>
-            <CollapsibleSection header="Monitor">
-              <Monitor governorInfo={governorInfo} />
-            </CollapsibleSection>
-          </MonitorSettingsProvider>
+          <Monitor governorInfo={governorInfo} />
         </>
       ) : currentNetwork.name === 'Testnet' ? (
         <>
@@ -57,11 +51,7 @@ function Home({
             isNTT
           />
           <Divider />
-          <MonitorSettingsProvider>
-            <CollapsibleSection header="Monitor">
-              <Monitor />
-            </CollapsibleSection>
-          </MonitorSettingsProvider>
+          <Monitor />
         </>
       ) : (
         <Governor />

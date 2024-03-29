@@ -26,6 +26,8 @@ function SettingsContent() {
     updateBackgroundUrl,
     updateTheme,
     updateShowChainName,
+    updateShowAllMisses,
+    updateShowMonitorDetails,
   } = useSettingsContext();
   const handleThemeChange = useCallback(
     (event: any, newTheme: Theme) => {
@@ -50,6 +52,18 @@ function SettingsContent() {
       updateShowChainName(event.target.checked);
     },
     [updateShowChainName]
+  );
+  const handleShowAllMisses = useCallback(
+    (event: any) => {
+      updateShowAllMisses(event.target.checked);
+    },
+    [updateShowAllMisses]
+  );
+  const handleShowMonitorDetails = useCallback(
+    (event: any) => {
+      updateShowMonitorDetails(event.target.checked);
+    },
+    [updateShowMonitorDetails]
   );
   return (
     <>
@@ -93,6 +107,20 @@ function SettingsContent() {
             <Checkbox checked={!!settings.showChainName} onChange={handleShowChainNameChange} />
           }
           label="Show chain names"
+        />
+      </Box>
+      <Box m={2}>
+        <FormControlLabel
+          control={<Checkbox checked={!!settings.showAllMisses} onChange={handleShowAllMisses} />}
+          label="Show all misses"
+        />
+      </Box>
+      <Box m={2}>
+        <FormControlLabel
+          control={
+            <Checkbox checked={!!settings.showMonitorDetails} onChange={handleShowMonitorDetails} />
+          }
+          label="Show monitor details"
         />
       </Box>
     </>

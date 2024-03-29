@@ -1,6 +1,9 @@
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
-import { ArrowDownward, ArrowUpward, Code, Launch } from '@mui/icons-material';
+import { ArrowDownward, ArrowUpward, Code, ExpandMore, Launch } from '@mui/icons-material';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Card,
@@ -252,10 +255,12 @@ function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
 
 function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const handleOpenClick = useCallback(() => {
+  const handleOpenClick = useCallback((event: any) => {
+    event.stopPropagation();
     setIsOpen(true);
   }, []);
-  const handleCloseClick = useCallback(() => {
+  const handleCloseClick = useCallback((event: any) => {
+    event.stopPropagation();
     setIsOpen(false);
   }, []);
   return misses ? (
@@ -329,13 +334,15 @@ function Misses({
         .filter((el) => !!el)
     : [];
   return (
-    <>
-      <Box display="flex" alignItems="center">
-        <Typography variant="h4">Misses</Typography>
-        <Box flexGrow="1" />
-        <ReobserveCode misses={misses} />
-      </Box>
-      <Box pl={0.5}>
+    <Accordion defaultExpanded TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
+      <AccordionSummary expandIcon={<ExpandMore />}>
+        <Box display="flex" alignItems="center" flexGrow="1">
+          <Typography>Misses</Typography>
+          <Box flexGrow="1" />
+          <ReobserveCode misses={misses} />
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails>
         {missesWrapper.receivedAt ? (
           <Typography variant="body2">
             Last retrieved misses at{' '}
@@ -351,17 +358,17 @@ function Misses({
         ) : (
           <Typography variant="body2">Loading message counts by chain...</Typography>
         )}
-      </Box>
-      {missesWrapper.isFetching ? (
-        <CircularProgress />
-      ) : missesElements.length ? (
-        missesElements
-      ) : (
-        <Typography pl={0.5}>
-          No misses{showAllMisses ? '' : ` > ${MISS_THRESHOLD_LABEL}`}!
-        </Typography>
-      )}
-    </>
+        {missesWrapper.isFetching ? (
+          <CircularProgress />
+        ) : missesElements.length ? (
+          missesElements
+        ) : (
+          <Typography pl={0.5}>
+            No misses{showAllMisses ? '' : ` > ${MISS_THRESHOLD_LABEL}`}!
+          </Typography>
+        )}
+      </AccordionDetails>
+    </Accordion>
   );
 }
 
@@ -371,86 +378,96 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
   const messageCounts = messageCountsWrapper.data;
   return (
     <CollapsibleSection header="Monitor">
-      <Card sx={{ p: 2 }}>
-        <Box mb={2}>
+      <Box mt={2}>
+        <Card>
           <Misses governorInfo={governorInfo} missesWrapper={missesWrapper} />
-        </Box>
-        <Typography variant="h4">Chains</Typography>
-        <Box pl={0.5}>
-          {lastBlockByChainWrapper.receivedAt ? (
-            <Typography variant="body2">
-              Last retrieved latest blocks at{' '}
-              <Box component="span" sx={{ display: 'inline-block' }}>
-                {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
-              </Box>{' '}
-              {lastBlockByChainWrapper.error ? (
-                <Typography component="span" color="error" variant="body2">
-                  {lastBlockByChainWrapper.error}
-                </Typography>
-              ) : null}
-            </Typography>
-          ) : (
-            <Typography variant="body2">Loading last block by chain...</Typography>
-          )}
-          {messageCountsWrapper.receivedAt ? (
-            <Typography variant="body2">
-              Last retrieved message counts at{' '}
-              <Box component="span" sx={{ display: 'inline-block' }}>
-                {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
-              </Box>{' '}
-              {messageCountsWrapper.error ? (
-                <Typography component="span" color="error" variant="body2">
-                  {messageCountsWrapper.error}
-                </Typography>
-              ) : null}
-            </Typography>
-          ) : (
-            <Typography variant="body2">Loading message counts by chain...</Typography>
-          )}
-        </Box>
-        {lastBlockByChainWrapper.isFetching ? (
-          <CircularProgress />
-        ) : (
-          lastBlockByChain &&
-          Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
-            <CollapsibleSection
-              key={chain}
-              defaultExpanded={false}
-              header={
-                <div>
-                  <Typography variant="h5" sx={{ mb: 0.5 }}>
-                    {coalesceChainName(Number(chain) as ChainId)} ({chain})
-                  </Typography>
-                  <Typography variant="body2" sx={{ mb: 0.5 }}>
-                    Last Indexed Block - {lastBlock.split('/')[0]}
-                    {' - '}
-                    {new Date(lastBlock.split('/')[1]).toLocaleString()}
-                  </Typography>
-                  {messageCounts?.[Number(chain) as ChainId] ? (
-                    <Typography
-                      component="div"
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Box sx={missingBlockSx} />
-                      &nbsp;= {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
-                      &nbsp;&nbsp;
-                      <Box sx={doneBlockSx} />
-                      &nbsp;={' '}
-                      {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
-                        (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas || 0)}
+        </Card>
+      </Box>
+      <Box mt={2}>
+        <Card>
+          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography>Chains</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              {lastBlockByChainWrapper.receivedAt ? (
+                <Typography variant="body2">
+                  Last retrieved latest blocks at{' '}
+                  <Box component="span" sx={{ display: 'inline-block' }}>
+                    {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
+                  </Box>{' '}
+                  {lastBlockByChainWrapper.error ? (
+                    <Typography component="span" color="error" variant="body2">
+                      {lastBlockByChainWrapper.error}
                     </Typography>
                   ) : null}
-                </div>
-              }
-            >
-              <DetailBlocks chain={chain} />
-            </CollapsibleSection>
-          ))
-        )}
-      </Card>
+                </Typography>
+              ) : (
+                <Typography variant="body2">Loading last block by chain...</Typography>
+              )}
+              {messageCountsWrapper.receivedAt ? (
+                <Typography variant="body2">
+                  Last retrieved message counts at{' '}
+                  <Box component="span" sx={{ display: 'inline-block' }}>
+                    {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
+                  </Box>{' '}
+                  {messageCountsWrapper.error ? (
+                    <Typography component="span" color="error" variant="body2">
+                      {messageCountsWrapper.error}
+                    </Typography>
+                  ) : null}
+                </Typography>
+              ) : (
+                <Typography variant="body2">Loading message counts by chain...</Typography>
+              )}
+              {lastBlockByChainWrapper.isFetching ? (
+                <CircularProgress />
+              ) : (
+                lastBlockByChain &&
+                Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
+                  <CollapsibleSection
+                    key={chain}
+                    defaultExpanded={false}
+                    header={
+                      <div>
+                        <Typography variant="h5" sx={{ mb: 0.5 }}>
+                          {coalesceChainName(Number(chain) as ChainId)} ({chain})
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 0.5 }}>
+                          Last Indexed Block - {lastBlock.split('/')[0]}
+                          {' - '}
+                          {new Date(lastBlock.split('/')[1]).toLocaleString()}
+                        </Typography>
+                        {messageCounts?.[Number(chain) as ChainId] ? (
+                          <Typography
+                            component="div"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Box sx={missingBlockSx} />
+                            &nbsp;={' '}
+                            {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
+                            &nbsp;&nbsp;
+                            <Box sx={doneBlockSx} />
+                            &nbsp;={' '}
+                            {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
+                              (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas ||
+                                0)}
+                          </Typography>
+                        ) : null}
+                      </div>
+                    }
+                  >
+                    <DetailBlocks chain={chain} />
+                  </CollapsibleSection>
+                ))
+              )}
+            </AccordionDetails>
+          </Accordion>
+        </Card>
+      </Box>
     </CollapsibleSection>
   );
 }

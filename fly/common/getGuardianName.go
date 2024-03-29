@@ -22,6 +22,7 @@ var guardianIndexMap = map[string]int{
 	strings.ToLower("0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8"): 16,
 	strings.ToLower("0x5E1487F35515d02A92753504a8D75471b9f49EdB"): 17,
 	strings.ToLower("0x6FbEBc898F403E4773E95feB15E80C9A99c8348d"): 18,
+	strings.ToLower("0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3"): 19,
 }
 
 var guardianIndexToNameMap = map[int]string{
@@ -43,7 +44,8 @@ var guardianIndexToNameMap = map[int]string{
 	16: "syncnode",
 	17: "Triton",
 	18: "Staking Facilities",
-	19: "Totals:",
+	19: "RockawayX",
+	20: "Totals:",
 }
 
 func GetGuardianName(addr string) (string, bool) {

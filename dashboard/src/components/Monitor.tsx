@@ -18,6 +18,7 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  CHAIN_INFO_MAP,
   MISS_THRESHOLD_IN_MINS,
   MISS_THRESHOLD_LABEL,
   explorerBlock,
@@ -32,6 +33,7 @@ import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMonitorInfo';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
 import CollapsibleSection from './CollapsibleSection';
+import { CHAIN_ICON_MAP } from '../utils/consts';
 
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',
@@ -373,11 +375,87 @@ function Misses({
 }
 
 function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
+  const network = useCurrentEnvironment();
+  const {
+    settings: { showAllMisses },
+  } = useSettingsContext();
   const { lastBlockByChainWrapper, messageCountsWrapper, missesWrapper } = useMonitorInfo();
   const lastBlockByChain = lastBlockByChainWrapper.data;
   const messageCounts = messageCountsWrapper.data;
+  const misses = missesWrapper.data;
+  const missesByChain = useMemo(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
+    const missThreshold = now.toISOString();
+    return misses
+      ? Object.entries(misses).reduce<{ [chainId: number]: number }>((counts, [chain, info]) => {
+          const filteredMisses = showAllMisses
+            ? info.messages
+            : info.messages
+                .filter((message) => message.timestamp < missThreshold)
+                .filter(
+                  (message) =>
+                    !governorInfo?.enqueuedVAAs.some(
+                      (enqueuedVAA) =>
+                        enqueuedVAA.emitterChain === message.chain &&
+                        enqueuedVAA.emitterAddress === message.emitter &&
+                        enqueuedVAA.sequence === message.seq
+                    )
+                );
+          return filteredMisses.length === 0
+            ? counts
+            : { ...counts, [Number(chain) as ChainId]: filteredMisses.length };
+        }, {})
+      : {};
+  }, [governorInfo?.enqueuedVAAs, misses, showAllMisses]);
   return (
-    <CollapsibleSection header="Monitor">
+    <CollapsibleSection
+      defaultExpanded={false}
+      header={
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            paddingRight: 1,
+          }}
+        >
+          <Box>Monitor</Box>
+          <Box flexGrow={1} />
+          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+            {Object.keys(missesByChain)
+              .sort()
+              .map((chainId) => (
+                <Box key={chainId} display="flex" alignItems="center">
+                  <Box
+                    ml={2}
+                    display="flex"
+                    alignItems="center"
+                    borderRadius="50%"
+                    sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
+                  >
+                    {CHAIN_ICON_MAP[chainId] ? (
+                      <img
+                        src={CHAIN_ICON_MAP[chainId]}
+                        alt={
+                          CHAIN_INFO_MAP[network][chainId]?.name ||
+                          coalesceChainName(Number(chainId) as ChainId)
+                        }
+                        width={24}
+                        height={24}
+                      />
+                    ) : (
+                      <Typography variant="body2">{chainId}</Typography>
+                    )}
+                  </Box>
+                  <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                    {missesByChain[Number(chainId)]}
+                  </Typography>
+                </Box>
+              ))}
+          </Box>
+        </Box>
+      }
+    >
       <Box mt={2}>
         <Card>
           <Misses governorInfo={governorInfo} missesWrapper={missesWrapper} />

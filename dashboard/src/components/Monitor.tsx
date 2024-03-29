@@ -14,47 +14,21 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import axios from 'axios';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import CollapsibleSection from './CollapsibleSection';
-import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
-import { useSettings } from '../contexts/MonitorSettingsContext';
 import {
+  MISS_THRESHOLD_IN_MINS,
+  MISS_THRESHOLD_LABEL,
   explorerBlock,
   explorerTx,
   explorerVaa,
-  MISS_THRESHOLD_IN_MINS,
-  MISS_THRESHOLD_LABEL,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import axios from 'axios';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSettings } from '../contexts/MonitorSettingsContext';
 import { Environment, useCurrentEnvironment, useNetworkContext } from '../contexts/NetworkContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
-
-type LastBlockByChain = { [chainId: string]: string };
-type CountsByChain = {
-  [chain in ChainId]?: {
-    numTotalMessages: number;
-    numMessagesWithoutVaas: number;
-    lastRowKey: string;
-    firstMissingVaaRowKey: string;
-  };
-};
-type MissesByChain = {
-  [chain in ChainId]?: {
-    messages: ObservedMessage[];
-    lastUpdated: number;
-    lastRowKey: string;
-  };
-};
-type ObservedMessage = {
-  id: string;
-  chain: number;
-  block: number;
-  emitter: string;
-  seq: string;
-  timestamp: any;
-  txHash: any;
-  hasSignedVaa: any;
-};
+import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMonitorInfo';
+import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
+import CollapsibleSection from './CollapsibleSection';
 
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',
@@ -294,36 +268,15 @@ function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
   ) : null;
 }
 
-function Misses({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
-  const { currentNetwork } = useNetworkContext();
+function Misses({
+  governorInfo,
+  missesWrapper,
+}: {
+  governorInfo?: CloudGovernorInfo | null;
+  missesWrapper: DataWrapper<MissesByChain>;
+}) {
   const { showAllMisses } = useSettings();
-  const [missesWrapper, setMissesWrapper] = useState<DataWrapper<MissesByChain>>(
-    getEmptyDataWrapper()
-  );
   const misses = missesWrapper.data;
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setMissesWrapper((r) => ({ ...r, isFetching: true, error: null }));
-      try {
-        const response = await axios.get<MissesByChain>(`${currentNetwork.endpoint}/missing-vaas`);
-        if (response.data && !cancelled) {
-          setMissesWrapper(receiveDataWrapper(response.data));
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setMissesWrapper((r) => ({
-            ...r,
-            isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
-          }));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentNetwork]);
   const now = new Date();
   now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
   const missThreshold = now.toISOString();
@@ -416,63 +369,9 @@ function SettingsButton() {
 }
 
 function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
-  const { currentNetwork } = useNetworkContext();
-  const [lastBlockByChainWrapper, setLastBlockByChainWrapper] = useState<
-    DataWrapper<LastBlockByChain>
-  >(getEmptyDataWrapper());
+  const { lastBlockByChainWrapper, messageCountsWrapper, missesWrapper } = useMonitorInfo();
   const lastBlockByChain = lastBlockByChainWrapper.data;
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLastBlockByChainWrapper((r) => ({ ...r, isFetching: true, error: null }));
-      try {
-        const url: string = `${currentNetwork.endpoint}/latest-blocks`;
-        const response = await axios.get<LastBlockByChain>(url);
-        if (response.data && !cancelled) {
-          setLastBlockByChainWrapper(receiveDataWrapper(response.data));
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setLastBlockByChainWrapper((r) => ({
-            ...r,
-            isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
-          }));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentNetwork]);
-  const [messageCountsWrapper, setMessageCountsWrapper] = useState<DataWrapper<CountsByChain>>(
-    getEmptyDataWrapper()
-  );
   const messageCounts = messageCountsWrapper.data;
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setMessageCountsWrapper((r) => ({ ...r, isFetching: true, error: null }));
-      try {
-        const url: string = `${currentNetwork.endpoint}/message-counts`;
-        const response = await axios.get<CountsByChain>(url);
-        if (response.data && !cancelled) {
-          setMessageCountsWrapper(receiveDataWrapper(response.data));
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setMessageCountsWrapper((r) => ({
-            ...r,
-            isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
-          }));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentNetwork]);
   return (
     <Card sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', mb: 1, alignItems: 'center' }}>
@@ -481,7 +380,7 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
         <SettingsButton />
       </Box>
       <Box mb={2}>
-        <Misses governorInfo={governorInfo} />
+        <Misses governorInfo={governorInfo} missesWrapper={missesWrapper} />
       </Box>
       <Typography variant="h4">Chains</Typography>
       <Box pl={0.5}>

@@ -41,8 +41,8 @@ export type Network = {
 };
 export type Mode = 'vaa' | 'ntt';
 
-export const MISS_THRESHOLD_IN_MINS = 30;
-export const MISS_THRESHOLD_LABEL = '30 minutes';
+export const MISS_THRESHOLD_IN_MINS = 35;
+export const MISS_THRESHOLD_LABEL = '35 minutes';
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   [key in Environment]: { [key in ChainName]?: string };

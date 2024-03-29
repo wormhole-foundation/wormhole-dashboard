@@ -26,7 +26,7 @@ import {
 import { getSignedVAA } from '../utils/getSignedVAA';
 import { PubSub } from '@google-cloud/pubsub';
 
-const WATCH_MISSING_TIMEOUT = 5 * 60 * 1000;
+const WATCH_MISSING_TIMEOUT = 2 * 60 * 1000;
 
 export class BigtableDatabase extends Database {
   msgTableId: string;

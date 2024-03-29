@@ -1,11 +1,14 @@
 import { Heartbeat_Network } from '@certusone/wormhole-sdk-proto-web/lib/cjs/gossip/v1/gossip';
 import {
+  CheckCircleOutline,
+  ErrorOutline,
   GridView,
   InfoOutlined,
   Link as LinkIcon,
   MonitorHeartOutlined,
   PlayCircleOutline,
   ViewList,
+  WarningAmberOutlined,
 } from '@mui/icons-material';
 import {
   Box,
@@ -173,7 +176,6 @@ function GuardianCard({
       <Card
         sx={{
           height: '100%',
-
           position: 'relative',
           overflow: 'visible',
         }}
@@ -333,6 +335,45 @@ function Guardians({
     },
     []
   );
+  const {
+    numSuccess,
+    numWarnings,
+    numErrors,
+  }: {
+    numSuccess: number;
+    numWarnings: number;
+    numErrors: number;
+  } = useMemo(() => {
+    let numSuccess = 0;
+    let numWarnings = 0;
+    let numErrors = 0;
+    const chainCount = Object.keys(highestByChain).length;
+    for (const heartbeat of heartbeats) {
+      const healthyCount = heartbeat.networks.reduce(
+        (count, network) =>
+          isHeartbeatUnhealthy(
+            { guardian: heartbeat.guardianAddr, name: heartbeat.nodeName, network },
+            highestByChain[network.id.toString()]
+          )
+            ? count
+            : count + 1,
+        0
+      );
+      const healthyPercent = (healthyCount / chainCount) * 100;
+      if (healthyPercent === 100) {
+        numSuccess++;
+      } else if (healthyPercent > 80) {
+        numWarnings++;
+      } else {
+        numErrors++;
+      }
+    }
+    return {
+      numSuccess,
+      numWarnings,
+      numErrors,
+    };
+  }, [heartbeats, highestByChain]);
   return (
     <CollapsibleSection
       header={
@@ -395,6 +436,30 @@ function Guardians({
             </ToggleButton>
           </ToggleButtonGroup>
           <Box flexGrow={1} />
+          {numSuccess > 0 ? (
+            <>
+              <CheckCircleOutline color="success" sx={{ ml: 2 }} />
+              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                {numSuccess}
+              </Typography>
+            </>
+          ) : null}
+          {numWarnings > 0 ? (
+            <>
+              <WarningAmberOutlined color="warning" sx={{ ml: 2 }} />
+              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                {numWarnings}
+              </Typography>
+            </>
+          ) : null}
+          {numErrors > 0 ? (
+            <>
+              <ErrorOutline color="error" sx={{ ml: 2 }} />
+              <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                {numErrors}
+              </Typography>
+            </>
+          ) : null}
         </Box>
       }
     >

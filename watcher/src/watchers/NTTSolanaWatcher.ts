@@ -41,6 +41,7 @@ import {
 import {
   NativeTokenTransfer,
   NttManagerMessage,
+  TrimmedAmount,
   ValidatedTransceiverMessage,
   WormholeTransceiverMessage,
 } from './NTTPayloads';
@@ -194,10 +195,10 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       sender: outboxItemAccount.sender.toBuffer(),
       payload: {
         sourceToken: config.mint.toBuffer(),
-        trimmedAmount: {
-          amount: BigInt(outboxItemAccount.amount.amount.toString()),
-          decimals: outboxItemAccount.amount.decimals,
-        },
+        trimmedAmount: new TrimmedAmount(
+          BigInt(outboxItemAccount.amount.amount.toString()),
+          outboxItemAccount.amount.decimals
+        ),
         recipientChain: outboxItemAccount.recipientChain.id,
         recipientAddress: Buffer.from(outboxItemAccount.recipientAddress),
       },
@@ -213,7 +214,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       srcChainId: coalesceChainId(this.chain),
       destChainId: coalesceChainId(nttManagerMessage.payload.recipientChain as ChainId),
       sourceToken: config.mint.toBuffer().toString('hex'),
-      tokenAmount: BigInt(outboxItemAccount.amount.amount.toString()),
+      tokenAmount: nttManagerMessage.payload.trimmedAmount.normalize(8),
       transferSentTxhash: '',
       transferBlockHeight: 0n,
       nttTransferKey: `${this.programId}/${nttManagerMessage.payload.recipientAddress.toString(
@@ -276,7 +277,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       srcChainId: transceiverMessage.chainId,
       destChainId: coalesceChainId(this.chain),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
-      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.amount,
+      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(8),
       transferSentTxhash: '',
       transferBlockHeight: 0n,
       nttTransferKey: '',
@@ -398,7 +399,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
         transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId
       ),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
-      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.amount,
+      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(8),
       transferSentTxhash: '',
       transferBlockHeight: 0n,
       nttTransferKey: `${
@@ -455,7 +456,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
         transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId
       ),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
-      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.amount,
+      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(8),
       transferSentTxhash: transaction.transaction.signatures[0],
       transferBlockHeight: BigInt(transaction.slot),
       nttTransferKey: `${this.programId}/${recipient}/${seq}`,

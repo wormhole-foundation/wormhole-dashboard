@@ -227,6 +227,16 @@ export class TrimmedAmount {
     buffer.writeBigUInt64BE(amount.amount, 1);
     return buffer;
   }
+
+  normalize(targetDecimals: number): bigint {
+    if (this.decimals === targetDecimals) {
+      return this.amount;
+    } else if (this.decimals > targetDecimals) {
+      return this.amount / BigInt(10 ** (this.decimals - targetDecimals));
+    } else {
+      return this.amount * BigInt(10 ** (targetDecimals - this.decimals));
+    }
+  }
 }
 
 // Another TransceiverMessage struct found in the TransceiverMessageAccount used in some instructions:

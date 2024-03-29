@@ -3,6 +3,7 @@ import { NTTSolanaWatcher } from '../NTTSolanaWatcher';
 import {
   NativeTokenTransfer,
   NttManagerMessage,
+  TrimmedAmount,
   ValidatedTransceiverMessage,
 } from '../NTTPayloads';
 
@@ -233,4 +234,30 @@ test.skip('parseRequestRelay', async () => {
   ix = txs[0]!.transaction.message.compiledInstructions[3];
   message = await watcher.parseInstruction(txs[0]!, ix);
   expect(message?.digest).toBe(digests[0]);
+});
+
+test('normalizeToDecimals', () => {
+  const testCases: { name: string; trimmedAmount: TrimmedAmount; expectedAmount: bigint }[] = [
+    {
+      name: 'currentDecimals < targetDecimals',
+      trimmedAmount: new TrimmedAmount(BigInt(1000), 6),
+      expectedAmount: 100000n,
+    },
+    {
+      name: 'currentDecimals > targetDecimals',
+      trimmedAmount: new TrimmedAmount(BigInt(1000000000), 10),
+      expectedAmount: 10000000n,
+    },
+    {
+      name: 'currentDecimals = targetDecimals',
+      trimmedAmount: new TrimmedAmount(BigInt(100000000), 8),
+      expectedAmount: 100000000n,
+    },
+  ];
+
+  for (const testCase of testCases) {
+    const { trimmedAmount, expectedAmount } = testCase;
+    const normalizedAmount = trimmedAmount.normalize(8);
+    expect(normalizedAmount).toBe(expectedAmount);
+  }
 });

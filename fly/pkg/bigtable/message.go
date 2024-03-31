@@ -221,19 +221,29 @@ func (db *BigtableDB) GetMessagesByRowKeys(ctx context.Context, rowKeys []string
 	var messages []*types.Message
 	var errors []error
 
-	err := table.ReadRows(ctx, bigtable.RowList(rowKeys), func(row bigtable.Row) bool {
-		message, err := db.bigtableRowToMessage(row)
-		if err != nil {
-			errors = append(errors, fmt.Errorf("failed to convert row to message: %v", err))
-			return true
+	const batchSize = 1000
+
+	for i := 0; i < len(rowKeys); i += batchSize {
+		end := i + batchSize
+		if end > len(rowKeys) {
+			end = len(rowKeys)
 		}
+		batchRowKeys := rowKeys[i:end]
 
-		messages = append(messages, message)
-		return true
-	})
+		err := table.ReadRows(ctx, bigtable.RowList(batchRowKeys), func(row bigtable.Row) bool {
+			message, err := db.bigtableRowToMessage(row)
+			if err != nil {
+				errors = append(errors, fmt.Errorf("failed to convert row to message: %v", err))
+				return true
+			}
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to read messages: %v", err)
+			messages = append(messages, message)
+			return true
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to read messages: %v", err)
+		}
 	}
 
 	if len(errors) > 0 {

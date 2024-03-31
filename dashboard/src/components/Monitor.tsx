@@ -1,6 +1,9 @@
 import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
-import { ArrowDownward, ArrowUpward, Code, Launch, Settings } from '@mui/icons-material';
+import { ArrowDownward, ArrowUpward, Code, ExpandMore, Launch } from '@mui/icons-material';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Card,
@@ -14,47 +17,23 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import axios from 'axios';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import CollapsibleSection from './CollapsibleSection';
-import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
-import { useSettings } from '../contexts/MonitorSettingsContext';
 import {
+  CHAIN_INFO_MAP,
+  MISS_THRESHOLD_IN_MINS,
+  MISS_THRESHOLD_LABEL,
   explorerBlock,
   explorerTx,
   explorerVaa,
-  MISS_THRESHOLD_IN_MINS,
-  MISS_THRESHOLD_LABEL,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import axios from 'axios';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment, useNetworkContext } from '../contexts/NetworkContext';
+import { useSettingsContext } from '../contexts/SettingsContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
-
-type LastBlockByChain = { [chainId: string]: string };
-type CountsByChain = {
-  [chain in ChainId]?: {
-    numTotalMessages: number;
-    numMessagesWithoutVaas: number;
-    lastRowKey: string;
-    firstMissingVaaRowKey: string;
-  };
-};
-type MissesByChain = {
-  [chain in ChainId]?: {
-    messages: ObservedMessage[];
-    lastUpdated: number;
-    lastRowKey: string;
-  };
-};
-type ObservedMessage = {
-  id: string;
-  chain: number;
-  block: number;
-  emitter: string;
-  seq: string;
-  timestamp: any;
-  txHash: any;
-  hasSignedVaa: any;
-};
+import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMonitorInfo';
+import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
+import CollapsibleSection from './CollapsibleSection';
+import { CHAIN_ICON_MAP } from '../utils/consts';
 
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',
@@ -144,7 +123,9 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
 
 function DetailBlocks({ chain }: { chain: string }) {
   const { currentNetwork } = useNetworkContext();
-  const { showDetails } = useSettings();
+  const {
+    settings: { showMonitorDetails: showDetails },
+  } = useSettingsContext();
   const [messagesWrapper, setMessagesWrapper] = useState<DataWrapper<ObservedMessage[]>>(
     getEmptyDataWrapper()
   );
@@ -252,7 +233,9 @@ function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
   const now = new Date();
   now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
   const missThreshold = now.toISOString();
-  const { showAllMisses } = useSettings();
+  const {
+    settings: { showAllMisses },
+  } = useSettingsContext();
   return (
     <pre>
       {Object.entries(misses)
@@ -274,10 +257,12 @@ function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
 
 function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const handleOpenClick = useCallback(() => {
+  const handleOpenClick = useCallback((event: any) => {
+    event.stopPropagation();
     setIsOpen(true);
   }, []);
-  const handleCloseClick = useCallback(() => {
+  const handleCloseClick = useCallback((event: any) => {
+    event.stopPropagation();
     setIsOpen(false);
   }, []);
   return misses ? (
@@ -294,36 +279,17 @@ function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
   ) : null;
 }
 
-function Misses({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
-  const { currentNetwork } = useNetworkContext();
-  const { showAllMisses } = useSettings();
-  const [missesWrapper, setMissesWrapper] = useState<DataWrapper<MissesByChain>>(
-    getEmptyDataWrapper()
-  );
+function Misses({
+  governorInfo,
+  missesWrapper,
+}: {
+  governorInfo?: CloudGovernorInfo | null;
+  missesWrapper: DataWrapper<MissesByChain>;
+}) {
+  const {
+    settings: { showAllMisses },
+  } = useSettingsContext();
   const misses = missesWrapper.data;
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setMissesWrapper((r) => ({ ...r, isFetching: true, error: null }));
-      try {
-        const response = await axios.get<MissesByChain>(`${currentNetwork.endpoint}/missing-vaas`);
-        if (response.data && !cancelled) {
-          setMissesWrapper(receiveDataWrapper(response.data));
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setMissesWrapper((r) => ({
-            ...r,
-            isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
-          }));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentNetwork]);
   const now = new Date();
   now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
   const missThreshold = now.toISOString();
@@ -370,13 +336,15 @@ function Misses({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
         .filter((el) => !!el)
     : [];
   return (
-    <>
-      <Box display="flex" alignItems="center">
-        <Typography variant="h4">Misses</Typography>
-        <Box flexGrow="1" />
-        <ReobserveCode misses={misses} />
-      </Box>
-      <Box pl={0.5}>
+    <Accordion defaultExpanded TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
+      <AccordionSummary expandIcon={<ExpandMore />}>
+        <Box display="flex" alignItems="center" flexGrow="1">
+          <Typography>Misses</Typography>
+          <Box flexGrow="1" />
+          <ReobserveCode misses={misses} />
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails>
         {missesWrapper.receivedAt ? (
           <Typography variant="body2">
             Last retrieved misses at{' '}
@@ -392,173 +360,193 @@ function Misses({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
         ) : (
           <Typography variant="body2">Loading message counts by chain...</Typography>
         )}
-      </Box>
-      {missesWrapper.isFetching ? (
-        <CircularProgress />
-      ) : missesElements.length ? (
-        missesElements
-      ) : (
-        <Typography pl={0.5}>
-          No misses{showAllMisses ? '' : ` > ${MISS_THRESHOLD_LABEL}`}!
-        </Typography>
-      )}
-    </>
-  );
-}
-
-function SettingsButton() {
-  const open = useSettings().open;
-  return (
-    <IconButton onClick={open}>
-      <Settings />
-    </IconButton>
+        {missesWrapper.isFetching ? (
+          <CircularProgress />
+        ) : missesElements.length ? (
+          missesElements
+        ) : (
+          <Typography pl={0.5}>
+            No misses{showAllMisses ? '' : ` > ${MISS_THRESHOLD_LABEL}`}!
+          </Typography>
+        )}
+      </AccordionDetails>
+    </Accordion>
   );
 }
 
 function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
-  const { currentNetwork } = useNetworkContext();
-  const [lastBlockByChainWrapper, setLastBlockByChainWrapper] = useState<
-    DataWrapper<LastBlockByChain>
-  >(getEmptyDataWrapper());
+  const network = useCurrentEnvironment();
+  const {
+    settings: { showAllMisses },
+  } = useSettingsContext();
+  const { lastBlockByChainWrapper, messageCountsWrapper, missesWrapper } = useMonitorInfo();
   const lastBlockByChain = lastBlockByChainWrapper.data;
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLastBlockByChainWrapper((r) => ({ ...r, isFetching: true, error: null }));
-      try {
-        const url: string = `${currentNetwork.endpoint}/latest-blocks`;
-        const response = await axios.get<LastBlockByChain>(url);
-        if (response.data && !cancelled) {
-          setLastBlockByChainWrapper(receiveDataWrapper(response.data));
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setLastBlockByChainWrapper((r) => ({
-            ...r,
-            isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
-          }));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentNetwork]);
-  const [messageCountsWrapper, setMessageCountsWrapper] = useState<DataWrapper<CountsByChain>>(
-    getEmptyDataWrapper()
-  );
   const messageCounts = messageCountsWrapper.data;
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setMessageCountsWrapper((r) => ({ ...r, isFetching: true, error: null }));
-      try {
-        const url: string = `${currentNetwork.endpoint}/message-counts`;
-        const response = await axios.get<CountsByChain>(url);
-        if (response.data && !cancelled) {
-          setMessageCountsWrapper(receiveDataWrapper(response.data));
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setMessageCountsWrapper((r) => ({
-            ...r,
-            isFetching: false,
-            error: e?.message || 'An error occurred while fetching the database',
-          }));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentNetwork]);
+  const misses = missesWrapper.data;
+  const missesByChain = useMemo(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
+    const missThreshold = now.toISOString();
+    return misses
+      ? Object.entries(misses).reduce<{ [chainId: number]: number }>((counts, [chain, info]) => {
+          const filteredMisses = showAllMisses
+            ? info.messages
+            : info.messages
+                .filter((message) => message.timestamp < missThreshold)
+                .filter(
+                  (message) =>
+                    !governorInfo?.enqueuedVAAs.some(
+                      (enqueuedVAA) =>
+                        enqueuedVAA.emitterChain === message.chain &&
+                        enqueuedVAA.emitterAddress === message.emitter &&
+                        enqueuedVAA.sequence === message.seq
+                    )
+                );
+          return filteredMisses.length === 0
+            ? counts
+            : { ...counts, [Number(chain) as ChainId]: filteredMisses.length };
+        }, {})
+      : {};
+  }, [governorInfo?.enqueuedVAAs, misses, showAllMisses]);
   return (
-    <Card sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', mb: 1, alignItems: 'center' }}>
-        <div></div>
-        <Box sx={{ flexGrow: 1 }} />
-        <SettingsButton />
-      </Box>
-      <Box mb={2}>
-        <Misses governorInfo={governorInfo} />
-      </Box>
-      <Typography variant="h4">Chains</Typography>
-      <Box pl={0.5}>
-        {lastBlockByChainWrapper.receivedAt ? (
-          <Typography variant="body2">
-            Last retrieved latest blocks at{' '}
-            <Box component="span" sx={{ display: 'inline-block' }}>
-              {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
-            </Box>{' '}
-            {lastBlockByChainWrapper.error ? (
-              <Typography component="span" color="error" variant="body2">
-                {lastBlockByChainWrapper.error}
-              </Typography>
-            ) : null}
-          </Typography>
-        ) : (
-          <Typography variant="body2">Loading last block by chain...</Typography>
-        )}
-        {messageCountsWrapper.receivedAt ? (
-          <Typography variant="body2">
-            Last retrieved message counts at{' '}
-            <Box component="span" sx={{ display: 'inline-block' }}>
-              {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
-            </Box>{' '}
-            {messageCountsWrapper.error ? (
-              <Typography component="span" color="error" variant="body2">
-                {messageCountsWrapper.error}
-              </Typography>
-            ) : null}
-          </Typography>
-        ) : (
-          <Typography variant="body2">Loading message counts by chain...</Typography>
-        )}
-      </Box>
-      {lastBlockByChainWrapper.isFetching ? (
-        <CircularProgress />
-      ) : (
-        lastBlockByChain &&
-        Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
-          <CollapsibleSection
-            key={chain}
-            defaultExpanded={false}
-            header={
-              <div>
-                <Typography variant="h5" sx={{ mb: 0.5 }}>
-                  {coalesceChainName(Number(chain) as ChainId)} ({chain})
-                </Typography>
-                <Typography variant="body2" sx={{ mb: 0.5 }}>
-                  Last Indexed Block - {lastBlock.split('/')[0]}
-                  {' - '}
-                  {new Date(lastBlock.split('/')[1]).toLocaleString()}
-                </Typography>
-                {messageCounts?.[Number(chain) as ChainId] ? (
-                  <Typography
-                    component="div"
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
+    <CollapsibleSection
+      defaultExpanded={false}
+      header={
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            paddingRight: 1,
+          }}
+        >
+          <Box>Monitor</Box>
+          <Box flexGrow={1} />
+          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+            {Object.keys(missesByChain)
+              .sort()
+              .map((chainId) => (
+                <Box key={chainId} display="flex" alignItems="center">
+                  <Box
+                    ml={2}
+                    display="flex"
+                    alignItems="center"
+                    borderRadius="50%"
+                    sx={{ p: 0.5, backgroundColor: 'rgba(0,0,0,0.5)' }}
                   >
-                    <Box sx={missingBlockSx} />
-                    &nbsp;= {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
-                    &nbsp;&nbsp;
-                    <Box sx={doneBlockSx} />
-                    &nbsp;={' '}
-                    {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
-                      (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas || 0)}
+                    {CHAIN_ICON_MAP[chainId] ? (
+                      <img
+                        src={CHAIN_ICON_MAP[chainId]}
+                        alt={
+                          CHAIN_INFO_MAP[network][chainId]?.name ||
+                          coalesceChainName(Number(chainId) as ChainId)
+                        }
+                        width={24}
+                        height={24}
+                      />
+                    ) : (
+                      <Typography variant="body2">{chainId}</Typography>
+                    )}
+                  </Box>
+                  <Typography variant="h6" component="strong" sx={{ ml: 0.5 }}>
+                    {missesByChain[Number(chainId)]}
                   </Typography>
-                ) : null}
-              </div>
-            }
-          >
-            <DetailBlocks chain={chain} />
-          </CollapsibleSection>
-        ))
-      )}
-    </Card>
+                </Box>
+              ))}
+          </Box>
+        </Box>
+      }
+    >
+      <Box mt={2}>
+        <Card>
+          <Misses governorInfo={governorInfo} missesWrapper={missesWrapper} />
+        </Card>
+      </Box>
+      <Box mt={2}>
+        <Card>
+          <Accordion TransitionProps={{ mountOnEnter: true, unmountOnExit: true }}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography>Chains</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              {lastBlockByChainWrapper.receivedAt ? (
+                <Typography variant="body2">
+                  Last retrieved latest blocks at{' '}
+                  <Box component="span" sx={{ display: 'inline-block' }}>
+                    {new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()}
+                  </Box>{' '}
+                  {lastBlockByChainWrapper.error ? (
+                    <Typography component="span" color="error" variant="body2">
+                      {lastBlockByChainWrapper.error}
+                    </Typography>
+                  ) : null}
+                </Typography>
+              ) : (
+                <Typography variant="body2">Loading last block by chain...</Typography>
+              )}
+              {messageCountsWrapper.receivedAt ? (
+                <Typography variant="body2">
+                  Last retrieved message counts at{' '}
+                  <Box component="span" sx={{ display: 'inline-block' }}>
+                    {new Date(messageCountsWrapper.receivedAt).toLocaleString()}
+                  </Box>{' '}
+                  {messageCountsWrapper.error ? (
+                    <Typography component="span" color="error" variant="body2">
+                      {messageCountsWrapper.error}
+                    </Typography>
+                  ) : null}
+                </Typography>
+              ) : (
+                <Typography variant="body2">Loading message counts by chain...</Typography>
+              )}
+              {lastBlockByChainWrapper.isFetching ? (
+                <CircularProgress />
+              ) : (
+                lastBlockByChain &&
+                Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
+                  <CollapsibleSection
+                    key={chain}
+                    defaultExpanded={false}
+                    header={
+                      <div>
+                        <Typography variant="h5" sx={{ mb: 0.5 }}>
+                          {coalesceChainName(Number(chain) as ChainId)} ({chain})
+                        </Typography>
+                        <Typography variant="body2" sx={{ mb: 0.5 }}>
+                          Last Indexed Block - {lastBlock.split('/')[0]}
+                          {' - '}
+                          {new Date(lastBlock.split('/')[1]).toLocaleString()}
+                        </Typography>
+                        {messageCounts?.[Number(chain) as ChainId] ? (
+                          <Typography
+                            component="div"
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Box sx={missingBlockSx} />
+                            &nbsp;={' '}
+                            {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
+                            &nbsp;&nbsp;
+                            <Box sx={doneBlockSx} />
+                            &nbsp;={' '}
+                            {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
+                              (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas ||
+                                0)}
+                          </Typography>
+                        ) : null}
+                      </div>
+                    }
+                  >
+                    <DetailBlocks chain={chain} />
+                  </CollapsibleSection>
+                ))
+              )}
+            </AccordionDetails>
+          </Accordion>
+        </Card>
+      </Box>
+    </CollapsibleSection>
   );
 }
 

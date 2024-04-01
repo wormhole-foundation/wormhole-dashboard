@@ -92,7 +92,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-// go test -v pkg/bigtable/message_test.go pkg/bigtable/message.go pkg/bigtable/message_index.go pkg/bigtable/test_setup.go pkg/bigtable/observation.go
+// go test -v pkg/historical_uptime/process_observation_test.go pkg/historical_uptime/process_observation.go
 func TestProcessObservation(t *testing.T) {
 	expectedLastObservedAt := time.Now()
 

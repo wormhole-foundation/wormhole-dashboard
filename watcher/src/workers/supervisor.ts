@@ -1,8 +1,8 @@
-import { ChainName } from '@certusone/wormhole-sdk';
 import { Worker } from 'worker_threads';
 import { HB_INTERVAL, WorkerData } from '../consts';
 import { getLogger } from '../utils/logger';
 import { Environment, getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Chain } from '@wormhole-foundation/sdk-base';
 
 interface WorkerInfo {
   worker: Worker;
@@ -53,7 +53,7 @@ function monitorWorkers() {
   }, HB_INTERVAL);
 }
 
-export function startSupervisor(supportedChains: ChainName[]) {
+export function startSupervisor(supportedChains: Chain[]) {
   supportedChains.forEach((chain) => {
     const workerData: WorkerData = { network, chain };
     spawnWorker(workerData);

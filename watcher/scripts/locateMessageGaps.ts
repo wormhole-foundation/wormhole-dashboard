@@ -1,6 +1,5 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { ChainId, CHAIN_ID_SOLANA, coalesceChainName } from '@certusone/wormhole-sdk';
 import {
   Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
@@ -12,6 +11,7 @@ import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { parseMessageId } from '../src/databases/utils';
 import { makeFinalizedWatcher } from '../src/watchers/utils';
 import { Watcher } from '../src/watchers/Watcher';
+import { ChainId, toChain, toChainId } from '@wormhole-foundation/sdk-base';
 
 // This script checks for gaps in the message sequences for an emitter.
 // Ideally this shouldn't happen, but there seems to be an issue with Oasis, Karura, and Celo
@@ -32,7 +32,7 @@ import { Watcher } from '../src/watchers/Watcher';
       .filter((m) => {
         const { chain, emitter } = parseMessageId(m.id);
         if (
-          chain === CHAIN_ID_SOLANA &&
+          chain === toChainId('Solana') &&
           emitter === '6bb14509a612f01fbbc4cffeebd4bbfb492a86df717ebe92eb6df432a3f00a25'
         ) {
           return false;
@@ -51,11 +51,11 @@ import { Watcher } from '../src/watchers/Watcher';
         emitter: emitterAddress,
         sequence,
       } = parseMessageId(observedMessage.id);
-      const chainName = coalesceChainName(emitterChain as ChainId);
+      const chainName = toChain(emitterChain as ChainId);
       const emitter = `${emitterChain}/${emitterAddress}`;
       if (!latestEmission[emitter]) {
         latestEmission[emitter] = {
-          sequence: chainName === 'algorand' || chainName === 'near' ? 0n : -1n,
+          sequence: chainName === 'Algorand' || chainName === 'Near' ? 0n : -1n,
           block: Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[network][chainName] || 0),
         };
       }
@@ -89,8 +89,8 @@ import { Watcher } from '../src/watchers/Watcher';
     let fromBlock = -1;
     for (const gap of gaps) {
       const [chain, blockRange, emitter, sequence] = gap.split('/');
-      const chainName = coalesceChainName(Number(chain) as ChainId);
-      if (chainName === 'algorand') {
+      const chainName = toChain(Number(chain) as ChainId);
+      if (chainName === 'Algorand') {
         console.warn('skipping algorand gaps until backfilled');
         continue;
       }

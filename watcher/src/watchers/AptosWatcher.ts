@@ -24,7 +24,7 @@ export class AptosWatcher extends Watcher {
   eventHandle: string;
 
   constructor(network: Environment) {
-    super(network, 'aptos');
+    super(network, 'Aptos');
     this.client = new AptosClient(RPCS_BY_CHAIN[this.network][this.chain]!);
     this.coreBridgeAddress =
       network === 'mainnet' ? CONTRACTS.MAINNET.aptos.core : CONTRACTS.TESTNET.aptos.core;
@@ -76,7 +76,7 @@ export class AptosWatcher extends Watcher {
       const initialSequence = z
         .number()
         .int()
-        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[this.network].aptos));
+        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[this.network].Aptos));
       return (
         z.number().int().parse(Number(block)) > 1094390 && // initial deployment block
         Date.parse(z.string().datetime().parse(timestamp)) < Date.now() &&

@@ -1,8 +1,8 @@
-import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { readFileSync, writeFileSync } from 'fs';
 import { DB_LAST_BLOCK_FILE, JSON_DB_FILE } from '../consts';
 import { Database } from './Database';
 import { DB, LastBlockByChain, VaasByBlock } from './types';
+import { Chain, toChainId } from '@wormhole-foundation/sdk-base';
 
 const ENCODING = 'utf8';
 export class JsonDatabase extends Database {
@@ -34,17 +34,17 @@ export class JsonDatabase extends Database {
     }
   }
 
-  async getLastBlockByChain(chain: ChainName): Promise<string | null> {
-    const chainId = coalesceChainId(chain);
+  async getLastBlockByChain(chain: Chain): Promise<string | null> {
+    const chainId = toChainId(chain);
     const blockInfo = this.lastBlockByChain[chainId];
     if (blockInfo) {
       const tokens = blockInfo.split('/');
-      return chain === 'aptos' ? tokens.at(-1)! : tokens[0];
+      return chain === 'Aptos' ? tokens.at(-1)! : tokens[0];
     }
     return null;
   }
-  async storeVaasByBlock(chain: ChainName, vaasByBlock: VaasByBlock): Promise<void> {
-    const chainId = coalesceChainId(chain);
+  async storeVaasByBlock(chain: Chain, vaasByBlock: VaasByBlock): Promise<void> {
+    const chainId = toChainId(chain);
     const filteredVaasByBlock = Database.filterEmptyBlocks(vaasByBlock);
     if (Object.keys(filteredVaasByBlock).length) {
       this.db[chainId] = { ...(this.db[chainId] || {}), ...filteredVaasByBlock };

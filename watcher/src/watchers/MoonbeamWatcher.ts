@@ -5,12 +5,12 @@ import { EVMWatcher } from './EVMWatcher';
 
 export class MoonbeamWatcher extends EVMWatcher {
   constructor(network: Environment) {
-    super(network, 'moonbeam');
+    super(network, 'Moonbeam');
   }
   async getFinalizedBlockNumber(): Promise<number> {
     const latestBlock = await super.getFinalizedBlockNumber();
     let isBlockFinalized = false;
-    const rpc = RPCS_BY_CHAIN[this.network].moonbeam;
+    const rpc = RPCS_BY_CHAIN[this.network].Moonbeam;
     if (!rpc) {
       throw new Error('Moonbeam RPC is not defined!');
     }

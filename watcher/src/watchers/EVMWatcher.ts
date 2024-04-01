@@ -8,6 +8,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { EvmChains } from '@wormhole-foundation/sdk-evm';
 
 // This is the hash for topic[0] of the core contract event LogMessagePublished
 // https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/contracts/Implementation.sol#L12
@@ -31,12 +32,12 @@ export class EVMWatcher extends Watcher {
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
 
-  constructor(network: Environment, chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
+  constructor(network: Environment, chain: EvmChains, finalizedBlockTag: BlockTag = 'latest') {
     super(network, chain);
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
-    if (chain === 'acala' || chain === 'karura') {
+    if (chain === 'Acala' || chain === 'Karura') {
       this.maximumBatchSize = 50;
     }
   }
@@ -208,10 +209,10 @@ export class EVMWatcher extends Watcher {
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
     const contracts: Contracts =
       this.network === 'mainnet'
-        ? CONTRACTS.MAINNET[this.chain]
+        ? CONTRACTS.MAINNET[this.chain.toLocaleLowerCase() as EVMChainName]
         : this.network === 'testnet'
-        ? CONTRACTS.TESTNET[this.chain]
-        : CONTRACTS.DEVNET[this.chain];
+        ? CONTRACTS.TESTNET[this.chain.toLocaleLowerCase() as EVMChainName]
+        : CONTRACTS.DEVNET[this.chain.toLocaleLowerCase() as EVMChainName];
     const address = contracts.core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);

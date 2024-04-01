@@ -18,7 +18,7 @@ export class AlgorandWatcher extends Watcher {
   indexerClient: algosdk.Indexer;
 
   constructor(network: Environment) {
-    super(network, 'algorand');
+    super(network, 'Algorand');
 
     if (!ALGORAND_INFO[this.network].algodServer) {
       throw new Error('ALGORAND_INFO.algodServer is not defined!');

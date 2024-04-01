@@ -1,7 +1,6 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { initDb } from './databases/utils';
 import { makeFinalizedNTTWatcher, makeFinalizedWatcher } from './watchers/utils';
 import {
@@ -11,6 +10,7 @@ import {
   getMode,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { startSupervisor } from './workers/supervisor';
+import { Chain } from '@wormhole-foundation/sdk-base';
 
 initDb();
 
@@ -19,75 +19,75 @@ const mode: Mode = getMode();
 
 // NOTE:  supportedChains is in chainId order
 
-const supportedChains: ChainName[] =
+const supportedChains: Chain[] =
   network === 'testnet'
     ? [
         // NOTE:  The commented out chains are left in there to easily
         //        identify which chains are not supported on testnet.
-        'solana',
-        // 'ethereum',
-        // 'terra',
-        'bsc',
-        'polygon',
-        'avalanche',
-        'oasis',
-        'algorand',
-        'fantom',
-        // 'karura',
-        'acala',
-        'klaytn',
-        'celo',
-        // 'near',
-        'moonbeam',
-        // 'terra2',
-        // 'injective',
-        'sui',
-        'aptos',
-        // 'arbitrum',
-        // 'optimism',
-        'xpla',
-        // 'base',
-        'sei',
-        // 'wormchain',
-        'sepolia',
-        'arbitrum_sepolia',
-        'base_sepolia',
-        'optimism_sepolia',
-        'holesky',
-        'polygon_sepolia',
+        'Solana',
+        // 'Ethereum',
+        // 'Terra',
+        'Bsc',
+        'Polygon',
+        'Avalanche',
+        'Oasis',
+        'Algorand',
+        'Fantom',
+        // 'Karura',
+        'Acala',
+        'Klaytn',
+        'Celo',
+        // 'Near',
+        'Moonbeam',
+        // 'Terra2',
+        // 'Injective',
+        'Sui',
+        'Aptos',
+        // 'Arbitrum',
+        // 'Optimism',
+        'Xpla',
+        // 'Base',
+        'Sei',
+        // 'Wormchain',
+        'Sepolia',
+        'ArbitrumSepolia',
+        'BaseSepolia',
+        'OptimismSepolia',
+        'Holesky',
+        'PolygonSepolia',
       ]
     : [
         // This is the list of chains supported in MAINNET.
-        'solana',
-        'ethereum',
-        'terra',
-        'bsc',
-        'polygon',
-        'avalanche',
-        'oasis',
-        'algorand',
-        'fantom',
-        'karura',
-        'acala',
-        'klaytn',
-        'celo',
-        'near',
-        'moonbeam',
-        'terra2',
-        'injective',
-        'sui',
-        'aptos',
-        'arbitrum',
-        'optimism',
-        'xpla',
-        'base',
-        'sei',
-        'wormchain',
+        'Solana',
+        'Ethereum',
+        'Terra',
+        'Bsc',
+        'Polygon',
+        'Avalanche',
+        'Oasis',
+        'Algorand',
+        'Fantom',
+        'Karura',
+        'Acala',
+        'Klaytn',
+        'Celo',
+        'Near',
+        'Moonbeam',
+        'Terra2',
+        'Injective',
+        'Sui',
+        'Aptos',
+        'Arbitrum',
+        'Optimism',
+        'Xpla',
+        'Base',
+        'Sei',
+        'Wormchain',
       ];
 
-const supportedNTTChains: ChainName[] =
+const supportedNTTChains: Chain[] =
   network === 'testnet'
-    ? ['solana', 'sepolia', 'arbitrum_sepolia', 'base_sepolia', 'optimism_sepolia']
+    ? ['Solana', 'Sepolia', 'ArbitrumSepolia', 'BaseSepolia', 'OptimismSepolia']
     : [];
 
 if (mode === 'vaa') {

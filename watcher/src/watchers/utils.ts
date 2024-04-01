@@ -1,4 +1,3 @@
-import { ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { AlgorandWatcher } from './AlgorandWatcher';
 import { AptosWatcher } from './AptosWatcher';
 import { ArbitrumWatcher } from './ArbitrumWatcher';
@@ -18,57 +17,58 @@ import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 import { NTTWatcher } from './NTTWatcher';
 import { NTTArbitrumWatcher } from './NTTArbitrumWatcher';
 import { NTTSolanaWatcher } from './NTTSolanaWatcher';
+import { Chain } from '@wormhole-foundation/sdk-base';
 
-export function makeFinalizedWatcher(network: Environment, chainName: ChainName): Watcher {
-  if (chainName === 'solana') {
+export function makeFinalizedWatcher(network: Environment, chainName: Chain): Watcher {
+  if (chainName === 'Solana') {
     return new SolanaWatcher(network);
-  } else if (chainName === 'ethereum' || chainName === 'karura' || chainName === 'acala') {
+  } else if (chainName === 'Ethereum' || chainName === 'Karura' || chainName === 'Acala') {
     return new EVMWatcher(network, chainName, 'finalized');
-  } else if (chainName === 'bsc') {
+  } else if (chainName === 'Bsc') {
     return new BSCWatcher(network);
   } else if (
-    chainName === 'avalanche' ||
-    chainName === 'oasis' ||
-    chainName === 'fantom' ||
-    chainName === 'klaytn' ||
-    chainName === 'polygon' ||
-    chainName === 'celo' ||
-    chainName === 'optimism' ||
-    chainName === 'base'
+    chainName === 'Avalanche' ||
+    chainName === 'Oasis' ||
+    chainName === 'Fantom' ||
+    chainName === 'Klaytn' ||
+    chainName === 'Polygon' ||
+    chainName === 'Celo' ||
+    chainName === 'Optimism' ||
+    chainName === 'Base'
   ) {
     return new EVMWatcher(network, chainName);
-  } else if (chainName === 'algorand') {
+  } else if (chainName === 'Algorand') {
     return new AlgorandWatcher(network);
-  } else if (chainName === 'moonbeam') {
+  } else if (chainName === 'Moonbeam') {
     return new MoonbeamWatcher(network);
-  } else if (chainName === 'arbitrum') {
+  } else if (chainName === 'Arbitrum') {
     return new ArbitrumWatcher(network);
-  } else if (chainName === 'aptos') {
+  } else if (chainName === 'Aptos') {
     return new AptosWatcher(network);
-  } else if (chainName === 'near') {
+  } else if (chainName === 'Near') {
     return new NearArchiveWatcher(network);
-  } else if (chainName === 'injective') {
+  } else if (chainName === 'Injective') {
     return new InjectiveExplorerWatcher(network);
-  } else if (chainName === 'sei') {
+  } else if (chainName === 'Sei') {
     return new SeiExplorerWatcher(network);
-  } else if (chainName === 'terra') {
+  } else if (chainName === 'Terra') {
     return new TerraExplorerWatcher(network, chainName);
-  } else if (chainName === 'xpla' || chainName === 'terra2') {
-    return new CosmwasmWatcher(network, chainName);
-  } else if (chainName === 'sui') {
+  } else if (chainName === 'Xpla' || chainName === 'Terra2') {
+    return new TerraExplorerWatcher(network, chainName);
+  } else if (chainName === 'Sui') {
     return new SuiWatcher(network);
-  } else if (chainName === 'wormchain') {
+  } else if (chainName === 'Wormchain') {
     return new WormchainWatcher(network);
   } else if (network === 'testnet') {
     // These are testnet only chains
-    if (chainName === 'sepolia' || chainName === 'holesky') {
+    if (chainName === 'Sepolia' || chainName === 'Holesky') {
       return new EVMWatcher(network, chainName, 'finalized');
-    } else if (chainName === 'arbitrum_sepolia') {
+    } else if (chainName === 'ArbitrumSepolia') {
       return new ArbitrumWatcher(network);
     } else if (
-      chainName === 'optimism_sepolia' ||
-      chainName === 'base_sepolia' ||
-      chainName === 'polygon_sepolia'
+      chainName === 'OptimismSepolia' ||
+      chainName === 'BaseSepolia' ||
+      chainName === 'PolygonSepolia'
     ) {
       return new EVMWatcher(network, chainName);
     } else {
@@ -81,16 +81,16 @@ export function makeFinalizedWatcher(network: Environment, chainName: ChainName)
   }
 }
 
-export function makeFinalizedNTTWatcher(network: Environment, chainName: ChainName): Watcher {
+export function makeFinalizedNTTWatcher(network: Environment, chainName: Chain): Watcher {
   if (network === 'testnet') {
     // These are testnet only chains
-    if (chainName === 'sepolia' || chainName === 'holesky') {
+    if (chainName === 'Sepolia' || chainName === 'Holesky') {
       return new NTTWatcher(network, chainName, 'finalized');
-    } else if (chainName === 'base_sepolia' || chainName === 'optimism_sepolia') {
+    } else if (chainName === 'BaseSepolia' || chainName === 'OptimismSepolia') {
       return new NTTWatcher(network, chainName);
-    } else if (chainName === 'arbitrum_sepolia') {
+    } else if (chainName === 'ArbitrumSepolia') {
       return new NTTArbitrumWatcher(network);
-    } else if (chainName === 'solana') {
+    } else if (chainName === 'Solana') {
       return new NTTSolanaWatcher(network);
     } else {
       throw new Error(

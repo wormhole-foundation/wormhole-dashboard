@@ -8,6 +8,7 @@ import { SHA256 } from 'jscrypto/SHA256';
 import { Base64 } from 'jscrypto/Base64';
 import { isBase64Encoded } from '../utils/isBase64Encoded';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { CosmwasmChains } from '@wormhole-foundation/sdk-cosmwasm';
 
 export class CosmwasmWatcher extends Watcher {
   latestBlockTag: string;
@@ -16,9 +17,9 @@ export class CosmwasmWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: Environment, chain: CosmWasmChainName | 'wormchain') {
+  constructor(network: Environment, chain: CosmwasmChains | 'Wormchain') {
     super(network, chain);
-    if (chain === 'injective') {
+    if (chain === 'Injective') {
       throw new Error('Please use InjectiveExplorerWatcher for injective');
     }
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
@@ -29,7 +30,7 @@ export class CosmwasmWatcher extends Watcher {
     this.getBlockTag = 'blocks/';
     this.hashTag = 'cosmos/tx/v1beta1/txs/';
     this.latestBlockHeight = 0;
-    if (chain === 'sei') {
+    if (chain === 'Sei') {
       this.maximumBatchSize = 1;
     }
   }
@@ -57,7 +58,7 @@ export class CosmwasmWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const address = CONTRACTS.MAINNET[this.chain].core;
+    const address = CONTRACTS.MAINNET[this.chain.toLowerCase() as CosmWasmChainName].core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }

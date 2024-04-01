@@ -1,11 +1,5 @@
 import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
-import {
-  CONTRACTS,
-  ChainName,
-  Contracts,
-  EVMChainName,
-  coalesceChainId,
-} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { CONTRACTS, ChainName, Contracts } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Log } from '@ethersproject/abstract-provider';
 import axios from 'axios';
 import { BigNumber } from 'ethers';
@@ -33,6 +27,8 @@ import { RELAYER_CONTRACTS, parseWormholeLog } from '@certusone/wormhole-sdk/lib
 import knex, { Knex } from 'knex';
 import { WormholeLogger } from '../utils/logger';
 import { formatIntoTimestamp } from '../utils/timestamp';
+import { toChainId } from '@wormhole-foundation/sdk-base';
+import { EvmChains } from '@wormhole-foundation/sdk-evm';
 
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
   '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
@@ -55,7 +51,7 @@ export class NTTWatcher extends Watcher {
   latestFinalizedBlockNumber: number;
   pg: Knex;
 
-  constructor(network: Environment, chain: EVMChainName, finalizedBlockTag: BlockTag = 'latest') {
+  constructor(network: Environment, chain: EvmChains, finalizedBlockTag: BlockTag = 'latest') {
     super(network, chain, true);
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
@@ -239,16 +235,16 @@ export class NTTWatcher extends Watcher {
 
   // This only needs to return the latest block looked at.
   async getNttMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
-    const nttAddresses = NTT_CONTRACT[this.network][this.chain];
+    const nttAddresses = NTT_CONTRACT[this.network][this.chain.toLowerCase() as ChainName];
     if (!nttAddresses) {
       throw new Error(`NTT manager contract not defined for ${this.network}`);
     }
     const contracts: Contracts =
       this.network === 'mainnet'
-        ? CONTRACTS.MAINNET[this.chain]
+        ? CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName]
         : this.network === 'testnet'
-        ? CONTRACTS.TESTNET[this.chain]
-        : CONTRACTS.DEVNET[this.chain];
+        ? CONTRACTS.TESTNET[this.chain.toLowerCase() as ChainName]
+        : CONTRACTS.DEVNET[this.chain.toLowerCase() as ChainName];
     const address = contracts.core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
@@ -298,13 +294,17 @@ export class NTTWatcher extends Watcher {
             }
             let emitter = coreLog.topics[1].slice(2);
             // If this emitter is a relayer, parse differently
-            const isRelay: boolean = isRelayer(this.network, this.chain, emitter);
+            const isRelay: boolean = isRelayer(
+              this.network,
+              this.chain.toLowerCase() as ChainName,
+              emitter
+            );
             if (isRelay) {
               this.logger.debug('Relayer detected');
               let {
                 args: { sequence, payload },
               } = wormholeInterface.parseLog(coreLog);
-              const vaaId = makeVaaId(coalesceChainId(this.chain), emitter, sequence);
+              const vaaId = makeVaaId(toChainId(this.chain), emitter, sequence);
               // Strip off leading 0x, if present
               if (payload.startsWith('0x')) {
                 payload = payload.slice(2);
@@ -327,13 +327,13 @@ export class NTTWatcher extends Watcher {
                   (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
                 );
                 const calculatedDigest = getNttManagerMessageDigest(
-                  coalesceChainId(this.chain),
+                  toChainId(this.chain),
                   transceiverMessage.ntt_managerPayload
                 );
                 const sourceToken: string =
                   transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
                 const lc: LifeCycle = {
-                  srcChainId: coalesceChainId(this.chain),
+                  srcChainId: toChainId(this.chain),
                   destChainId: decodedTransfer.recipientChain,
                   sourceToken,
                   tokenAmount: BigInt(decodedTransfer.amount),
@@ -363,7 +363,7 @@ export class NTTWatcher extends Watcher {
               let {
                 args: { sequence, payload },
               } = wormholeInterface.parseLog(coreLog);
-              const vaaId = makeVaaId(coalesceChainId(this.chain), emitter, sequence);
+              const vaaId = makeVaaId(toChainId(this.chain), emitter, sequence);
               // Strip off leading 0x, if present
               if (payload.startsWith('0x')) {
                 payload = payload.slice(2);
@@ -377,13 +377,13 @@ export class NTTWatcher extends Watcher {
                   (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
                 );
                 const calculatedDigest = getNttManagerMessageDigest(
-                  coalesceChainId(this.chain),
+                  toChainId(this.chain),
                   transceiverMessage.ntt_managerPayload
                 );
                 const sourceToken: string =
                   transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
                 const lc: LifeCycle = {
-                  srcChainId: coalesceChainId(this.chain),
+                  srcChainId: toChainId(this.chain),
                   destChainId: decodedTransfer.recipientChain,
                   sourceToken,
                   tokenAmount: BigInt(decodedTransfer.amount),
@@ -422,7 +422,7 @@ export class NTTWatcher extends Watcher {
           lc.redeemedBlockHeight = BigInt(blockNumber);
           lc.digest = digest;
           lc.redeemTime = timestampsByBlock[blockNumber];
-          lc.destChainId = coalesceChainId(this.chain);
+          lc.destChainId = toChainId(this.chain);
           await saveToPG(this.pg, lc, TransferRedeemedTopic, this.logger);
         } else if (log.topics[0] === InboundTransferQueuedTopic) {
           this.logger.debug('***********InboundTransferQueuedTopic***************');

@@ -24,7 +24,7 @@ export class NearArchiveWatcher extends Watcher {
   provider: Provider | null = null;
 
   constructor(network: Environment) {
-    super(network, 'near');
+    super(network, 'Near');
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -179,7 +179,7 @@ export const getMessagesFromBlockResults = async (
         .map((log) => JSON.parse(log.slice(11)) as EventLog)
         .filter(isWormholePublishEventLog);
       for (const log of logs) {
-        const vaaKey = makeVaaKey(tx.hash, 'near', log.emitter, log.seq.toString());
+        const vaaKey = makeVaaKey(tx.hash, 'Near', log.emitter, log.seq.toString());
         vaasByBlock[blockKey] = [...vaasByBlock[blockKey], vaaKey];
       }
     }

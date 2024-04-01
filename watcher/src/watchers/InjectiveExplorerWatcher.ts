@@ -1,4 +1,4 @@
-import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { CONTRACTS, ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
@@ -19,7 +19,7 @@ export class InjectiveExplorerWatcher extends Watcher {
   latestBlockHeight: number;
 
   constructor(network: Environment) {
-    super(network, 'injective');
+    super(network, 'Injective');
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
@@ -49,8 +49,8 @@ export class InjectiveExplorerWatcher extends Watcher {
   // use "to": as the pagination key
   // compare block height ("block_number":) with what is passed in.
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const coreAddress = CONTRACTS.MAINNET[this.chain].core;
-    const address = CONTRACTS.MAINNET[this.chain].token_bridge;
+    const coreAddress = CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName].core;
+    const address = CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName].token_bridge;
     if (!address) {
       throw new Error(`Token Bridge contract not defined for ${this.chain}`);
     }

@@ -13,9 +13,9 @@ export class NTTArbitrumWatcher extends NTTWatcher {
 
   constructor(network: Environment) {
     if (network === 'mainnet') {
-      super(network, 'arbitrum');
+      super(network, 'Arbitrum');
     } else {
-      super(network, 'arbitrum_sepolia');
+      super(network, 'ArbitrumSepolia');
     }
 
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
@@ -24,8 +24,8 @@ export class NTTArbitrumWatcher extends NTTWatcher {
     }
     this.nttWatcher =
       network === 'mainnet'
-        ? new NTTWatcher(network, 'ethereum', 'finalized')
-        : new NTTWatcher(network, 'sepolia', 'finalized');
+        ? new NTTWatcher(network, 'Ethereum', 'finalized')
+        : new NTTWatcher(network, 'Sepolia', 'finalized');
     this.latestL2Finalized = 0;
     this.l1L2Map = new Map<number, number>();
     this.lastEthTime = 0;

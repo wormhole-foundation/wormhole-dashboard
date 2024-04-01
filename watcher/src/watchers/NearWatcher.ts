@@ -16,7 +16,7 @@ export class NearWatcher extends Watcher {
   provider: Provider | null = null;
 
   constructor(network: Environment) {
-    super(network, 'near');
+    super(network, 'Near');
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -57,7 +57,7 @@ export class NearWatcher extends Watcher {
 
   async getProvider(): Promise<Provider> {
     return (this.provider =
-      this.provider || (await getNearProvider(this.network, RPCS_BY_CHAIN[this.network].near!)));
+      this.provider || (await getNearProvider(this.network, RPCS_BY_CHAIN[this.network].Near!)));
   }
 
   isValidVaaKey(key: string) {
@@ -109,7 +109,7 @@ export const getMessagesFromBlockResults = async (
         .map((log) => JSON.parse(log.slice(11)) as EventLog)
         .filter(isWormholePublishEventLog);
       for (const log of logs) {
-        const vaaKey = makeVaaKey(tx.hash, 'near', log.emitter, log.seq.toString());
+        const vaaKey = makeVaaKey(tx.hash, 'Near', log.emitter, log.seq.toString());
         vaasByBlock[blockKey] = [...vaasByBlock[blockKey], vaaKey];
       }
     }

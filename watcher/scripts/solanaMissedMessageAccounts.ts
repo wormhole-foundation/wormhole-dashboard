@@ -28,7 +28,7 @@ import { MISS_THRESHOLD_IN_MINS } from '@wormhole-foundation/wormhole-monitor-co
       .map((m: any) => m.txHash);
     log.succeed();
     log = ora('Fetching message accounts').start();
-    const connection = new Connection(RPCS_BY_CHAIN.mainnet.solana!, 'finalized');
+    const connection = new Connection(RPCS_BY_CHAIN.mainnet.Solana!, 'finalized');
     const txs = await connection.getTransactions(solanaTxHashes, {
       maxSupportedTransactionVersion: 0,
     });

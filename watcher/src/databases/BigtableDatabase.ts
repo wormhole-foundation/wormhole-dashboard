@@ -1,4 +1,3 @@
-import { ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { parseVaa } from '@certusone/wormhole-sdk/lib/cjs/vaa/wormhole';
 import { Bigtable } from '@google-cloud/bigtable';
 import {
@@ -25,6 +24,7 @@ import {
 } from './utils';
 import { getSignedVAA } from '../utils/getSignedVAA';
 import { PubSub } from '@google-cloud/pubsub';
+import { Chain, toChainId } from '@wormhole-foundation/sdk-base';
 
 const WATCH_MISSING_TIMEOUT = 2 * 60 * 1000;
 
@@ -62,8 +62,8 @@ export class BigtableDatabase extends Database {
     }
   }
 
-  async getLastBlockByChain(chain: ChainName, isNTT: boolean): Promise<string | null> {
-    const chainId = coalesceChainId(chain);
+  async getLastBlockByChain(chain: Chain, isNTT: boolean): Promise<string | null> {
+    const chainId = toChainId(chain);
     const lastObservedBlock = isNTT
       ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(chainId.toString())
       : this.firestoreDb.collection(this.latestCollectionName).doc(chainId.toString());
@@ -73,17 +73,17 @@ export class BigtableDatabase extends Database {
     if (lastBlockKey) {
       this.logger.info(`for chain=${chain}, found most recent firestore block=${lastBlockKey}`);
       const tokens = lastBlockKey.split('/');
-      return chain === 'aptos' ? tokens.at(-1) : tokens[0];
+      return chain === 'Aptos' ? tokens.at(-1) : tokens[0];
     }
     return null;
   }
 
-  async storeLatestBlock(chain: ChainName, lastBlockKey: string, isNTT: boolean): Promise<void> {
+  async storeLatestBlock(chain: Chain, lastBlockKey: string, isNTT: boolean): Promise<void> {
     if (this.firestoreDb === undefined) {
       this.logger.error('no firestore db set');
       return;
     }
-    const chainId = coalesceChainId(chain);
+    const chainId = toChainId(chain);
     this.logger.info(`storing last block=${lastBlockKey} for chain=${chainId}`);
     const lastObservedBlock = isNTT
       ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(`${chainId.toString()}`)
@@ -92,7 +92,7 @@ export class BigtableDatabase extends Database {
   }
 
   async storeVaasByBlock(
-    chain: ChainName,
+    chain: Chain,
     vaasByBlock: VaasByBlock,
     updateLatestBlock: boolean = true
   ): Promise<void> {
@@ -100,7 +100,7 @@ export class BigtableDatabase extends Database {
       this.logger.warn('no bigtable instance set');
       return;
     }
-    const chainId = coalesceChainId(chain);
+    const chainId = toChainId(chain);
     const filteredBlocks = BigtableDatabase.filterEmptyBlocks(vaasByBlock);
     const instance = this.bigtable.instance(this.instanceId);
     const table = instance.table(this.msgTableId);

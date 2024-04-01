@@ -1,4 +1,4 @@
-import { ChainId, ChainName, coalesceChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { ChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
   Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
@@ -12,6 +12,7 @@ import { BigtableDatabase } from './BigtableDatabase';
 import { Database } from './Database';
 import { JsonDatabase } from './JsonDatabase';
 import { VaasByBlock } from './types';
+import { Chain, toChainId } from '@wormhole-foundation/sdk-base';
 
 // Bigtable Message ID format
 // chain/MAX_UINT64-block/emitter/sequence
@@ -52,10 +53,10 @@ export const extractBlockFromKey = (key: string): number => {
 
 export const makeVaaKey = (
   transactionHash: string,
-  chain: ChainId | ChainName,
+  chain: ChainId | Chain,
   emitter: string,
   seq: string
-): string => `${transactionHash}:${coalesceChainId(chain)}/${emitter}/${seq}`;
+): string => `${transactionHash}:${toChainId(chain)}/${emitter}/${seq}`;
 
 // make a bigtable row key for the `vaasByTxHash` table
 export const makeVAAsByTxHashRowKey = (txHash: string, chain: number): string =>
@@ -80,7 +81,7 @@ export const initDb = (startWatching: boolean = true): Database => {
 };
 
 export const storeLatestBlock = async (
-  chain: ChainName,
+  chain: Chain,
   lastBlockKey: string,
   isNTT: boolean
 ): Promise<void> => {
@@ -89,7 +90,7 @@ export const storeLatestBlock = async (
 
 export const getResumeBlockByChain = async (
   network: Environment,
-  chain: ChainName,
+  chain: Chain,
   isNTT: boolean
 ): Promise<number | null> => {
   const lastBlock = await database.getLastBlockByChain(chain, isNTT);
@@ -103,10 +104,7 @@ export const getResumeBlockByChain = async (
     : null;
 };
 
-export const storeVaasByBlock = async (
-  chain: ChainName,
-  vaasByBlock: VaasByBlock
-): Promise<void> => {
+export const storeVaasByBlock = async (chain: Chain, vaasByBlock: VaasByBlock): Promise<void> => {
   return database.storeVaasByBlock(chain, vaasByBlock);
 };
 

@@ -1,4 +1,4 @@
-import { CONTRACTS, Contracts } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { CONTRACTS, Contracts, ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import {
   AXIOS_CONFIG_JSON,
@@ -40,7 +40,7 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
   accountId: number;
 
   constructor(network: Environment) {
-    super(network, 'sei');
+    super(network, 'Sei');
     // arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
     this.maximumBatchSize = 1_000_000;
     this.explorerGraphql =
@@ -110,10 +110,10 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
     const contracts: Contracts =
       this.network === 'mainnet'
-        ? CONTRACTS.MAINNET[this.chain]
+        ? CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName]
         : this.network === 'testnet'
-        ? CONTRACTS.TESTNET[this.chain]
-        : CONTRACTS.DEVNET[this.chain];
+        ? CONTRACTS.TESTNET[this.chain.toLowerCase() as ChainName]
+        : CONTRACTS.DEVNET[this.chain.toLowerCase() as ChainName];
     const address = contracts.core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);

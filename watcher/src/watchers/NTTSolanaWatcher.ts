@@ -50,6 +50,7 @@ import knex, { Knex } from 'knex';
 import { WormholeLogger } from '../utils/logger';
 import { millisecondsToTimestamp } from '../utils/timestamp';
 import { NttQuoter } from '../quoters/NTTSolanaQuoter';
+import { toChainId } from '@wormhole-foundation/sdk-base';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
@@ -87,7 +88,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
 
   constructor(network: Environment) {
     super(network, true);
-    this.rpc = RPCS_BY_CHAIN[this.network].solana!;
+    this.rpc = RPCS_BY_CHAIN[this.network].Solana!;
     this.programIds = NTT_CONTRACT[this.network].solana!;
     this.connection = new Connection(this.rpc, COMMITMENT);
 
@@ -204,14 +205,14 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       },
     };
 
-    const digest = getNttManagerMessageDigest(coalesceChainId(this.chain), nttManagerMessage);
+    const digest = getNttManagerMessageDigest(toChainId(this.chain), nttManagerMessage);
 
     // We save the digest to the outboxItem so we can link the lifecycle to the outboxItem later in the relayRequest ix
     // This is because the relayRequest ix does not contain the necessary information to create the digest, only outboxItem
     await this.saveOutboxItemToDigest(outboxAccount.toBase58(), digest, this.pg);
 
     const lc: LifeCycle = {
-      srcChainId: coalesceChainId(this.chain),
+      srcChainId: toChainId(this.chain),
       destChainId: coalesceChainId(nttManagerMessage.payload.recipientChain as ChainId),
       sourceToken: config.mint.toBuffer().toString('hex'),
       tokenAmount: nttManagerMessage.payload.trimmedAmount.normalize(8),
@@ -275,7 +276,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
 
     let lc: LifeCycle = {
       srcChainId: transceiverMessage.chainId,
-      destChainId: coalesceChainId(this.chain),
+      destChainId: toChainId(this.chain),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
       tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(8),
       transferSentTxhash: '',
@@ -324,7 +325,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
 
     let lc: LifeCycle = {
       srcChainId: 0,
-      destChainId: coalesceChainId(this.chain),
+      destChainId: toChainId(this.chain),
       sourceToken: '',
       tokenAmount: 0n,
       transferSentTxhash: '',
@@ -451,7 +452,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     const vaaId = `${postMessage.message.emitterChain}/${emitterHex}/${seq}`;
 
     let lc: LifeCycle = {
-      srcChainId: coalesceChainId(this.chain),
+      srcChainId: toChainId(this.chain),
       destChainId: coalesceChainId(
         transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId
       ),
@@ -462,7 +463,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       nttTransferKey: `${this.programId}/${recipient}/${seq}`,
       vaaId: vaaId,
       digest: getNttManagerMessageDigest(
-        coalesceChainId(this.chain),
+        toChainId(this.chain),
         transceiverMessage.ntt_managerPayload
       ),
       isRelay: false,

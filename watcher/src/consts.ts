@@ -1,4 +1,5 @@
-import { ChainName, CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { Chain } from '@wormhole-foundation/sdk-base';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 import { AxiosRequestConfig } from 'axios';
 
@@ -6,7 +7,7 @@ export const TIMEOUT = 0.5 * 1000;
 export const HB_INTERVAL = 5 * 60 * 1000; // 5 Minutes
 export type WorkerData = {
   network: Environment;
-  chain: ChainName;
+  chain: Chain;
 };
 
 // Notes about RPCs
@@ -30,67 +31,67 @@ export type WorkerData = {
 // Arbitrum
 //  This node didn't work:  'https://arb1.arbitrum.io/rpc',
 
-export const RPCS_BY_CHAIN: { [key in Environment]: { [key in ChainName]?: string } } = {
+export const RPCS_BY_CHAIN: { [key in Environment]: { [key in Chain]?: string } } = {
   ['mainnet']: {
-    ethereum: process.env.ETH_RPC,
-    bsc: process.env.BSC_RPC || 'https://bsc.publicnode.com',
-    polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon',
-    avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche',
-    oasis: process.env.OASIS_RPC || 'https://emerald.oasis.dev',
-    algorand: process.env.ALGORAND_RPC || 'https://mainnet-api.algonode.cloud',
-    fantom: process.env.FANTOM_RPC || 'https://rpc.ankr.com/fantom',
-    karura: process.env.KARURA_RPC || 'https://eth-rpc-karura.aca-api.network',
-    acala: process.env.ACALA_RPC || 'https://eth-rpc-acala.aca-api.network',
-    klaytn: process.env.KLAYTN_RPC || 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
-    celo: process.env.CELO_RPC || 'https://forno.celo.org',
-    moonbeam: process.env.MOONBEAM_RPC || 'https://rpc.ankr.com/moonbeam',
-    arbitrum: process.env.ARBITRUM_RPC || 'https://arb1.arbitrum.io/rpc',
-    optimism: process.env.OPTIMISM_RPC || 'https://rpc.ankr.com/optimism',
-    aptos: process.env.APTOS_RPC || 'https://fullnode.mainnet.aptoslabs.com/',
-    near: process.env.NEAR_RPC || 'https://rpc.mainnet.near.org',
-    xpla: process.env.XPLA_RPC || 'https://dimension-lcd.xpla.dev',
-    terra2: process.env.TERRA2_RPC || 'https://phoenix-lcd.terra.dev',
-    // terra: 'https://columbus-fcd.terra.dev',
-    terra: process.env.TERRA_RPC || 'https://terra-classic-fcd.publicnode.com',
-    injective: process.env.INJECTIVE_RPC || 'https://sentry.exchange.grpc-web.injective.network',
-    solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
-    sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
-    base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
-    sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
-    wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
+    Ethereum: process.env.ETH_RPC,
+    Bsc: process.env.BSC_RPC || 'https://bsc.publicnode.com',
+    Polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon',
+    Avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche',
+    Oasis: process.env.OASIS_RPC || 'https://emerald.oasis.dev',
+    Algorand: process.env.ALGORAND_RPC || 'https://mainnet-api.algonode.cloud',
+    Fantom: process.env.FANTOM_RPC || 'https://rpc.ankr.com/fantom',
+    Karura: process.env.KARURA_RPC || 'https://eth-rpc-karura.aca-api.network',
+    Acala: process.env.ACALA_RPC || 'https://eth-rpc-acala.aca-api.network',
+    Klaytn: process.env.KLAYTN_RPC || 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
+    Celo: process.env.CELO_RPC || 'https://forno.celo.org',
+    Moonbeam: process.env.MOONBEAM_RPC || 'https://rpc.ankr.com/moonbeam',
+    Arbitrum: process.env.ARBITRUM_RPC || 'https://arb1.arbitrum.io/rpc',
+    Optimism: process.env.OPTIMISM_RPC || 'https://rpc.ankr.com/optimism',
+    Aptos: process.env.APTOS_RPC || 'https://fullnode.mainnet.aptoslabs.com/',
+    Near: process.env.NEAR_RPC || 'https://rpc.mainnet.near.org',
+    Xpla: process.env.XPLA_RPC || 'https://dimension-lcd.xpla.dev',
+    Terra2: process.env.TERRA2_RPC || 'https://phoenix-lcd.terra.dev',
+    // Terra: 'https://columbus-fcd.terra.dev',
+    Terra: process.env.TERRA_RPC || 'https://terra-classic-fcd.publicnode.com',
+    Injective: process.env.INJECTIVE_RPC || 'https://sentry.exchange.grpc-web.injective.network',
+    Solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
+    Sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
+    Base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
+    Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
+    Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
   },
   ['testnet']: {
-    ethereum: process.env.ETH_RPC,
-    bsc: process.env.BSC_RPC,
-    polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon_mumbai',
-    avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche_fuji',
-    oasis: process.env.OASIS_RPC || 'https://testnet.emerald.oasis.dev',
-    algorand: process.env.ALGORAND_RPC || 'https://testnet-api.algonode.cloud',
-    fantom: process.env.FANTOM_RPC,
-    karura: process.env.KARURA_RPC,
-    acala: process.env.ACALA_RPC || 'https://eth-rpc-acala-testnet.aca-staging.network',
-    klaytn: process.env.KLAYTN_RPC || 'https://rpc.ankr.com/klaytn_testnet',
-    celo: process.env.CELO_RPC || 'https://alfajores-forno.celo-testnet.org',
-    moonbeam: process.env.MOONBEAM_RPC,
-    arbitrum: process.env.ARBITRUM_RPC || 'https://sepolia-rollup.arbitrum.io/rpc',
-    optimism: process.env.OPTIMISM_RPC || 'https://optimism-goerli.publicnode.com',
-    aptos: process.env.APTOS_RPC,
-    near: process.env.NEAR_RPC,
-    xpla: process.env.XPLA_RPC || 'https://cube-lcd.xpla.dev',
-    terra2: process.env.TERRA2_RPC || 'https://pisco-lcd.terra.dev',
-    terra: process.env.TERRA_RPC,
-    injective: process.env.INJECTIVE_RPC,
-    solana: process.env.SOLANA_RPC,
-    sui: process.env.SUI_RPC,
-    base: process.env.BASE_RPC,
-    sei: process.env.SEI_RPC,
-    wormchain: process.env.WORMCHAIN_RPC,
-    arbitrum_sepolia: process.env.ARBITRUM_SEPOLIA_RPC,
-    base_sepolia: process.env.BASE_SEPOLIA_RPC,
-    optimism_sepolia: process.env.OPTIMISM_SEPOLIA_RPC,
-    holesky: process.env.HOLESKY_RPC,
-    sepolia: process.env.SEPOLIA_RPC,
-    polygon_sepolia: process.env.POLYGON_SEPOLIA_RPC || 'https://rpc-amoy.polygon.technology',
+    Ethereum: process.env.ETH_RPC,
+    Bsc: process.env.BSC_RPC,
+    Polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon_mumbai',
+    Avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche_fuji',
+    Oasis: process.env.OASIS_RPC || 'https://testnet.emerald.oasis.dev',
+    Algorand: process.env.ALGORAND_RPC || 'https://testnet-api.algonode.cloud',
+    Fantom: process.env.FANTOM_RPC,
+    Karura: process.env.KARURA_RPC,
+    Acala: process.env.ACALA_RPC || 'https://eth-rpc-acala-testnet.aca-staging.network',
+    Klaytn: process.env.KLAYTN_RPC || 'https://rpc.ankr.com/klaytn_testnet',
+    Celo: process.env.CELO_RPC || 'https://alfajores-forno.celo-testnet.org',
+    Moonbeam: process.env.MOONBEAM_RPC,
+    Arbitrum: process.env.ARBITRUM_RPC || 'https://sepolia-rollup.arbitrum.io/rpc',
+    Optimism: process.env.OPTIMISM_RPC || 'https://optimism-goerli.publicnode.com',
+    Aptos: process.env.APTOS_RPC,
+    Near: process.env.NEAR_RPC,
+    Xpla: process.env.XPLA_RPC || 'https://cube-lcd.xpla.dev',
+    Terra2: process.env.TERRA2_RPC || 'https://pisco-lcd.terra.dev',
+    Terra: process.env.TERRA_RPC,
+    Injective: process.env.INJECTIVE_RPC,
+    Solana: process.env.SOLANA_RPC,
+    Sui: process.env.SUI_RPC,
+    Base: process.env.BASE_RPC,
+    Sei: process.env.SEI_RPC,
+    Wormchain: process.env.WORMCHAIN_RPC,
+    ArbitrumSepolia: process.env.ARBITRUM_SEPOLIA_RPC,
+    BaseSepolia: process.env.BASE_SEPOLIA_RPC,
+    OptimismSepolia: process.env.OPTIMISM_SEPOLIA_RPC,
+    Holesky: process.env.HOLESKY_RPC,
+    Sepolia: process.env.SEPOLIA_RPC,
+    PolygonSepolia: process.env.POLYGON_SEPOLIA_RPC || 'https://rpc-amoy.polygon.technology',
   },
   ['devnet']: {},
 };
@@ -116,8 +117,8 @@ export const ALGORAND_INFO: { [key in Environment]: AlgorandInfo } = {
   ['mainnet']: {
     appid: Number(CONTRACTS.MAINNET.algorand.core),
     algodToken: '',
-    algodServer: RPCS_BY_CHAIN['mainnet'].algorand
-      ? (RPCS_BY_CHAIN['mainnet'].algorand as string)
+    algodServer: RPCS_BY_CHAIN['mainnet'].Algorand
+      ? (RPCS_BY_CHAIN['mainnet'].Algorand as string)
       : '',
     algodPort: 443,
     server: 'https://mainnet-idx.algonode.cloud',
@@ -127,8 +128,8 @@ export const ALGORAND_INFO: { [key in Environment]: AlgorandInfo } = {
   ['testnet']: {
     appid: Number(CONTRACTS.TESTNET.algorand.core),
     algodToken: '',
-    algodServer: RPCS_BY_CHAIN['testnet'].algorand
-      ? (RPCS_BY_CHAIN['testnet'].algorand as string)
+    algodServer: RPCS_BY_CHAIN['testnet'].Algorand
+      ? (RPCS_BY_CHAIN['testnet'].Algorand as string)
       : '',
     algodPort: 443,
     server: 'https://testnet-idx.algonode.cloud',

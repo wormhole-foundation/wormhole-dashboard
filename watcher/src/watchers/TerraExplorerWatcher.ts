@@ -5,6 +5,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { CosmwasmChains } from '@wormhole-foundation/sdk-cosmwasm';
 
 export class TerraExplorerWatcher extends Watcher {
   // Arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
@@ -16,7 +17,7 @@ export class TerraExplorerWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: Environment, chain: CosmWasmChainName) {
+  constructor(network: Environment, chain: CosmwasmChains) {
     super(network, chain);
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
@@ -45,7 +46,7 @@ export class TerraExplorerWatcher extends Watcher {
   // use "next": as the pagination key
   // compare block height ("height":) with what is passed in.
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const address = CONTRACTS.MAINNET[this.chain].core;
+    const address = CONTRACTS.MAINNET[this.chain.toLowerCase() as CosmWasmChainName].core;
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }

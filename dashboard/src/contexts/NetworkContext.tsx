@@ -1,5 +1,5 @@
-import React, { ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { useSettingsContext } from './SettingsContext';
+import React, { ReactNode, useCallback, useContext, useEffect, useMemo } from 'react';
+import { useHistory, useLocation } from 'react-router-dom';
 
 export type Environment = 'mainnet' | 'testnet' | 'devnet';
 export type Network = {
@@ -12,7 +12,7 @@ export type Network = {
 
 type NetworkContextValue = {
   currentNetwork: Network;
-  setCurrentNetwork: React.Dispatch<React.SetStateAction<Network>>;
+  setCurrentNetwork: (network: Network) => void;
 };
 
 // https://book.wormhole.com/reference/rpcnodes.html
@@ -107,6 +107,7 @@ export const networkOptions: Network[] = [
 ];
 
 const defaultNetwork: Network = networkOptions[0];
+const urlParamKey = 'endpoint';
 
 const NetworkContext = React.createContext<NetworkContextValue>({
   currentNetwork: defaultNetwork,
@@ -114,16 +115,32 @@ const NetworkContext = React.createContext<NetworkContextValue>({
 });
 
 export const NetworkContextProvider = ({ children }: { children: ReactNode }) => {
-  const {
-    settings: { defaultEndpoint },
-    updateDefaultEndpoint,
-  } = useSettingsContext();
-  const [currentNetwork, setCurrentNetwork] = useState<Network>(
-    networkOptions.find((option) => option.endpoint === defaultEndpoint) || defaultNetwork
+  const { push, replace } = useHistory();
+  const { search } = useLocation();
+  const { urlParams, urlNetwork, currentNetwork } = useMemo(() => {
+    const urlParams = new URLSearchParams(search);
+    const urlNetwork = urlParams.get(urlParamKey);
+    const currentNetwork =
+      networkOptions.find((option) => option.name === urlNetwork) || defaultNetwork;
+    return { urlParams, urlNetwork, currentNetwork };
+  }, [search]);
+  const setCurrentNetwork = useCallback(
+    (network: Network, shouldReplace?: boolean) => {
+      if (urlNetwork !== network.name) {
+        urlParams.set(urlParamKey, network.name);
+        if (shouldReplace) {
+          replace({ search: urlParams.toString() });
+        } else {
+          push({ search: urlParams.toString() });
+        }
+      }
+    },
+    [urlNetwork, urlParams, replace, push]
   );
   useEffect(() => {
-    updateDefaultEndpoint(currentNetwork.endpoint);
-  }, [currentNetwork, updateDefaultEndpoint]);
+    // sync initial / bad param with drop down, this will do nothing when the current network matches
+    setCurrentNetwork(currentNetwork, true);
+  }, [currentNetwork, setCurrentNetwork]);
   const value = useMemo(
     () => ({ currentNetwork, setCurrentNetwork }),
     [currentNetwork, setCurrentNetwork]

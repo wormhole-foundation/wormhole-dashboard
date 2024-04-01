@@ -9,7 +9,7 @@ import { NearArchiveWatcher } from '../NearArchiveWatcher';
 jest.setTimeout(60000);
 
 const INITIAL_NEAR_BLOCK = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].near ?? 0
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Near ?? 0
 );
 let archiveWatcher: NearArchiveWatcher = new NearArchiveWatcher('mainnet');
 
@@ -31,7 +31,7 @@ test.skip('getMessagesForBlocks', async () => {
 
 describe('getNearProvider', () => {
   test('with normal RPC', async () => {
-    const provider = await getNearProvider('mainnet', RPCS_BY_CHAIN['mainnet']['near']!);
+    const provider = await getNearProvider('mainnet', RPCS_BY_CHAIN['mainnet']['Near']!);
     // grab last block from core contract
     expect(await provider.block({ finality: 'final' })).toBeTruthy();
   });

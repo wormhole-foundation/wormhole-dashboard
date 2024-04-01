@@ -5,9 +5,9 @@ import { ArbitrumWatcher } from '../ArbitrumWatcher';
 jest.setTimeout(60000);
 
 const initialArbitrumBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].arbitrum
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Arbitrum
 );
-const initialEthBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].ethereum);
+const initialEthBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Ethereum);
 
 test('getFinalizedBlockNumber', async () => {
   const watcher = new ArbitrumWatcher('mainnet');

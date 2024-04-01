@@ -4,16 +4,16 @@ import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundat
 import { Block, EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 
 const initialAvalancheBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].avalanche
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Avalanche
 );
-const initialCeloBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].celo);
-const initialOasisBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].oasis);
-const initialKaruraBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].karura);
+const initialCeloBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Celo);
+const initialOasisBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Oasis);
+const initialKaruraBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Karura);
 
 jest.setTimeout(60000);
 
 test('getBlock by tag', async () => {
-  const watcher = new EVMWatcher('mainnet', 'avalanche');
+  const watcher = new EVMWatcher('mainnet', 'Avalanche');
   const block = await watcher.getBlock('latest');
   expect(block.number).toBeGreaterThan(initialAvalancheBlock);
   expect(block.timestamp).toBeGreaterThan(1671672811);
@@ -21,7 +21,7 @@ test('getBlock by tag', async () => {
 });
 
 test('getBlock by number', async () => {
-  const watcher = new EVMWatcher('mainnet', 'avalanche');
+  const watcher = new EVMWatcher('mainnet', 'Avalanche');
   const block = await watcher.getBlock(initialAvalancheBlock);
   expect(block.number).toEqual(initialAvalancheBlock);
   expect(block.hash).toEqual('0x33b358fe68a2a11b6a5a5969f29f9223001e36a5d719734ba542b238d397f14e');
@@ -30,7 +30,7 @@ test('getBlock by number', async () => {
 });
 
 test('getBlocks', async () => {
-  const watcher = new EVMWatcher('mainnet', 'avalanche');
+  const watcher = new EVMWatcher('mainnet', 'Avalanche');
   const blocks = await watcher.getBlocks(
     initialAvalancheBlock,
     initialAvalancheBlock + watcher.maximumBatchSize - 1
@@ -50,7 +50,7 @@ test('getBlocks', async () => {
 });
 
 test('getLogs', async () => {
-  const watcher = new EVMWatcher('mainnet', 'avalanche');
+  const watcher = new EVMWatcher('mainnet', 'Avalanche');
   const logs = await watcher.getLogs(9743300, 9743399, CONTRACTS.MAINNET.avalanche.core, [
     LOG_MESSAGE_PUBLISHED_TOPIC,
   ]);
@@ -63,13 +63,13 @@ test('getLogs', async () => {
 });
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new EVMWatcher('mainnet', 'avalanche');
+  const watcher = new EVMWatcher('mainnet', 'Avalanche');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(initialAvalancheBlock);
 });
 
 test('getMessagesForBlocks', async () => {
-  const watcher = new EVMWatcher('mainnet', 'avalanche');
+  const watcher = new EVMWatcher('mainnet', 'Avalanche');
   const vaasByBlock = await watcher.getMessagesForBlocks(9743300, 9743399);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(100);
@@ -84,7 +84,7 @@ test('getMessagesForBlocks', async () => {
 });
 
 test('getBlock by tag (Oasis compatibility)', async () => {
-  const watcher = new EVMWatcher('mainnet', 'oasis');
+  const watcher = new EVMWatcher('mainnet', 'Oasis');
   const block = await watcher.getBlock('latest');
   expect(block.number).toBeGreaterThan(initialOasisBlock);
   expect(block.timestamp).toBeGreaterThan(3895665);
@@ -92,7 +92,7 @@ test('getBlock by tag (Oasis compatibility)', async () => {
 });
 
 test('getBlock by tag (Celo compatibility)', async () => {
-  const watcher = new EVMWatcher('mainnet', 'celo');
+  const watcher = new EVMWatcher('mainnet', 'Celo');
   const block = await watcher.getBlock('latest');
   expect(block.number).toBeGreaterThan(initialCeloBlock);
   expect(block.timestamp).toBeGreaterThan(1671672811);
@@ -100,7 +100,7 @@ test('getBlock by tag (Celo compatibility)', async () => {
 });
 
 test('getBlock by number (Celo compatibility)', async () => {
-  const watcher = new EVMWatcher('mainnet', 'celo');
+  const watcher = new EVMWatcher('mainnet', 'Celo');
   const block = await watcher.getBlock(initialCeloBlock);
   expect(block.number).toEqual(initialCeloBlock);
   expect(block.timestamp).toEqual(1652314820);
@@ -108,7 +108,7 @@ test('getBlock by number (Celo compatibility)', async () => {
 });
 
 test('getMessagesForBlocks (Celo compatibility)', async () => {
-  const watcher = new EVMWatcher('mainnet', 'celo');
+  const watcher = new EVMWatcher('mainnet', 'Celo');
   const vaasByBlock = await watcher.getMessagesForBlocks(13322450, 13322549);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(100);
@@ -123,7 +123,7 @@ test('getMessagesForBlocks (Celo compatibility)', async () => {
 });
 
 test('getBlock by number (Karura compatibility)', async () => {
-  const watcher = new EVMWatcher('mainnet', 'karura');
+  const watcher = new EVMWatcher('mainnet', 'Karura');
   const latestBlock = await watcher.getFinalizedBlockNumber();
   const moreRecentBlockNumber = 4646601;
   //   block {
@@ -139,7 +139,7 @@ test('getBlock by number (Karura compatibility)', async () => {
 });
 
 test('getMessagesForBlocks (Karura compatibility)', async () => {
-  const watcher = new EVMWatcher('mainnet', 'karura');
+  const watcher = new EVMWatcher('mainnet', 'Karura');
   const vaasByBlock = await watcher.getMessagesForBlocks(4582511, 4582513);
   const entries = Object.entries(vaasByBlock);
   console.log('entries', entries);
@@ -152,7 +152,7 @@ test('getMessagesForBlocks (Karura compatibility)', async () => {
 });
 
 test('getMessagesForBlocks (Karura compatibility 2)', async () => {
-  const watcher = new EVMWatcher('mainnet', 'karura');
+  const watcher = new EVMWatcher('mainnet', 'Karura');
   await watcher.getFinalizedBlockNumber(); // This has the side effect of initializing the latestFinalizedBlockNumber
   const vaasByBlock = await watcher.getMessagesForBlocks(4595356, 4595358);
   const entries = Object.entries(vaasByBlock);
@@ -162,7 +162,7 @@ test('getMessagesForBlocks (Karura compatibility 2)', async () => {
 
 // skipped as it was timing out the test
 test.skip('getBlock (Karura compatibility)', async () => {
-  const watcher = new EVMWatcher('mainnet', 'karura');
+  const watcher = new EVMWatcher('mainnet', 'Karura');
   await watcher.getFinalizedBlockNumber(); // This has the side effect of initializing the latestFinalizedBlockNumber
   let block: Block = await watcher.getBlock(4582512); // 6969 block
   console.log('block', block);

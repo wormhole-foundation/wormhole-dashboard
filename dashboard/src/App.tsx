@@ -1,4 +1,5 @@
 import { CssBaseline } from '@mui/material';
+import { HashRouter as Router } from 'react-router-dom';
 import CustomThemeProvider from './components/CustomThemeProvider';
 import Main from './components/Main';
 import { NetworkContextProvider } from './contexts/NetworkContext';
@@ -9,9 +10,11 @@ function App() {
     <SettingsContextProvider>
       <CustomThemeProvider>
         <CssBaseline />
-        <NetworkContextProvider>
-          <Main />
-        </NetworkContextProvider>
+        <Router>
+          <NetworkContextProvider>
+            <Main />
+          </NetworkContextProvider>
+        </Router>
       </CustomThemeProvider>
     </SettingsContextProvider>
   );

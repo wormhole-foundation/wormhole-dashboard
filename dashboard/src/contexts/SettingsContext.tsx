@@ -7,7 +7,6 @@ export type Theme = 'light' | 'dark' | 'auto';
 type Settings = {
   backgroundUrl?: string;
   backgroundOpacity?: number;
-  defaultEndpoint?: string;
   theme: Theme;
   showChainName?: boolean;
   showAllMisses?: boolean;
@@ -18,7 +17,6 @@ type SettingsContextValue = {
   settings: Settings;
   updateBackgroundOpacity(value: number): void;
   updateBackgroundUrl(value: string): void;
-  updateDefaultEndpoint(value: string): void;
   updateTheme(value: Theme): void;
   updateShowChainName(value: boolean): void;
   updateShowAllMisses(value: boolean): void;
@@ -56,7 +54,6 @@ const SettingsContext = React.createContext<SettingsContextValue>({
   settings: initialSettings,
   updateBackgroundOpacity: (value: number) => {},
   updateBackgroundUrl: (value: string) => {},
-  updateDefaultEndpoint: (value: string) => {},
   updateTheme: (value: Theme) => {},
   updateShowChainName: (value: boolean) => {},
   updateShowAllMisses: (value: boolean) => {},
@@ -70,9 +67,6 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
   }, []);
   const updateBackgroundUrl = useCallback((value: string) => {
     setSettings((settings) => ({ ...settings, backgroundUrl: value }));
-  }, []);
-  const updateDefaultEndpoint = useCallback((value: string) => {
-    setSettings((settings) => ({ ...settings, defaultEndpoint: value }));
   }, []);
   const updateTheme = useCallback((value: Theme) => {
     setSettings((settings) => ({ ...settings, theme: value }));
@@ -95,7 +89,6 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       settings,
       updateBackgroundOpacity,
       updateBackgroundUrl,
-      updateDefaultEndpoint,
       updateTheme,
       updateShowChainName,
       updateShowAllMisses,
@@ -105,7 +98,6 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       settings,
       updateBackgroundOpacity,
       updateBackgroundUrl,
-      updateDefaultEndpoint,
       updateTheme,
       updateShowChainName,
       updateShowAllMisses,

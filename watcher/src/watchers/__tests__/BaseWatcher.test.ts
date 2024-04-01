@@ -1,21 +1,20 @@
 import { expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { EVMWatcher } from '../EVMWatcher';
-import { NEAR_ARCHIVE_RPC } from '../../utils/near';
 
 jest.setTimeout(60000);
 
-const initialBaseBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].base);
+const initialBaseBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Base);
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new EVMWatcher('mainnet', 'base');
+  const watcher = new EVMWatcher('mainnet', 'Base');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   console.log('blockNumber', blockNumber);
   expect(blockNumber).toBeGreaterThan(initialBaseBlock);
 });
 
 test('getMessagesForBlocks', async () => {
-  const watcher = new EVMWatcher('mainnet', 'base');
+  const watcher = new EVMWatcher('mainnet', 'Base');
   const vaasByBlock = await watcher.getMessagesForBlocks(1544175, 1544185);
   expect(vaasByBlock).toMatchObject({
     '1544175/2023-07-20T18:28:17.000Z': [],
@@ -33,7 +32,7 @@ test('getMessagesForBlocks', async () => {
 });
 
 test('getMessagesForBlockWithWHMsg', async () => {
-  const watcher = new EVMWatcher('mainnet', 'base');
+  const watcher = new EVMWatcher('mainnet', 'Base');
   const vaasByBlock = await watcher.getMessagesForBlocks(1557420, 1557429);
   expect(vaasByBlock).toMatchObject({
     '1557420/2023-07-21T01:49:47.000Z': [],

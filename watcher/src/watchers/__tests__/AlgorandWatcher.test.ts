@@ -5,7 +5,7 @@ import { AlgorandWatcher } from '../AlgorandWatcher';
 jest.setTimeout(180000);
 
 const initialAlgorandBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].algorand
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Algorand
 );
 
 test('getFinalizedBlockNumber', async () => {

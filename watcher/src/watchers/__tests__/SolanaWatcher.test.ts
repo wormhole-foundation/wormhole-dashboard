@@ -5,7 +5,7 @@ import { SolanaWatcher } from '../SolanaWatcher';
 jest.setTimeout(60000);
 
 const INITIAL_SOLANA_BLOCK = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].solana ?? 0
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Solana ?? 0
 );
 
 test('getFinalizedBlockNumber', async () => {

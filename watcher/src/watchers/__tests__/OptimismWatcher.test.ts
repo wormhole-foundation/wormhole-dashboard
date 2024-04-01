@@ -5,18 +5,18 @@ import { EVMWatcher } from '../EVMWatcher';
 jest.setTimeout(60000);
 
 const initialOptimismBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].optimism
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Optimism
 );
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new EVMWatcher('mainnet', 'optimism');
+  const watcher = new EVMWatcher('mainnet', 'Optimism');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   console.log('blockNumber', blockNumber);
   expect(blockNumber).toBeGreaterThan(105235062);
 });
 
 test('getMessagesForBlocks', async () => {
-  const watcher = new EVMWatcher('mainnet', 'optimism');
+  const watcher = new EVMWatcher('mainnet', 'Optimism');
   const vaasByBlock = await watcher.getMessagesForBlocks(105235070, 105235080);
   expect(vaasByBlock).toMatchObject({
     '105235070/2023-06-06T16:28:37.000Z': [],

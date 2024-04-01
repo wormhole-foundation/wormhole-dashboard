@@ -10,13 +10,13 @@ import { isBase64Encoded } from '../../utils/isBase64Encoded';
 jest.setTimeout(60000);
 
 test('getFinalizedBlockNumber(terra2)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'terra2');
+  const watcher = new CosmwasmWatcher('mainnet', 'Terra2');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(3181746);
 });
 
 test('getMessagesForBlocks(terra2)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'terra2');
+  const watcher = new CosmwasmWatcher('mainnet', 'Terra2');
   const vaasByBlock = await watcher.getMessagesForBlocks(3165191, 3165192);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
@@ -31,7 +31,7 @@ test('getMessagesForBlocks(terra2)', async () => {
 });
 
 test('getMessagesForBlocks(terra2)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'terra2');
+  const watcher = new CosmwasmWatcher('mainnet', 'Terra2');
   const vaasByBlock = await watcher.getMessagesForBlocks(5635710, 5635712);
   const entries = Object.entries(vaasByBlock);
   // console.log(entries); // Leave this in for future debugging
@@ -45,14 +45,14 @@ test('getMessagesForBlocks(terra2)', async () => {
 });
 
 test.skip('getFinalizedBlockNumber(terra)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'terra');
+  const watcher = new CosmwasmWatcher('mainnet', 'Terra');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(10980872);
 });
 
 // flaky rpc, skip
 test.skip('getMessagesForBlocks(terra)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'terra');
+  const watcher = new CosmwasmWatcher('mainnet', 'Terra');
   const vaasByBlock = await watcher.getMessagesForBlocks(10974196, 10974197);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
@@ -67,14 +67,14 @@ test.skip('getMessagesForBlocks(terra)', async () => {
 });
 
 test('getFinalizedBlockNumber(terra explorer)', async () => {
-  const watcher = new TerraExplorerWatcher('mainnet', 'terra');
+  const watcher = new TerraExplorerWatcher('mainnet', 'Terra');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(10980872);
 });
 
 // flaky rpc, skip
 test('getMessagesForBlocks(terra explorer)', async () => {
-  const watcher = new TerraExplorerWatcher('mainnet', 'terra');
+  const watcher = new TerraExplorerWatcher('mainnet', 'Terra');
   const vaasByBlock = await watcher.getMessagesForBlocks(14506733, 14506740);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
@@ -90,7 +90,7 @@ test('getMessagesForBlocks(terra explorer)', async () => {
 
 // flaky rpc, skip
 test.skip('getMessagesForBlocks(terra explorer, no useful info)', async () => {
-  const watcher = new TerraExplorerWatcher('mainnet', 'terra');
+  const watcher = new TerraExplorerWatcher('mainnet', 'Terra');
   const vaasByBlock = await watcher.getMessagesForBlocks(10975000, 10975010);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(1);
@@ -100,13 +100,13 @@ test.skip('getMessagesForBlocks(terra explorer, no useful info)', async () => {
 });
 
 test('getFinalizedBlockNumber(xpla)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'xpla');
+  const watcher = new CosmwasmWatcher('mainnet', 'Xpla');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(1980633);
 });
 
 test('getMessagesForBlocks(xpla)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'xpla');
+  const watcher = new CosmwasmWatcher('mainnet', 'Xpla');
   const vaasByBlock = await watcher.getMessagesForBlocks(1645812, 1645813);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
@@ -144,7 +144,7 @@ test.skip('getMessagesForBlocks(injective)', async () => {
 
 // skipped because the SeiExplorerWatcher is used
 test.skip('getFinalizedBlockNumber(sei)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'sei');
+  const watcher = new CosmwasmWatcher('mainnet', 'Sei');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   console.log(blockNumber);
   expect(blockNumber).toBeGreaterThan(0);
@@ -152,7 +152,7 @@ test.skip('getFinalizedBlockNumber(sei)', async () => {
 
 // skipped because the SeiExplorerWatcher is used
 test.skip('getMessagesForBlocks(sei)', async () => {
-  const watcher = new CosmwasmWatcher('mainnet', 'sei');
+  const watcher = new CosmwasmWatcher('mainnet', 'Sei');
   const vaasByBlock = await watcher.getMessagesForBlocks(18907686, 18907687);
   const entries = Object.entries(vaasByBlock);
   console.log(entries);
@@ -197,7 +197,7 @@ test('getFinalizedBlockNumber(wormchain)', async () => {
   const blockNumber = await watcher.getFinalizedBlockNumber();
   console.log(blockNumber);
   expect(blockNumber).toBeGreaterThan(
-    Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].wormchain)
+    Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Wormchain)
   );
 });
 

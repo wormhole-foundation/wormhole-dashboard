@@ -5,7 +5,7 @@ import { MoonbeamWatcher } from '../MoonbeamWatcher';
 jest.setTimeout(60000);
 
 const initialMoonbeamBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].moonbeam
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Moonbeam
 );
 
 test('getFinalizedBlockNumber', async () => {

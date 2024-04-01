@@ -5,7 +5,7 @@ import { SuiWatcher } from '../SuiWatcher';
 jest.setTimeout(60000);
 
 const INITAL_SEQUENCE_NUMBER = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].sui ?? 1581000
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Sui ?? 1581000
 );
 
 test('getFinalizedSequenceNumber', async () => {

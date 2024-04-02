@@ -38,12 +38,10 @@ import {
   GUARDIAN_SET_3,
   WORMCHAIN_URL,
 } from '../utils/consts';
-import { CHAIN_INFO_MAP } from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
 import useTokenData, { TokenDataEntry } from '../hooks/useTokenData';
 import numeral from 'numeral';
-import { useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { useDebounce } from 'use-debounce';
@@ -153,7 +151,7 @@ const pendingTransferColumns = [
     header: () => 'Tx',
     cell: (info) => (
       <ExplorerTxHash
-        chain={info.row.original.key.emitter_chain}
+        chainId={info.row.original.key.emitter_chain}
         rawTxHash={'0x' + Buffer.from(info.getValue(), 'base64').toString('hex')}
       />
     ),
@@ -552,7 +550,6 @@ function Accountant({
       }, {} as { [chainId: number]: number }),
     [pendingTransferInfo]
   );
-  const network = useCurrentEnvironment();
   return (
     <>
       <CollapsibleSection
@@ -589,7 +586,7 @@ function Accountant({
                       {CHAIN_ICON_MAP[chainId] ? (
                         <img
                           src={CHAIN_ICON_MAP[chainId]}
-                          alt={CHAIN_INFO_MAP[network][chainId].name}
+                          alt={chainIdToName(Number(chainId))}
                           width={24}
                         />
                       ) : (

@@ -40,13 +40,11 @@ import {
 } from '../hooks/useCloudGovernorInfo';
 import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_ICON_MAP, GUARDIAN_SET_3 } from '../utils/consts';
-import { CHAIN_INFO_MAP } from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
-import Table from './Table';
-import { useCurrentEnvironment } from '../contexts/NetworkContext';
-import { ExplorerTxHash } from './ExplorerTxHash';
 import { ExplorerAssetURL } from './ExplorerAssetURL';
+import { ExplorerTxHash } from './ExplorerTxHash';
+import Table from './Table';
 
 const calculatePercent = (notional: AvailableNotionalByChain): number => {
   try {
@@ -166,7 +164,7 @@ const guardianHoldingColumns = [
                 {CHAIN_ICON_MAP[chainId] ? (
                   <img
                     src={CHAIN_ICON_MAP[chainId]}
-                    alt={CHAIN_INFO_MAP[useCurrentEnvironment()][chainId].name}
+                    alt={chainIdToName(Number(chainId))}
                     width={12}
                     height={12}
                   />
@@ -218,7 +216,7 @@ const enqueuedColumns = [
   enqueuedColumnHelper.accessor('txHash', {
     header: () => 'Transaction Hash',
     cell: (info) => (
-      <ExplorerTxHash chain={info.row.original.emitterChain} rawTxHash={info.getValue()} />
+      <ExplorerTxHash chainId={info.row.original.emitterChain} rawTxHash={info.getValue()} />
     ),
   }),
   enqueuedColumnHelper.accessor('releaseTime', {
@@ -359,7 +357,6 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
       }, {} as ChainIdToEnqueuedCount),
     [governorInfo.enqueuedVAAs]
   );
-  const network = useCurrentEnvironment();
   return (
     <CollapsibleSection
       defaultExpanded={false}
@@ -388,7 +385,7 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
                     {CHAIN_ICON_MAP[chainId] ? (
                       <img
                         src={CHAIN_ICON_MAP[chainId]}
-                        alt={CHAIN_INFO_MAP[network][chainId].name}
+                        alt={chainIdToName(Number(chainId))}
                         width={24}
                         height={24}
                       />

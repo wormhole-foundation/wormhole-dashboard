@@ -12,7 +12,6 @@ import { decode } from 'bs58';
 import { Connection } from '@solana/web3.js';
 import { contracts, encoding } from '@wormhole-foundation/sdk-base';
 import { BN } from '@coral-xyz/anchor';
-import { CHAIN_INFO_MAP } from './consts';
 
 export const isLegacyMessage = (message: Message | MessageV0): message is Message => {
   return message.version === 'legacy';
@@ -35,7 +34,7 @@ export const normalizeCompileInstruction = (
 export async function convertSolanaTxToAccts(txHash: string): Promise<string[]> {
   const POST_MESSAGE_IX_ID = 0x01;
   let accounts: string[] = [];
-  const connection = new Connection(CHAIN_INFO_MAP['mainnet'][1].endpointUrl!, 'finalized');
+  const connection = new Connection('https://api.mainnet-beta.solana.com', 'finalized');
   const txs = await connection.getTransactions([txHash], {
     maxSupportedTransactionVersion: 0,
   });

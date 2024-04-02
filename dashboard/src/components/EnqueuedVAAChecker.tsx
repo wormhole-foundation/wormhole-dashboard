@@ -1,7 +1,8 @@
-import { ChainId, getSignedVAA, getSignedVAAWithRetry } from '@certusone/wormhole-sdk';
 import { GovernorGetEnqueuedVAAsResponse_Entry } from '@certusone/wormhole-sdk-proto-web/lib/cjs/publicrpc/v1/publicrpc';
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
+import { ChainId } from '@wormhole-foundation/sdk-base';
+import getSignedVAAWithRetry, { getSignedVAA } from '../utils/getSignedVaa';
 
 const VAA_CHECK_TIMEOUT = 60000;
 const WORMHOLE_RPC_HOSTS = [

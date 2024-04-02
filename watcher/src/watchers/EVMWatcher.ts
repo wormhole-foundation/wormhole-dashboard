@@ -8,7 +8,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
-import { EvmChains } from '@wormhole-foundation/sdk-evm';
+import { PlatformToChains } from '@wormhole-foundation/sdk-base';
 
 // This is the hash for topic[0] of the core contract event LogMessagePublished
 // https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/contracts/Implementation.sol#L12
@@ -32,7 +32,11 @@ export class EVMWatcher extends Watcher {
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
 
-  constructor(network: Environment, chain: EvmChains, finalizedBlockTag: BlockTag = 'latest') {
+  constructor(
+    network: Environment,
+    chain: PlatformToChains<'Evm'>,
+    finalizedBlockTag: BlockTag = 'latest'
+  ) {
     super(network, chain);
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;

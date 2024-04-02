@@ -1,4 +1,3 @@
-import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/esm/utils/consts';
 import { ArrowDownward, ArrowUpward, Code, ExpandMore, Launch } from '@mui/icons-material';
 import {
   Accordion,
@@ -34,6 +33,7 @@ import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMoni
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
 import CollapsibleSection from './CollapsibleSection';
 import { CHAIN_ICON_MAP } from '../utils/consts';
+import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
 
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',
@@ -313,7 +313,7 @@ function Misses({
             <CollapsibleSection
               key={chain}
               defaultExpanded={false}
-              header={`${coalesceChainName(Number(chain) as ChainId)} (${chain}) - ${
+              header={`${chainIdToChain.get(Number(chain) as ChainId)} (${chain}) - ${
                 filteredMisses.length
               }`}
             >
@@ -438,7 +438,7 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                         src={CHAIN_ICON_MAP[chainId]}
                         alt={
                           CHAIN_INFO_MAP[network][chainId]?.name ||
-                          coalesceChainName(Number(chainId) as ChainId)
+                          chainIdToChain.get(Number(chainId) as ChainId)
                         }
                         width={24}
                         height={24}
@@ -509,7 +509,7 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                     header={
                       <div>
                         <Typography variant="h5" sx={{ mb: 0.5 }}>
-                          {coalesceChainName(Number(chain) as ChainId)} ({chain})
+                          {chainIdToChain.get(Number(chain) as ChainId)} ({chain})
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 0.5 }}>
                           Last Indexed Block - {lastBlock.split('/')[0]}

@@ -5,7 +5,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
-import { CosmwasmChains } from '@wormhole-foundation/sdk-cosmwasm';
+import { PlatformToChains } from '@wormhole-foundation/sdk-base';
 
 export class TerraExplorerWatcher extends Watcher {
   // Arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
@@ -17,7 +17,7 @@ export class TerraExplorerWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: Environment, chain: CosmwasmChains) {
+  constructor(network: Environment, chain: PlatformToChains<'Cosmwasm'>) {
     super(network, chain);
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {

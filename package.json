@@ -14,13 +14,12 @@
     "cloud_functions",
     "database"
   ],
-  "dependencies": {
-    "@wormhole-foundation/sdk-base": "^0.5.1",
-    "@wormhole-foundation/sdk-cosmwasm": "^0.5.1",
-    "@wormhole-foundation/sdk-evm": "^0.5.1"
-  },
   "devDependencies": {
     "prettier": "^2.8.1",
     "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "@certusone/wormhole-sdk": "^0.10.13",
+    "@wormhole-foundation/sdk-base": "^0.5.2"
   }
 }

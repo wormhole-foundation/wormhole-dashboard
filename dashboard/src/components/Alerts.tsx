@@ -1,9 +1,4 @@
-import {
-  CHAIN_ID_ARBITRUM,
-  CHAIN_ID_AURORA,
-  CHAIN_ID_OPTIMISM,
-  CHAIN_ID_POLYGON,
-} from '@certusone/wormhole-sdk';
+import { chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
   CheckCircleOutline,
   ErrorOutline,
@@ -29,7 +24,9 @@ import { Heartbeat } from '../utils/getLastHeartbeats';
 export const BEHIND_DIFF = 1000;
 export const CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD = 2;
 const isLayer2 = (chainId: number) =>
-  chainId === CHAIN_ID_POLYGON || chainId === CHAIN_ID_ARBITRUM || chainId === CHAIN_ID_OPTIMISM;
+  chainId === chainToChainId('Polygon') ||
+  chainId === chainToChainId('Arbitrum') ||
+  chainId === chainToChainId('Optimism');
 export const getBehindDiffForChain = (chainId: number) =>
   isLayer2(chainId) ? BEHIND_DIFF * 2 : BEHIND_DIFF;
 
@@ -63,7 +60,7 @@ function chainDownAlerts(
   const downChains: { [chainId: string]: string[] } = {};
   Object.entries(chainIdsToHeartbeats)
     // Aurora is known to be disabled, no need to alert on it
-    .filter(([chainId]) => chainId !== CHAIN_ID_AURORA.toString())
+    .filter(([chainId]) => chainId !== chainToChainId('Aurora').toString())
     .forEach(([chainId, chainHeartbeats]) => {
       // Search for known guardians without heartbeats
       const missingGuardians = heartbeats.filter(

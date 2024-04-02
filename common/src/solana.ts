@@ -10,10 +10,9 @@ import {
 } from '@solana/web3.js';
 import { decode } from 'bs58';
 import { Connection } from '@solana/web3.js';
-import { RPCS_BY_CHAIN } from '@certusone/wormhole-sdk/lib/cjs/relayer';
-import { CONTRACTS } from '@certusone/wormhole-sdk';
-import { encoding } from '@wormhole-foundation/sdk-base';
+import { contracts, encoding } from '@wormhole-foundation/sdk-base';
 import { BN } from '@coral-xyz/anchor';
+import { CHAIN_INFO_MAP } from './consts';
 
 export const isLegacyMessage = (message: Message | MessageV0): message is Message => {
   return message.version === 'legacy';
@@ -36,7 +35,7 @@ export const normalizeCompileInstruction = (
 export async function convertSolanaTxToAccts(txHash: string): Promise<string[]> {
   const POST_MESSAGE_IX_ID = 0x01;
   let accounts: string[] = [];
-  const connection = new Connection(RPCS_BY_CHAIN.MAINNET.solana!, 'finalized');
+  const connection = new Connection(CHAIN_INFO_MAP['mainnet'][1].endpointUrl!, 'finalized');
   const txs = await connection.getTransactions([txHash], {
     maxSupportedTransactionVersion: 0,
   });
@@ -47,7 +46,7 @@ export async function convertSolanaTxToAccts(txHash: string): Promise<string[]> 
     const message = tx.transaction.message;
     const accountKeys = isLegacyMessage(message) ? message.accountKeys : message.staticAccountKeys;
     const programIdIndex = accountKeys.findIndex(
-      (i) => i.toBase58() === CONTRACTS.MAINNET.solana.core
+      (i) => i.toBase58() === contracts.coreBridge('Mainnet', 'Solana')
     );
     const instructions = message.compiledInstructions;
     const innerInstructions =

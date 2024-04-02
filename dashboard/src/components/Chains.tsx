@@ -1,4 +1,3 @@
-import { CHAIN_ID_AURORA } from '@certusone/wormhole-sdk';
 import {
   CheckCircleOutline,
   ErrorOutline,
@@ -45,6 +44,7 @@ import {
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
 import { CHAIN_ICON_MAP } from '../utils/consts';
+import { chainToChainId } from '@wormhole-foundation/sdk-base';
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
 
@@ -250,7 +250,7 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
         (count, heartbeat) => count + (isHeartbeatUnhealthy(heartbeat, highest) ? 0 : 1),
         0
       );
-      if (Number(chainId) !== CHAIN_ID_AURORA)
+      if (Number(chainId) !== chainToChainId('Aurora'))
         if (healthyCount < getQuorumCount(environment)) {
           numErrors++;
         } else if (healthyCount < getWarningCount(environment)) {

@@ -1,7 +1,6 @@
-import { isCosmWasmChain, isEVMChain, tryHexToNativeString } from '@certusone/wormhole-sdk';
-import { ChainId, toChainId } from '@wormhole-foundation/sdk-base';
+import { ChainId, chainIdToChain, chainToPlatform, toChainId } from '@wormhole-foundation/sdk-base';
 import { base58 } from 'ethers/lib/utils';
-import { CHAIN_INFO_MAP, Environment } from './consts';
+import { Environment } from './consts';
 
 export const explorerBlock = (network: Environment, chainId: ChainId, block: string) =>
   network === 'mainnet'
@@ -206,22 +205,14 @@ export const explorerVaa = (network: string, key: string) =>
     ? `https://wormholescan.io/#/tx/${key}`
     : `https://wormholescan.io/#/tx/${key}?network=TESTNET`;
 
-export const getExplorerTxHash = (network: Environment, chain: ChainId, txHash: string) => {
+export const getExplorerTxHash = (_: Environment, chain: ChainId, txHash: string) => {
   let explorerTxHash = '';
-  if (isCosmWasmChain(chain)) {
+  const platform = chainToPlatform(chainIdToChain(chain));
+  if (platform === 'Cosmwasm') {
     explorerTxHash = txHash.slice(2);
-  } else if (chain === toChainId('Sui')) {
+  } else if (platform === 'Sui' || platform === 'Solana') {
     const txHashBytes = Buffer.from(txHash.slice(2), 'hex');
     explorerTxHash = base58.encode(txHashBytes);
-  } else if (!isEVMChain(chain)) {
-    try {
-      explorerTxHash = tryHexToNativeString(
-        txHash.slice(2),
-        CHAIN_INFO_MAP[network][chain].chainId
-      );
-    } catch (e) {
-      return txHash;
-    }
   } else {
     explorerTxHash = txHash;
   }

@@ -27,8 +27,7 @@ import { RELAYER_CONTRACTS, parseWormholeLog } from '@certusone/wormhole-sdk/lib
 import knex, { Knex } from 'knex';
 import { WormholeLogger } from '../utils/logger';
 import { formatIntoTimestamp } from '../utils/timestamp';
-import { toChainId } from '@wormhole-foundation/sdk-base';
-import { EvmChains } from '@wormhole-foundation/sdk-evm';
+import { PlatformToChains, toChainId } from '@wormhole-foundation/sdk-base';
 
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
   '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
@@ -51,7 +50,11 @@ export class NTTWatcher extends Watcher {
   latestFinalizedBlockNumber: number;
   pg: Knex;
 
-  constructor(network: Environment, chain: EvmChains, finalizedBlockTag: BlockTag = 'latest') {
+  constructor(
+    network: Environment,
+    chain: PlatformToChains<'Evm'>,
+    finalizedBlockTag: BlockTag = 'latest'
+  ) {
     super(network, chain, true);
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;

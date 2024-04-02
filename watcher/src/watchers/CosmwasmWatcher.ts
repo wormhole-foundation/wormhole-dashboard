@@ -8,7 +8,7 @@ import { SHA256 } from 'jscrypto/SHA256';
 import { Base64 } from 'jscrypto/Base64';
 import { isBase64Encoded } from '../utils/isBase64Encoded';
 import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
-import { CosmwasmChains } from '@wormhole-foundation/sdk-cosmwasm';
+import { PlatformToChains } from '@wormhole-foundation/sdk-base';
 
 export class CosmwasmWatcher extends Watcher {
   latestBlockTag: string;
@@ -17,7 +17,7 @@ export class CosmwasmWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: Environment, chain: CosmwasmChains | 'Wormchain') {
+  constructor(network: Environment, chain: PlatformToChains<'Cosmwasm'>) {
     super(network, chain);
     if (chain === 'Injective') {
       throw new Error('Please use InjectiveExplorerWatcher for injective');

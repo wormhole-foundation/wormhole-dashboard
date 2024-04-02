@@ -1,8 +1,8 @@
-import { ChainId } from '@certusone/wormhole-sdk';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
+import { ChainId } from '@wormhole-foundation/sdk-base';
 
 export type LastBlockByChain = { [chainId: string]: string };
 export type CountsByChain = {

@@ -1,234 +1,204 @@
-import {
-  CHAIN_ID_OPTIMISM,
-  CHAIN_ID_SEI,
-  CHAIN_ID_WORMCHAIN,
-  isCosmWasmChain,
-  isEVMChain,
-  tryHexToNativeString,
-  ChainId,
-  CHAIN_ID_ACALA,
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_APTOS,
-  CHAIN_ID_ARBITRUM,
-  CHAIN_ID_AURORA,
-  CHAIN_ID_AVAX,
-  CHAIN_ID_BASE,
-  CHAIN_ID_BSC,
-  CHAIN_ID_CELO,
-  CHAIN_ID_ETH,
-  CHAIN_ID_FANTOM,
-  CHAIN_ID_INJECTIVE,
-  CHAIN_ID_KARURA,
-  CHAIN_ID_KLAYTN,
-  CHAIN_ID_MOONBEAM,
-  CHAIN_ID_NEAR,
-  CHAIN_ID_OASIS,
-  CHAIN_ID_POLYGON,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_SUI,
-  CHAIN_ID_TERRA,
-  CHAIN_ID_TERRA2,
-  CHAIN_ID_XPLA,
-} from '@certusone/wormhole-sdk';
+import { isCosmWasmChain, isEVMChain, tryHexToNativeString } from '@certusone/wormhole-sdk';
+import { ChainId, toChainId } from '@wormhole-foundation/sdk-base';
 import { base58 } from 'ethers/lib/utils';
 import { CHAIN_INFO_MAP, Environment } from './consts';
 
 export const explorerBlock = (network: Environment, chainId: ChainId, block: string) =>
   network === 'mainnet'
-    ? chainId === CHAIN_ID_SOLANA
+    ? chainId === toChainId('Solana')
       ? `https://solana.fm/block/${block}`
-      : chainId === CHAIN_ID_ETH
+      : chainId === toChainId('Ethereum')
       ? `https://etherscan.io/block/${block}`
-      : chainId === CHAIN_ID_TERRA
+      : chainId === toChainId('Terra')
       ? `https://finder.terra.money/columbus-5/block/${block}`
-      : chainId === CHAIN_ID_BSC
+      : chainId === toChainId('Bsc')
       ? `https://bscscan.com/block/${block}`
-      : chainId === CHAIN_ID_POLYGON
+      : chainId === toChainId('Polygon')
       ? `https://polygonscan.com/block/${block}`
-      : chainId === CHAIN_ID_AVAX
+      : chainId === toChainId('Avalanche')
       ? `https://snowtrace.io/block/${block}`
-      : chainId === CHAIN_ID_OASIS
+      : chainId === toChainId('Oasis')
       ? `https://explorer.emerald.oasis.dev/block/${block}`
-      : chainId === CHAIN_ID_ALGORAND
+      : chainId === toChainId('Algorand')
       ? `https://app.dappflow.org/explorer/block/${block}`
-      : chainId === CHAIN_ID_FANTOM
+      : chainId === toChainId('Fantom')
       ? `https://ftmscan.com/block/${block}`
-      : chainId === CHAIN_ID_KARURA
+      : chainId === toChainId('Karura')
       ? `https://blockscout.karura.network/block/${block}`
-      : chainId === CHAIN_ID_ACALA
+      : chainId === toChainId('Acala')
       ? `https://blockscout.acala.network/block/${block}`
-      : chainId === CHAIN_ID_KLAYTN
+      : chainId === toChainId('Klaytn')
       ? `https://scope.klaytn.com/block/${block}`
-      : chainId === CHAIN_ID_CELO
+      : chainId === toChainId('Celo')
       ? `https://explorer.celo.org/block/${block}`
-      : chainId === CHAIN_ID_NEAR
+      : chainId === toChainId('Near')
       ? `https://nearblocks.io/blocks/${block}`
-      : chainId === CHAIN_ID_MOONBEAM
+      : chainId === toChainId('Moonbeam')
       ? `https://moonscan.io/block/${block}`
-      : chainId === CHAIN_ID_TERRA2
+      : chainId === toChainId('Terra2')
       ? `https://finder.terra.money/phoenix-1/block/${block}`
-      : chainId === CHAIN_ID_INJECTIVE
+      : chainId === toChainId('Injective')
       ? `https://explorer.injective.network/block/${block}`
-      : chainId === CHAIN_ID_SUI
+      : chainId === toChainId('Sui')
       ? `https://suiexplorer.com/checkpoint/${block}`
-      : chainId === CHAIN_ID_APTOS
+      : chainId === toChainId('Aptos')
       ? `https://explorer.aptoslabs.com/block/${block}`
-      : chainId === CHAIN_ID_ARBITRUM
+      : chainId === toChainId('Arbitrum')
       ? `https://arbiscan.io/block/${block}`
-      : chainId === CHAIN_ID_OPTIMISM
+      : chainId === toChainId('Optimism')
       ? `https://optimistic.etherscan.io/block/${block}`
-      : chainId === CHAIN_ID_XPLA
+      : chainId === toChainId('Xpla')
       ? `https://explorer.xpla.io/mainnet/block/${block}`
-      : chainId === CHAIN_ID_BASE
+      : chainId === toChainId('Base')
       ? `https://basescan.org/block/${block}`
-      : chainId === CHAIN_ID_SEI
+      : chainId === toChainId('Sei')
       ? `https://www.seiscan.app/pacific-1/blocks/${block}`
-      : chainId === CHAIN_ID_WORMCHAIN
+      : chainId === toChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/blocks/${block}`
       : ''
-    : chainId === CHAIN_ID_SOLANA
+    : chainId === toChainId('Solana')
     ? `https://explorer.solana.com/${block}?cluster=testnet`
-    : chainId === CHAIN_ID_ETH
+    : chainId === toChainId('Ethereum')
     ? `https://sepolia.etherscan.io/block/${block}`
-    : // : chainId === CHAIN_ID_TERRA <-- not supported on testnet dashboard
-    chainId === CHAIN_ID_BSC
+    : // : chainId === toChainId('Terra') <-- not supported on testnet dashboard
+    chainId === toChainId('Bsc')
     ? `https://testnet.bscscan.com/block/${block}`
-    : chainId === CHAIN_ID_POLYGON
+    : chainId === toChainId('Polygon')
     ? `https://mumbai.polygonscan.com/block/${block}`
-    : chainId === CHAIN_ID_AVAX
+    : chainId === toChainId('Avalanche')
     ? `https://testnet.snowtrace.io/block/${block}`
-    : chainId === CHAIN_ID_OASIS
+    : chainId === toChainId('Oasis')
     ? `https://testnet.oasisscan.com/block/${block}`
-    : chainId === CHAIN_ID_ALGORAND
+    : chainId === toChainId('Algorand')
     ? `https://app.dappflow.org/explorer/block/${block}`
-    : chainId === CHAIN_ID_FANTOM
+    : chainId === toChainId('Fantom')
     ? `https://testnet.ftmscan.com/block/${block}`
-    : // : chainId === CHAIN_ID_KARURA <-- not supported on testnet dashboard
-    chainId === CHAIN_ID_ACALA
+    : // : chainId === toChainId('Karura') <-- not supported on testnet dashboard
+    chainId === toChainId('Acala')
     ? `https://blockscout.mandala.aca-staging.network/block/${block}`
-    : chainId === CHAIN_ID_KLAYTN
+    : chainId === toChainId('Klaytn')
     ? `https://baobab.klaytnscope.com/block/${block}`
-    : chainId === CHAIN_ID_CELO
+    : chainId === toChainId('Celo')
     ? `https://alfajores.celoscan.io/block/${block}`
-    : // : chainId === CHAIN_ID_NEAR <-- not supported on testnet dashboard
-    chainId === CHAIN_ID_MOONBEAM
+    : // : chainId === toChainId('Near') <-- not supported on testnet dashboard
+    chainId === toChainId('Moonbeam')
     ? `https://moonbase.moonscan.io/block/${block}`
-    : // : chainId === CHAIN_ID_TERRA2 <-- not supported on testnet dashboard
-    // : chainId === CHAIN_ID_INJECTIVE <-- not supported on testnet dashboard
-    chainId === CHAIN_ID_SUI
+    : // : chainId === toChainId('Terra2') <-- not supported on testnet dashboard
+    // : chainId === toChainId('Injective') <-- not supported on testnet dashboard
+    chainId === toChainId('Sui')
     ? `https://suiexplorer.com/checkpoint/${block}?network=testnet`
-    : chainId === CHAIN_ID_APTOS
+    : chainId === toChainId('Aptos')
     ? `https://explorer.aptoslabs.com/block/${block}?network=testnet`
-    : chainId === CHAIN_ID_ARBITRUM
+    : chainId === toChainId('Arbitrum')
     ? `https://sepolia.arbiscan.io/block/${block}`
-    : chainId === CHAIN_ID_OPTIMISM
+    : chainId === toChainId('Optimism')
     ? `https://sepolia-optimism.etherscan.io/block/${block}`
-    : chainId === CHAIN_ID_XPLA
+    : chainId === toChainId('Xpla')
     ? `https://explorer.xpla.io/testnet/block/${block}`
-    : chainId === CHAIN_ID_BASE
+    : chainId === toChainId('Base')
     ? `https://goerli.basescan.org/block/${block}`
-    : chainId === CHAIN_ID_SEI
+    : chainId === toChainId('Sei')
     ? `https://www.seiscan.app/atlantic-2/blocks/${block}`
-    : // : chainId === CHAIN_ID_WORMCHAIN <-- not supported on testnet dashboard
+    : // : chainId === toChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
 export const explorerTx = (network: Environment, chainId: ChainId, tx: string) =>
   network === 'mainnet'
-    ? chainId === CHAIN_ID_SOLANA
+    ? chainId === toChainId('Solana')
       ? `https://solana.fm/tx/${tx}`
-      : chainId === CHAIN_ID_ETH
+      : chainId === toChainId('Ethereum')
       ? `https://etherscan.io/tx/${tx}`
-      : chainId === CHAIN_ID_TERRA
+      : chainId === toChainId('Terra')
       ? `https://finder.terra.money/columbus-5/tx/${tx}`
-      : chainId === CHAIN_ID_BSC
+      : chainId === toChainId('Bsc')
       ? `https://bscscan.com/tx/${tx}`
-      : chainId === CHAIN_ID_POLYGON
+      : chainId === toChainId('Polygon')
       ? `https://polygonscan.com/tx/${tx}`
-      : chainId === CHAIN_ID_AVAX
+      : chainId === toChainId('Avalanche')
       ? `https://snowtrace.io/tx/${tx}`
-      : chainId === CHAIN_ID_OASIS
+      : chainId === toChainId('Oasis')
       ? `https://explorer.emerald.oasis.dev/tx/${tx}`
-      : chainId === CHAIN_ID_ALGORAND
+      : chainId === toChainId('Algorand')
       ? `https://app.dappflow.org/explorer/transaction/${tx}`
-      : chainId === CHAIN_ID_FANTOM
+      : chainId === toChainId('Fantom')
       ? `https://ftmscan.com/tx/${tx}`
-      : chainId === CHAIN_ID_KARURA
+      : chainId === toChainId('Karura')
       ? `https://blockscout.karura.network/tx/${tx}`
-      : chainId === CHAIN_ID_ACALA
+      : chainId === toChainId('Acala')
       ? `https://blockscout.acala.network/tx/${tx}`
-      : chainId === CHAIN_ID_KLAYTN
+      : chainId === toChainId('Klaytn')
       ? `https://scope.klaytn.com/tx/${tx}`
-      : chainId === CHAIN_ID_CELO
+      : chainId === toChainId('Celo')
       ? `https://explorer.celo.org/tx/${tx}`
-      : chainId === CHAIN_ID_NEAR
+      : chainId === toChainId('Near')
       ? `https://explorer.near.org/transactions/${tx}`
-      : chainId === CHAIN_ID_MOONBEAM
+      : chainId === toChainId('Moonbeam')
       ? `https://moonscan.io/tx/${tx}`
-      : chainId === CHAIN_ID_TERRA2
+      : chainId === toChainId('Terra2')
       ? `https://finder.terra.money/phoenix-1/tx/${tx}`
-      : chainId === CHAIN_ID_INJECTIVE
+      : chainId === toChainId('Injective')
       ? `https://explorer.injective.network/transaction/${tx}`
-      : chainId === CHAIN_ID_SUI
+      : chainId === toChainId('Sui')
       ? `https://suiexplorer.com/txblock/${tx}`
-      : chainId === CHAIN_ID_APTOS
+      : chainId === toChainId('Aptos')
       ? `https://explorer.aptoslabs.com/txn/${tx}?network=mainnet`
-      : chainId === CHAIN_ID_ARBITRUM
+      : chainId === toChainId('Arbitrum')
       ? `https://arbiscan.io/tx/${tx}`
-      : chainId === CHAIN_ID_OPTIMISM
+      : chainId === toChainId('Optimism')
       ? `https://optimistic.etherscan.io/tx/${tx}`
-      : chainId === CHAIN_ID_XPLA
+      : chainId === toChainId('Xpla')
       ? `https://explorer.xpla.io/mainnet/tx/${tx}`
-      : chainId === CHAIN_ID_BASE
+      : chainId === toChainId('Base')
       ? `https://basescan.org/tx/${tx}`
-      : chainId === CHAIN_ID_SEI
+      : chainId === toChainId('Sei')
       ? `https://www.seiscan.app/pacific-1/txs/${tx}`
-      : chainId === CHAIN_ID_WORMCHAIN
+      : chainId === toChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/transactions/${tx}`
       : ''
-    : chainId === CHAIN_ID_SOLANA
+    : chainId === toChainId('Solana')
     ? `https://solscan.io/txs/${tx}?cluster=testnet`
-    : chainId === CHAIN_ID_ETH
+    : chainId === toChainId('Ethereum')
     ? `https://sepolia.etherscan.io/tx/${tx}`
-    : // : chainId === CHAIN_ID_TERRA <-- not supported on testnet dashboard
-    chainId === CHAIN_ID_BSC
+    : // : chainId === toChainId('Terra') <-- not supported on testnet dashboard
+    chainId === toChainId('Bsc')
     ? `https://testnet.bscscan.com/tx/${tx}`
-    : chainId === CHAIN_ID_POLYGON
+    : chainId === toChainId('Polygon')
     ? `https://mumbai.polygonscan.com/tx/${tx}`
-    : chainId === CHAIN_ID_AVAX
+    : chainId === toChainId('Avalanche')
     ? `https://testnet.snowtrace.io/tx/${tx}`
-    : chainId === CHAIN_ID_OASIS
+    : chainId === toChainId('Oasis')
     ? `https://testnet.oasisscan.com/tx/${tx}`
-    : chainId === CHAIN_ID_ALGORAND
+    : chainId === toChainId('Algorand')
     ? `https://app.dappflow.org/explorer/transaction/${tx}`
-    : chainId === CHAIN_ID_FANTOM
+    : chainId === toChainId('Fantom')
     ? `https://testnet.ftmscan.com/tx/${tx}`
-    : // chainId === CHAIN_ID_KARURA <-- not supported on testnet dashboard
-    chainId === CHAIN_ID_ACALA
+    : // chainId === toChainId('Karura') <-- not supported on testnet dashboard
+    chainId === toChainId('Acala')
     ? `https://blockscout.mandala.aca-staging.network/tx/${tx}`
-    : chainId === CHAIN_ID_KLAYTN
+    : chainId === toChainId('Klaytn')
     ? `https://baobab.klaytnscope.com/tx/${tx}`
-    : chainId === CHAIN_ID_CELO
+    : chainId === toChainId('Celo')
     ? `https://alfajores.celoscan.io/tx/${tx}`
-    : //  chainId === CHAIN_ID_NEAR <-- not supported on testnet dashboard
-    chainId === CHAIN_ID_MOONBEAM
+    : //  chainId === toChainId('Near') <-- not supported on testnet dashboard
+    chainId === toChainId('Moonbeam')
     ? `https://moonbase.moonscan.io/tx/${tx}`
-    : // chainId === CHAIN_ID_TERRA2 <-- not supported on testnet dashboard
-    // chainId === CHAIN_ID_INJECTIVE <-- not supported on testnet dashboard
-    chainId === CHAIN_ID_SUI
+    : // chainId === toChainId('Terra2') <-- not supported on testnet dashboard
+    // chainId === toChainId('Injective') <-- not supported on testnet dashboard
+    chainId === toChainId('Sui')
     ? `https://suiexplorer.com/txblock/${tx}?network=testnet`
-    : chainId === CHAIN_ID_APTOS
+    : chainId === toChainId('Aptos')
     ? `https://explorer.aptoslabs.com/txn/${tx}?network=testnet`
-    : chainId === CHAIN_ID_ARBITRUM
+    : chainId === toChainId('Arbitrum')
     ? `https://sepolia.arbiscan.io/tx/${tx}`
-    : chainId === CHAIN_ID_OPTIMISM
+    : chainId === toChainId('Optimism')
     ? `https://sepolia-optimism.etherscan.io/tx/${tx}`
-    : chainId === CHAIN_ID_XPLA
+    : chainId === toChainId('Xpla')
     ? `https://explorer.xpla.io/testnet/tx/${tx}`
-    : chainId === CHAIN_ID_BASE
+    : chainId === toChainId('Base')
     ? `https://goerli.basescan.org/tx/${tx}`
-    : chainId === CHAIN_ID_SEI
+    : chainId === toChainId('Sei')
     ? `https://www.seiscan.app/atlantic-2/txs/${tx}`
-    : // chainId === CHAIN_ID_WORMCHAIN <-- not supported on testnet dashboard
+    : // chainId === toChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
 export const explorerVaa = (network: string, key: string) =>
@@ -240,7 +210,7 @@ export const getExplorerTxHash = (network: Environment, chain: ChainId, txHash: 
   let explorerTxHash = '';
   if (isCosmWasmChain(chain)) {
     explorerTxHash = txHash.slice(2);
-  } else if (chain === CHAIN_ID_SUI) {
+  } else if (chain === toChainId('Sui')) {
     const txHashBytes = Buffer.from(txHash.slice(2), 'hex');
     explorerTxHash = base58.encode(txHashBytes);
   } else if (!isEVMChain(chain)) {

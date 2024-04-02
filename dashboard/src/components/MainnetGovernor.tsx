@@ -38,13 +38,13 @@ import {
   EnqueuedVAA,
   GovernorToken,
 } from '../hooks/useCloudGovernorInfo';
-import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_ICON_MAP, GUARDIAN_SET_3 } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import { ExplorerAssetURL } from './ExplorerAssetURL';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
+import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
 
 const calculatePercent = (notional: AvailableNotionalByChain): number => {
   try {

@@ -27,7 +27,7 @@ import {
   CircleIntegrationPayload,
   parseCircleIntegrationDepositWithPayload,
 } from './_sdk_circleIntegration';
-import { ChainId } from '@wormhole-foundation/sdk-base';
+import { ChainId, toChainId } from '@wormhole-foundation/sdk-base';
 
 let initialized = false;
 let bigtable: Bigtable;
@@ -70,8 +70,7 @@ export const processVaa: EventFunction = async (message: PubsubMessage, context:
       return;
     }
     const [chain, emitter] = rowKey.split('/');
-    const chainId = Number(chain) as ChainId;
-    assertChain(chainId);
+    const chainId = toChainId(Number(chain));
     const module = isTokenBridgeEmitter(chainId, emitter)
       ? 'TokenBridge'
       : isCircleIntegrationEmitter(chainId, emitter)

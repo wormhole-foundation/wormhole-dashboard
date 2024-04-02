@@ -1,15 +1,16 @@
-import { ChainId, toChain } from '@wormhole-foundation/sdk-base';
-import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
-import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './utils';
-import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';
+import { ChainId } from '@wormhole-foundation/sdk-base';
 import {
   Environment,
-  getEnvironment,
+  MISS_THRESHOLD_IN_MINS,
   explorerBlock,
   explorerTx,
-  MISS_THRESHOLD_IN_MINS,
+  getEnvironment,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/src/chainIdToName';
 import { Firestore } from 'firebase-admin/firestore';
+import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
+import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';
+import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './utils';
 
 interface EnqueuedVAAResponse {
   sequence: string;
@@ -290,7 +291,7 @@ function convert(msg: ObservedMessage): FirestoreVAA {
 }
 
 function formatMessage(msg: ObservedMessage): string {
-  const cName: string = toChain(msg.chain);
+  const cName: string = chainIdToName(msg.chain);
   const vaaKeyUrl: string = `https://wormholescan.io/#/tx/${msg.chain}/${msg.emitter}/${msg.seq}`;
   const txHashUrl: string = explorerTx(network, msg.chain as ChainId, msg.txHash);
   const blockUrl: string = explorerBlock(network, msg.chain as ChainId, msg.block.toString());
@@ -351,7 +352,7 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
     if (latestTime < oneDayAgo && !alarmedChains.has(chainId)) {
       // Send a message to slack
       const chainTime: Date = new Date(latestTime);
-      const cName: string = toChain(chainId);
+      const cName: string = chainIdToName(chainId);
       const deltaTime: number = (now.getTime() - chainTime.getTime()) / (1000 * 60 * 60 * 24);
       alarmSlackInfo.msg = `*Chain:* ${cName}(${chainId})\nThe ${network} watcher is behind by ${deltaTime} days.`;
       await formatAndSendToSlack(alarmSlackInfo);

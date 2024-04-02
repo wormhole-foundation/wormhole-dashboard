@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { DB_LAST_BLOCK_FILE, JSON_DB_FILE } from '../consts';
 import { Database } from './Database';
 import { DB, LastBlockByChain, VaasByBlock } from './types';
-import { Chain, toChainId } from '@wormhole-foundation/sdk-base';
+import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
 
 const ENCODING = 'utf8';
 export class JsonDatabase extends Database {
@@ -35,7 +35,7 @@ export class JsonDatabase extends Database {
   }
 
   async getLastBlockByChain(chain: Chain): Promise<string | null> {
-    const chainId = toChainId(chain);
+    const chainId = chainToChainId(chain);
     const blockInfo = this.lastBlockByChain[chainId];
     if (blockInfo) {
       const tokens = blockInfo.split('/');
@@ -44,7 +44,7 @@ export class JsonDatabase extends Database {
     return null;
   }
   async storeVaasByBlock(chain: Chain, vaasByBlock: VaasByBlock): Promise<void> {
-    const chainId = toChainId(chain);
+    const chainId = chainToChainId(chain);
     const filteredVaasByBlock = Database.filterEmptyBlocks(vaasByBlock);
     if (Object.keys(filteredVaasByBlock).length) {
       this.db[chainId] = { ...(this.db[chainId] || {}), ...filteredVaasByBlock };

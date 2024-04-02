@@ -109,12 +109,7 @@ export class SuiWatcher extends Watcher {
         if (checkpointNum < fromCheckpoint || checkpointNum > toCheckpoint) continue;
         const msg = event.parsedJson as PublishMessageEvent;
         const timestamp = new Date(Number(msg.timestamp) * 1000).toISOString();
-        const vaaKey = makeVaaKey(
-          event.id.txDigest,
-          CHAIN_ID_SUI,
-          msg.sender.slice(2),
-          msg.sequence
-        );
+        const vaaKey = makeVaaKey(event.id.txDigest, 'Sui', msg.sender.slice(2), msg.sequence);
         const blockKey = makeBlockKey(checkpoint, timestamp);
         vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
       }

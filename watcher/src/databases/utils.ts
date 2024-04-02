@@ -1,4 +1,4 @@
-import { ChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
   Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
@@ -12,7 +12,6 @@ import { BigtableDatabase } from './BigtableDatabase';
 import { Database } from './Database';
 import { JsonDatabase } from './JsonDatabase';
 import { VaasByBlock } from './types';
-import { Chain, toChainId } from '@wormhole-foundation/sdk-base';
 
 // Bigtable Message ID format
 // chain/MAX_UINT64-block/emitter/sequence
@@ -53,10 +52,10 @@ export const extractBlockFromKey = (key: string): number => {
 
 export const makeVaaKey = (
   transactionHash: string,
-  chain: ChainId | Chain,
+  chain: Chain,
   emitter: string,
   seq: string
-): string => `${transactionHash}:${toChainId(chain)}/${emitter}/${seq}`;
+): string => `${transactionHash}:${chainToChainId(chain)}/${emitter}/${seq}`;
 
 // make a bigtable row key for the `vaasByTxHash` table
 export const makeVAAsByTxHashRowKey = (txHash: string, chain: number): string =>

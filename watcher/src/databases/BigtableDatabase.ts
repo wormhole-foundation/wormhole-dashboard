@@ -1,5 +1,7 @@
 import { parseVaa } from '@certusone/wormhole-sdk/lib/cjs/vaa/wormhole';
 import { Bigtable } from '@google-cloud/bigtable';
+import { PubSub } from '@google-cloud/pubsub';
+import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
   assertEnvironmentVariable,
   chunkArray,
@@ -7,6 +9,7 @@ import {
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getSignedVAA } from '../utils/getSignedVAA';
 import { Database } from './Database';
 import {
   BigtableMessagesResultRow,
@@ -18,13 +21,10 @@ import {
 } from './types';
 import {
   makeMessageId,
-  makeVAAsByTxHashRowKey,
   makeSignedVAAsRowKey,
+  makeVAAsByTxHashRowKey,
   parseMessageId,
 } from './utils';
-import { getSignedVAA } from '../utils/getSignedVAA';
-import { PubSub } from '@google-cloud/pubsub';
-import { Chain, toChainId } from '@wormhole-foundation/sdk-base';
 
 const WATCH_MISSING_TIMEOUT = 2 * 60 * 1000;
 
@@ -63,7 +63,7 @@ export class BigtableDatabase extends Database {
   }
 
   async getLastBlockByChain(chain: Chain, isNTT: boolean): Promise<string | null> {
-    const chainId = toChainId(chain);
+    const chainId = chainToChainId(chain);
     const lastObservedBlock = isNTT
       ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(chainId.toString())
       : this.firestoreDb.collection(this.latestCollectionName).doc(chainId.toString());
@@ -83,7 +83,7 @@ export class BigtableDatabase extends Database {
       this.logger.error('no firestore db set');
       return;
     }
-    const chainId = toChainId(chain);
+    const chainId = chainToChainId(chain);
     this.logger.info(`storing last block=${lastBlockKey} for chain=${chainId}`);
     const lastObservedBlock = isNTT
       ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(`${chainId.toString()}`)
@@ -100,7 +100,7 @@ export class BigtableDatabase extends Database {
       this.logger.warn('no bigtable instance set');
       return;
     }
-    const chainId = toChainId(chain);
+    const chainId = chainToChainId(chain);
     const filteredBlocks = BigtableDatabase.filterEmptyBlocks(vaasByBlock);
     const instance = this.bigtable.instance(this.instanceId);
     const table = instance.table(this.msgTableId);

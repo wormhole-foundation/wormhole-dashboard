@@ -1,4 +1,5 @@
 export * from './arrays';
+export * from './chainIdToName';
 export * from './consts';
 export * from './explorer';
 export * from './solana';

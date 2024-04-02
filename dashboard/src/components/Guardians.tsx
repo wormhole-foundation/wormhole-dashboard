@@ -46,7 +46,7 @@ import { Heartbeat } from '../utils/getLastHeartbeats';
 import { isHeartbeatUnhealthy } from './Chains';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
-import chainIdToName from '../utils/chainIdToName';
+import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
 
 const columnHelper = createColumnHelper<Heartbeat>();
 

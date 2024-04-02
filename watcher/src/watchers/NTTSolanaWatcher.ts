@@ -1,43 +1,46 @@
+import { ChainId, coalesceChainId } from '@certusone/wormhole-sdk';
+import {
+  PostedMessageData,
+  getPostedMessage,
+} from '@certusone/wormhole-sdk/lib/cjs/solana/wormhole';
+import { AnchorProvider, BorshCoder, Program, Wallet } from '@coral-xyz/anchor';
 import {
   Commitment,
   ConfirmedSignatureInfo,
   Connection,
+  Keypair,
   MessageCompiledInstruction,
   PublicKey,
   VersionedTransactionResponse,
-  Keypair,
 } from '@solana/web3.js';
+import { chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
   Environment,
   assertEnvironmentVariable,
   findFromSignatureAndToSignature,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { RPCS_BY_CHAIN } from '../consts';
+import knex, { Knex } from 'knex';
 import {
   LifeCycle,
   NTT_CONTRACT,
   NTT_QUOTER_CONTRACT,
-  RequestRelayIx,
-  getNttManagerMessageDigest,
-} from '../NTTConsts';
-import { SolanaWatcher } from './SolanaWatcher';
-import { makeBlockKey } from '../databases/utils';
-import { Program, BorshCoder, AnchorProvider, Wallet } from '@coral-xyz/anchor';
-import NTT_IDL from '../idls/example_native_token_transfers.json';
-import { type ExampleNativeTokenTransfers as RawExampleNativeTokenTransfers } from '../types/example_native_token_transfers';
-import {
-  TransferLockIx,
-  TransferBurnIx,
+  ReceiveWormholeMessageIx,
   RedeemIx,
   ReleaseInboundMintIx,
   ReleaseInboundUnlockIx,
-  ReceiveWormholeMessageIx,
   ReleaseWormholeOutboundIx,
+  RequestRelayIx,
+  TransferBurnIx,
+  TransferLockIx,
+  getNttManagerMessageDigest,
 } from '../NTTConsts';
-import {
-  PostedMessageData,
-  getPostedMessage,
-} from '@certusone/wormhole-sdk/lib/cjs/solana/wormhole';
+import { RPCS_BY_CHAIN } from '../consts';
+import { makeBlockKey } from '../databases/utils';
+import NTT_IDL from '../idls/example_native_token_transfers.json';
+import { NttQuoter } from '../quoters/NTTSolanaQuoter';
+import { type ExampleNativeTokenTransfers as RawExampleNativeTokenTransfers } from '../types/example_native_token_transfers';
+import { WormholeLogger } from '../utils/logger';
+import { millisecondsToTimestamp } from '../utils/timestamp';
 import {
   NativeTokenTransfer,
   NttManagerMessage,
@@ -45,12 +48,7 @@ import {
   ValidatedTransceiverMessage,
   WormholeTransceiverMessage,
 } from './NTTPayloads';
-import { ChainId, coalesceChainId } from '@certusone/wormhole-sdk';
-import knex, { Knex } from 'knex';
-import { WormholeLogger } from '../utils/logger';
-import { millisecondsToTimestamp } from '../utils/timestamp';
-import { NttQuoter } from '../quoters/NTTSolanaQuoter';
-import { toChainId } from '@wormhole-foundation/sdk-base';
+import { SolanaWatcher } from './SolanaWatcher';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
@@ -205,14 +203,14 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       },
     };
 
-    const digest = getNttManagerMessageDigest(toChainId(this.chain), nttManagerMessage);
+    const digest = getNttManagerMessageDigest(chainToChainId(this.chain), nttManagerMessage);
 
     // We save the digest to the outboxItem so we can link the lifecycle to the outboxItem later in the relayRequest ix
     // This is because the relayRequest ix does not contain the necessary information to create the digest, only outboxItem
     await this.saveOutboxItemToDigest(outboxAccount.toBase58(), digest, this.pg);
 
     const lc: LifeCycle = {
-      srcChainId: toChainId(this.chain),
+      srcChainId: chainToChainId(this.chain),
       destChainId: coalesceChainId(nttManagerMessage.payload.recipientChain as ChainId),
       sourceToken: config.mint.toBuffer().toString('hex'),
       tokenAmount: nttManagerMessage.payload.trimmedAmount.normalize(8),
@@ -276,7 +274,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
 
     let lc: LifeCycle = {
       srcChainId: transceiverMessage.chainId,
-      destChainId: toChainId(this.chain),
+      destChainId: chainToChainId(this.chain),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
       tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(8),
       transferSentTxhash: '',
@@ -325,7 +323,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
 
     let lc: LifeCycle = {
       srcChainId: 0,
-      destChainId: toChainId(this.chain),
+      destChainId: chainToChainId(this.chain),
       sourceToken: '',
       tokenAmount: 0n,
       transferSentTxhash: '',
@@ -452,7 +450,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     const vaaId = `${postMessage.message.emitterChain}/${emitterHex}/${seq}`;
 
     let lc: LifeCycle = {
-      srcChainId: toChainId(this.chain),
+      srcChainId: chainToChainId(this.chain),
       destChainId: coalesceChainId(
         transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId
       ),
@@ -463,7 +461,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       nttTransferKey: `${this.programId}/${recipient}/${seq}`,
       vaaId: vaaId,
       digest: getNttManagerMessageDigest(
-        toChainId(this.chain),
+        chainToChainId(this.chain),
         transceiverMessage.ntt_managerPayload
       ),
       isRelay: false,

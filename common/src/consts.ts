@@ -1,4 +1,4 @@
-import { Chain, ChainId, toChain, toChainId } from '@wormhole-foundation/sdk-base';
+import { Chain, ChainId, chainToChainId, toChain, toChainId } from '@wormhole-foundation/sdk-base';
 
 export type Environment = 'mainnet' | 'testnet' | 'devnet';
 export type Network = {
@@ -157,12 +157,12 @@ export const isCircleIntegrationEmitter = (chain: ChainId | Chain, emitter: stri
 
 // https://developers.circle.com/stablecoins/docs/supported-domains
 export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
-  0: toChainId('Ethereum'),
-  1: toChainId('Avalanche'),
-  2: toChainId('Optimism'),
-  3: toChainId('Arbitrum'),
-  6: toChainId('Base'),
-  7: toChainId('Polygon'),
+  0: chainToChainId('Ethereum'),
+  1: chainToChainId('Avalanche'),
+  2: chainToChainId('Optimism'),
+  3: chainToChainId('Arbitrum'),
+  6: chainToChainId('Base'),
+  7: chainToChainId('Polygon'),
 };
 
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';

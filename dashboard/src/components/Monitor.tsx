@@ -31,9 +31,9 @@ import { useSettingsContext } from '../contexts/SettingsContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMonitorInfo';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
-import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_ICON_MAP } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
+import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
 
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',

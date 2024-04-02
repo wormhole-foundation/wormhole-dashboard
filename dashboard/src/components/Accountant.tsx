@@ -31,7 +31,6 @@ import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAcco
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
 } from '../hooks/useGetAccountantPendingTransfers';
-import chainIdToName from '../utils/chainIdToName';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   CHAIN_ICON_MAP,
@@ -45,6 +44,7 @@ import numeral from 'numeral';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { useDebounce } from 'use-debounce';
+import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 type AccountWithTokenData = Account & {

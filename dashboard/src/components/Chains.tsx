@@ -33,7 +33,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
-import chainIdToName from '../utils/chainIdToName';
 import {
   BEHIND_DIFF,
   CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD,
@@ -45,6 +44,7 @@ import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
 import { CHAIN_ICON_MAP } from '../utils/consts';
 import { chainToChainId } from '@wormhole-foundation/sdk-base';
+import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
 

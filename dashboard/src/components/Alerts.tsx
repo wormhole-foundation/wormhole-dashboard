@@ -17,9 +17,9 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
-import chainIdToName from '../utils/chainIdToName';
 import { GUARDIAN_SET_3 } from '../utils/consts';
 import { Heartbeat } from '../utils/getLastHeartbeats';
+import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
 
 export const BEHIND_DIFF = 1000;
 export const CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD = 2;

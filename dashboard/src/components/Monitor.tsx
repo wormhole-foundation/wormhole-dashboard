@@ -16,8 +16,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
 import {
-  CHAIN_INFO_MAP,
   MISS_THRESHOLD_IN_MINS,
   MISS_THRESHOLD_LABEL,
   explorerBlock,
@@ -31,9 +31,9 @@ import { useSettingsContext } from '../contexts/SettingsContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMonitorInfo';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
-import CollapsibleSection from './CollapsibleSection';
+import chainIdToName from '../utils/chainIdToName';
 import { CHAIN_ICON_MAP } from '../utils/consts';
-import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
+import CollapsibleSection from './CollapsibleSection';
 
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',
@@ -375,7 +375,6 @@ function Misses({
 }
 
 function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
-  const network = useCurrentEnvironment();
   const {
     settings: { showAllMisses },
   } = useSettingsContext();
@@ -436,10 +435,7 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                     {CHAIN_ICON_MAP[chainId] ? (
                       <img
                         src={CHAIN_ICON_MAP[chainId]}
-                        alt={
-                          CHAIN_INFO_MAP[network][chainId]?.name ||
-                          chainIdToChain.get(Number(chainId) as ChainId)
-                        }
+                        alt={chainIdToName(Number(chainId))}
                         width={24}
                         height={24}
                       />

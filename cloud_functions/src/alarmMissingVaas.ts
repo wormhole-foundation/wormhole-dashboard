@@ -1,4 +1,4 @@
-import { CHAIN_ID_TO_NAME, ChainId, ChainName } from '@certusone/wormhole-sdk';
+import { ChainId, toChain } from '@wormhole-foundation/sdk-base';
 import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
 import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './utils';
 import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';
@@ -290,7 +290,7 @@ function convert(msg: ObservedMessage): FirestoreVAA {
 }
 
 function formatMessage(msg: ObservedMessage): string {
-  const cName: string = CHAIN_ID_TO_NAME[msg.chain as ChainId] as ChainName;
+  const cName: string = toChain(msg.chain);
   const vaaKeyUrl: string = `https://wormholescan.io/#/tx/${msg.chain}/${msg.emitter}/${msg.seq}`;
   const txHashUrl: string = explorerTx(network, msg.chain as ChainId, msg.txHash);
   const blockUrl: string = explorerBlock(network, msg.chain as ChainId, msg.block.toString());
@@ -351,7 +351,7 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
     if (latestTime < oneDayAgo && !alarmedChains.has(chainId)) {
       // Send a message to slack
       const chainTime: Date = new Date(latestTime);
-      const cName: string = CHAIN_ID_TO_NAME[chainId] as ChainName;
+      const cName: string = toChain(chainId);
       const deltaTime: number = (now.getTime() - chainTime.getTime()) / (1000 * 60 * 60 * 24);
       alarmSlackInfo.msg = `*Chain:* ${cName}(${chainId})\nThe ${network} watcher is behind by ${deltaTime} days.`;
       await formatAndSendToSlack(alarmSlackInfo);

@@ -4,8 +4,8 @@ import {
   chainToChainId,
   chainToPlatform,
 } from '@wormhole-foundation/sdk-base';
+import base58 from 'bs58';
 import { Buffer } from 'buffer';
-import { base58 } from 'ethers/lib/utils';
 import { Environment } from './consts';
 
 export const explorerBlock = (network: Environment, chainId: ChainId, block: string) =>

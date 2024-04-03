@@ -1,7 +1,7 @@
-import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { TESTNET_WORMCHAIN_URL, WORMCHAIN_URL } from '../utils/consts';
+import { queryContractSmart } from '../utils/queryContractSmart';
 
 const POLL_INTERVAL_MS = 10 * 1000;
 const PAGE_LIMIT = 2000; // throws a gas limit error over this
@@ -37,19 +37,20 @@ const useGetAccountantPendingTransfers = (contractAddress: string): PendingTrans
     (async () => {
       while (!cancelled) {
         try {
-          const cosmWasmClient = await CosmWasmClient.connect(
-            currentNetwork.name === 'Mainnet' ? WORMCHAIN_URL : TESTNET_WORMCHAIN_URL
-          );
           let pending: PendingTransfer[] = [];
           let response;
           let start_after = undefined;
           do {
-            response = await cosmWasmClient.queryContractSmart(contractAddress, {
-              all_pending_transfers: {
-                limit: PAGE_LIMIT,
-                start_after,
-              },
-            });
+            response = await queryContractSmart(
+              currentNetwork.name === 'Mainnet' ? WORMCHAIN_URL : TESTNET_WORMCHAIN_URL,
+              contractAddress,
+              {
+                all_pending_transfers: {
+                  limit: PAGE_LIMIT,
+                  start_after,
+                },
+              }
+            );
             pending = [...pending, ...response.pending];
             start_after =
               response.pending.length && response.pending[response.pending.length - 1].key;

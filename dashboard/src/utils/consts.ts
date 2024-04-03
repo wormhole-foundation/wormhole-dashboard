@@ -38,8 +38,6 @@ import terra2Icon from '../images/terra2.svg';
 import wormchainIcon from '../images/wormchain.svg';
 import xplaIcon from '../images/xpla.svg';
 
-require('dotenv').config();
-
 export const WORMCHAIN_URL = 'https://tncnt-eu-wormchain-main-01.rpc.p2p.world';
 export const TESTNET_WORMCHAIN_URL = `https://corsproxy.io/?${encodeURIComponent(
   'https://gateway.testnet.xlabs.xyz'

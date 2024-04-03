@@ -25,26 +25,27 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
+import { Buffer } from 'buffer';
+import numeral from 'numeral';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useDebounce } from 'use-debounce';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
 } from '../hooks/useGetAccountantPendingTransfers';
+import useTokenData, { TokenDataEntry } from '../hooks/useTokenData';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   CHAIN_ICON_MAP,
   GUARDIAN_SET_3,
   WORMCHAIN_URL,
 } from '../utils/consts';
+import { queryContractSmart } from '../utils/queryContractSmart';
 import CollapsibleSection from './CollapsibleSection';
-import Table from './Table';
-import useTokenData, { TokenDataEntry } from '../hooks/useTokenData';
-import numeral from 'numeral';
 import { ExplorerTxHash } from './ExplorerTxHash';
-import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
-import { useDebounce } from 'use-debounce';
-import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
+import Table from './Table';
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 type AccountWithTokenData = Account & {
@@ -315,8 +316,7 @@ function AccountantSearch() {
       let cancelled = false;
       (async () => {
         try {
-          const cosmWasmClient = await CosmWasmClient.connect(WORMCHAIN_URL);
-          const response = await cosmWasmClient.queryContractSmart(ACCOUNTANT_CONTRACT_ADDRESS, {
+          const response = await queryContractSmart(WORMCHAIN_URL, ACCOUNTANT_CONTRACT_ADDRESS, {
             transfer_status: {
               emitter_chain,
               emitter_address,

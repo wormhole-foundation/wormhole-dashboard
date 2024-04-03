@@ -346,14 +346,14 @@ export class NTTWatcher extends Watcher {
               );
               const sourceToken: string =
                 transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
-              const decimals = transceiverMessage.ntt_managerPayload.payload.trimmedAmount.decimals;
-              const amount = transceiverMessage.ntt_managerPayload.payload.trimmedAmount.amount;
-              const trimmedAmount: TrimmedAmount = new TrimmedAmount(amount, decimals);
               const lc: LifeCycle = {
                 srcChainId: chainToChainId(this.chain),
                 destChainId: decodedTransfer.recipientChain,
                 sourceToken,
-                tokenAmount: trimmedAmount.normalize(NTT_DECIMALS),
+                tokenAmount:
+                  transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(
+                    NTT_DECIMALS
+                  ),
                 transferSentTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
                 transferBlockHeight: BigInt(blockNumber),
                 redeemedTxhash: '',

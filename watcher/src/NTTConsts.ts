@@ -140,6 +140,8 @@ export const ReceiveWormholeMessageIx = 'receiveWormholeMessage';
 export const ReleaseWormholeOutboundIx = 'releaseWormholeOutbound';
 export const RequestRelayIx = 'requestRelay';
 
+export const NTT_DECIMALS = 8;
+
 export const NTT_SOLANA_IXS = [
   TransferLockIx,
   TransferBurnIx,

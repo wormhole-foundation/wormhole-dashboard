@@ -23,6 +23,7 @@ import knex, { Knex } from 'knex';
 import {
   LifeCycle,
   NTT_CONTRACT,
+  NTT_DECIMALS,
   NTT_QUOTER_CONTRACT,
   ReceiveWormholeMessageIx,
   RedeemIx,
@@ -213,7 +214,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       srcChainId: chainToChainId(this.chain),
       destChainId: coalesceChainId(nttManagerMessage.payload.recipientChain as ChainId),
       sourceToken: config.mint.toBuffer().toString('hex'),
-      tokenAmount: nttManagerMessage.payload.trimmedAmount.normalize(8),
+      tokenAmount: nttManagerMessage.payload.trimmedAmount.normalize(NTT_DECIMALS),
       transferSentTxhash: '',
       transferBlockHeight: 0n,
       nttTransferKey: `${this.programId}/${nttManagerMessage.payload.recipientAddress.toString(
@@ -276,7 +277,8 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       srcChainId: transceiverMessage.chainId,
       destChainId: chainToChainId(this.chain),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
-      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(8),
+      tokenAmount:
+        transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(NTT_DECIMALS),
       transferSentTxhash: '',
       transferBlockHeight: 0n,
       nttTransferKey: '',
@@ -398,7 +400,8 @@ export class NTTSolanaWatcher extends SolanaWatcher {
         transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId
       ),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
-      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(8),
+      tokenAmount:
+        transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(NTT_DECIMALS),
       transferSentTxhash: '',
       transferBlockHeight: 0n,
       nttTransferKey: `${
@@ -455,7 +458,8 @@ export class NTTSolanaWatcher extends SolanaWatcher {
         transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId
       ),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
-      tokenAmount: transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(8),
+      tokenAmount:
+        transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(NTT_DECIMALS),
       transferSentTxhash: transaction.transaction.signatures[0],
       transferBlockHeight: BigInt(transaction.slot),
       nttTransferKey: `${this.programId}/${recipient}/${seq}`,

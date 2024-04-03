@@ -4,6 +4,7 @@ import {
   chainToChainId,
   chainToPlatform,
 } from '@wormhole-foundation/sdk-base';
+import { Buffer } from 'buffer';
 import { base58 } from 'ethers/lib/utils';
 import { Environment } from './consts';
 

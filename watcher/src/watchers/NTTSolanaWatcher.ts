@@ -17,7 +17,6 @@ import { chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
   Environment,
   assertEnvironmentVariable,
-  findFromSignatureAndToSignature,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
 import {
@@ -41,6 +40,7 @@ import NTT_IDL from '../idls/example_native_token_transfers.json';
 import { NttQuoter } from '../quoters/NTTSolanaQuoter';
 import { type ExampleNativeTokenTransfers as RawExampleNativeTokenTransfers } from '../types/example_native_token_transfers';
 import { WormholeLogger } from '../utils/logger';
+import { findFromSignatureAndToSignature } from '../utils/solana';
 import { millisecondsToTimestamp } from '../utils/timestamp';
 import {
   NativeTokenTransfer,

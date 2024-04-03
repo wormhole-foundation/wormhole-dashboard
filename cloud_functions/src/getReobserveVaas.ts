@@ -1,11 +1,50 @@
-import { assertEnvironmentVariable, isVAASigned } from './utils';
-import { ReobserveInfo } from './types';
-import { Firestore } from 'firebase-admin/firestore';
 import { CHAIN_ID_SOLANA } from '@certusone/wormhole-sdk';
-import { convertSolanaTxToAccts } from '@wormhole-foundation/wormhole-monitor-common';
-import { getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Connection } from '@solana/web3.js';
+import { contracts } from '@wormhole-foundation/sdk-base';
+import {
+  getEnvironment,
+  isLegacyMessage,
+  normalizeCompileInstruction,
+} from '@wormhole-foundation/wormhole-monitor-common';
+import { Firestore } from 'firebase-admin/firestore';
+import { ReobserveInfo } from './types';
+import { assertEnvironmentVariable, isVAASigned } from './utils';
 
 const MAX_VAAS_TO_REOBSERVE = 25;
+
+export async function convertSolanaTxToAccts(txHash: string): Promise<string[]> {
+  const POST_MESSAGE_IX_ID = 0x01;
+  let accounts: string[] = [];
+  const connection = new Connection('https://api.mainnet-beta.solana.com', 'finalized');
+  const txs = await connection.getTransactions([txHash], {
+    maxSupportedTransactionVersion: 0,
+  });
+  for (const tx of txs) {
+    if (!tx) {
+      continue;
+    }
+    const message = tx.transaction.message;
+    const accountKeys = isLegacyMessage(message) ? message.accountKeys : message.staticAccountKeys;
+    const programIdIndex = accountKeys.findIndex(
+      (i) => i.toBase58() === contracts.coreBridge('Mainnet', 'Solana')
+    );
+    const instructions = message.compiledInstructions;
+    const innerInstructions =
+      tx.meta?.innerInstructions?.flatMap((i) => i.instructions.map(normalizeCompileInstruction)) ||
+      [];
+    const whInstructions = innerInstructions
+      .concat(instructions)
+      .filter((i) => i.programIdIndex === programIdIndex);
+    for (const instruction of whInstructions) {
+      // skip if not postMessage instruction
+      const instructionId = instruction.data;
+      if (instructionId[0] !== POST_MESSAGE_IX_ID) continue;
+
+      accounts.push(accountKeys[instruction.accountKeyIndexes[1]].toBase58());
+    }
+  }
+  return accounts;
+}
 
 export async function getReobserveVaas(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');

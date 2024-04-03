@@ -1,8 +1,8 @@
-import { Connection, PublicKeyInitData, PublicKey } from '@solana/web3.js';
-import { Program, BorshCoder } from '@coral-xyz/anchor';
-import { NttQuoter as Idl } from '../types/ntt_quoter';
+import { BorshCoder, Program } from '@coral-xyz/anchor';
+import { Connection, PublicKey, PublicKeyInitData } from '@solana/web3.js';
 import IDL from '../idls/ntt_quoter.json';
-import { U64, derivePda } from '@wormhole-foundation/wormhole-monitor-common';
+import { NttQuoter as Idl } from '../types/ntt_quoter';
+import { U64, derivePda } from '../utils/solana';
 
 //constants that must match ntt-quoter lib.rs / implementation:
 const GWEI_PER_ETH = 1e9;

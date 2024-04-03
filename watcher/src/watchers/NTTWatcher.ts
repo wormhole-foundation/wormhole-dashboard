@@ -14,6 +14,7 @@ import {
   InboundTransferQueuedTopic,
   LifeCycle,
   NTT_CONTRACT,
+  NTT_DECIMALS,
   NTT_TOPICS,
   OutboundTransferQueuedTopic,
   OutboundTransferRateLimitedTopic,
@@ -26,7 +27,12 @@ import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { extractBlockFromKey, makeBlockKey } from '../databases/utils';
 import { WormholeLogger } from '../utils/logger';
 import { formatIntoTimestamp } from '../utils/timestamp';
-import { NativeTokenTransfer, NttManagerMessage, WormholeTransceiverMessage } from './NTTPayloads';
+import {
+  NativeTokenTransfer,
+  NttManagerMessage,
+  TrimmedAmount,
+  WormholeTransceiverMessage,
+} from './NTTPayloads';
 import { Watcher } from './Watcher';
 
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
@@ -297,6 +303,15 @@ export class NTTWatcher extends Watcher {
             }
             let emitter = coreLog.topics[1].slice(2);
             // If this emitter is a relayer, parse differently
+            let {
+              args: { sequence, payload },
+            } = wormholeInterface.parseLog(coreLog);
+            const vaaId = makeVaaId(chainToChainId(this.chain), emitter, sequence);
+            // Strip off leading 0x, if present
+            if (payload.startsWith('0x')) {
+              payload = payload.slice(2);
+            }
+            let payloadBuffer;
             const isRelay: boolean = isRelayer(
               this.network,
               this.chain.toLowerCase() as ChainName,
@@ -304,16 +319,7 @@ export class NTTWatcher extends Watcher {
             );
             if (isRelay) {
               this.logger.debug('Relayer detected');
-              let {
-                args: { sequence, payload },
-              } = wormholeInterface.parseLog(coreLog);
-              const vaaId = makeVaaId(chainToChainId(this.chain), emitter, sequence);
-              // Strip off leading 0x, if present
-              if (payload.startsWith('0x')) {
-                payload = payload.slice(2);
-              }
-              let { type, parsed } = parseWormholeLog(coreLog);
-              let payloadBuffer;
+              let { parsed } = parseWormholeLog(coreLog);
               if (typeof parsed === 'string') {
                 payloadBuffer = Buffer.from(parsed, 'hex');
               } else if ('payload' in parsed) {
@@ -322,95 +328,52 @@ export class NTTWatcher extends Watcher {
                 this.logger.error('Could not parse payload');
                 continue;
               }
-              // This payload is a transceiver message
-              // Use the payload to create a digest
-              try {
-                const transceiverMessage = WormholeTransceiverMessage.deserialize(
-                  payloadBuffer,
-                  (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
-                );
-                const calculatedDigest = getNttManagerMessageDigest(
-                  chainToChainId(this.chain),
-                  transceiverMessage.ntt_managerPayload
-                );
-                const sourceToken: string =
-                  transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
-                const lc: LifeCycle = {
-                  srcChainId: chainToChainId(this.chain),
-                  destChainId: decodedTransfer.recipientChain,
-                  sourceToken,
-                  tokenAmount: BigInt(decodedTransfer.amount),
-                  transferSentTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
-                  transferBlockHeight: BigInt(blockNumber),
-                  redeemedTxhash: '',
-                  redeemedBlockHeight: 0n,
-                  nttTransferKey,
-                  vaaId,
-                  digest: calculatedDigest,
-                  isRelay,
-                  transferTime: timestampsByBlock[blockNumber],
-                  redeemTime: '',
-                  inboundTransferQueuedTime: '',
-                  outboundTransferQueuedTime: '',
-                  outboundTransferReleasableTime: '',
-                };
-                await saveToPG(this.pg, lc, TransferSentTopic, this.logger);
-                this.logger.debug(
-                  `For txhash ${txhash}, correlating nttTransferKey ${nttTransferKey} to vaaId ${vaaId} and digest ${calculatedDigest}`
-                );
-              } catch (e) {
-                this.logger.error('Error:', e);
-              }
             } else {
               this.logger.debug('Not a relayer');
-              let {
-                args: { sequence, payload },
-              } = wormholeInterface.parseLog(coreLog);
-              const vaaId = makeVaaId(chainToChainId(this.chain), emitter, sequence);
-              // Strip off leading 0x, if present
-              if (payload.startsWith('0x')) {
-                payload = payload.slice(2);
-              }
-              const payloadBuffer = Buffer.from(payload, 'hex');
-              // This payload is a transceiver message
-              // Use the payload to create a digest
-              try {
-                const transceiverMessage = WormholeTransceiverMessage.deserialize(
-                  payloadBuffer,
-                  (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
-                );
-                const calculatedDigest = getNttManagerMessageDigest(
-                  chainToChainId(this.chain),
-                  transceiverMessage.ntt_managerPayload
-                );
-                const sourceToken: string =
-                  transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
-                const lc: LifeCycle = {
-                  srcChainId: chainToChainId(this.chain),
-                  destChainId: decodedTransfer.recipientChain,
-                  sourceToken,
-                  tokenAmount: BigInt(decodedTransfer.amount),
-                  transferSentTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
-                  transferBlockHeight: BigInt(blockNumber),
-                  redeemedTxhash: '',
-                  redeemedBlockHeight: 0n,
-                  nttTransferKey,
-                  vaaId,
-                  digest: calculatedDigest,
-                  isRelay,
-                  transferTime: timestampsByBlock[blockNumber],
-                  redeemTime: '',
-                  inboundTransferQueuedTime: '',
-                  outboundTransferQueuedTime: '',
-                  outboundTransferReleasableTime: '',
-                };
-                await saveToPG(this.pg, lc, TransferSentTopic, this.logger);
-                this.logger.debug(
-                  `For txhash ${txhash}, correlating nttTransferKey ${nttTransferKey} to vaaId ${vaaId} and digest ${calculatedDigest}`
-                );
-              } catch (e) {
-                this.logger.error('Error:', e);
-              }
+              payloadBuffer = Buffer.from(payload, 'hex');
+            }
+
+            // This payload is a transceiver message
+            // Use the payload to create a digest
+            try {
+              const transceiverMessage = WormholeTransceiverMessage.deserialize(
+                payloadBuffer,
+                (a) => NttManagerMessage.deserialize(a, NativeTokenTransfer.deserialize)
+              );
+              const calculatedDigest = getNttManagerMessageDigest(
+                chainToChainId(this.chain),
+                transceiverMessage.ntt_managerPayload
+              );
+              const sourceToken: string =
+                transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex');
+              const decimals = transceiverMessage.ntt_managerPayload.payload.trimmedAmount.decimals;
+              const amount = transceiverMessage.ntt_managerPayload.payload.trimmedAmount.amount;
+              const trimmedAmount: TrimmedAmount = new TrimmedAmount(amount, decimals);
+              const lc: LifeCycle = {
+                srcChainId: chainToChainId(this.chain),
+                destChainId: decodedTransfer.recipientChain,
+                sourceToken,
+                tokenAmount: trimmedAmount.normalize(NTT_DECIMALS),
+                transferSentTxhash: txhash.startsWith('0x') ? txhash.slice(2) : txhash,
+                transferBlockHeight: BigInt(blockNumber),
+                redeemedTxhash: '',
+                redeemedBlockHeight: 0n,
+                nttTransferKey,
+                vaaId,
+                digest: calculatedDigest,
+                isRelay,
+                transferTime: timestampsByBlock[blockNumber],
+                redeemTime: '',
+                inboundTransferQueuedTime: '',
+                outboundTransferQueuedTime: '',
+                outboundTransferReleasableTime: '',
+              };
+              await saveToPG(this.pg, lc, TransferSentTopic, this.logger);
+              this.logger.debug(
+                `For txhash ${txhash}, correlating nttTransferKey ${nttTransferKey} to vaaId ${vaaId} and digest ${calculatedDigest}`
+              );
+            } catch (e) {
+              this.logger.error('Error:', e);
             }
           }
         } else if (log.topics[0] === TransferRedeemedTopic) {

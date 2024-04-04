@@ -1,6 +1,6 @@
 import { GitHub } from '@mui/icons-material';
 import { AppBar, Box, Button, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
-import { NavLink, Route, Switch } from 'react-router-dom';
+import { NavLink, Route, Switch, useLocation } from 'react-router-dom';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';
 import useHeartbeats from '../hooks/useHeartbeats';
 import useLatestRelease from '../hooks/useLatestRelease';
@@ -8,6 +8,7 @@ import WormholeStatsIcon from '../icons/WormholeStatsIcon';
 import Alerts from './Alerts';
 import Home from './Home';
 import Metrics from './Metrics';
+import NTTMetrics from './NTTMetrics';
 import NetworkSelector from './NetworkSelector';
 import Settings from './Settings';
 
@@ -15,6 +16,51 @@ function NavButton(props: any) {
   // fix for Invalid value for prop `navigate` on <a> tag
   const { navigate, ...rest } = props;
   return <Button {...rest} />;
+}
+
+function NavLinks() {
+  const { search } = useLocation();
+  return (
+    <>
+      <NavLink
+        to={`/${search}`}
+        exact
+        component={NavButton}
+        color="inherit"
+        activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
+        style={{ marginLeft: -8, textTransform: 'none', borderRadius: 0, minWidth: 0 }}
+      >
+        <Box display="flex" alignItems="center">
+          <WormholeStatsIcon />
+        </Box>
+        <Hidden smDown>
+          <Typography variant="h6" sx={{ pl: 0.75 }}>
+            Dashboard
+          </Typography>
+        </Hidden>
+      </NavLink>
+      <NavLink
+        to={`/metrics${search}`}
+        exact
+        component={NavButton}
+        color="inherit"
+        activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
+        style={{ paddingRight: 8, marginLeft: 8, textTransform: 'none', borderRadius: 0 }}
+      >
+        <Typography variant="h6">Metrics</Typography>
+      </NavLink>
+      <NavLink
+        to={`/ntt-metrics${search}`}
+        exact
+        component={NavButton}
+        color="inherit"
+        activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
+        style={{ paddingRight: 8, marginLeft: 8, textTransform: 'none', borderRadius: 0 }}
+      >
+        <Typography variant="h6">NTT</Typography>
+      </NavLink>
+    </>
+  );
 }
 
 function Main() {
@@ -25,33 +71,7 @@ function Main() {
     <>
       <AppBar position="static">
         <Toolbar variant="dense">
-          <NavLink
-            to="/"
-            exact
-            component={NavButton}
-            color="inherit"
-            activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
-            style={{ marginLeft: -8, textTransform: 'none', borderRadius: 0, minWidth: 0 }}
-          >
-            <Box display="flex" alignItems="center">
-              <WormholeStatsIcon />
-            </Box>
-            <Hidden smDown>
-              <Typography variant="h6" sx={{ pl: 0.75 }}>
-                Dashboard
-              </Typography>
-            </Hidden>
-          </NavLink>
-          <NavLink
-            to="/metrics"
-            exact
-            component={NavButton}
-            color="inherit"
-            activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
-            style={{ paddingRight: 8, marginLeft: 8, textTransform: 'none', borderRadius: 0 }}
-          >
-            <Typography variant="h6">Metrics</Typography>
-          </NavLink>
+          <NavLinks />
           <Box flexGrow={1} />
           <Hidden smDown>
             <Alerts
@@ -74,6 +94,9 @@ function Main() {
         </Toolbar>
       </AppBar>
       <Switch>
+        <Route path="/ntt-metrics">
+          <NTTMetrics />
+        </Route>
         <Route path="/metrics">
           <Metrics />
         </Route>

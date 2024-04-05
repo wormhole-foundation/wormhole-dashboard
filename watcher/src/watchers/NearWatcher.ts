@@ -1,21 +1,17 @@
-import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { decode } from 'bs58';
 import { Provider, TypedError } from 'near-api-js/lib/providers';
-import { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
-import ora from 'ora';
+import { BlockResult } from 'near-api-js/lib/providers/provider';
 import { z } from 'zod';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { EventLog } from '../types/near';
-import { getNearProvider, isWormholePublishEventLog } from '../utils/near';
+import { getMessagesFromBlockResults, getNearProvider } from '../utils/near';
 import { Watcher } from './Watcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network } from '@wormhole-foundation/sdk-base';
 
 export class NearWatcher extends Watcher {
   provider: Provider | null = null;
 
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, 'Near');
   }
 
@@ -52,7 +48,7 @@ export class NearWatcher extends Watcher {
       }
     }
 
-    return getMessagesFromBlockResults(provider, blocks);
+    return getMessagesFromBlockResults(this.network, provider, blocks);
   }
 
   async getProvider(): Promise<Provider> {
@@ -75,50 +71,3 @@ export class NearWatcher extends Watcher {
     }
   }
 }
-
-export const getMessagesFromBlockResults = async (
-  provider: Provider,
-  blocks: BlockResult[],
-  debug: boolean = false
-): Promise<VaasByBlock> => {
-  const vaasByBlock: VaasByBlock = {};
-  let log: ora.Ora;
-  if (debug) log = ora(`Fetching messages from ${blocks.length} blocks...`).start();
-  for (let i = 0; i < blocks.length; i++) {
-    if (debug) log!.text = `Fetching messages from block ${i + 1}/${blocks.length}...`;
-    const { height, timestamp } = blocks[i].header;
-    const blockKey = makeBlockKey(height.toString(), new Date(timestamp / 1_000_000).toISOString());
-    vaasByBlock[blockKey] = [];
-
-    const chunks = [];
-    for (const chunk of blocks[i].chunks) {
-      chunks.push(await provider.chunk(chunk.chunk_hash));
-    }
-
-    const transactions = chunks.flatMap(({ transactions }) => transactions);
-    for (const tx of transactions) {
-      const outcome = await provider.txStatus(tx.hash, CONTRACTS.MAINNET.near.core);
-      const logs = outcome.receipts_outcome
-        .filter(
-          ({ outcome }) =>
-            (outcome as any).executor_id === CONTRACTS.MAINNET.near.core &&
-            (outcome.status as ExecutionStatus).SuccessValue
-        )
-        .flatMap(({ outcome }) => outcome.logs)
-        .filter((log) => log.startsWith('EVENT_JSON:')) // https://nomicon.io/Standards/EventsFormat
-        .map((log) => JSON.parse(log.slice(11)) as EventLog)
-        .filter(isWormholePublishEventLog);
-      for (const log of logs) {
-        const vaaKey = makeVaaKey(tx.hash, 'Near', log.emitter, log.seq.toString());
-        vaasByBlock[blockKey] = [...vaasByBlock[blockKey], vaaKey];
-      }
-    }
-  }
-
-  if (debug) {
-    const numMessages = Object.values(vaasByBlock).flat().length;
-    log!.succeed(`Fetched ${numMessages} messages from ${blocks.length} blocks`);
-  }
-
-  return vaasByBlock;
-};

@@ -10,7 +10,7 @@ import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { Watcher } from './Watcher';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network } from '@wormhole-foundation/sdk-base';
 
 const SUI_EVENT_HANDLE = `0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a::publish_message::WormholeMessage`;
 
@@ -27,7 +27,7 @@ export class SuiWatcher extends Watcher {
   client: JsonRpcClient;
   maximumBatchSize: number = 100000; // arbitrarily large as this pages back by events
 
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, 'Sui');
     this.client = new JsonRpcClient(RPCS_BY_CHAIN[this.network][this.chain]!);
   }

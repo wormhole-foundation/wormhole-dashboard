@@ -1,11 +1,10 @@
-import { CONTRACTS, ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { EventObjectsTypes, RawLogEvents } from './TerraExplorerWatcher';
 import { Watcher } from './Watcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network, contracts } from '@wormhole-foundation/sdk-base';
 
 export class InjectiveExplorerWatcher extends Watcher {
   // Arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
@@ -18,7 +17,7 @@ export class InjectiveExplorerWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, 'Injective');
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
@@ -49,10 +48,10 @@ export class InjectiveExplorerWatcher extends Watcher {
   // use "to": as the pagination key
   // compare block height ("block_number":) with what is passed in.
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const coreAddress = CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName].core;
-    const address = CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName].token_bridge;
-    if (!address) {
-      throw new Error(`Token Bridge contract not defined for ${this.chain}`);
+    const coreAddress = contracts.coreBridge.get(this.network, this.chain);
+    const address = contracts.tokenBridge.get(this.network, this.chain);
+    if (!coreAddress || !address) {
+      throw new Error(`Unable to get contract address for ${this.chain}`);
     }
     this.logger.debug(`Token Bridge contract for ${this.chain} is ${address}`);
     let vaasByBlock: VaasByBlock = {};

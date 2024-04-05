@@ -13,7 +13,7 @@ import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../src/consts';
 import { LOG_MESSAGE_PUBLISHED_TOPIC, wormholeInterface } from '../src/watchers/EVMWatcher';
 import { Log } from '@ethersproject/abstract-provider';
-import { getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
+import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
 import { toChain } from '@wormhole-foundation/sdk-base';
 
 const misses: { chain: ChainId; txHash: string }[] = [
@@ -144,7 +144,7 @@ export function serializeVAA(vaa: VAA<Other>) {
 }
 
 (async () => {
-  const network = getEnvironment();
+  const network = getNetwork();
   for (const miss of misses) {
     const rpc = RPCS_BY_CHAIN[network][toChain(miss.chain)];
     if (!isEVMChain(miss.chain)) {

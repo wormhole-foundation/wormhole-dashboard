@@ -31,7 +31,7 @@ export const getBehindDiffForChain = (chainId: number) =>
   isLayer2(chainId) ? BEHIND_DIFF * 2 : BEHIND_DIFF;
 
 export const getNumGuardians = (environment: Environment) =>
-  environment === 'mainnet' ? GUARDIAN_SET_3.length : 1;
+  environment === 'Mainnet' ? GUARDIAN_SET_3.length : 1;
 
 export function getQuorumCount(environment: Environment): number {
   return Math.floor((getNumGuardians(environment) * 2) / 3 + 1);

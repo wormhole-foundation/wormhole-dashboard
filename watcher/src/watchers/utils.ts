@@ -13,13 +13,12 @@ import { SuiWatcher } from './SuiWatcher';
 import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
 import { NearArchiveWatcher } from './NearArchiveWatcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 import { NTTWatcher } from './NTTWatcher';
 import { NTTArbitrumWatcher } from './NTTArbitrumWatcher';
 import { NTTSolanaWatcher } from './NTTSolanaWatcher';
-import { Chain } from '@wormhole-foundation/sdk-base';
+import { Chain, Network } from '@wormhole-foundation/sdk-base';
 
-export function makeFinalizedWatcher(network: Environment, chainName: Chain): Watcher {
+export function makeFinalizedWatcher(network: Network, chainName: Chain): Watcher {
   if (chainName === 'Solana') {
     return new SolanaWatcher(network);
   } else if (chainName === 'Ethereum' || chainName === 'Karura' || chainName === 'Acala') {
@@ -59,7 +58,7 @@ export function makeFinalizedWatcher(network: Environment, chainName: Chain): Wa
     return new SuiWatcher(network);
   } else if (chainName === 'Wormchain') {
     return new WormchainWatcher(network);
-  } else if (network === 'testnet') {
+  } else if (network === 'Testnet') {
     // These are testnet only chains
     if (chainName === 'Sepolia' || chainName === 'Holesky') {
       return new EVMWatcher(network, chainName, 'finalized');
@@ -81,8 +80,8 @@ export function makeFinalizedWatcher(network: Environment, chainName: Chain): Wa
   }
 }
 
-export function makeFinalizedNTTWatcher(network: Environment, chainName: Chain): Watcher {
-  if (network === 'testnet') {
+export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Watcher {
+  if (network === 'Testnet') {
     // These are testnet only chains
     if (chainName === 'Sepolia' || chainName === 'Holesky') {
       return new NTTWatcher(network, chainName, 'finalized');

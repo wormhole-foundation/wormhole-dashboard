@@ -1,8 +1,3 @@
-import {
-  Environment,
-  assertEnvironmentVariable,
-} from '@wormhole-foundation/wormhole-monitor-common';
-
 let loggingEnv: LoggingEnvironment | undefined = undefined;
 
 export type LoggingEnvironment = {

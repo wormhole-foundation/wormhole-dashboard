@@ -1,8 +1,8 @@
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network } from '@wormhole-foundation/sdk-base';
 import { EVMWatcher } from './EVMWatcher';
 
 export class BSCWatcher extends EVMWatcher {
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, 'Bsc');
   }
   async getFinalizedBlockNumber(): Promise<number> {

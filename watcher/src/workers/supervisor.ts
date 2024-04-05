@@ -1,8 +1,8 @@
 import { Worker } from 'worker_threads';
 import { HB_INTERVAL, WorkerData } from '../consts';
 import { getLogger } from '../utils/logger';
-import { Environment, getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
-import { Chain } from '@wormhole-foundation/sdk-base';
+import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
+import { Chain, Network } from '@wormhole-foundation/sdk-base';
 
 interface WorkerInfo {
   worker: Worker;
@@ -12,7 +12,7 @@ interface WorkerInfo {
 
 const workers: { [key: string]: WorkerInfo } = {};
 const logger = getLogger('supervisor');
-const network: Environment = getEnvironment();
+const network: Network = getNetwork();
 
 function spawnWorker(data: WorkerData) {
   const workerName = `${data.chain}Worker`;

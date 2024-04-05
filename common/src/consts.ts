@@ -1,22 +1,14 @@
-import { Chain, ChainId, chainToChainId, toChain, toChainId } from '@wormhole-foundation/sdk-base';
+import { Chain, ChainId, Network, chainToChainId, toChain } from '@wormhole-foundation/sdk-base';
 
-export type Environment = 'mainnet' | 'testnet' | 'devnet';
-export type Network = {
-  env: Environment;
-  endpoint: string;
-  name: string;
-  logo: string;
-  type: 'guardian' | 'cloudfunction';
-};
 export type Mode = 'vaa' | 'ntt';
 
 export const MISS_THRESHOLD_IN_MINS = 40;
 export const MISS_THRESHOLD_LABEL = '40 minutes';
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
-  [key in Environment]: { [key in Chain]?: string };
+  [key in Network]: { [key in Chain]?: string };
 } = {
-  ['mainnet']: {
+  ['Mainnet']: {
     Ethereum: '12959638',
     Terra: '4810000', // not sure exactly but this should be before the first known message
     Bsc: '9745450',
@@ -43,7 +35,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     Sei: '238594',
     Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A  },
   },
-  ['testnet']: {
+  ['Testnet']: {
     Ethereum: '0',
     Terra: '0',
     Bsc: '0',
@@ -71,21 +63,21 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     Wormchain: '0',
     PolygonSepolia: '2379275',
   },
-  ['devnet']: {},
+  ['Devnet']: {},
 };
 
 export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
-  [key in Environment]: { [key in Chain]?: string };
+  [key in Network]: { [key in Chain]?: string };
 } = {
-  ['mainnet']: {},
-  ['testnet']: {
+  ['Mainnet']: {},
+  ['Testnet']: {
     Solana: '285100152',
     Sepolia: '5472203',
     ArbitrumSepolia: '22501243',
     BaseSepolia: '7249669',
     OptimismSepolia: '9232548',
   },
-  ['devnet']: {},
+  ['Devnet']: {},
 };
 
 export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {

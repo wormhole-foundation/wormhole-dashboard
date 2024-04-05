@@ -1,4 +1,5 @@
-import { Environment, Mode } from './consts';
+import { Network } from '@wormhole-foundation/sdk-base';
+import { Mode } from './consts';
 
 export async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
@@ -16,10 +17,16 @@ export const padUint64 = (s: string): string => s.padStart(MAX_UINT_64.length, '
 export const makeSignedVAAsRowKey = (chain: number, emitter: string, sequence: string): string =>
   `${padUint16(chain.toString())}/${emitter}/${padUint64(sequence)}`;
 
-export function getEnvironment(): Environment {
+export function getNetwork(): Network {
   const network: string = assertEnvironmentVariable('NETWORK').toLowerCase();
-  if (network === 'mainnet' || network === 'testnet' || network === 'devnet') {
-    return network;
+  if (network === 'mainnet') {
+    return 'Mainnet';
+  }
+  if (network === 'testnet') {
+    return 'Testnet';
+  }
+  if (network === 'devnet') {
+    return 'Devnet';
   }
   throw new Error(`Unknown network: ${network}`);
 }

@@ -1,15 +1,15 @@
 import {
   ChainId,
+  Network,
   chainIdToChain,
   chainToChainId,
   chainToPlatform,
 } from '@wormhole-foundation/sdk-base';
 import base58 from 'bs58';
 import { Buffer } from 'buffer';
-import { Environment } from './consts';
 
-export const explorerBlock = (network: Environment, chainId: ChainId, block: string) =>
-  network === 'mainnet'
+export const explorerBlock = (network: Network, chainId: ChainId, block: string) =>
+  network === 'Mainnet'
     ? chainId === chainToChainId('Solana')
       ? `https://solana.fm/block/${block}`
       : chainId === chainToChainId('Ethereum')
@@ -107,8 +107,8 @@ export const explorerBlock = (network: Environment, chainId: ChainId, block: str
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
-export const explorerTx = (network: Environment, chainId: ChainId, tx: string) =>
-  network === 'mainnet'
+export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
+  network === 'Mainnet'
     ? chainId === chainToChainId('Solana')
       ? `https://solana.fm/tx/${tx}`
       : chainId === chainToChainId('Ethereum')
@@ -211,7 +211,7 @@ export const explorerVaa = (network: string, key: string) =>
     ? `https://wormholescan.io/#/tx/${key}`
     : `https://wormholescan.io/#/tx/${key}?network=TESTNET`;
 
-export const getExplorerTxHash = (_: Environment, chain: ChainId, txHash: string) => {
+export const getExplorerTxHash = (_: Network, chain: ChainId, txHash: string) => {
   let explorerTxHash = '';
   const platform = chainToPlatform(chainIdToChain(chain));
   if (platform === 'Cosmwasm') {

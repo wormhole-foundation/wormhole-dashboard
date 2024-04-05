@@ -161,7 +161,7 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
   }
 
   const notionals: AvailableNotionalByChain[] = [];
-  const quorumIdx = getQuorumCount('mainnet') - 1;
+  const quorumIdx = getQuorumCount('Mainnet') - 1;
   for (const chainIdStr in availableNotionalByChain) {
     const chainId = Number(chainIdStr);
     availableNotionalByChain[chainId].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)).reverse();

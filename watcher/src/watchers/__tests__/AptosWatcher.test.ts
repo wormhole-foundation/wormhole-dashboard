@@ -5,17 +5,17 @@ import { AptosWatcher } from '../AptosWatcher';
 jest.setTimeout(60000);
 
 const INITAL_SEQUENCE_NUMBER = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Aptos ?? 0
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Aptos ?? 0
 );
 
 test('getFinalizedSequenceNumber', async () => {
-  const watcher = new AptosWatcher('mainnet');
+  const watcher = new AptosWatcher('Mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(INITAL_SEQUENCE_NUMBER);
 });
 
 test('getMessagesForSequenceNumbers', async () => {
-  const watcher = new AptosWatcher('mainnet');
+  const watcher = new AptosWatcher('Mainnet');
   const messages = await watcher.getMessagesForBlocks(0, 1);
   expect(messages).toMatchObject({
     '1095891/2022-10-19T00:55:54.676Z/0': [

@@ -1,5 +1,4 @@
 import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
-import { CONTRACTS, Contracts, EVMChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Log } from '@ethersproject/abstract-provider';
 import axios from 'axios';
 import { BigNumber } from 'ethers';
@@ -7,8 +6,7 @@ import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
-import { PlatformToChains } from '@wormhole-foundation/sdk-base';
+import { Network, PlatformToChains, contracts } from '@wormhole-foundation/sdk-base';
 
 // This is the hash for topic[0] of the core contract event LogMessagePublished
 // https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/contracts/Implementation.sol#L12
@@ -33,7 +31,7 @@ export class EVMWatcher extends Watcher {
   latestFinalizedBlockNumber: number;
 
   constructor(
-    network: Environment,
+    network: Network,
     chain: PlatformToChains<'Evm'>,
     finalizedBlockTag: BlockTag = 'latest'
   ) {
@@ -211,15 +209,9 @@ export class EVMWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const contracts: Contracts =
-      this.network === 'mainnet'
-        ? CONTRACTS.MAINNET[this.chain.toLocaleLowerCase() as EVMChainName]
-        : this.network === 'testnet'
-        ? CONTRACTS.TESTNET[this.chain.toLocaleLowerCase() as EVMChainName]
-        : CONTRACTS.DEVNET[this.chain.toLocaleLowerCase() as EVMChainName];
-    const address = contracts.core;
+    const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
-      throw new Error(`Core contract not defined for ${this.chain}`);
+      throw new Error(`Core contract not defined for ${this.chain} on ${this.network}!`);
     }
     const logs = await this.getLogs(fromBlock, toBlock, address, [LOG_MESSAGE_PUBLISHED_TOPIC]);
     const timestampsByBlock: { [block: number]: string } = {};

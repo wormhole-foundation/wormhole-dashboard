@@ -3,7 +3,7 @@ import { Watcher } from './Watcher';
 import { ALGORAND_INFO } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network } from '@wormhole-foundation/sdk-base';
 
 type Message = {
   blockKey: string;
@@ -17,7 +17,7 @@ export class AlgorandWatcher extends Watcher {
   algodClient: algosdk.Algodv2;
   indexerClient: algosdk.Indexer;
 
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, 'Algorand');
 
     if (!ALGORAND_INFO[this.network].algodServer) {

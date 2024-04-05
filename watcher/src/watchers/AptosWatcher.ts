@@ -1,8 +1,4 @@
-import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils';
-import {
-  Environment,
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
-} from '@wormhole-foundation/wormhole-monitor-common';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { AptosClient } from 'aptos';
 import { z } from 'zod';
 import { RPCS_BY_CHAIN } from '../consts';
@@ -10,6 +6,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeVaaKey } from '../databases/utils';
 import { AptosEvent } from '../types/aptos';
 import { Watcher } from './Watcher';
+import { Network, contracts } from '@wormhole-foundation/sdk-base';
 
 const APTOS_FIELD_NAME = 'event';
 
@@ -23,11 +20,10 @@ export class AptosWatcher extends Watcher {
   coreBridgeAddress: string;
   eventHandle: string;
 
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, 'Aptos');
     this.client = new AptosClient(RPCS_BY_CHAIN[this.network][this.chain]!);
-    this.coreBridgeAddress =
-      network === 'mainnet' ? CONTRACTS.MAINNET.aptos.core : CONTRACTS.TESTNET.aptos.core;
+    this.coreBridgeAddress = contracts.coreBridge(network, 'Aptos');
     this.eventHandle = `${this.coreBridgeAddress}::state::WormholeMessageHandle`;
   }
 

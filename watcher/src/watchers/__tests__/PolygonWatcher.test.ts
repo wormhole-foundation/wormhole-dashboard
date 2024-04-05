@@ -5,11 +5,11 @@ import { PolygonWatcher } from '../PolygonWatcher';
 jest.setTimeout(60000);
 
 const initialPolygonBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Polygon
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Polygon
 );
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new PolygonWatcher('mainnet');
+  const watcher = new PolygonWatcher('Mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(initialPolygonBlock);
 });

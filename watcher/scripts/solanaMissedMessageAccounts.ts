@@ -1,7 +1,6 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Connection } from '@solana/web3.js';
 import axios from 'axios';
 import ora from 'ora';
@@ -11,6 +10,7 @@ import {
   normalizeCompileInstruction,
 } from '@wormhole-foundation/wormhole-monitor-common/src/solana';
 import { MISS_THRESHOLD_IN_MINS } from '@wormhole-foundation/wormhole-monitor-common';
+import { contracts } from '@wormhole-foundation/sdk-base';
 
 // This script finds the message accounts which correspond to solana misses
 
@@ -28,7 +28,7 @@ import { MISS_THRESHOLD_IN_MINS } from '@wormhole-foundation/wormhole-monitor-co
       .map((m: any) => m.txHash);
     log.succeed();
     log = ora('Fetching message accounts').start();
-    const connection = new Connection(RPCS_BY_CHAIN.mainnet.Solana!, 'finalized');
+    const connection = new Connection(RPCS_BY_CHAIN.Mainnet.Solana!, 'finalized');
     const txs = await connection.getTransactions(solanaTxHashes, {
       maxSupportedTransactionVersion: 0,
     });
@@ -44,7 +44,7 @@ import { MISS_THRESHOLD_IN_MINS } from '@wormhole-foundation/wormhole-monitor-co
           ? message.accountKeys
           : message.staticAccountKeys;
         const programIdIndex = accountKeys.findIndex(
-          (i) => i.toBase58() === CONTRACTS.MAINNET.solana.core
+          (i) => i.toBase58() === contracts.coreBridge('Mainnet', 'Solana')
         );
         const instructions = message.compiledInstructions;
         const innerInstructions =

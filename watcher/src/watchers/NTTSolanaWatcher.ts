@@ -13,11 +13,8 @@ import {
   PublicKey,
   VersionedTransactionResponse,
 } from '@solana/web3.js';
-import { chainToChainId } from '@wormhole-foundation/sdk-base';
-import {
-  Environment,
-  assertEnvironmentVariable,
-} from '@wormhole-foundation/wormhole-monitor-common';
+import { Network, chainToChainId } from '@wormhole-foundation/sdk-base';
+import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
 import {
   LifeCycle,
@@ -85,15 +82,15 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   maximumBatchSize = 100_000;
   pg: Knex;
 
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, true);
     this.rpc = RPCS_BY_CHAIN[this.network].Solana!;
-    this.programIds = NTT_CONTRACT[this.network].solana!;
+    this.programIds = NTT_CONTRACT[this.network].Solana!;
     this.connection = new Connection(this.rpc, COMMITMENT);
 
     // Initialize the NttQuoter
     // Required to check if a relay was requested
-    this.quoterProgramId = NTT_QUOTER_CONTRACT[this.network].solana!;
+    this.quoterProgramId = NTT_QUOTER_CONTRACT[this.network].Solana!;
     this.NttQuoter = new NttQuoter(this.connection, this.quoterProgramId);
 
     // We are using the Anchor framework to interact with the NTT program

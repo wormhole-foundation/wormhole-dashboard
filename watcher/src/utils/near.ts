@@ -9,8 +9,11 @@ import {
   Transaction,
   WormholePublishEventLog,
 } from '../types/near';
-import { BlockId, BlockResult } from 'near-api-js/lib/providers/provider';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { BlockId, BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
+import { Network, contracts } from '@wormhole-foundation/sdk-base';
+import { VaasByBlock } from '../databases/types';
+import ora from 'ora';
+import { makeBlockKey, makeVaaKey } from '../databases/utils';
 
 // The following is obtained by going to: https://explorer.near.org/accounts/contract.wormhole_crypto.near
 // and watching the network tab in the browser to see where the explorer is going.
@@ -18,7 +21,7 @@ const NEAR_EXPLORER_TRANSACTION_URL =
   'https://explorer-backend-mainnet-prod-24ktefolwq-uc.a.run.app/trpc/transaction.listByAccountId';
 export const NEAR_ARCHIVE_RPC = 'https://archival-rpc.mainnet.near.org';
 
-export const getNearProvider = async (network: Environment, rpc: string): Promise<Provider> => {
+export const getNearProvider = async (network: Network, rpc: string): Promise<Provider> => {
   let connection;
   connection = await connect({ nodeUrl: rpc, networkId: network });
   const provider = connection.connection.provider;
@@ -107,4 +110,56 @@ export const getTransactionsByAccountId = async (
 
 export const isWormholePublishEventLog = (log: EventLog): log is WormholePublishEventLog => {
   return log.standard === 'wormhole' && log.event === 'publish';
+};
+
+export const getMessagesFromBlockResults = async (
+  network: Network,
+  provider: Provider,
+  blocks: BlockResult[],
+  debug: boolean = false
+): Promise<VaasByBlock> => {
+  const vaasByBlock: VaasByBlock = {};
+  let log: ora.Ora;
+  if (debug) log = ora(`Fetching messages from ${blocks.length} blocks...`).start();
+  for (let i = 0; i < blocks.length; i++) {
+    if (debug) log!.text = `Fetching messages from block ${i + 1}/${blocks.length}...`;
+    const { height, timestamp } = blocks[i].header;
+    const blockKey = makeBlockKey(height.toString(), new Date(timestamp / 1_000_000).toISOString());
+    vaasByBlock[blockKey] = [];
+
+    const chunks = [];
+    for (const chunk of blocks[i].chunks) {
+      chunks.push(await provider.chunk(chunk.chunk_hash));
+    }
+
+    const transactions = chunks.flatMap(({ transactions }) => transactions);
+    const coreBridge = contracts.coreBridge.get(network, 'Near');
+    if (!coreBridge) {
+      throw new Error('Unable to get contract address for Near');
+    }
+    for (const tx of transactions) {
+      const outcome = await provider.txStatus(tx.hash, coreBridge);
+      const logs = outcome.receipts_outcome
+        .filter(
+          ({ outcome }) =>
+            (outcome as any).executor_id === coreBridge &&
+            (outcome.status as ExecutionStatus).SuccessValue
+        )
+        .flatMap(({ outcome }) => outcome.logs)
+        .filter((log) => log.startsWith('EVENT_JSON:')) // https://nomicon.io/Standards/EventsFormat
+        .map((log) => JSON.parse(log.slice(11)) as EventLog)
+        .filter(isWormholePublishEventLog);
+      for (const log of logs) {
+        const vaaKey = makeVaaKey(tx.hash, 'Near', log.emitter, log.seq.toString());
+        vaasByBlock[blockKey] = [...vaasByBlock[blockKey], vaaKey];
+      }
+    }
+  }
+
+  if (debug) {
+    const numMessages = Object.values(vaasByBlock).flat().length;
+    log!.succeed(`Fetched ${numMessages} messages from ${blocks.length} blocks`);
+  }
+
+  return vaasByBlock;
 };

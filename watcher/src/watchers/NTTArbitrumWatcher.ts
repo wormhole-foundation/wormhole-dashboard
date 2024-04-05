@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { EVMWatcher } from './EVMWatcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
 import { NTTWatcher } from './NTTWatcher';
+import { Network } from '@wormhole-foundation/sdk-base';
 
 export class NTTArbitrumWatcher extends NTTWatcher {
   rpc: string | undefined;
@@ -11,8 +11,8 @@ export class NTTArbitrumWatcher extends NTTWatcher {
   l1L2Map: Map<number, number>;
   lastEthTime: number;
 
-  constructor(network: Environment) {
-    if (network === 'mainnet') {
+  constructor(network: Network) {
+    if (network === 'Mainnet') {
       super(network, 'Arbitrum');
     } else {
       super(network, 'ArbitrumSepolia');
@@ -23,7 +23,7 @@ export class NTTArbitrumWatcher extends NTTWatcher {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
     this.nttWatcher =
-      network === 'mainnet'
+      network === 'Mainnet'
         ? new NTTWatcher(network, 'Ethereum', 'finalized')
         : new NTTWatcher(network, 'Sepolia', 'finalized');
     this.latestL2Finalized = 0;

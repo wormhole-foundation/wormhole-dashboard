@@ -1,9 +1,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
-  Environment,
-  getEnvironment,
+  getNetwork,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
@@ -11,15 +9,15 @@ import { BlockResult, Provider } from 'near-api-js/lib/providers/provider';
 import ora from 'ora';
 import { initDb, makeBlockKey } from '../src/databases/utils';
 import {
+  getMessagesFromBlockResults,
   getNearProvider,
   getTimestampByBlock,
   getTransactionsByAccountId,
   NEAR_ARCHIVE_RPC,
 } from '../src/utils/near';
-import { getMessagesFromBlockResults } from '../src/watchers/NearWatcher';
 import { Transaction } from '../src/types/near';
 import { VaasByBlock } from '../src/databases/types';
-import { Chain } from '@wormhole-foundation/sdk-base';
+import { Chain, contracts, Network } from '@wormhole-foundation/sdk-base';
 
 // This script exists because NEAR RPC nodes do not support querying blocks older than 5 epochs
 // (~2.5 days): https://docs.near.org/api/rpc/setup#querying-historical-data. This script fetches
@@ -33,7 +31,7 @@ const BATCH_SIZE = 100;
 
 (async () => {
   const db = initDb(false); // Don't start watching
-  const network: Environment = getEnvironment();
+  const network: Network = getNetwork();
   const chain: Chain = 'Near';
   const provider = await getNearProvider(network, NEAR_ARCHIVE_RPC);
   const fromBlock = Number(
@@ -49,7 +47,7 @@ const BATCH_SIZE = 100;
   const toBlock = await provider.block({ finality: 'final' });
   console.log('\ntoBlock', toBlock.header.height, toBlock.header.timestamp.toString());
   const transactions: Transaction[] = await getTransactionsByAccountId(
-    CONTRACTS.MAINNET.near.core,
+    contracts.coreBridge(network, chain),
     BATCH_SIZE,
     fromBlockTimestamp,
     toBlock.header.timestamp.toString().padEnd(19, '9') // pad to nanoseconds
@@ -78,7 +76,12 @@ const BATCH_SIZE = 100;
   }
 
   log.succeed(`Fetched ${blocks.length} blocks`);
-  const vaasByBlock: VaasByBlock = await getMessagesFromBlockResults(provider, blocks, true);
+  const vaasByBlock: VaasByBlock = await getMessagesFromBlockResults(
+    network,
+    provider,
+    blocks,
+    true
+  );
   // Make a block for the to_block, if it isn't already there
   const blockKey = makeBlockKey(
     toBlock.header.height.toString(),

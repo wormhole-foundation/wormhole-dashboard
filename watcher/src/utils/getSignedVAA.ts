@@ -1,13 +1,14 @@
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, GUARDIAN_RPC_HOSTS } from '../consts';
-import { Environment, getEnvironment } from '@wormhole-foundation/wormhole-monitor-common';
+import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network } from '@wormhole-foundation/sdk-base';
 
 export const getSignedVAA = async (
   chain: number,
   emitter: string,
   sequence: string
 ): Promise<Buffer | null> => {
-  const environment: Environment = getEnvironment();
+  const environment: Network = getNetwork();
   for (const host of GUARDIAN_RPC_HOSTS[environment]) {
     try {
       const result = await axios.get(

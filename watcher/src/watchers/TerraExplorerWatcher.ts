@@ -1,11 +1,9 @@
-import { CONTRACTS, CosmWasmChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
-import { PlatformToChains } from '@wormhole-foundation/sdk-base';
+import { Network, PlatformToChains, contracts } from '@wormhole-foundation/sdk-base';
 
 export class TerraExplorerWatcher extends Watcher {
   // Arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
@@ -17,7 +15,7 @@ export class TerraExplorerWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: Environment, chain: PlatformToChains<'Cosmwasm'>) {
+  constructor(network: Network, chain: PlatformToChains<'Cosmwasm'>) {
     super(network, chain);
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
@@ -46,7 +44,7 @@ export class TerraExplorerWatcher extends Watcher {
   // use "next": as the pagination key
   // compare block height ("height":) with what is passed in.
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const address = CONTRACTS.MAINNET[this.chain.toLowerCase() as CosmWasmChainName].core;
+    const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }

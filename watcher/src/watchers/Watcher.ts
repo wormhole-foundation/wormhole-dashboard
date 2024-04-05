@@ -1,5 +1,4 @@
 import {
-  Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
@@ -9,16 +8,16 @@ import { VaasByBlock } from '../databases/types';
 import { getResumeBlockByChain, storeLatestBlock, storeVaasByBlock } from '../databases/utils';
 import { getLogger, WormholeLogger } from '../utils/logger';
 import { parentPort } from 'worker_threads';
-import { Chain } from '@wormhole-foundation/sdk-base';
+import { Chain, Network } from '@wormhole-foundation/sdk-base';
 
 export class Watcher {
   chain: Chain;
-  network: Environment;
+  network: Network;
   logger: WormholeLogger;
   maximumBatchSize: number = 100;
   isNTT: boolean = false;
 
-  constructor(network: Environment, chain: Chain, isNTT: boolean = false) {
+  constructor(network: Network, chain: Chain, isNTT: boolean = false) {
     this.network = network;
     this.chain = chain;
     this.isNTT = isNTT;

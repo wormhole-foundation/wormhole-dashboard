@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { EVMWatcher } from './EVMWatcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network } from '@wormhole-foundation/sdk-base';
 
 export class ArbitrumWatcher extends EVMWatcher {
   rpc: string | undefined;
@@ -10,8 +10,8 @@ export class ArbitrumWatcher extends EVMWatcher {
   l1L2Map: Map<number, number>;
   lastEthTime: number;
 
-  constructor(network: Environment) {
-    if (network === 'mainnet') {
+  constructor(network: Network) {
+    if (network === 'Mainnet') {
       super(network, 'Arbitrum');
     } else {
       super(network, 'ArbitrumSepolia');
@@ -22,7 +22,7 @@ export class ArbitrumWatcher extends EVMWatcher {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
     this.evmWatcher =
-      network === 'mainnet'
+      network === 'Mainnet'
         ? new EVMWatcher(network, 'Ethereum', 'finalized')
         : new EVMWatcher(network, 'Sepolia', 'finalized');
     this.latestL2Finalized = 0;

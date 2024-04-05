@@ -2,7 +2,7 @@ import { CHAIN_ID_SOLANA } from '@certusone/wormhole-sdk';
 import { Connection } from '@solana/web3.js';
 import { contracts } from '@wormhole-foundation/sdk-base';
 import {
-  getEnvironment,
+  getNetwork,
   isLegacyMessage,
   normalizeCompileInstruction,
 } from '@wormhole-foundation/wormhole-monitor-common';
@@ -133,7 +133,7 @@ async function getAndProcessReobsVAAs(): Promise<Map<string, ReobserveInfo>> {
     return current;
   }
   for (const vaa of realVaas) {
-    if (!(await isVAASigned(getEnvironment(), vaa.vaaKey))) {
+    if (!(await isVAASigned(getNetwork(), vaa.vaaKey))) {
       current.set(vaa.txhash, vaa);
     }
   }

@@ -1,12 +1,14 @@
 import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
-import { RELAYER_CONTRACTS, parseWormholeLog } from '@certusone/wormhole-sdk/lib/cjs/relayer';
-import { CONTRACTS, ChainName, Contracts } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { parseWormholeLog } from '@certusone/wormhole-sdk/lib/cjs/relayer';
 import { Log } from '@ethersproject/abstract-provider';
-import { PlatformToChains, chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
-  Environment,
-  assertEnvironmentVariable,
-} from '@wormhole-foundation/wormhole-monitor-common';
+  Chain,
+  Network,
+  PlatformToChains,
+  chainToChainId,
+  contracts,
+} from '@wormhole-foundation/sdk-base';
+import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 import { BigNumber } from 'ethers';
 import knex, { Knex } from 'knex';
@@ -27,12 +29,7 @@ import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { extractBlockFromKey, makeBlockKey } from '../databases/utils';
 import { WormholeLogger } from '../utils/logger';
 import { formatIntoTimestamp } from '../utils/timestamp';
-import {
-  NativeTokenTransfer,
-  NttManagerMessage,
-  TrimmedAmount,
-  WormholeTransceiverMessage,
-} from './NTTPayloads';
+import { NativeTokenTransfer, NttManagerMessage, WormholeTransceiverMessage } from './NTTPayloads';
 import { Watcher } from './Watcher';
 
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
@@ -57,7 +54,7 @@ export class NTTWatcher extends Watcher {
   pg: Knex;
 
   constructor(
-    network: Environment,
+    network: Network,
     chain: PlatformToChains<'Evm'>,
     finalizedBlockTag: BlockTag = 'latest'
   ) {
@@ -244,17 +241,11 @@ export class NTTWatcher extends Watcher {
 
   // This only needs to return the latest block looked at.
   async getNttMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
-    const nttAddresses = NTT_CONTRACT[this.network][this.chain.toLowerCase() as ChainName];
+    const nttAddresses = NTT_CONTRACT[this.network][this.chain];
     if (!nttAddresses) {
       throw new Error(`NTT manager contract not defined for ${this.network}`);
     }
-    const contracts: Contracts =
-      this.network === 'mainnet'
-        ? CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName]
-        : this.network === 'testnet'
-        ? CONTRACTS.TESTNET[this.chain.toLowerCase() as ChainName]
-        : CONTRACTS.DEVNET[this.chain.toLowerCase() as ChainName];
-    const address = contracts.core;
+    const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }
@@ -312,11 +303,7 @@ export class NTTWatcher extends Watcher {
               payload = payload.slice(2);
             }
             let payloadBuffer;
-            const isRelay: boolean = isRelayer(
-              this.network,
-              this.chain.toLowerCase() as ChainName,
-              emitter
-            );
+            const isRelay: boolean = isRelayer(this.network, this.chain, emitter);
             if (isRelay) {
               this.logger.debug('Relayer detected');
               let { parsed } = parseWormholeLog(coreLog);
@@ -579,15 +566,15 @@ async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger
   });
 }
 
-function isRelayer(network: Environment, chain: ChainName, emitter: string): boolean {
-  const ucNetwork =
-    network === 'mainnet' ? 'MAINNET' : network === 'testnet' ? 'TESTNET' : 'DEVNET';
-  let relayer = RELAYER_CONTRACTS[ucNetwork][chain]?.wormholeRelayerAddress;
+function isRelayer(network: Network, chain: Chain, emitter: string): boolean {
+  // let relayer = RELAYER_CONTRACTS[ucNetwork][chain]?.wormholeRelayerAddress;
+  const relayer = contracts.relayer.get(network, chain);
   if (!relayer) {
     return false;
   }
-  if (relayer.startsWith('0x')) {
-    relayer = relayer.slice(2);
+  let relayerStr: string = relayer;
+  if (relayerStr.startsWith('0x')) {
+    relayerStr = relayerStr.slice(2);
   }
   // Strip leading 0x off emitter
   if (emitter.startsWith('0x')) {
@@ -595,11 +582,10 @@ function isRelayer(network: Environment, chain: ChainName, emitter: string): boo
   }
   // The relayer and the emitter may not have the same length,
   // so pad the shorter one with leading 0s
-  let len = Math.max(relayer.length, emitter.length);
-  relayer = relayer.padStart(len, '0');
+  let len = Math.max(relayerStr.length, emitter.length);
+  relayerStr = relayerStr.padStart(len, '0');
   emitter = emitter.padStart(len, '0');
-  if (emitter.toLowerCase() === relayer.toLowerCase()) {
-    console.log('Relayer detected');
+  if (emitter.toLowerCase() === relayerStr.toLowerCase()) {
     return true;
   }
   return false;

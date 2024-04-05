@@ -1,9 +1,8 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 import {
-  Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
-  getEnvironment,
+  getNetwork,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { TIMEOUT } from '../src/consts';
@@ -11,13 +10,13 @@ import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { parseMessageId } from '../src/databases/utils';
 import { makeFinalizedWatcher } from '../src/watchers/utils';
 import { Watcher } from '../src/watchers/Watcher';
-import { ChainId, toChain, toChainId } from '@wormhole-foundation/sdk-base';
+import { ChainId, Network, toChain, toChainId } from '@wormhole-foundation/sdk-base';
 
 // This script checks for gaps in the message sequences for an emitter.
 // Ideally this shouldn't happen, but there seems to be an issue with Oasis, Karura, and Celo
 
 (async () => {
-  const network: Environment = getEnvironment();
+  const network: Network = getNetwork();
   const bt = new BigtableDatabase();
   if (!bt.bigtable) {
     throw new Error('bigtable is undefined');

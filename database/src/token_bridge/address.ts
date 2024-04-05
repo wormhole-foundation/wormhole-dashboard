@@ -8,7 +8,6 @@ import {
   CHAIN_ID_TERRA,
   CHAIN_ID_TERRA2,
   CHAIN_ID_XPLA,
-  CONTRACTS,
   ChainId,
   getTypeFromExternalAddress,
   hexToUint8Array,
@@ -23,6 +22,7 @@ import { getNetworkInfo, Network } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
 import { Connection, JsonRpcProvider } from '@mysten/sui.js';
 import { LCDClient } from '@terra-money/terra.js';
+import { contracts } from '@wormhole-foundation/sdk-base';
 import { AptosClient } from 'aptos';
 import { connect } from 'near-api-js';
 
@@ -44,7 +44,8 @@ export const getNativeAddress = async (
         chainID: 'dimension_37-1',
       });
       return (
-        (await queryExternalId(client, CONTRACTS.MAINNET.xpla.token_bridge, tokenAddress)) || null
+        (await queryExternalId(client, contracts.tokenBridge('Mainnet', 'Xpla'), tokenAddress)) ||
+        null
       );
     } else if (tokenChain === CHAIN_ID_TERRA2) {
       const client = new LCDClient({
@@ -52,20 +53,21 @@ export const getNativeAddress = async (
         chainID: 'phoenix-1',
       });
       return (
-        (await queryExternalId(client, CONTRACTS.MAINNET.terra2.token_bridge, tokenAddress)) || null
+        (await queryExternalId(client, contracts.tokenBridge('Mainnet', 'Terra2'), tokenAddress)) ||
+        null
       );
     } else if (tokenChain === CHAIN_ID_INJECTIVE) {
       const client = new ChainGrpcWasmApi(getNetworkInfo(Network.MainnetK8s).grpc);
       return await queryExternalIdInjective(
         client,
-        CONTRACTS.MAINNET.injective.token_bridge,
+        contracts.tokenBridge('Mainnet', 'Injective'),
         tokenAddress
       );
     } else if (tokenChain === CHAIN_ID_APTOS) {
       const client = new AptosClient('https://fullnode.mainnet.aptoslabs.com');
       return await getTypeFromExternalAddress(
         client,
-        CONTRACTS.MAINNET.aptos.token_bridge,
+        contracts.tokenBridge('Mainnet', 'Aptos'),
         tokenAddress
       );
     } else if (tokenChain === CHAIN_ID_NEAR) {
@@ -81,7 +83,7 @@ export const getNativeAddress = async (
         });
         return await tryHexToNativeStringNear(
           connection.connection.provider,
-          CONTRACTS.MAINNET.near.token_bridge,
+          contracts.tokenBridge('Mainnet', 'Near'),
           tokenAddress
         );
       }
@@ -91,7 +93,7 @@ export const getNativeAddress = async (
       );
       return await getTokenCoinType(
         provider,
-        CONTRACTS.MAINNET.sui.token_bridge,
+        contracts.tokenBridge('Mainnet', 'Sui'),
         hexToUint8Array(tokenAddress),
         CHAIN_ID_SUI
       );

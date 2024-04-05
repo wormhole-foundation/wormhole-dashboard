@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { PagerDutyInfo, SlackInfo } from './types';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network } from '@wormhole-foundation/sdk-base';
 
 export async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));
@@ -87,8 +87,9 @@ export async function formatAndSendToSlack(info: SlackInfo): Promise<any> {
   return responseData;
 }
 
-export async function isVAASigned(env: Environment, vaaKey: string): Promise<boolean> {
-  const url: string = WormholescanRPC + 'v1/signed_vaa/' + vaaKey + '?network=' + env.toUpperCase();
+export async function isVAASigned(network: Network, vaaKey: string): Promise<boolean> {
+  const url: string =
+    WormholescanRPC + 'v1/signed_vaa/' + vaaKey + '?network=' + network.toUpperCase();
   try {
     const response = await axios.get(url);
     // curl -X 'GET' \

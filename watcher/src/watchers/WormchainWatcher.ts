@@ -1,10 +1,9 @@
-import { CONTRACTS, ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { CosmwasmBlockResult, CosmwasmWatcher } from './CosmwasmWatcher';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network, contracts } from '@wormhole-foundation/sdk-base';
 
 export class WormchainWatcher extends CosmwasmWatcher {
   latestBlockTag: string;
@@ -13,7 +12,7 @@ export class WormchainWatcher extends CosmwasmWatcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, 'Wormchain');
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
@@ -39,7 +38,7 @@ export class WormchainWatcher extends CosmwasmWatcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const address = CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName].core;
+    const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }

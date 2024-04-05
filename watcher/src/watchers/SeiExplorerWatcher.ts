@@ -1,4 +1,3 @@
-import { CONTRACTS, Contracts, ChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import {
   AXIOS_CONFIG_JSON,
@@ -10,7 +9,8 @@ import {
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { CosmwasmHashResult, CosmwasmWatcher } from './CosmwasmWatcher';
-import { Environment, sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
+import { Network, contracts } from '@wormhole-foundation/sdk-base';
 
 type SeiExplorerAccountTransactionsResponse = {
   data: {
@@ -39,23 +39,23 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
   explorerTxs: string;
   accountId: number;
 
-  constructor(network: Environment) {
+  constructor(network: Network) {
     super(network, 'Sei');
     // arbitrarily large since the code here is capable of pulling all logs from all via indexer pagination
     this.maximumBatchSize = 1_000_000;
     this.explorerGraphql =
-      network === 'mainnet'
+      network === 'Mainnet'
         ? SEI_EXPLORER_GRAPHQL_MAINNET
-        : network === 'testnet'
+        : network === 'Testnet'
         ? SEI_EXPLORER_GRAPHQL_TESTNET
         : '';
     this.explorerTxs =
-      network === 'mainnet'
+      network === 'Mainnet'
         ? SEI_EXPLORER_TXS_MAINNET
-        : network === 'testnet'
+        : network === 'Testnet'
         ? SEI_EXPLORER_TXS_TESTNET
         : '';
-    this.accountId = network === 'mainnet' ? 42 : network === 'testnet' ? 3254150 : 0;
+    this.accountId = network === 'Mainnet' ? 42 : network === 'Testnet' ? 3254150 : 0;
     // 42 is the account id of sei1gjrrme22cyha4ht2xapn3f08zzw6z3d4uxx6fyy9zd5dyr3yxgzqqncdqn <-- mainnet
     // MAINNET:
     // curl https://pacific-1-graphql.alleslabs.dev/v1/graphql \
@@ -108,13 +108,7 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
   // retrieve blocks for core contract
   // compare block height with what is passed in
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const contracts: Contracts =
-      this.network === 'mainnet'
-        ? CONTRACTS.MAINNET[this.chain.toLowerCase() as ChainName]
-        : this.network === 'testnet'
-        ? CONTRACTS.TESTNET[this.chain.toLowerCase() as ChainName]
-        : CONTRACTS.DEVNET[this.chain.toLowerCase() as ChainName];
-    const address = contracts.core;
+    const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }

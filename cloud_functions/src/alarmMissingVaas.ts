@@ -1,10 +1,9 @@
-import { ChainId } from '@wormhole-foundation/sdk-base';
+import { ChainId, Network } from '@wormhole-foundation/sdk-base';
 import {
-  Environment,
   MISS_THRESHOLD_IN_MINS,
   explorerBlock,
   explorerTx,
-  getEnvironment,
+  getNetwork,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
@@ -41,7 +40,7 @@ interface GovernedVAA {
 // The key is the vaaKey
 type GovernedVAAMap = Map<string, GovernedVAA>;
 
-const network: Environment = getEnvironment();
+const network: Network = getNetwork();
 
 export async function alarmMissingVaas(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -119,7 +118,7 @@ export async function alarmMissingVaas(req: any, res: any) {
                 console.log(`skipping over ${vaaKey} because it is governed`);
                 continue;
               }
-              if (await isVAASigned(getEnvironment(), vaaKey)) {
+              if (await isVAASigned(getNetwork(), vaaKey)) {
                 console.log(`skipping over ${vaaKey} because it is signed`);
                 continue;
               }
@@ -131,7 +130,7 @@ export async function alarmMissingVaas(req: any, res: any) {
                 txhash: msg.txHash,
                 vaaKey: vaaKey,
               });
-              if (network === 'mainnet') {
+              if (network === 'Mainnet') {
                 alarmSlackInfo.msg = formatMessage(msg);
                 await formatAndSendToSlack(alarmSlackInfo);
               }
@@ -251,7 +250,7 @@ async function getAndProcessReobsVAAs(): Promise<Map<string, ReobserveInfo>> {
         if (data) {
           const vaas: ReobserveInfo[] = data.VAAs;
           vaas.forEach(async (vaa) => {
-            if (!(await isVAASigned(getEnvironment(), vaa.vaaKey))) {
+            if (!(await isVAASigned(getNetwork(), vaa.vaaKey))) {
               console.log('keeping reobserved VAA in firestore', vaa.vaaKey);
               current.set(vaa.txhash, vaa);
             } else {

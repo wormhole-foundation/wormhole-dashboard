@@ -5,12 +5,12 @@ import { ArbitrumWatcher } from '../ArbitrumWatcher';
 jest.setTimeout(60000);
 
 const initialArbitrumBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Arbitrum
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Arbitrum
 );
-const initialEthBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['mainnet'].Ethereum);
+const initialEthBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Ethereum);
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new ArbitrumWatcher('mainnet');
+  const watcher = new ArbitrumWatcher('Mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   // The blockNumber is 0 because the most recent L2 block isn't in
   // a finalized L1 block, yet.  It's in an L1 block.  That L1 block
@@ -23,7 +23,7 @@ test('getFinalizedBlockNumber', async () => {
 });
 
 test('getMessagesForBlocks', async () => {
-  const watcher = new ArbitrumWatcher('mainnet');
+  const watcher = new ArbitrumWatcher('Mainnet');
   const vaasByBlock = await watcher.getMessagesForBlocks(114500582, 114500584);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(3);

@@ -1,12 +1,10 @@
-import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
-import { Chain } from '@wormhole-foundation/sdk-base';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
+import { Chain, Network, contracts } from '@wormhole-foundation/sdk-base';
 import { AxiosRequestConfig } from 'axios';
 
 export const TIMEOUT = 0.5 * 1000;
 export const HB_INTERVAL = 5 * 60 * 1000; // 5 Minutes
 export type WorkerData = {
-  network: Environment;
+  network: Network;
   chain: Chain;
 };
 
@@ -31,8 +29,8 @@ export type WorkerData = {
 // Arbitrum
 //  This node didn't work:  'https://arb1.arbitrum.io/rpc',
 
-export const RPCS_BY_CHAIN: { [key in Environment]: { [key in Chain]?: string } } = {
-  ['mainnet']: {
+export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = {
+  ['Mainnet']: {
     Ethereum: process.env.ETH_RPC,
     Bsc: process.env.BSC_RPC || 'https://bsc.publicnode.com',
     Polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon',
@@ -60,7 +58,7 @@ export const RPCS_BY_CHAIN: { [key in Environment]: { [key in Chain]?: string } 
     Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
     Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
   },
-  ['testnet']: {
+  ['Testnet']: {
     Ethereum: process.env.ETH_RPC,
     Bsc: process.env.BSC_RPC,
     Polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon_mumbai',
@@ -93,50 +91,50 @@ export const RPCS_BY_CHAIN: { [key in Environment]: { [key in Chain]?: string } 
     Sepolia: process.env.SEPOLIA_RPC,
     PolygonSepolia: process.env.POLYGON_SEPOLIA_RPC || 'https://rpc-amoy.polygon.technology',
   },
-  ['devnet']: {},
+  ['Devnet']: {},
 };
 
 // The following is obsolete, but I'm leaving it here for now in case we need it later.
 // Separating for now so if we max out infura we can keep Polygon going
-export const POLYGON_ROOT_CHAIN_INFO: { [key in Environment]: PolygonRootChainInfo } = {
-  ['mainnet']: {
+export const POLYGON_ROOT_CHAIN_INFO: { [key in Network]: PolygonRootChainInfo } = {
+  ['Mainnet']: {
     address: '0x86E4Dc95c7FBdBf52e33D563BbDB00823894C287',
     rpc: 'https://rpc.ankr.com/eth',
   },
-  ['testnet']: {
+  ['Testnet']: {
     address: '0x2890ba17efe978480615e330ecb65333b880928e',
     rpc: 'https://rpc.ankr.com/eth', // TODO:  Put testnet info here
   },
-  ['devnet']: {
+  ['Devnet']: {
     address: '',
     rpc: '',
   },
 };
 
-export const ALGORAND_INFO: { [key in Environment]: AlgorandInfo } = {
-  ['mainnet']: {
-    appid: Number(CONTRACTS.MAINNET.algorand.core),
+export const ALGORAND_INFO: { [key in Network]: AlgorandInfo } = {
+  ['Mainnet']: {
+    appid: Number(contracts.coreBridge('Mainnet', 'Algorand')),
     algodToken: '',
-    algodServer: RPCS_BY_CHAIN['mainnet'].Algorand
-      ? (RPCS_BY_CHAIN['mainnet'].Algorand as string)
+    algodServer: RPCS_BY_CHAIN['Mainnet'].Algorand
+      ? (RPCS_BY_CHAIN['Mainnet'].Algorand as string)
       : '',
     algodPort: 443,
     server: 'https://mainnet-idx.algonode.cloud',
     port: 443,
     token: '',
   },
-  ['testnet']: {
-    appid: Number(CONTRACTS.TESTNET.algorand.core),
+  ['Testnet']: {
+    appid: Number(contracts.coreBridge('Testnet', 'Algorand')),
     algodToken: '',
-    algodServer: RPCS_BY_CHAIN['testnet'].Algorand
-      ? (RPCS_BY_CHAIN['testnet'].Algorand as string)
+    algodServer: RPCS_BY_CHAIN['Testnet'].Algorand
+      ? (RPCS_BY_CHAIN['Testnet'].Algorand as string)
       : '',
     algodPort: 443,
     server: 'https://testnet-idx.algonode.cloud',
     port: 443,
     token: '',
   },
-  ['devnet']: {
+  ['Devnet']: {
     appid: 0,
     algodToken: '',
     algodServer: '',
@@ -164,15 +162,15 @@ export const AXIOS_CONFIG_JSON: AxiosRequestConfig = {
   headers: { 'Accept-Encoding': 'application/json' },
 };
 
-export const GUARDIAN_RPC_HOSTS: { [key in Environment]: string[] } = {
-  ['mainnet']: [
+export const GUARDIAN_RPC_HOSTS: { [key in Network]: string[] } = {
+  ['Mainnet']: [
     'https://api.wormholescan.io',
     'https://wormhole-v2-mainnet-api.mcf.rocks',
     'https://wormhole-v2-mainnet-api.chainlayer.network',
     'https://wormhole-v2-mainnet-api.staking.fund',
   ],
-  ['testnet']: ['https://api.testnet.wormholescan.io'],
-  ['devnet']: [],
+  ['Testnet']: ['https://api.testnet.wormholescan.io'],
+  ['Devnet']: [],
 };
 
 export type AlgorandInfo = {

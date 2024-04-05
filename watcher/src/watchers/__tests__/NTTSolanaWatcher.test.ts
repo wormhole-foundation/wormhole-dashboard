@@ -59,13 +59,13 @@ test('deserializeValidatedTransceiverMessage', async () => {
 // This test is working, but testing it is not very useful since the return value is just the lastBlockKey.
 // It is just an entrypoint to test the whole thing with a local postgres database.
 test.skip('getNttMessagesForBlock', async () => {
-  const watcher = new NTTSolanaWatcher('testnet');
+  const watcher = new NTTSolanaWatcher('Testnet');
   const latestSlot = await watcher.getConnection().getSlot();
   await watcher.getNttMessagesForBlocks(286868903, 288234170);
 });
 
 test.skip('parseTransferLockIx should have no transfer details', async () => {
-  const watcher = new NTTSolanaWatcher('testnet');
+  const watcher = new NTTSolanaWatcher('Testnet');
   const txHash =
     '2B9J3WQSeEqzWtmXLsgX97TkRTbYoCHGcmShPkac5hJGGNVB7XiKxhz8ayj8MQX8DEMiG8ZfEbBDvqphq1PqH9H3';
 
@@ -87,7 +87,7 @@ test.skip('parseTransferLockIx should have no transfer details', async () => {
 });
 
 test.skip('parseReleaseWormholeOutboundIx should have transfer details', async () => {
-  const watcher = new NTTSolanaWatcher('testnet');
+  const watcher = new NTTSolanaWatcher('Testnet');
   const txHash =
     '2B9J3WQSeEqzWtmXLsgX97TkRTbYoCHGcmShPkac5hJGGNVB7XiKxhz8ayj8MQX8DEMiG8ZfEbBDvqphq1PqH9H3';
 
@@ -111,7 +111,7 @@ test.skip('parseReleaseWormholeOutboundIx should have transfer details', async (
 });
 
 test.skip('parseReceiveWormholeMessageIx', async () => {
-  const watcher = new NTTSolanaWatcher('testnet');
+  const watcher = new NTTSolanaWatcher('Testnet');
   const txHashes = [
     // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5
     '22to1Yq258rRRDYX1UzKfH1knSH4acBzdQSYFjKrTU4vwqw98ALyPSmtpqWddPXjciwK8tEHLYzq3MRpFmd3U6x2',
@@ -144,7 +144,7 @@ test.skip('parseReceiveWormholeMessageIx', async () => {
 });
 
 test.skip('parseReceiveWormholeMessageIx', async () => {
-  const watcher = new NTTSolanaWatcher('testnet');
+  const watcher = new NTTSolanaWatcher('Testnet');
   const txHashes = [
     // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5
     '22to1Yq258rRRDYX1UzKfH1knSH4acBzdQSYFjKrTU4vwqw98ALyPSmtpqWddPXjciwK8tEHLYzq3MRpFmd3U6x2',
@@ -177,7 +177,7 @@ test.skip('parseReceiveWormholeMessageIx', async () => {
 });
 
 test.skip('parseRedeemIx', async () => {
-  const watcher = new NTTSolanaWatcher('testnet');
+  const watcher = new NTTSolanaWatcher('Testnet');
   const txHashes = [
     // 10005/00000000000000000000000041265eb2863bf0238081f6aeefef73549c82c3dd/5
     '22to1Yq258rRRDYX1UzKfH1knSH4acBzdQSYFjKrTU4vwqw98ALyPSmtpqWddPXjciwK8tEHLYzq3MRpFmd3U6x2',
@@ -209,7 +209,7 @@ test.skip('parseRedeemIx', async () => {
 });
 
 test.skip('parseRequestRelay', async () => {
-  const watcher = new NTTSolanaWatcher('testnet');
+  const watcher = new NTTSolanaWatcher('Testnet');
   const txHashes = [
     // 1/7e6436b671cce379a1fa9833783e28b36d39a00e2cdc6bfeab5d2d836eb61c7f/29
     'uqKyFZHhZCFusb1YH9K7rzXqDLXsfzh778ZM2bQv2tDYznyktYVEzQ86FCesDCWD9B5RTkbxGNxfCjF2GN5ALL2',

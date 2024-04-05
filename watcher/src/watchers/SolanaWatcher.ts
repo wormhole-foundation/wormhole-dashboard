@@ -1,5 +1,4 @@
 import { getPostedMessage } from '@certusone/wormhole-sdk/lib/cjs/solana/wormhole';
-import { CONTRACTS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
   Commitment,
   ConfirmedSignatureInfo,
@@ -14,13 +13,12 @@ import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import {
-  Environment,
   isLegacyMessage,
   normalizeCompileInstruction,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Watcher } from './Watcher';
+import { Network, contracts } from '@wormhole-foundation/sdk-base';
 
-const WORMHOLE_PROGRAM_ID = CONTRACTS.MAINNET.solana.core;
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
 
@@ -38,10 +36,10 @@ export class SolanaWatcher extends Watcher {
 
   connection: Connection | undefined;
 
-  constructor(network: Environment, isNTT: boolean = false) {
+  constructor(network: Network, isNTT: boolean = false) {
     super(network, 'Solana', isNTT);
     this.rpc = RPCS_BY_CHAIN[this.network].Solana!;
-    this.programId = WORMHOLE_PROGRAM_ID;
+    this.programId = contracts.coreBridge(this.network, 'Solana');
   }
 
   getConnection(): Connection {

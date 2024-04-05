@@ -1,4 +1,3 @@
-import { CONTRACTS, CosmWasmChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
@@ -7,8 +6,7 @@ import { Watcher } from './Watcher';
 import { SHA256 } from 'jscrypto/SHA256';
 import { Base64 } from 'jscrypto/Base64';
 import { isBase64Encoded } from '../utils/isBase64Encoded';
-import { Environment } from '@wormhole-foundation/wormhole-monitor-common';
-import { PlatformToChains } from '@wormhole-foundation/sdk-base';
+import { Network, PlatformToChains, contracts } from '@wormhole-foundation/sdk-base';
 
 export class CosmwasmWatcher extends Watcher {
   latestBlockTag: string;
@@ -17,7 +15,7 @@ export class CosmwasmWatcher extends Watcher {
   rpc: string | undefined;
   latestBlockHeight: number;
 
-  constructor(network: Environment, chain: PlatformToChains<'Cosmwasm'>) {
+  constructor(network: Network, chain: PlatformToChains<'Cosmwasm'>) {
     super(network, chain);
     if (chain === 'Injective') {
       throw new Error('Please use InjectiveExplorerWatcher for injective');
@@ -58,7 +56,7 @@ export class CosmwasmWatcher extends Watcher {
   }
 
   async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
-    const address = CONTRACTS.MAINNET[this.chain.toLowerCase() as CosmWasmChainName].core;
+    const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
     }

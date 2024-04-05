@@ -1,6 +1,5 @@
-import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
+import { Chain, Network, chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
-  Environment,
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   MAX_UINT_64,
@@ -88,7 +87,7 @@ export const storeLatestBlock = async (
 };
 
 export const getResumeBlockByChain = async (
-  network: Environment,
+  network: Network,
   chain: Chain,
   isNTT: boolean
 ): Promise<number | null> => {

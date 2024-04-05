@@ -1,28 +1,27 @@
 import { decode } from 'bs58';
 import { Provider } from 'near-api-js/lib/providers';
-import { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
-import ora from 'ora';
+import { BlockResult } from 'near-api-js/lib/providers/provider';
 import { z } from 'zod';
 import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { EventLog, Transaction } from '../types/near';
+import { makeBlockKey } from '../databases/utils';
 import {
   fetchBlockByBlockId,
   getMessagesFromBlockResults,
   getNearProvider,
   getTimestampByBlock,
-  getTransactionsByAccountId,
-  isWormholePublishEventLog,
 } from '../utils/near';
 import { Watcher } from './Watcher';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
+import axios from 'axios';
+import { AXIOS_CONFIG_JSON } from '../consts';
 
 export class NearArchiveWatcher extends Watcher {
   provider: Provider | null = null;
 
   constructor(network: Network) {
     super(network, 'Near');
+    this.maximumBatchSize = 1000;
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -49,6 +48,7 @@ export class NearArchiveWatcher extends Watcher {
     while (!done) {
       try {
         fromBlockTimestamp = await getTimestampByBlock(provider, fromBlock);
+        this.logger.debug(`fromBlockTimestamp: ${fromBlockTimestamp}`);
         done = true;
       } catch (e) {
         // Logging this to help with troubleshooting.
@@ -95,9 +95,8 @@ export class NearArchiveWatcher extends Watcher {
     if (!coreContract) {
       throw new Error(`Unable to get contract address for ${this.chain}`);
     }
-    const transactions: Transaction[] = await getTransactionsByAccountId(
+    const transactions: NearTxn[] = await this.getTransactionsByAccountId(
       coreContract,
-      this.maximumBatchSize,
       fromBlockTimestamp,
       toBlockInfo.header.timestamp.toString().padEnd(19, '9') // pad to nanoseconds
     );
@@ -105,7 +104,7 @@ export class NearArchiveWatcher extends Watcher {
 
     // filter out transactions that precede last seen block
     const blocks: BlockResult[] = [];
-    const blockHashes = [...new Set(transactions.map((tx) => tx.blockHash))]; // de-dup blocks
+    const blockHashes = [...new Set(transactions.map((tx) => tx.included_in_block_hash))]; // de-dup blocks
     for (let i = 0; i < blockHashes.length; i++) {
       // If the following throws, it will trigger exponential backoff and retry
       const block = await fetchBlockByBlockId(provider, blockHashes[i]);
@@ -151,4 +150,76 @@ export class NearArchiveWatcher extends Watcher {
       return false;
     }
   }
+  // This function will only return transactions in the time window.
+  async getTransactionsByAccountId(
+    accountId: string,
+    beginningTimestamp: number,
+    endingTimestamp: string
+  ): Promise<NearTxn[]> {
+    console.log(`Fetching transactions in range [${beginningTimestamp}, ${endingTimestamp}]...`);
+    let txs: NearTxn[] = [];
+    let done: boolean = false;
+
+    let page = 1;
+    while (!done) {
+      console.log(`Fetching transactions for page ${page}...`);
+      // https://api3.nearblocks.io/v1/account/contract.wormhole_crypto.near/txns?method=publish_message&order=desc&page=1&per_page=25
+      const res = (
+        await axios.get(
+          `https://api3.nearblocks.io/v1/account/${accountId}/txns?method=publish_message&order=desc&page=${page}&per_page=25`,
+          AXIOS_CONFIG_JSON
+        )
+      ).data as GetTransactionsByAccountIdResponse;
+      // console.log(`Fetched ${JSON.stringify(res)}`);
+      page++;
+      for (const tx of res.txns) {
+        // Need to pad the timestamp to 19 digits to match the timestamp format in the NearTxn object.
+        const paddedTimestamp: number = Number(tx.block_timestamp.padEnd(19, '0'));
+        console.log(
+          `Checking transaction ${tx.transaction_hash} at block timestamp ${tx.block_timestamp}...`
+        );
+        if (paddedTimestamp >= beginningTimestamp && paddedTimestamp <= Number(endingTimestamp)) {
+          console.log(
+            `Transaction ${tx.transaction_hash} at block ${paddedTimestamp} is in range of [${beginningTimestamp}, ${endingTimestamp}].`
+          );
+          txs.push(tx);
+        } else if (paddedTimestamp < beginningTimestamp) {
+          // This transaction is older than the beginning timestamp, so we're done.
+          done = true;
+          break;
+        }
+      }
+    }
+    return txs.reverse();
+  }
 }
+type GetTransactionsByAccountIdResponse = {
+  txns: NearTxn[];
+};
+
+export type NearTxn = {
+  receipt_id: string; // "FvRXsCxiMnSWG9NML1XFaCUw3UYiqocGvNjjsmS9fE3K",
+  predecessor_account_id: string; //"contract.portalbridge.near",
+  receiver_account_id: string; //"contract.wormhole_crypto.near",
+  transaction_hash: string; //"By1pofzm3h9oG9ADnp66MTFut2iWMyLWDYRuWhyJhHw9",
+  included_in_block_hash: string; //"E9tC4GwT1dPumcS1JRV1evfTps2R2Fq9aaxb49FVoQUq",
+  block_timestamp: string; //"1712335003062739270",
+  block: {
+    block_height: number; //116190465
+  };
+  actions: [
+    {
+      action: string; //"FUNCTION_CALL",
+      method: string; //"publish_message"
+    }
+  ];
+  actions_agg: {
+    deposit: number; //1
+  };
+  outcomes: {
+    status: boolean; //true
+  };
+  outcomes_agg: {
+    transaction_fee: number; //2.3824666512144e+21
+  };
+};

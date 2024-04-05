@@ -157,29 +157,27 @@ export class NearArchiveWatcher extends Watcher {
     endingTimestamp: string
   ): Promise<NearTxn[]> {
     console.log(`Fetching transactions in range [${beginningTimestamp}, ${endingTimestamp}]...`);
-    let txs: NearTxn[] = [];
+    const txs: NearTxn[] = [];
     let done: boolean = false;
 
     let page = 1;
     while (!done) {
-      console.log(`Fetching transactions for page ${page}...`);
+      this.logger.debug(`Fetching transactions for page ${page}...`);
       // https://api3.nearblocks.io/v1/account/contract.wormhole_crypto.near/txns?method=publish_message&order=desc&page=1&per_page=25
-      const res = (
-        await axios.get(
-          `https://api3.nearblocks.io/v1/account/${accountId}/txns?method=publish_message&order=desc&page=${page}&per_page=25`,
-          AXIOS_CONFIG_JSON
-        )
-      ).data as GetTransactionsByAccountIdResponse;
+      const res = await axios.get<GetTransactionsByAccountIdResponse>(
+        `https://api3.nearblocks.io/v1/account/${accountId}/txns?method=publish_message&order=desc&page=${page}&per_page=25`,
+        AXIOS_CONFIG_JSON
+      );
       // console.log(`Fetched ${JSON.stringify(res)}`);
       page++;
-      for (const tx of res.txns) {
+      for (const tx of res.data.txns) {
         // Need to pad the timestamp to 19 digits to match the timestamp format in the NearTxn object.
         const paddedTimestamp: number = Number(tx.block_timestamp.padEnd(19, '0'));
-        console.log(
+        this.logger.debug(
           `Checking transaction ${tx.transaction_hash} at block timestamp ${tx.block_timestamp}...`
         );
         if (paddedTimestamp >= beginningTimestamp && paddedTimestamp <= Number(endingTimestamp)) {
-          console.log(
+          this.logger.debug(
             `Transaction ${tx.transaction_hash} at block ${paddedTimestamp} is in range of [${beginningTimestamp}, ${endingTimestamp}].`
           );
           txs.push(tx);

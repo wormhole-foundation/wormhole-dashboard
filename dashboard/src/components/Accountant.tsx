@@ -25,7 +25,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
+import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import { Buffer } from 'buffer';
 import numeral from 'numeral';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';

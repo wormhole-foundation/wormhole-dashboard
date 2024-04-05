@@ -6,7 +6,7 @@ import {
   explorerTx,
   getEnvironment,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/src/chainIdToName';
+import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
 import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
 import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';

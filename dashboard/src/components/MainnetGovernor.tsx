@@ -44,7 +44,7 @@ import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import { ExplorerAssetURL } from './ExplorerAssetURL';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
-import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
+import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const calculatePercent = (notional: AvailableNotionalByChain): number => {
   try {

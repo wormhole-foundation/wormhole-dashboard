@@ -44,7 +44,7 @@ import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
 import { CHAIN_ICON_MAP } from '../utils/consts';
 import { chainToChainId } from '@wormhole-foundation/sdk-base';
-import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
+import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
 

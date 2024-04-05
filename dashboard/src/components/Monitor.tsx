@@ -33,7 +33,7 @@ import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMoni
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
 import { CHAIN_ICON_MAP } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
-import chainIdToName from '@wormhole-foundation/wormhole-monitor-common/dist/chainIdToName';
+import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const inlineIconButtonSx: SxProps<Theme> = {
   fontSize: '1em',

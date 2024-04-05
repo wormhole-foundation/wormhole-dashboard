@@ -1,7 +1,7 @@
 import { Worker } from 'worker_threads';
 import { HB_INTERVAL, WorkerData } from '../consts';
 import { getLogger } from '../utils/logger';
-import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
+import { Mode, getMode, getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
 
 interface WorkerInfo {
@@ -13,10 +13,11 @@ interface WorkerInfo {
 const workers: { [key: string]: WorkerInfo } = {};
 const logger = getLogger('supervisor');
 const network: Network = getNetwork();
+const mode: Mode = getMode();
 
 function spawnWorker(data: WorkerData) {
   const workerName = `${data.chain}Worker`;
-  logger.info(`Spawning worker ${workerName} on network ${network}...`);
+  logger.info(`Spawning worker ${workerName} on network ${network} in mode ${mode}...`);
   const worker = new Worker('./dist/src/workers/worker.js', { workerData: data });
 
   worker.on('message', (message) => {
@@ -55,7 +56,7 @@ function monitorWorkers() {
 
 export function startSupervisor(supportedChains: Chain[]) {
   supportedChains.forEach((chain) => {
-    const workerData: WorkerData = { network, chain };
+    const workerData: WorkerData = { network, chain, mode };
     spawnWorker(workerData);
   });
 

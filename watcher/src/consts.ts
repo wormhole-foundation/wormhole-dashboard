@@ -1,4 +1,5 @@
 import { Chain, Network, contracts } from '@wormhole-foundation/sdk-base';
+import { Mode } from '@wormhole-foundation/wormhole-monitor-common';
 import { AxiosRequestConfig } from 'axios';
 
 export const TIMEOUT = 0.5 * 1000;
@@ -6,6 +7,7 @@ export const HB_INTERVAL = 5 * 60 * 1000; // 5 Minutes
 export type WorkerData = {
   network: Network;
   chain: Chain;
+  mode: Mode;
 };
 
 // Notes about RPCs

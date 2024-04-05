@@ -86,14 +86,8 @@ const supportedNTTChains: Chain[] =
     : [];
 
 if (mode === 'vaa') {
-  for (const chain of supportedChains) {
-    makeFinalizedWatcher(network, chain).watch();
-  }
   startSupervisor(supportedChains);
 } else if (mode === 'ntt') {
-  for (const chain of supportedNTTChains) {
-    makeFinalizedNTTWatcher(network, chain).watch();
-  }
   startSupervisor(supportedNTTChains);
 } else {
   throw new Error(`Unknown mode: ${mode}`);

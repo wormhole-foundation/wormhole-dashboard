@@ -242,3 +242,45 @@ export const GUARDIAN_SET_3 = [
     name: 'Staking Facilities',
   },
 ];
+
+export const SUPPORTED_EVM_CHAINS: Record<string, Chain[]> = {
+  Testnet: ['Sepolia', 'ArbitrumSepolia', 'BaseSepolia', 'OptimismSepolia'],
+  Mainnet: [],
+  Devnet: [],
+};
+
+export const NTT_TOKENS: { [key in Network]: { [key in Chain]?: string } } = {
+  ['Mainnet']: {},
+  ['Testnet']: {
+    Solana: '87r5ZS91Q2pQbFTvvneqs7y7mbtegtqMt4LDAS4g23Ax',
+    Sepolia: '0x1d30E78B7C7fbbcef87ae6e97B5389b2e470CA4a',
+    ArbitrumSepolia: '0x84A1Cb660B19eB0063EE5FD377eC14AAe3364d74',
+    BaseSepolia: '0x7f430D4e7939D994C0955A01FC75D9DE33F12D11',
+    OptimismSepolia: '0x0e15979a7a1eFAEf20312CA45A59eb141bF7E340',
+  },
+  ['Devnet']: {},
+};
+
+export const NTT_MANAGER_CONTRACT: { [key in Network]: { [key in Chain]?: string } } = {
+  ['Mainnet']: {},
+  ['Testnet']: {
+    Solana: 'nTTh3bZ5Aer6xboWZe39RDEft4MeVxSQ8D1EYAVLZw9',
+    Sepolia: '0xB231aD95f2301bc82eA44c515001F0F746D637e0',
+    ArbitrumSepolia: '0xEec94CD3083e067398256a79CcA7e740C5c8ef81',
+    BaseSepolia: '0xB03b030b2f5B40819Df76467d67eD1C85Ff66fAD',
+    OptimismSepolia: '0x7f430D4e7939D994C0955A01FC75D9DE33F12D11',
+  },
+  ['Devnet']: {},
+};
+
+export const NTT_TRANSCEIVER_CONTRACT: { [key in Network]: { [key in Chain]?: string } } = {
+  ['Mainnet']: {},
+  ['Testnet']: {
+    Solana: '9WNzy7xYZyL2k6JnE9dWSp7VpYkvfRN3Rhd8wHv9J9mY',
+    Sepolia: '0x1fDC902e30b188FD2BA976B421Cb179943F57896',
+    ArbitrumSepolia: '0x0E24D17D7467467b39Bf64A9DFf88776Bd6c74d7',
+    BaseSepolia: '0x1e072169541f1171e427Aa44B5fd8924BEE71b0e',
+    OptimismSepolia: '0x41265eb2863bf0238081F6AeefeF73549C82C3DD',
+  },
+  ['Devnet']: {},
+};

@@ -4,7 +4,6 @@ import { RateLimit } from '../utils/nttHelpers';
 import { useRateLimits } from '../hooks/useRateLimits';
 import {
   ExpandedState,
-  Row,
   SortingState,
   createColumnHelper,
   getCoreRowModel,
@@ -12,17 +11,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import numeral from 'numeral';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
-import { chainToChainId } from '@wormhole-foundation/sdk-base';
 import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const rateLimitColumnHelper = createColumnHelper<RateLimit>();
 
 const rateLimitColumns = [
-  rateLimitColumnHelper.accessor((row) => row.srcChain.toString(), {
+  rateLimitColumnHelper.accessor((row) => row.srcChain, {
     id: 'srcChain',
     header: () => 'Chain',
     cell: (info) => (
@@ -44,7 +41,7 @@ const rateLimitColumns = [
         ) : null}{' '}
         {info.row.original.destChain ? (
           <Box sx={{ pl: 3 }}>
-            {chainIdToName(info.row.original.destChain)} (${info.row.original.destChain})
+            {chainIdToName(info.row.original.destChain)} ({info.row.original.destChain})
           </Box>
         ) : (
           `${chainIdToName(info.row.original.srcChain)} (${info.row.original.srcChain})`
@@ -72,7 +69,7 @@ const rateLimitColumns = [
   }),
 ];
 
-export function LookerRateLimits() {
+export function NTTRateLimits() {
   const network = useNetworkContext();
   const rateLimits = useRateLimits(network.currentNetwork);
   const [rateLimitSorting, setRateLimitSorting] = useState<SortingState>([]);

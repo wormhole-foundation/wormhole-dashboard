@@ -1,6 +1,6 @@
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { LookerDashboard } from './LookerDashboard';
-import { LookerRateLimits } from './LookerRateLimits';
+import { NTTRateLimits } from './NTTRateLimits';
 
 function NTTMetrics() {
   const { currentNetwork } = useNetworkContext();
@@ -22,7 +22,7 @@ function NTTMetrics() {
         title="Testnet NTT Transfers Report"
         src="https://lookerstudio.google.com/embed/reporting/a47057a8-15a0-4cc7-8086-eb00f5d09d2a/page/SPpuD"
       />
-      <LookerRateLimits />
+      <NTTRateLimits />
     </>
   );
 }

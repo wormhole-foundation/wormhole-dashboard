@@ -1,7 +1,5 @@
 import { EvmNtt } from '@wormhole-foundation/sdk-evm-ntt';
 import type { EvmChains } from '@wormhole-foundation/sdk-evm';
-import { Connection } from '@solana/web3.js';
-import { SolanaNtt } from '@wormhole-foundation/sdk-solana-ntt';
 import { JsonRpcProvider } from 'ethers';
 import {
   Chain,
@@ -17,7 +15,7 @@ import {
   NTT_TOKENS,
   NTT_MANAGER_CONTRACT,
   NTT_TRANSCEIVER_CONTRACT,
-} from '@wormhole-foundation/wormhole-monitor-common';
+} from './consts';
 
 export type RateLimit = {
   srcChain: ChainId;
@@ -33,13 +31,15 @@ export async function getRateLimits(network: Network): Promise<RateLimit[]> {
   const records: RateLimit[] = [];
 
   const promises = Array.from(evmNtts.entries()).map(async ([chain, ntt]) => {
+    // decimals should be uint8 so this should be safe to cast
+    const decimals = Number(await ntt.manager.tokenDecimals.staticCall());
     const inboundCapacity: RateLimit[] = [];
     // TODO: include Solana in the loop
     let totalInboundCapacity = BigInt(0);
     for (const supportedChain of SUPPORTED_EVM_CHAINS[network.name]) {
       if (chain === supportedChain) continue;
       let inboundCapacityAmount =
-        (await ntt.getCurrentInboundCapacity(supportedChain)) / BigInt(10 ** 18);
+        (await ntt.getCurrentInboundCapacity(supportedChain)) / BigInt(10 ** decimals);
       inboundCapacity.push({
         srcChain: chainToChainId(chain),
         destChain: chainToChainId(supportedChain),
@@ -51,7 +51,7 @@ export async function getRateLimits(network: Network): Promise<RateLimit[]> {
 
     records.push({
       srcChain: chainToChainId(chain),
-      amount: (await ntt.getCurrentOutboundCapacity()) / BigInt(10 ** 18),
+      amount: (await ntt.getCurrentOutboundCapacity()) / BigInt(10 ** decimals),
       inboundCapacity,
       totalInboundCapacity,
     });
@@ -77,6 +77,9 @@ export async function getRateLimits(network: Network): Promise<RateLimit[]> {
   //   }
   await Promise.all(promises);
 
+  // To make sure the records are sorted by srcChain
+  records.sort((a, b) => a.srcChain - b.srcChain);
+
   return records;
 }
 
@@ -84,22 +87,19 @@ function getNtts(network: Network): Map<Chain, EvmNtt<SdkNetwork, EvmChains>> {
   return SUPPORTED_EVM_CHAINS[network.name].reduce((map, chain) => {
     try {
       const rpcAddress = rpc.rpcAddress(network.name as SdkNetwork, chain);
+      const provider = new JsonRpcProvider(rpcAddress);
+
       map.set(
         chain,
-        new EvmNtt(
-          network.name as SdkNetwork,
-          chain as EvmChains,
-          new JsonRpcProvider(rpcAddress),
-          {
-            ntt: {
-              token: NTT_TOKENS[network.name as SdkNetwork][chain]!,
-              manager: NTT_MANAGER_CONTRACT[network.name as SdkNetwork][chain]!,
-              transceiver: {
-                wormhole: NTT_TRANSCEIVER_CONTRACT[network.name as SdkNetwork][chain]!,
-              },
+        new EvmNtt(network.name as SdkNetwork, chain as EvmChains, provider, {
+          ntt: {
+            token: NTT_TOKENS[network.name as SdkNetwork][chain]!,
+            manager: NTT_MANAGER_CONTRACT[network.name as SdkNetwork][chain]!,
+            transceiver: {
+              wormhole: NTT_TRANSCEIVER_CONTRACT[network.name as SdkNetwork][chain]!,
             },
-          }
-        )
+          },
+        })
       );
     } catch (error) {
       console.error(`Error initializing NTT for ${chain} on ${network.name}:`, error);
@@ -109,22 +109,22 @@ function getNtts(network: Network): Map<Chain, EvmNtt<SdkNetwork, EvmChains>> {
   }, new Map<Chain, EvmNtt<SdkNetwork, EvmChains>>());
 }
 
-function getSolNtt(network: Network): SolanaNtt<SdkNetwork, 'Solana'> | undefined {
-  const rpcAddress = rpc.rpcAddress(network.name as SdkNetwork, 'Solana');
+// function getSolNtt(network: Network): SolanaNtt<SdkNetwork, 'Solana'> | undefined {
+//   const rpcAddress = rpc.rpcAddress(network.name as SdkNetwork, 'Solana');
 
-  try {
-    return new SolanaNtt(network.name as SdkNetwork, 'Solana', new Connection(rpcAddress), {
-      // TODO: corebridge address should not be needed
-      coreBridge: 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG',
-      ntt: {
-        token: NTT_TOKENS[network.name as SdkNetwork]['Solana']!,
-        manager: NTT_MANAGER_CONTRACT[network.name as SdkNetwork]['Solana']!,
-        transceiver: {
-          wormhole: NTT_TRANSCEIVER_CONTRACT[network.name as SdkNetwork]['Solana']!,
-        },
-      },
-    });
-  } catch (error) {
-    console.error(`Error initializing Solana NTT on ${network.name}:`, error);
-  }
-}
+//   try {
+//     return new SolanaNtt(network.name as SdkNetwork, 'Solana', new Connection(rpcAddress), {
+//       // TODO: corebridge address should not be needed
+//       coreBridge: 'EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG',
+//       ntt: {
+//         token: NTT_TOKENS[network.name as SdkNetwork]['Solana']!,
+//         manager: NTT_MANAGER_CONTRACT[network.name as SdkNetwork]['Solana']!,
+//         transceiver: {
+//           wormhole: NTT_TRANSCEIVER_CONTRACT[network.name as SdkNetwork]['Solana']!,
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     console.error(`Error initializing Solana NTT on ${network.name}:`, error);
+//   }
+// }

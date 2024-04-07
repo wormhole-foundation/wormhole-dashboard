@@ -130,6 +130,10 @@ gcloud functions --project "$GCP_PROJECT" deploy reobserve-vaas --entry-point ge
 gcloud functions --project "$GCP_PROJECT" deploy tvl --entry-point getTVL --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars FIRESTORE_TVL_COLLECTION=$FIRESTORE_TVL_COLLECTION,NETWORK=$NETWORK
 gcloud functions --project "$GCP_PROJECT" deploy tvl-history --entry-point getTVLHistory --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars FIRESTORE_TVL_HISTORY_COLLECTION=$FIRESTORE_TVL_HISTORY_COLLECTION,NETWORK=$NETWORK
 gcloud functions --project "$GCP_PROJECT" deploy vaas-by-tx-hash --entry-point getVaasByTxHash --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID=$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID,NETWORK=$NETWORK
+gcloud functions --project "$GCP_PROJECT" deploy get-ntt-rate-limits --entry-point getNTTRateLimits --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars NETWORK=$NETWORK
+gcloud functions --project "$GCP_PROJECT" deploy compute-ntt-rate-limits --entry-point computeNTTRateLimits --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars NETWORK=$NETWORK
+gcloud functions --project "$GCP_PROJECT" deploy get-total-supply-and-locked --entry-point getTotalSupplyAndLocked --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars NETWORK=$NETWORK
+gcloud functions --project "$GCP_PROJECT" deploy compute-total-supply-and-locked --entry-point computeTotalSupplyAndLocked --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars NETWORK=$NETWORK
 
 #
 # Bail out if we are only deploying TESTNET functions

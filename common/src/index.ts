@@ -6,3 +6,4 @@ export * from './solana';
 export * from './utils';
 export * from './nttConsts';
 export * from './evm';
+export * from './types';

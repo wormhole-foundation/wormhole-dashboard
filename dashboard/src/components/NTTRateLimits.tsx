@@ -1,6 +1,5 @@
 import { Box, Card, IconButton } from '@mui/material';
 import Table from './Table';
-import { RateLimit } from '../utils/nttHelpers';
 import { useRateLimits } from '../hooks/useRateLimits';
 import {
   ExpandedState,
@@ -14,9 +13,9 @@ import {
 import { useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
-import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
+import { NTTRateLimit, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
-const rateLimitColumnHelper = createColumnHelper<RateLimit>();
+const rateLimitColumnHelper = createColumnHelper<NTTRateLimit>();
 
 const rateLimitColumns = [
   rateLimitColumnHelper.accessor('tokenName', {
@@ -70,9 +69,7 @@ const rateLimitColumns = [
           <Box sx={{ width: 20, display: 'inline-block' }} />
         )}{' '}
         {info.row.original.srcChain
-          ? info.row.original.destChain
-            ? `${chainIdToName(info.row.original.destChain)}(${info.row.original.destChain})`
-            : `${chainIdToName(info.row.original.srcChain)}(${info.row.original.srcChain})`
+          ? `${chainIdToName(info.row.original.srcChain)}(${info.row.original.srcChain})`
           : null}
       </>
     ),
@@ -84,7 +81,9 @@ const rateLimitColumns = [
         {info.row.original.srcChain
           ? info.row.original.destChain
             ? null
-            : `${info.row.original.amount?.toLocaleString()}`
+            : info.row.original.amount
+            ? `${BigInt(info.row.original.amount).toLocaleString()}`
+            : null
           : null}
       </Box>
     ),
@@ -95,8 +94,8 @@ const rateLimitColumns = [
       <Box textAlign="right">
         {info.row.original.srcChain
           ? info.row.original.destChain
-            ? info.row.original.amount?.toLocaleString()
-            : `${info.row.original.totalInboundCapacity?.toLocaleString()}`
+            ? `${BigInt(info.row.original.amount!).toLocaleString()}`
+            : `${BigInt(info.row.original.totalInboundCapacity!).toLocaleString()}`
           : null}
       </Box>
     ),
@@ -118,7 +117,7 @@ export function NTTRateLimits() {
     },
     getSubRows: (row) => row.inboundCapacity,
     getRowId: (rateLimit) =>
-      `${rateLimit.tokenName.toString()}-${rateLimit.srcChain || ''}-${rateLimit.destChain || ''}`,
+      `${rateLimit.tokenName}-${rateLimit.srcChain || ''}-${rateLimit.destChain || ''}`,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
@@ -129,7 +128,7 @@ export function NTTRateLimits() {
   return (
     <Box mt={2} mx={2}>
       <Card>
-        <Table<RateLimit> table={table} />
+        <Table<NTTRateLimit> table={table} />
       </Card>
     </Box>
   );

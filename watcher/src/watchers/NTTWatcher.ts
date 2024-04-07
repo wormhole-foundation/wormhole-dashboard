@@ -15,7 +15,6 @@ import knex, { Knex } from 'knex';
 import {
   InboundTransferQueuedTopic,
   LifeCycle,
-  NTT_CONTRACT,
   NTT_DECIMALS,
   NTT_LIFECYCLE_TOPICS,
   OutboundTransferQueuedTopic,
@@ -25,6 +24,7 @@ import {
   createNewLifeCycle,
   getNttManagerMessageDigest,
 } from '../NTTConsts';
+import { NTT_MANAGER_CONTRACT_ARRAY } from '@wormhole-foundation/wormhole-monitor-common';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { extractBlockFromKey, makeBlockKey } from '../databases/utils';
 import { WormholeLogger } from '../utils/logger';
@@ -241,7 +241,7 @@ export class NTTWatcher extends Watcher {
 
   // This only needs to return the latest block looked at.
   async getNttMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
-    const nttAddresses = NTT_CONTRACT[this.network][this.chain];
+    const nttAddresses = NTT_MANAGER_CONTRACT_ARRAY[this.network][this.chain];
     if (!nttAddresses) {
       throw new Error(`NTT manager contract not defined for ${this.network}`);
     }

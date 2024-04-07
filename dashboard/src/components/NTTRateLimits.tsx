@@ -19,12 +19,12 @@ import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 const rateLimitColumnHelper = createColumnHelper<RateLimit>();
 
 const rateLimitColumns = [
-  rateLimitColumnHelper.accessor((row) => row.srcChain, {
-    id: 'srcChain',
-    header: () => 'Chain',
+  rateLimitColumnHelper.accessor('tokenName', {
+    id: 'tokenName',
+    header: () => 'Token',
     cell: (info) => (
       <>
-        {info.row.getCanExpand() ? (
+        {info.row.getCanExpand() && !info.row.original.srcChain ? (
           <IconButton
             size="small"
             sx={{ ml: -1 }}
@@ -39,13 +39,41 @@ const rateLimitColumns = [
             )}
           </IconButton>
         ) : null}{' '}
-        {info.row.original.destChain ? (
-          <Box sx={{ pl: 3 }}>
-            {chainIdToName(info.row.original.destChain)} ({info.row.original.destChain})
-          </Box>
+        {info.row.original.srcChain
+          ? info.row.original.destChain
+            ? null
+            : null
+          : info.row.original.tokenName}
+      </>
+    ),
+  }),
+  rateLimitColumnHelper.accessor((row) => row.srcChain, {
+    id: 'srcChain',
+    header: () => 'Chain',
+    cell: (info) => (
+      <>
+        {info.row.getCanExpand() && info.row.original.srcChain ? (
+          <IconButton
+            size="small"
+            sx={{ ml: -1 }}
+            {...{
+              onClick: info.row.getToggleExpandedHandler(),
+            }}
+          >
+            {info.row.getIsExpanded() ? (
+              <KeyboardArrowDown fontSize="inherit" />
+            ) : (
+              <KeyboardArrowRight fontSize="inherit" />
+            )}
+          </IconButton>
         ) : (
-          `${chainIdToName(info.row.original.srcChain)} (${info.row.original.srcChain})`
-        )}
+          <Box sx={{ width: 20, display: 'inline-block' }} />
+        )}{' '}
+        {info.row.original.srcChain
+          ? info.row.original.destChain
+            ? `${chainIdToName(info.row.original.destChain)}(${info.row.original.destChain})`
+            : `${chainIdToName(info.row.original.srcChain)}(${info.row.original.srcChain})`
+          : null}
       </>
     ),
   }),
@@ -53,7 +81,11 @@ const rateLimitColumns = [
     header: () => <Box order="1">Outbound Capacity</Box>,
     cell: (info) => (
       <Box textAlign="right">
-        {info.row.original.destChain ? null : `$${info.row.original.amount.toLocaleString()}`}
+        {info.row.original.srcChain
+          ? info.row.original.destChain
+            ? null
+            : `${info.row.original.amount?.toLocaleString()}`
+          : null}
       </Box>
     ),
   }),
@@ -61,9 +93,11 @@ const rateLimitColumns = [
     header: () => <Box order="1">Inbound Capacity</Box>,
     cell: (info) => (
       <Box textAlign="right">
-        {info.row.original.destChain
-          ? `$${info.row.original.amount.toLocaleString()}`
-          : `$${info.row.original.totalInboundCapacity?.toLocaleString()}`}
+        {info.row.original.srcChain
+          ? info.row.original.destChain
+            ? info.row.original.amount?.toLocaleString()
+            : `${info.row.original.totalInboundCapacity?.toLocaleString()}`
+          : null}
       </Box>
     ),
   }),
@@ -83,7 +117,8 @@ export function NTTRateLimits() {
       sorting: rateLimitSorting,
     },
     getSubRows: (row) => row.inboundCapacity,
-    getRowId: (rateLimit) => `${rateLimit.srcChain.toString()}-${rateLimit.destChain || ''}`,
+    getRowId: (rateLimit) =>
+      `${rateLimit.tokenName.toString()}-${rateLimit.srcChain || ''}-${rateLimit.destChain || ''}`,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getExpandedRowModel: getExpandedRowModel(),

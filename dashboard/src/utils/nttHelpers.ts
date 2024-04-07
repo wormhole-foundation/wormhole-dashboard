@@ -1,41 +1,149 @@
-import { ChainId, Network as SdkNetwork, chainToChainId, rpc } from '@wormhole-foundation/sdk-base';
+import {
+  Chain,
+  ChainId,
+  Network as SdkNetwork,
+  chainToChainId,
+  rpc,
+} from '@wormhole-foundation/sdk-base';
 import { Network } from '../contexts/NetworkContext';
-import { SUPPORTED_EVM_CHAINS, NTT_MANAGER_CONTRACT } from './consts';
+import {
+  NTT_MANAGER_CONTRACT,
+  NTT_TOKENS,
+  NTT_SUPPORTED_CHAINS,
+} from '@wormhole-foundation/wormhole-monitor-common';
+
 import {
   getCurrentInboundCapacity,
   getCurrentOutboundCapacity,
   getTokenDecimals,
 } from './evmNttHelpers';
 
+import {
+  getTokenDecimals as getSolTokenDecimals,
+  getCurrentOutboundCapacity as getSolOutboundCapacity,
+  getCurrentInboundCapacity as getSolInboundCapacity,
+} from './solNttHelpers';
+
 export type RateLimit = {
-  srcChain: ChainId;
+  tokenName: string;
+  srcChain?: ChainId;
   destChain?: ChainId;
-  amount: bigint;
+  amount?: bigint;
   totalInboundCapacity?: bigint;
   inboundCapacity?: RateLimit[];
 };
 
 export async function getRateLimits(network: Network): Promise<RateLimit[]> {
-  const records: RateLimit[] = [];
+  const rateLimitsByToken: RateLimit[] = [];
+  const tokenContractAddresses = NTT_MANAGER_CONTRACT[network.name as SdkNetwork];
 
-  const promises = SUPPORTED_EVM_CHAINS[network.name].map(async (chain) => {
-    const rpcAddress = rpc.rpcAddress(network.name as SdkNetwork, chain);
-    const contractAddress = NTT_MANAGER_CONTRACT[network.name as SdkNetwork][chain]!;
-    const tokenDecimals = await getTokenDecimals(rpcAddress, contractAddress);
+  for (const [tokenName, chainContractAddresses] of Object.entries(tokenContractAddresses)) {
+    const rateLimitsByChain: RateLimit[] = [];
+    const promises = NTT_SUPPORTED_CHAINS(network.name as SdkNetwork, tokenName).map(
+      async (chain) => {
+        try {
+          const contractAddress = chainContractAddresses[chain];
+          if (contractAddress) {
+            let rateLimit: RateLimit | null = null;
+            if (chain === 'Solana') {
+              rateLimit = await getSolanaRateLimits(network, tokenName);
+            } else {
+              rateLimit = await getEvmRateLimits(network, chain, tokenName, contractAddress);
+            }
+
+            if (rateLimit) rateLimitsByChain.push(rateLimit);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    );
+
+    await Promise.all(promises);
+
+    rateLimitsByChain.sort((a, b) => a.srcChain! - b.srcChain!);
+
+    const rateLimit = {
+      tokenName,
+      inboundCapacity: rateLimitsByChain,
+    };
+
+    rateLimitsByToken.push(rateLimit);
+  }
+
+  return rateLimitsByToken;
+}
+
+async function getEvmRateLimits(
+  network: Network,
+  chain: Chain,
+  tokenName: string,
+  contractAddress: string
+): Promise<RateLimit> {
+  const rpcAddress = rpc.rpcAddress(network.name as SdkNetwork, chain);
+
+  const tokenDecimals = await getTokenDecimals(rpcAddress, contractAddress);
+  const inboundCapacity: RateLimit[] = [];
+  let totalInboundCapacity = BigInt(0);
+
+  for (const supportedChain of NTT_SUPPORTED_CHAINS(network.name as SdkNetwork, tokenName)) {
+    if (chain === supportedChain) continue;
+    const inboundCapacityAmount = await getCurrentInboundCapacity(
+      rpcAddress,
+      contractAddress,
+      chainToChainId(supportedChain)
+    );
+    const normalizedInboundCapacityAmount = inboundCapacityAmount / BigInt(10 ** tokenDecimals);
+    inboundCapacity.push({
+      tokenName,
+      srcChain: chainToChainId(chain),
+      destChain: chainToChainId(supportedChain),
+      amount: normalizedInboundCapacityAmount,
+    });
+
+    totalInboundCapacity += normalizedInboundCapacityAmount;
+  }
+
+  const outboundCapacityAmount = await getCurrentOutboundCapacity(rpcAddress, contractAddress);
+  inboundCapacity.sort((a, b) => a.destChain! - b.destChain!);
+  return {
+    tokenName,
+    srcChain: chainToChainId(chain),
+    amount: outboundCapacityAmount / BigInt(10 ** tokenDecimals),
+    inboundCapacity,
+    totalInboundCapacity,
+  };
+}
+
+async function getSolanaRateLimits(network: Network, tokenName: string): Promise<RateLimit | null> {
+  try {
+    const solRpcAddress = rpc.rpcAddress(network.name as SdkNetwork, 'Solana');
+    const solTokenAddress = NTT_TOKENS[network.name as SdkNetwork][tokenName]['Solana']!;
+    const solManagerAddress =
+      NTT_MANAGER_CONTRACT[network.name as SdkNetwork][tokenName]['Solana']!;
+
+    const solOutboundCapacityAmount = await getSolOutboundCapacity(
+      solRpcAddress,
+      solManagerAddress!
+    );
+
+    const solTokenDecimals = await getSolTokenDecimals(solRpcAddress, solTokenAddress);
+    console.log('tokenDecimals', solTokenDecimals);
 
     const inboundCapacity: RateLimit[] = [];
-    // TODO: include Solana in the loop
     let totalInboundCapacity = BigInt(0);
-    for (const supportedChain of SUPPORTED_EVM_CHAINS[network.name]) {
-      if (chain === supportedChain) continue;
-      const inboundCapacityAmount = await getCurrentInboundCapacity(
-        rpcAddress,
-        contractAddress,
+
+    for (const supportedChain of NTT_SUPPORTED_CHAINS(network.name as SdkNetwork, tokenName)) {
+      const inboundCapacityAmount = await getSolInboundCapacity(
+        solRpcAddress,
+        solManagerAddress,
         chainToChainId(supportedChain)
       );
-      const normalizedInboundCapacityAmount = inboundCapacityAmount / BigInt(10 ** tokenDecimals);
+      const normalizedInboundCapacityAmount =
+        inboundCapacityAmount / BigInt(10 ** solTokenDecimals);
       inboundCapacity.push({
-        srcChain: chainToChainId(chain),
+        tokenName,
+        srcChain: chainToChainId('Solana'),
         destChain: chainToChainId(supportedChain),
         amount: normalizedInboundCapacityAmount,
       });
@@ -43,37 +151,15 @@ export async function getRateLimits(network: Network): Promise<RateLimit[]> {
       totalInboundCapacity += normalizedInboundCapacityAmount;
     }
 
-    const outboundCapacityAmount = await getCurrentOutboundCapacity(rpcAddress, contractAddress);
-    records.push({
-      srcChain: chainToChainId(chain),
-      amount: outboundCapacityAmount / BigInt(10 ** tokenDecimals),
+    return {
+      tokenName,
+      srcChain: chainToChainId('Solana'),
+      amount: solOutboundCapacityAmount / BigInt(10 ** solTokenDecimals),
       inboundCapacity,
       totalInboundCapacity,
-    });
-  });
-
-  // TODO: Uncomment after Ben replies
-  //   const solNtt = getSolNtt(network)!;
-
-  //   {
-  //     const inboundCapacity: { [key in Chain]?: bigint } = {};
-  //     for (const supportedChain of supportedEvmChains[network.name]) {
-  //       if ('Solana' === supportedChain) continue;
-  //       inboundCapacity[supportedChain] = await solNtt.getCurrentInboundCapacity(supportedChain);
-  //     }
-
-  //     supportedEvmChains[network.name].forEach(async (chain) => {
-  //       records.push({
-  //         chain: 'Solana',
-  //         outboundCapacity: await solNtt.getCurrentOutboundCapacity(),
-  //         inboundCapacity,
-  //       });
-  //     });
-  //   }
-  await Promise.all(promises);
-
-  // To make sure the records are sorted by srcChain
-  records.sort((a, b) => a.srcChain - b.srcChain);
-
-  return records;
+    };
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
 }

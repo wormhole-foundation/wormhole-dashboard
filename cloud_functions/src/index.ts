@@ -26,6 +26,9 @@ export const { wormchainMonitor } = require('./wormchainMonitor');
 export const { getLatestTokenData } = require('./getLatestTokenData');
 export const { getSolanaEvents } = require('./getSolanaEvents');
 export const { getNTTRateLimits } = require('./getNTTRateLimits');
+export const { computeNTTRateLimits } = require('./computeNTTRateLimits');
+export const { getTotalSupplyAndLocked } = require('./getTotalSupplyAndLocked');
+export const { computeTotalSupplyAndLocked } = require('./computeTotalSupplyAndLocked');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.
@@ -53,3 +56,6 @@ functions.http('wormchainMonitor', wormchainMonitor);
 functions.http('latestTokenData', getLatestTokenData);
 functions.http('getSolanaEvents', getSolanaEvents);
 functions.http('getNTTRateLimits', getNTTRateLimits);
+functions.http('computeNTTRateLimits', computeNTTRateLimits);
+functions.http('getTotalSupplyAndLocked', getTotalSupplyAndLocked);
+functions.http('computeTotalSupplyAndLocked', computeTotalSupplyAndLocked);

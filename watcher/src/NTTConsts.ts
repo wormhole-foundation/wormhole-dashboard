@@ -175,24 +175,6 @@ export const NTT_SOLANA_IXS = [
   RequestRelayIx,
 ];
 
-export const NTT_CONTRACT: { [key in Network]: { [key in Chain]?: string[] } } = {
-  ['Mainnet']: {
-    Ethereum: ['0xeBdCe9a913d9400EE75ef31Ce8bd34462D01a1c1'],
-    Fantom: [
-      '0x68dB2f05Aa2d77DEf981fd2be32661340c9222FB',
-      '0x2F733095B80A04b38b0D10cC884524a3d09b836a',
-    ],
-  },
-  ['Testnet']: {
-    Solana: ['nTTh3bZ5Aer6xboWZe39RDEft4MeVxSQ8D1EYAVLZw9'],
-    Sepolia: ['0xB231aD95f2301bc82eA44c515001F0F746D637e0'],
-    ArbitrumSepolia: ['0xEec94CD3083e067398256a79CcA7e740C5c8ef81'],
-    BaseSepolia: ['0xB03b030b2f5B40819Df76467d67eD1C85Ff66fAD'],
-    OptimismSepolia: ['0x7f430D4e7939D994C0955A01FC75D9DE33F12D11'],
-  },
-  ['Devnet']: {},
-};
-
 export const NTT_QUOTER_CONTRACT: { [key in Network]: { [key in Chain]?: string } } = {
   ['Mainnet']: {},
   ['Testnet']: {

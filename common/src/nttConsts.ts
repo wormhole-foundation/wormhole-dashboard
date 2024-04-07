@@ -1,0 +1,105 @@
+import { Chain, Network, chains } from '@wormhole-foundation/sdk-base';
+
+// This data structure is used in dashboard
+export type NTTContract = {
+  [key in Network]: { [tokenName: string]: { [key in Chain]?: string } };
+};
+
+// This data structure is used in watchers
+export type NTTContractArray = {
+  [key in Network]: { [key in Chain]?: string[] };
+};
+
+function convertNTTManagerContractToNTTContractArray(
+  nttManagerContract: NTTContract
+): NTTContractArray {
+  const nttContract: NTTContractArray = {} as NTTContractArray;
+
+  for (const network in nttManagerContract) {
+    nttContract[network as Network] = {};
+
+    for (const tokenName in nttManagerContract[network as Network]) {
+      for (const chain in nttManagerContract[network as Network][tokenName]) {
+        const tokenAddress = nttManagerContract[network as Network][tokenName][chain as Chain];
+
+        if (tokenAddress) {
+          if (!nttContract[network as Network][chain as Chain]) {
+            nttContract[network as Network][chain as Chain] = [];
+          }
+          nttContract[network as Network][chain as Chain]!.push(tokenAddress);
+        }
+      }
+    }
+  }
+
+  return nttContract;
+}
+
+export const NTT_MANAGER_CONTRACT: NTTContract = {
+  Mainnet: {
+    USDC: {
+      Ethereum: '0xeBdCe9a913d9400EE75ef31Ce8bd34462D01a1c1',
+      Fantom: '0x68dB2f05Aa2d77DEf981fd2be32661340c9222FB',
+    },
+  },
+  Testnet: {
+    TEST_NTT: {
+      Solana: 'nTTh3bZ5Aer6xboWZe39RDEft4MeVxSQ8D1EYAVLZw9',
+      Sepolia: '0xB231aD95f2301bc82eA44c515001F0F746D637e0',
+      ArbitrumSepolia: '0xEec94CD3083e067398256a79CcA7e740C5c8ef81',
+      BaseSepolia: '0xB03b030b2f5B40819Df76467d67eD1C85Ff66fAD',
+      OptimismSepolia: '0x7f430D4e7939D994C0955A01FC75D9DE33F12D11',
+    },
+  },
+  Devnet: {},
+};
+
+export const NTT_TRANSCEIVER_CONTRACT: NTTContract = {
+  Mainnet: {
+    USDC: {
+      Ethereum: '0x55f7820357FA17A1ECb48E959D5E637bFF956d6F',
+      Fantom: '0x8b47f02E7E20174C76Af910adc0Ad8A4B0342f4c',
+    },
+  },
+  Testnet: {
+    TEST_NTT: {
+      Solana: '9WNzy7xYZyL2k6JnE9dWSp7VpYkvfRN3Rhd8wHv9J9mY',
+      Sepolia: '0x1fDC902e30b188FD2BA976B421Cb179943F57896',
+      ArbitrumSepolia: '0x0E24D17D7467467b39Bf64A9DFf88776Bd6c74d7',
+      BaseSepolia: '0x1e072169541f1171e427Aa44B5fd8924BEE71b0e',
+      OptimismSepolia: '0x41265eb2863bf0238081F6AeefeF73549C82C3DD',
+    },
+  },
+  Devnet: {},
+};
+
+export const NTT_TOKENS: NTTContract = {
+  Mainnet: {
+    USDC: {
+      Ethereum: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      Fantom: '0x2F733095B80A04b38b0D10cC884524a3d09b836a',
+    },
+  },
+  Testnet: {
+    TEST_NTT: {
+      Solana: '87r5ZS91Q2pQbFTvvneqs7y7mbtegtqMt4LDAS4g23Ax',
+      Sepolia: '0x1d30E78B7C7fbbcef87ae6e97B5389b2e470CA4a',
+      ArbitrumSepolia: '0x84A1Cb660B19eB0063EE5FD377eC14AAe3364d74',
+      BaseSepolia: '0x7f430D4e7939D994C0955A01FC75D9DE33F12D11',
+      OptimismSepolia: '0x0e15979a7a1eFAEf20312CA45A59eb141bF7E340',
+    },
+  },
+  Devnet: {},
+};
+
+export const NTT_MANAGER_CONTRACT_ARRAY =
+  convertNTTManagerContractToNTTContractArray(NTT_MANAGER_CONTRACT);
+
+export function NTT_SUPPORTED_CHAINS(network: Network, token: string): Chain[] {
+  const contractDetails = NTT_MANAGER_CONTRACT[network][token];
+  if (!contractDetails) {
+    return [];
+  }
+
+  return chains.filter((chain) => chain in contractDetails);
+}

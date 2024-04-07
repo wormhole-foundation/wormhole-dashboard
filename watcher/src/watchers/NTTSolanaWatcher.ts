@@ -18,7 +18,6 @@ import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor
 import knex, { Knex } from 'knex';
 import {
   LifeCycle,
-  NTT_CONTRACT,
   NTT_DECIMALS,
   NTT_QUOTER_CONTRACT,
   ReceiveWormholeMessageIx,
@@ -31,6 +30,7 @@ import {
   TransferLockIx,
   getNttManagerMessageDigest,
 } from '../NTTConsts';
+import { NTT_MANAGER_CONTRACT_ARRAY } from '@wormhole-foundation/wormhole-monitor-common';
 import { RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey } from '../databases/utils';
 import NTT_IDL from '../idls/example_native_token_transfers.json';
@@ -85,7 +85,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   constructor(network: Network) {
     super(network, true);
     this.rpc = RPCS_BY_CHAIN[this.network].Solana!;
-    this.programIds = NTT_CONTRACT[this.network].Solana!;
+    this.programIds = NTT_MANAGER_CONTRACT_ARRAY[this.network].Solana!;
     this.connection = new Connection(this.rpc, COMMITMENT);
 
     // Initialize the NttQuoter

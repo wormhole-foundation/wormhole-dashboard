@@ -46,3 +46,9 @@ export async function getEvmTokenDecimals(rpc: string, contractAddress: string):
   const result = await callContractMethod(rpc, contractAddress, methodId);
   return Number(result);
 }
+
+export async function getEvmTotalSupply(rpc: string, contractAddress: string): Promise<number> {
+  const methodId = getMethodId('totalSupply()');
+  const result = await callContractMethod(rpc, contractAddress, methodId);
+  return Number(result);
+}

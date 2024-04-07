@@ -1,17 +1,9 @@
+import { Storage } from '@google-cloud/storage';
+import { chainIdToChain } from '@wormhole-foundation/sdk-base';
 import {
+  NTTRateLimit,
   assertEnvironmentVariable,
-  NTT_MANAGER_CONTRACT,
-  NTT_TOKENS,
-  NTT_TRANSCEIVER_CONTRACT,
-  NTT_SUPPORTED_CHAINS,
-  getEvmTokenDecimals,
-  getSolanaTokenDecimals,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { EvmPlatform, EvmChains } from '@wormhole-foundation/sdk-evm';
-import { SolanaPlatform } from '@wormhole-foundation/sdk-solana';
-import { EvmNtt } from '@wormhole-foundation/sdk-evm-ntt';
-import { SolanaNtt } from '@wormhole-foundation/sdk-solana-ntt';
-import { Network, Chain, contracts, rpc } from '@wormhole-foundation/sdk-base';
 import { Gauge, register } from 'prom-client';
 
 const outboundCapacityGauge = new Gauge({
@@ -27,6 +19,7 @@ const inboundCapacityGauge = new Gauge({
 });
 
 const PRODUCT = 'cloud_functions_ntt';
+const AUTH_TOKEN = 'bypass_grafana_gating'; // Dummy token for Grafana Metrics Integration
 
 async function setCapacityGauge(
   gauge: Gauge,
@@ -36,95 +29,103 @@ async function setCapacityGauge(
   gauge.set(labels, Number(capacity));
 }
 
-async function getRateLimits(network: Network, token: string, chain: Chain) {
-  let ntt: EvmNtt<Network, EvmChains> | SolanaNtt<Network, 'Solana'>;
-  let tokenDecimals: number;
-  const rpcEndpoint = rpc.rpcAddress(network, chain as Chain);
-  const tokenAddress = NTT_TOKENS[network][token][chain]!;
-  const managerContract = NTT_MANAGER_CONTRACT[network][token][chain]!;
-  const transceiverContract = NTT_TRANSCEIVER_CONTRACT[network][token][chain]!;
+const storage = new Storage();
 
-  if (chain === 'Solana') {
-    const platform = new SolanaPlatform(network);
-    ntt = new SolanaNtt(network, chain, platform.getRpc(chain), {
-      coreBridge: contracts.coreBridge(network, chain),
-      ntt: {
-        token: tokenAddress,
-        manager: managerContract,
-        transceiver: {
-          wormhole: transceiverContract,
+let bucketName: string = 'wormhole-ntt-cache';
+const network = assertEnvironmentVariable('NETWORK');
+if (network === 'Testnet') {
+  bucketName = 'wormhole-ntt-cache-testnet';
+}
+
+const cacheBucket = storage.bucket(bucketName);
+const cacheFileName = 'ntt-rate-limits-cache.json';
+const cloudStorageCache = cacheBucket.file(cacheFileName);
+
+async function handlePrometheusMetrics(rateLimits: NTTRateLimit[]) {
+  // If the request is not for JSON, return the rate limits as prometheus metrics
+  // We set the gauge values for the rate limits and return using register.metrics() to get the metrics in the prometheus format
+  rateLimits.forEach((tokenRateLimits) => {
+    if (!tokenRateLimits.inboundCapacity) return;
+
+    tokenRateLimits.inboundCapacity.forEach((rateLimit) => {
+      if (!rateLimit || !rateLimit.amount || !rateLimit.tokenName || !rateLimit.srcChain) return;
+
+      setCapacityGauge(
+        outboundCapacityGauge,
+        {
+          token: rateLimit.tokenName,
+          chain: chainIdToChain(rateLimit.srcChain),
+          network,
+          product: PRODUCT,
         },
-      },
-    });
-    tokenDecimals = await getSolanaTokenDecimals(rpcEndpoint, tokenAddress);
-  } else {
-    const evmChain = chain as EvmChains;
-    const platform = new EvmPlatform(network);
-    ntt = new EvmNtt(network, evmChain, platform.getRpc(evmChain), {
-      ntt: {
-        token: tokenAddress,
-        manager: managerContract,
-        transceiver: {
-          wormhole: transceiverContract,
-        },
-      },
-    });
-    tokenDecimals = await getEvmTokenDecimals(rpcEndpoint, managerContract);
-  }
-
-  const outboundCapacity = await ntt.getCurrentOutboundCapacity();
-  const normalizedOutboundCapacity = outboundCapacity / BigInt(10 ** tokenDecimals);
-
-  await setCapacityGauge(
-    outboundCapacityGauge,
-    { token, chain, network, product: PRODUCT },
-    normalizedOutboundCapacity
-  );
-
-  const inboundChains = NTT_SUPPORTED_CHAINS(network, token).filter(
-    (inboundChain) => inboundChain !== chain
-  );
-  await Promise.all(
-    inboundChains.map(async (inboundChain) => {
-      const inboundCapacity = await ntt.getCurrentInboundCapacity(inboundChain);
-      const normalizedInboundCapacity = inboundCapacity / BigInt(10 ** tokenDecimals);
-      await setCapacityGauge(
-        inboundCapacityGauge,
-        { token, chain, inbound_chain: inboundChain, network, product: PRODUCT },
-        normalizedInboundCapacity
+        BigInt(rateLimit.amount)
       );
-    })
-  );
+
+      if (!rateLimit.inboundCapacity) return;
+      rateLimit.inboundCapacity.forEach((inboundRateLimit) => {
+        if (
+          !inboundRateLimit ||
+          !inboundRateLimit.amount ||
+          !inboundRateLimit.tokenName ||
+          !inboundRateLimit.destChain ||
+          !inboundRateLimit.srcChain
+        )
+          return;
+
+        setCapacityGauge(
+          inboundCapacityGauge,
+          {
+            token: inboundRateLimit.tokenName,
+            chain: chainIdToChain(inboundRateLimit.destChain),
+            inbound_chain: chainIdToChain(inboundRateLimit.srcChain),
+            network,
+            product: PRODUCT,
+          },
+          BigInt(inboundRateLimit.amount)
+        );
+      });
+    });
+  });
 }
 
 export async function getNTTRateLimits(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
   if (req.method === 'OPTIONS') {
+    // Send response to OPTIONS requests
     res.set('Access-Control-Allow-Methods', 'GET');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.set('Access-Control-Max-Age', '3600');
-    res.sendStatus(204);
+    res.status(204).send('');
     return;
   }
 
+  // This is just a hacky way to get Grafana thinking it's authenticated
+  // This doesn't provide any real security
+  // Grafana Metrics Integration requires the URL to be protected by authentication.
+  // Refer to: https://arc.net/l/quote/hikxnfht
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.split(' ')[1]; // Authorization: Bearer <token>
+  if (!token || token !== AUTH_TOKEN) {
+    res.status(401).send('Unauthorized');
+    return;
+  }
+
+  let rateLimits: NTTRateLimit[] = [];
   try {
-    const network = assertEnvironmentVariable('NETWORK') as Network;
-    const managerContracts = NTT_MANAGER_CONTRACT[network];
+    const [csCache] = await cloudStorageCache.download();
+    rateLimits = JSON.parse(csCache.toString());
 
-    const rateLimitPromises = Object.entries(managerContracts).flatMap(([token, manager]) =>
-      Object.entries(manager)
-        .map(([chain, contract]) =>
-          contract ? getRateLimits(network, token, chain as Chain) : null
-        )
-        .filter(Boolean)
-    );
+    // If the request is for JSON, return the rate limits directly
+    if (req.get('Accept') === 'application/json') {
+      res.json(rateLimits);
+      return;
+    }
 
-    await Promise.all(rateLimitPromises);
-
+    await handlePrometheusMetrics(rateLimits);
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
   } catch (e) {
-    console.error(e);
+    console.error('Error getting rate limits: ', e);
     res.sendStatus(500);
   }
 }

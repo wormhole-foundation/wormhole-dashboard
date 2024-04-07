@@ -1,12 +1,5 @@
 import { BN } from '@coral-xyz/anchor';
-import {
-  Connection,
-  PublicKey,
-  PublicKeyInitData,
-  SolanaJSONRPCError,
-  VersionedBlockResponse,
-} from '@solana/web3.js';
-import { encoding } from '@wormhole-foundation/sdk-base';
+import { Connection, SolanaJSONRPCError, VersionedBlockResponse } from '@solana/web3.js';
 
 export const findNextValidBlock = async (
   connection: Connection,
@@ -74,14 +67,3 @@ export const U64 = {
   },
   from: (amount: BN, unit: number) => amount.toNumber() / unit,
 };
-
-// copied from https://github.com/wormhole-foundation/example-native-token-transfers/blob/main/solana/ts/sdk/utils.ts#L55-L56
-type Seed = Uint8Array | string;
-export function derivePda(seeds: Seed | readonly Seed[], programId: PublicKeyInitData) {
-  const toBytes = (s: string | Uint8Array) =>
-    typeof s === 'string' ? encoding.bytes.encode(s) : s;
-  return PublicKey.findProgramAddressSync(
-    Array.isArray(seeds) ? seeds.map(toBytes) : [toBytes(seeds as Seed)],
-    new PublicKey(programId)
-  )[0];
-}

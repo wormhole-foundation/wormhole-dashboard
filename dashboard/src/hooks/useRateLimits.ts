@@ -13,7 +13,6 @@ export function useRateLimits(network: Network) {
 
     const fetchRateLimits = async () => {
       if (cancelled) return;
-      console.log('Fetching rate limits');
       const limits = await getRateLimits(network);
       setRateLimits(limits);
     };

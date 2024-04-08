@@ -69,7 +69,10 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
 export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   [key in Network]: { [key in Chain]?: string };
 } = {
-  ['Mainnet']: {},
+  ['Mainnet']: {
+    Ethereum: '19583505',
+    Fantom: '78727372',
+  },
   ['Testnet']: {
     Solana: '285100152',
     Sepolia: '5472203',

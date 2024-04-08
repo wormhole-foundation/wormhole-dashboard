@@ -24,13 +24,13 @@ export const OutboundTransferQueuedTopic =
 
 /// @notice Emitted when an outbound transfer is rate limited.
 /// @dev Topic0
-///      0x754d657d1363ee47d967b415652b739bfe96d5729ccf2f26625dcdbc147db68b.
+///      0xf33512b84e24a49905c26c6991942fc5a9652411769fc1e448f967cdb049f08a.
 /// @param sender The initial sender of the transfer.
 /// @param amount The amount to be transferred.
 /// @param currentCapacity The capacity left for transfers within the 24-hour window.:w
-/// event OutboundTransferRateLimited( address indexed sender, uint64 sequence, uint256 amount, uint256 currentCapacity);
+/// OutboundTransferRateLimited(address,uint64,uint256,uint256)
 export const OutboundTransferRateLimitedTopic =
-  '0x754d657d1363ee47d967b415652b739bfe96d5729ccf2f26625dcdbc147db68b';
+  '0xf33512b84e24a49905c26c6991942fc5a9652411769fc1e448f967cdb049f08a';
 
 //
 // The following are from INttManagerEvents.sol
@@ -38,25 +38,27 @@ export const OutboundTransferRateLimitedTopic =
 
 /// @notice Emitted when a message is sent from the nttManager.
 /// @dev Topic0
-///      0x9716fe52fe4e02cf924ae28f19f5748ef59877c6496041b986fbad3dae6a8ecf
+///      0x9cc8ade41ef46b98ba8bcad8c6bfa643934e6b84d3ce066cd38b5f0813bb2ae5.
 /// @param recipient The recipient of the message.
+/// @param refundAddress The address on the destination chain to which the
+///                      refund of unused gas will be paid
 /// @param amount The amount transferred.
 /// @param fee The amount of ether sent along with the tx to cover the delivery fee.
 /// @param recipientChain The chain ID of the recipient.
 /// @param msgSequence The unique sequence ID of the message.
-/// event TransferSent( bytes32 recipient, uint256 amount, uint256 fee, uint16 recipientChain, uint64 msgSequence);
 export const TransferSentTopic =
-  '0x9716fe52fe4e02cf924ae28f19f5748ef59877c6496041b986fbad3dae6a8ecf';
+  '0xe54e51e42099622516fa3b48e9733581c9dbdcb771cafb093f745a0532a35982';
 
 /// @notice Emitted when the peer contract is updated.
 /// @dev Topic0
-///      0x51b8437a7e22240c473f4cbdb4ed3a4f4bf5a9e7b3c511d7cfe0197325735700.
+///      0x1456404e7f41f35c3daac941bb50bad417a66275c3040061b4287d787719599d.
 /// @param chainId_ The chain ID of the peer contract.
 /// @param oldPeerContract The old peer contract address.
+/// @param oldPeerDecimals The old peer contract decimals.
 /// @param peerContract The new peer contract address.
-/// event PeerUpdated(uint16 indexed chainId_, bytes32 oldPeerContract, bytes32 peerContract);
+/// @param peerDecimals The new peer contract decimals.
 export const PeerUpdatedTopic =
-  '0x51b8437a7e22240c473f4cbdb4ed3a4f4bf5a9e7b3c511d7cfe0197325735700';
+  '0x1456404e7f41f35c3daac941bb50bad417a66275c3040061b4287d787719599d';
 
 /// @notice Emitted when a message has been attested to.
 /// @dev Topic0
@@ -79,22 +81,22 @@ export const ThresholdChangedTopic =
 
 /// @notice Emitted when an transceiver is removed from the nttManager.
 /// @dev Topic0
-///      0xc6289e62021fd0421276d06677862d6b328d9764cdd4490ca5ac78b173f25883.
+///      0xf05962b5774c658e85ed80c91a75af9d66d2af2253dda480f90bce78aff5eda5.
 /// @param transceiver The address of the transceiver.
 /// @param transceiversNum The current number of transceivers.
 /// @param threshold The current threshold of transceivers.
-/// event TransceiverAdded(address transceiver, uint256 transceiversNum, uint8 threshold);
+/// Event | TransceiverAdded(address,uint256,uint8) | 0xf05962b5774c658e85ed80c91a75af9d66d2af2253dda480f90bce78aff5eda5
 export const TransceiverAddedTopic =
-  '0xc6289e62021fd0421276d06677862d6b328d9764cdd4490ca5ac78b173f25883';
+  '0xf05962b5774c658e85ed80c91a75af9d66d2af2253dda480f90bce78aff5eda5';
 
 /// @notice Emitted when an transceiver is removed from the nttManager.
 /// @dev Topic0
-///     0x638e631f34d9501a3ff0295873b29f50d0207b5400bf0e48b9b34719e6b1a39e.
+///     0x697a3853515b88013ad432f29f53d406debc9509ed6d9313dcfe115250fcd18f.
 /// @param transceiver The address of the transceiver.
 /// @param threshold The current threshold of transceivers.
-/// event TransceiverRemoved(address transceiver, uint8 threshold);
+/// Event | TransceiverRemoved(address,uint8) | 0x697a3853515b88013ad432f29f53d406debc9509ed6d9313dcfe115250fcd18f
 export const TransceiverRemovedTopic =
-  '0x638e631f34d9501a3ff0295873b29f50d0207b5400bf0e48b9b34719e6b1a39e';
+  '0x697a3853515b88013ad432f29f53d406debc9509ed6d9313dcfe115250fcd18f';
 
 /// @notice Emitted when a message has already been executed to
 ///         notify client of against retries.
@@ -116,6 +118,16 @@ export const MessageAlreadyExecutedTopic =
 export const TransferRedeemedTopic =
   '0x504e6efe18ab9eed10dc6501a417f5b12a2f7f2b1593aed9b89f9bce3cf29a91';
 
+/// @notice Emitted when an outbound transfer has been cancelled
+/// @dev Topic0
+///      0xf80e572ae1b63e2449629b6c7d783add85c36473926f216077f17ee002bcfd07.
+/// @param sequence The sequence number being cancelled
+/// @param recipient The canceller and recipient of the funds
+/// @param amount The amount of the transfer being cancelled
+// event OutboundTransferCancelled(uint256 sequence, address recipient, uint256 amount);
+export const OutboundTransferCancelledTopic =
+  '0xf80e572ae1b63e2449629b6c7d783add85c36473926f216077f17ee002bcfd07';
+
 // All topics:
 export const NTT_TOPICS = [
   InboundTransferQueuedTopic,
@@ -128,6 +140,16 @@ export const NTT_TOPICS = [
   TransceiverAddedTopic,
   TransceiverRemovedTopic,
   MessageAlreadyExecutedTopic,
+  TransferRedeemedTopic,
+  OutboundTransferCancelledTopic,
+];
+
+// Lifecycle topics:
+export const NTT_LIFECYCLE_TOPICS = [
+  InboundTransferQueuedTopic,
+  OutboundTransferQueuedTopic,
+  OutboundTransferRateLimitedTopic,
+  TransferSentTopic,
   TransferRedeemedTopic,
 ];
 
@@ -156,7 +178,10 @@ export const NTT_SOLANA_IXS = [
 export const NTT_CONTRACT: { [key in Network]: { [key in Chain]?: string[] } } = {
   ['Mainnet']: {
     Ethereum: ['0xeBdCe9a913d9400EE75ef31Ce8bd34462D01a1c1'],
-    Fantom: ['0x68dB2f05Aa2d77DEf981fd2be32661340c9222FB'],
+    Fantom: [
+      '0x68dB2f05Aa2d77DEf981fd2be32661340c9222FB',
+      '0x2F733095B80A04b38b0D10cC884524a3d09b836a',
+    ],
   },
   ['Testnet']: {
     Solana: ['nTTh3bZ5Aer6xboWZe39RDEft4MeVxSQ8D1EYAVLZw9'],

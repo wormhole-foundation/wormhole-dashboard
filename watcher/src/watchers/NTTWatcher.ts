@@ -17,7 +17,7 @@ import {
   LifeCycle,
   NTT_CONTRACT,
   NTT_DECIMALS,
-  NTT_TOPICS,
+  NTT_LIFECYCLE_TOPICS,
   OutboundTransferQueuedTopic,
   OutboundTransferRateLimitedTopic,
   TransferRedeemedTopic,
@@ -253,7 +253,7 @@ export class NTTWatcher extends Watcher {
     for (const nttAddress of nttAddresses) {
       // Get and filter logs
       const logs: Log[] = (await this.getLogs(fromBlock, toBlock, nttAddress, [])).filter(
-        isNTTEvent
+        isNttLifecycleEvent
       );
       const timestampsByBlock: { [block: number]: string } = {};
       // fetch timestamps for each block
@@ -265,7 +265,7 @@ export class NTTWatcher extends Watcher {
       }
       this.logger.info(`processing ${logs.length} logs`);
       for (const log of logs) {
-        this.logger.debug('log:', log);
+        this.logger.debug(`log topic: ${log.topics[0]}`);
         const blockNumber = log.blockNumber;
         const txhash = log.transactionHash;
         this.logger.debug(`blockNumber: ${blockNumber}, txhash: ${txhash}`);
@@ -411,6 +411,8 @@ export class NTTWatcher extends Watcher {
           lc.digest = digest;
           lc.outboundTransferReleasableTime = timestampsByBlock[blockNumber];
           await saveToPG(this.pg, lc, OutboundTransferRateLimitedTopic, this.logger);
+        } else {
+          this.logger.warn(`Unhandled log topic: ${log.topics[0]}`);
         }
       }
 
@@ -426,6 +428,7 @@ export class NTTWatcher extends Watcher {
 
 type decodedTransferSent = {
   recipient: string;
+  refundAddr: string;
   amount: string;
   fee: string;
   recipientChain: number;
@@ -434,24 +437,36 @@ type decodedTransferSent = {
 
 /// event TransferSent( bytes32 recipient, uint256 amount, uint256 fee, uint16 recipientChain, uint64 msgSequence);
 function decodeNttTransferSent(data: string): decodedTransferSent {
-  // There are 5 fields in this message.  Each is 32 bytes long (64 characters)
+  //   event TransferSent(
+  //     bytes32 recipient,
+  //     bytes32 refundAddress,
+  //     uint256 amount,
+  //     uint256 fee,
+  //     uint16 recipientChain,
+  //     uint64 msgSequence
+  // );
+  // There are 6 fields in this message.  All of them are 32 bytes (64 characters in hex)
   // If data starts with '0x', we need to remove it
   if (data.startsWith('0x')) {
     data = data.slice(2);
   }
   let retVal: decodedTransferSent = {
     recipient: '',
+    refundAddr: '',
     amount: '',
     fee: '',
     recipientChain: 0,
     msgSequence: 0,
   };
-  if (data.length === 320) {
+  if (data.length === 384) {
     retVal.recipient = data.slice(0, 64);
-    retVal.amount = '0x' + data.slice(64, 128);
-    retVal.fee = '0x' + data.slice(128, 192);
-    retVal.recipientChain = Number('0x' + data.slice(192, 256));
-    retVal.msgSequence = Number('0x' + data.slice(256, 320));
+    retVal.refundAddr = '0x' + data.slice(64, 128);
+    retVal.amount = '0x' + data.slice(128, 192);
+    retVal.fee = '0x' + data.slice(192, 256);
+    retVal.recipientChain = Number('0x' + data.slice(256, 320));
+    retVal.msgSequence = Number('0x' + data.slice(320, 384));
+  } else {
+    throw new Error('Invalid data length.  Expected 384 characters.  Got ' + data.length);
   }
   return retVal;
 }
@@ -469,8 +484,8 @@ function makeNttTransferKey(mgrAddress: string, recipient: string, seq: number):
 export const makeVaaId = (chainId: number, emitter: string, seq: number): string =>
   `${chainId}/${emitter}/${seq}`;
 
-function isNTTEvent(log: Log): boolean {
-  return NTT_TOPICS.some((topic) => log.topics[0].includes(topic));
+function isNttLifecycleEvent(log: Log): boolean {
+  return NTT_LIFECYCLE_TOPICS.some((topic) => log.topics[0].includes(topic));
 }
 
 async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger: WormholeLogger) {

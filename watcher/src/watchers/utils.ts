@@ -81,7 +81,17 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
 }
 
 export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Watcher {
-  if (network === 'Testnet') {
+  if (network === 'Mainnet') {
+    if (chainName === 'Ethereum') {
+      return new NTTWatcher(network, chainName, 'finalized');
+    } else if (chainName === 'Fantom') {
+      return new NTTWatcher(network, chainName);
+    } else {
+      throw new Error(
+        `Attempted to create finalized NTT watcher for unsupported mainnet chain ${chainName}`
+      );
+    }
+  } else if ('Testnet') {
     // These are testnet only chains
     if (chainName === 'Sepolia' || chainName === 'Holesky') {
       return new NTTWatcher(network, chainName, 'finalized');
@@ -93,10 +103,12 @@ export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Wat
       return new NTTSolanaWatcher(network);
     } else {
       throw new Error(
-        `Attempted to create finalized watcher for unsupported testnet chain ${chainName}`
+        `Attempted to create finalized NTT watcher for unsupported testnet chain ${chainName}`
       );
     }
   } else {
-    throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
+    throw new Error(
+      `Attempted to create finalized NTT watcher for unsupported network ${network}, ${chainName}`
+    );
   }
 }

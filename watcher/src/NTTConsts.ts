@@ -155,8 +155,8 @@ export const NTT_SOLANA_IXS = [
 
 export const NTT_CONTRACT: { [key in Network]: { [key in Chain]?: string[] } } = {
   ['Mainnet']: {
-    Ethereum: ['0x4d573bc8cE236BE2609333206776c5B6FB8f4a10'],
-    Fantom: ['0x6d8297ED9E6df372C79a66443F4501fF8F1FBA84'],
+    Ethereum: ['0xeBdCe9a913d9400EE75ef31Ce8bd34462D01a1c1'],
+    Fantom: ['0x68dB2f05Aa2d77DEf981fd2be32661340c9222FB'],
   },
   ['Testnet']: {
     Solana: ['nTTh3bZ5Aer6xboWZe39RDEft4MeVxSQ8D1EYAVLZw9'],

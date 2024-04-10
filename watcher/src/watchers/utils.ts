@@ -53,7 +53,7 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
   } else if (chainName === 'Terra') {
     return new TerraExplorerWatcher(network, chainName);
   } else if (chainName === 'Xpla' || chainName === 'Terra2') {
-    return new TerraExplorerWatcher(network, chainName);
+    return new CosmwasmWatcher(network, chainName);
   } else if (chainName === 'Sui') {
     return new SuiWatcher(network);
   } else if (chainName === 'Wormchain') {

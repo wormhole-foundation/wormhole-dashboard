@@ -9,6 +9,7 @@ function NTTMetrics() {
         <LookerDashboard
           title="Mainnet NTT Transfers Report"
           src="https://lookerstudio.google.com/embed/reporting/0f20bce5-d442-4f39-8cc4-ced8bb73042a/page/kSKuD"
+          hasTabs
         />
       </>
     );

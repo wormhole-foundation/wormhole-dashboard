@@ -1,7 +1,7 @@
 import { Bigtable } from '@google-cloud/bigtable';
-import { ChainId, CHAINS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { padUint16, assertEnvironmentVariable } from './utils';
 import { Storage } from '@google-cloud/storage';
+import { ChainId, chainIds } from '@wormhole-foundation/sdk-base';
 
 // Read/write with cloud storage
 const storage = new Storage();
@@ -53,7 +53,7 @@ async function getMessageCounts_(prevMessageCounts: CountsByChain): Promise<Coun
   const [observedMessages] = await table.getRows(ranges);
   const [missingVaaObservedMessages] = await table.getRows(missingVaaRanges);
 
-  for (const [chainName, chainId] of Object.entries(CHAINS)) {
+  for (const chainId of chainIds) {
     const prevData = prevMessageCounts[chainId];
     const prevRowKey = prevData?.lastRowKey || '';
     const prevTotalMessages = prevData?.numTotalMessages || 0;

@@ -1,8 +1,8 @@
 import { Bigtable } from '@google-cloud/bigtable';
-import { ChainId, CHAINS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { padUint16, assertEnvironmentVariable, parseMessageId } from './utils';
 import { Storage } from '@google-cloud/storage';
 import { ObservedMessage } from './types';
+import { ChainId, chainIds } from '@wormhole-foundation/sdk-base';
 
 // Read/write to cloud storage
 const storage = new Storage();
@@ -32,7 +32,7 @@ async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<Mis
     ranges: [],
   };
 
-  for (const [chainName, chainId] of Object.entries(CHAINS)) {
+  for (const chainId of chainIds) {
     //(const [prevChain, prevData] of Object.entries(prevMissingVaas)) {
     const prevData = prevMissingVaas[chainId];
     const startRowKey = `${padUint16(Number(chainId).toString())}/`;
@@ -43,7 +43,7 @@ async function getMissingVaas_(prevMissingVaas: MissingVaasByChain): Promise<Mis
   }
   let missingMessages: MissingVaasByChain = {};
   const [missingVaaObservedMessages] = await table.getRows(missingVaaRanges);
-  for (const [chainName, chainId] of Object.entries(CHAINS)) {
+  for (const chainId of chainIds) {
     let lastRowKey = '';
     let missingMessagesByChain: ObservedMessage[] = [];
     const messagesByChain = missingVaaObservedMessages.filter(

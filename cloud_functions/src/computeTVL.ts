@@ -1,6 +1,8 @@
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  MAX_VAA_DECIMALS,
+  assertEnvironmentVariable,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
-import { MAX_VAA_DECIMALS } from '@certusone/wormhole-sdk';
 import { Firestore } from 'firebase-admin/firestore';
 import { fetchPrices } from '@wormhole-foundation/wormhole-monitor-database';
 import { NotionalTVL } from './types';

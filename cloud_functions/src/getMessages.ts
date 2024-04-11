@@ -1,5 +1,4 @@
 import { Bigtable } from '@google-cloud/bigtable';
-import { ChainId, CHAINS } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { padUint16, assertEnvironmentVariable, padUint64, parseMessageId } from './utils';
 import { pathToRegexp } from 'path-to-regexp';
 import {
@@ -9,20 +8,9 @@ import {
   MessagesByChain,
   makeCache,
 } from './types';
+import { ChainId, isChainId, toChainId } from '@wormhole-foundation/sdk-base';
 
 let noVaaCache: MessagesByChain = makeCache();
-
-function validChain(chain: string) {
-  try {
-    if (Object.values(CHAINS).indexOf(Number(chain) as ChainId) > -1) {
-      return true;
-    } else {
-      return false;
-    }
-  } catch (e) {
-    return false;
-  }
-}
 
 async function getMessages_(
   chainId: number,
@@ -235,8 +223,8 @@ export async function getMessages(req: any, res: any) {
     chain = pathVars[1];
     console.log(chain);
     let chainId: ChainId;
-    if (validChain(chain)) {
-      chainId = Number(chain) as ChainId;
+    if (isChainId(Number(chain))) {
+      chainId = toChainId(chain);
 
       let messageResponse: ObservedMessageResponse = {
         messages: [],

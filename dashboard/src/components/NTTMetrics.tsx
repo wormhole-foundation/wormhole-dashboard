@@ -1,16 +1,19 @@
-import { Box, Typography } from '@mui/material';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { LookerDashboard } from './LookerDashboard';
 
 function NTTMetrics() {
   const { currentNetwork } = useNetworkContext();
-  if (currentNetwork.name !== 'Testnet') {
+  if (currentNetwork.name === 'Mainnet') {
     return (
-      <Box textAlign="center" my={8} mx={4}>
-        <Typography variant="h3">NTT Metrics are only supported in Testnet</Typography>
-      </Box>
+      <>
+        <LookerDashboard
+          title="Mainnet NTT Transfers Report"
+          src="https://lookerstudio.google.com/embed/reporting/0f20bce5-d442-4f39-8cc4-ced8bb73042a/page/kSKuD"
+        />
+      </>
     );
   }
+  // This is the Testnet leg
   return (
     <>
       <LookerDashboard

@@ -2,7 +2,8 @@ import { Bigtable } from '@google-cloud/bigtable';
 import { assertEnvironmentVariable } from './utils';
 import { Firestore } from 'firebase-admin/firestore';
 import { MessageCountsHistory } from './types';
-import { parseVaa } from '@certusone/wormhole-sdk';
+import { deserialize } from '@wormhole-foundation/sdk-definitions';
+import { toChainId } from '@wormhole-foundation/sdk-base';
 
 export async function computeMessageCountHistory(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -39,7 +40,7 @@ export async function computeMessageCountHistory(req: any, res: any) {
           skipRow = false;
           continue;
         }
-        const parsed = parseVaa(signedVAA.data.info.bytes[0].value);
+        const parsed = deserialize('Uint8Array', signedVAA.data.info.bytes[0].value);
         if (parsed.timestamp === 0) {
           // e.g. governance VAAs may have timestamp set to 0
           continue;
@@ -47,8 +48,8 @@ export async function computeMessageCountHistory(req: any, res: any) {
         const date = new Date(parsed.timestamp * 1000).toISOString().slice(0, 10);
         messageCounts.DailyTotals[date] = {
           ...messageCounts.DailyTotals[date],
-          [parsed.emitterChain]:
-            (messageCounts.DailyTotals[date]?.[parsed.emitterChain.toString()] || 0) + 1,
+          [toChainId(parsed.emitterChain)]:
+            (messageCounts.DailyTotals[date]?.[toChainId(parsed.emitterChain).toString()] || 0) + 1,
         };
       }
       if (signedVAARows.length < readChunkSize) {

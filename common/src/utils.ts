@@ -1,4 +1,5 @@
-import { Network } from '@wormhole-foundation/sdk-base';
+import { Network, encoding } from '@wormhole-foundation/sdk-base';
+import { UniversalAddress } from '@wormhole-foundation/sdk-definitions';
 import { Mode } from './consts';
 
 export async function sleep(timeout: number) {
@@ -37,4 +38,8 @@ export function getMode(): Mode {
     return mode;
   }
   throw new Error(`Unknown mode: ${mode}`);
+}
+
+export function universalAddress_stripped(u: UniversalAddress): string {
+  return encoding.hex.encode(u.toUint8Array());
 }

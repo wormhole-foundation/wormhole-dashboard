@@ -3,18 +3,10 @@ import { PubsubMessage } from '@google-cloud/pubsub/build/src/publisher';
 import { Bigtable, Instance, Table } from '@google-cloud/bigtable';
 import knex, { Knex } from 'knex';
 import {
-  ParsedAttestMetaVaa,
-  ParsedTokenTransferVaa,
-  TokenBridgePayload,
-  assertChain,
-  parseAttestMetaPayload,
-  parseTokenTransferPayload,
-  parseVaa,
-} from '@certusone/wormhole-sdk';
-import {
   CIRCLE_DOMAIN_TO_CHAIN_ID,
   isCircleIntegrationEmitter,
   isTokenBridgeEmitter,
+  universalAddress_stripped,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import {
   TokenTransfer,
@@ -27,7 +19,8 @@ import {
   CircleIntegrationPayload,
   parseCircleIntegrationDepositWithPayload,
 } from './_sdk_circleIntegration';
-import { ChainId, toChainId } from '@wormhole-foundation/sdk-base';
+import { toChainId } from '@wormhole-foundation/sdk-base';
+import { deserialize } from '@wormhole-foundation/sdk-definitions';
 
 let initialized = false;
 let bigtable: Bigtable;
@@ -81,21 +74,20 @@ export const processVaa: EventFunction = async (message: PubsubMessage, context:
     }
     const [row] = await signedVAAsTable.row(rowKey).get({ decode: false });
     const vaaBytes = row.data.info.bytes[0].value;
-    const vaa = parseVaa(vaaBytes);
+    const vaa = deserialize('Uint8Array', vaaBytes);
     if (vaa.payload.length > 0) {
       const payloadType = vaa.payload[0];
       if (module === 'TokenBridge') {
-        if (
-          payloadType === TokenBridgePayload.Transfer ||
-          payloadType === TokenBridgePayload.TransferWithPayload
-        ) {
-          const payload = parseTokenTransferPayload(vaa.payload);
-          const tokenTransferVaa: ParsedTokenTransferVaa = { ...vaa, ...payload };
-          const tokenTransfer = createTokenTransfer(tokenTransferVaa);
+        if (payloadType === 1 || payloadType === 3) {
+          const tokenTransferVaa =
+            payloadType === 1
+              ? deserialize('TokenBridge:Transfer', vaaBytes)
+              : deserialize('TokenBridge:TransferWithPayload', vaaBytes);
+
+          const tokenTransfer: TokenTransfer = createTokenTransfer(tokenTransferVaa);
           await pg(tokenTransferTable).insert(tokenTransfer).onConflict().ignore();
-        } else if (payloadType === TokenBridgePayload.AttestMeta) {
-          const payload = parseAttestMetaPayload(vaa.payload);
-          const attestMetaVaa: ParsedAttestMetaVaa = { ...vaa, ...payload };
+        } else if (payloadType === 2) {
+          const attestMetaVaa = deserialize('TokenBridge:AttestMeta', vaaBytes);
           const attestMessage = createAttestMessage(attestMetaVaa);
           const tokenMetadata = createTokenMetadata(attestMetaVaa);
           await pg.transaction(async (trx) => {
@@ -105,19 +97,20 @@ export const processVaa: EventFunction = async (message: PubsubMessage, context:
         }
       } else if (module === 'CircleIntegration') {
         if (payloadType === CircleIntegrationPayload.DepositWithPayload) {
-          const payload = parseCircleIntegrationDepositWithPayload(vaa.payload);
+          const payloadBuffer = Buffer.from(vaa.payload);
+          const payload = parseCircleIntegrationDepositWithPayload(payloadBuffer);
           const to_chain = CIRCLE_DOMAIN_TO_CHAIN_ID[payload.targetDomain];
           if (!to_chain) {
             throw new Error(`Missing mapping for Circle domain ${payload.targetDomain}`);
           }
           const tokenTransfer: TokenTransfer = {
             timestamp: vaa.timestamp.toString(),
-            emitter_chain: vaa.emitterChain,
-            emitter_address: vaa.emitterAddress.toString('hex'),
+            emitter_chain: toChainId(vaa.emitterChain),
+            emitter_address: universalAddress_stripped(vaa.emitterAddress),
             sequence: vaa.sequence.toString(),
             amount: payload.amount.toString(),
             token_address: payload.tokenAddress.toString('hex'),
-            token_chain: vaa.emitterChain,
+            token_chain: toChainId(vaa.emitterChain),
             to_address: payload.mintRecipient.toString('hex'),
             to_chain,
             payload_type: Number(payload.payloadType),

@@ -1,4 +1,4 @@
-import { ChainName } from '@certusone/wormhole-sdk';
+import { Chain } from '@wormhole-foundation/sdk-base';
 import { chunkArray, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import axios, { isAxiosError } from 'axios';
 
@@ -7,31 +7,31 @@ const COIN_GECKO_PRO_API_BASE_URL = 'https://pro-api.coingecko.com/api/v3';
 const COIN_GECKO_API_SLEEP_MS = 1000;
 
 // https://api.coingecko.com/api/v3/asset_platforms
-export const COINGECKO_PLATFORM_BY_CHAIN: { [key in ChainName]?: string } = {
-  solana: 'solana',
-  ethereum: 'ethereum',
-  terra: 'terra',
-  terra2: 'terra-2',
-  bsc: 'binance-smart-chain',
-  polygon: 'polygon-pos',
-  avalanche: 'avalanche',
-  oasis: 'oasis',
-  algorand: 'algorand',
-  aptos: 'aptos',
-  aurora: 'aurora',
-  fantom: 'fantom',
-  karura: 'karura',
-  acala: 'acala',
-  klaytn: 'klay-token',
-  celo: 'celo',
-  near: 'near-protocol',
-  moonbeam: 'moonbeam',
-  arbitrum: 'arbitrum-one',
-  optimism: 'optimistic-ethereum',
-  xpla: undefined,
-  injective: 'injective',
-  sui: 'sui',
-  base: 'base',
+export const COINGECKO_PLATFORM_BY_CHAIN: { [key in Chain]?: string } = {
+  Solana: 'solana',
+  Ethereum: 'ethereum',
+  Terra: 'terra',
+  Terra2: 'terra-2',
+  Bsc: 'binance-smart-chain',
+  Polygon: 'polygon-pos',
+  Avalanche: 'avalanche',
+  Oasis: 'oasis',
+  Algorand: 'algorand',
+  Aptos: 'aptos',
+  Aurora: 'aurora',
+  Fantom: 'fantom',
+  Karura: 'karura',
+  Acala: 'acala',
+  Klaytn: 'klay-token',
+  Celo: 'celo',
+  Near: 'near-protocol',
+  Moonbeam: 'moonbeam',
+  Arbitrum: 'arbitrum-one',
+  Optimism: 'optimistic-ethereum',
+  Xpla: undefined,
+  Injective: 'injective',
+  Sui: 'sui',
+  Base: 'base',
 };
 
 export interface CoinGeckoPrices {

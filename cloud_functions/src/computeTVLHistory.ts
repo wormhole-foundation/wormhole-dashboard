@@ -1,15 +1,18 @@
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  MAX_VAA_DECIMALS,
+  assertEnvironmentVariable,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
-import { ChainId, MAX_VAA_DECIMALS } from '@certusone/wormhole-sdk';
 import { Firestore } from 'firebase-admin/firestore';
 import { TokenPrice } from '@wormhole-foundation/wormhole-monitor-database';
 import { TVLHistory } from './types';
 import { isTokenDenylisted } from './consts';
+import { ChainId } from '@wormhole-foundation/sdk-base';
 
 interface LockedToken {
   date: string;
   token_address: string;
-  token_chain: number;
+  token_chain: ChainId;
   coin_gecko_coin_id: string;
   native_address: string;
   decimals: number;

@@ -1,4 +1,6 @@
-import { ParsedAttestMetaVaa, ParsedTokenTransferVaa } from '@certusone/wormhole-sdk';
+import { toChainId } from '@wormhole-foundation/sdk-base';
+import { TokenBridge } from '@wormhole-foundation/sdk-definitions';
+import { universalAddress_stripped } from '@wormhole-foundation/wormhole-monitor-common';
 
 // Note: bigint is handled as string to prevent precision loss - https://github.com/brianc/node-postgres/pull/353
 
@@ -46,40 +48,41 @@ export interface TokenPrice {
   price_usd: number;
 }
 
-export const createTokenMetadata = (vaa: ParsedAttestMetaVaa): TokenMetadata => ({
-  token_chain: vaa.tokenChain,
-  token_address: vaa.tokenAddress.toString('hex'),
+export const createTokenMetadata = (vaa: TokenBridge.AttestVAA): TokenMetadata => ({
+  token_chain: toChainId(vaa.payload.token.chain),
+  token_address: universalAddress_stripped(vaa.payload.token.address),
   native_address: null,
   coin_gecko_coin_id: null,
-  decimals: vaa.decimals,
-  symbol: vaa.symbol,
-  name: vaa.name,
+  decimals: vaa.payload.decimals,
+  symbol: vaa.payload.symbol.replace(/\0/g, ''),
+  name: vaa.payload.name.replace(/\0/g, ''),
 });
 
-export const createTokenTransfer = (vaa: ParsedTokenTransferVaa): TokenTransfer => ({
+export const createTokenTransfer = (vaa: TokenBridge.TransferVAA): TokenTransfer => ({
   timestamp: vaa.timestamp.toString(),
-  emitter_chain: vaa.emitterChain,
-  emitter_address: vaa.emitterAddress.toString('hex'),
+  emitter_chain: toChainId(vaa.emitterChain),
+  emitter_address: universalAddress_stripped(vaa.emitterAddress),
   sequence: vaa.sequence.toString(),
-  amount: vaa.amount.toString(),
-  token_address: vaa.tokenAddress.toString('hex'),
-  token_chain: vaa.tokenChain,
-  to_address: vaa.to.toString('hex'),
-  to_chain: vaa.toChain,
-  payload_type: Number(vaa.payloadType),
-  fee: vaa.fee !== null ? vaa.fee.toString() : null,
-  from_address: vaa.fromAddress !== null ? vaa.fromAddress.toString('hex') : null,
-  module: 'TokenBridge',
+  amount: vaa.payload.token.amount.toString(),
+  token_address: universalAddress_stripped(vaa.payload.token.address),
+  token_chain: toChainId(vaa.payload.token.chain),
+  to_address: universalAddress_stripped(vaa.payload.to.address),
+  to_chain: toChainId(vaa.payload.to.chain),
+  module: vaa.protocolName,
+  payload_type: vaa.payloadName === 'Transfer' ? 1 : 3,
+  fee: vaa.payloadName === 'Transfer' ? vaa.payload.fee.toString() : null,
+  from_address:
+    vaa.payloadName === 'TransferWithPayload' ? universalAddress_stripped(vaa.payload.from) : null,
 });
 
-export const createAttestMessage = (vaa: ParsedAttestMetaVaa): AttestMessage => ({
+export const createAttestMessage = (vaa: TokenBridge.AttestVAA): AttestMessage => ({
   timestamp: vaa.timestamp.toString(),
-  emitter_chain: vaa.emitterChain,
-  emitter_address: vaa.emitterAddress.toString('hex'),
+  emitter_chain: toChainId(vaa.emitterChain),
+  emitter_address: universalAddress_stripped(vaa.emitterAddress),
   sequence: vaa.sequence.toString(),
-  token_address: vaa.tokenAddress.toString('hex'),
-  token_chain: vaa.tokenChain,
-  decimals: vaa.decimals,
-  symbol: vaa.symbol,
-  name: vaa.name,
+  token_address: universalAddress_stripped(vaa.payload.token.address),
+  token_chain: toChainId(vaa.payload.token.chain),
+  decimals: vaa.payload.decimals,
+  symbol: vaa.payload.symbol.replace(/\0/g, ''),
+  name: vaa.payload.name.replace(/\0/g, ''),
 });

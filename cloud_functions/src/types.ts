@@ -1,4 +1,4 @@
-import { ChainId } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
+import { ChainId } from '@wormhole-foundation/sdk-base';
 
 export type ObservedEventInfo = {
   info: {
@@ -45,11 +45,6 @@ export type MessagesByChain = {
 
 export function makeCache() {
   const cache: MessagesByChain = {
-    0: {
-      messages: [],
-      lastUpdated: 0,
-      lastRowKey: '',
-    },
     1: {
       messages: [],
       lastUpdated: 0,

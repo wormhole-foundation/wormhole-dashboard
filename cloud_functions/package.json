@@ -21,13 +21,16 @@
     "@google-cloud/storage": "^6.8.0",
     "@solana/web3.js": "^1.87.3",
     "@wormhole-foundation/sdk-base": "^0.5.1",
+    "@wormhole-foundation/sdk-evm-ntt": "0.0.1-beta.1",
+    "@wormhole-foundation/sdk-solana-ntt": "0.0.1-beta.1",
     "axios": "^1.5.0",
     "borsh": "^1.0.0",
     "dotenv": "^16.0.3",
     "firebase-admin": "^11.4.1",
     "knex": "^2.4.2",
     "path-to-regexp": "^6.2.1",
-    "pg": "^8.10.0"
+    "pg": "^8.10.0",
+    "prom-client": "^15.1.1"
   },
   "devDependencies": {
     "typescript": "^5.2.2"

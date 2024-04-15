@@ -1,7 +1,4 @@
-import {
-  callContractMethod,
-  getMethodId,
-} from '@wormhole-foundation/wormhole-monitor-common';
+import { callContractMethod, getMethodId } from '@wormhole-foundation/wormhole-monitor-common';
 
 export async function getCurrentOutboundCapacity(
   rpc: string,

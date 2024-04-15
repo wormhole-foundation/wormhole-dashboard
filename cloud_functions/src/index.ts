@@ -25,7 +25,7 @@ export const { getReobserveVaas } = require('./getReobserveVaas');
 export const { wormchainMonitor } = require('./wormchainMonitor');
 export const { getLatestTokenData } = require('./getLatestTokenData');
 export const { getSolanaEvents } = require('./getSolanaEvents');
-export const { pushNTTRateLimits } = require('./pushNTTRateLimits');
+export const { getNTTRateLimits } = require('./getNTTRateLimits');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.
@@ -52,4 +52,4 @@ functions.http('getReobserveVaas', getReobserveVaas);
 functions.http('wormchainMonitor', wormchainMonitor);
 functions.http('latestTokenData', getLatestTokenData);
 functions.http('getSolanaEvents', getSolanaEvents);
-functions.http('pushNTTRateLimits', pushNTTRateLimits);
+functions.http('getNTTRateLimits', getNTTRateLimits);

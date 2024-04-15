@@ -10,13 +10,10 @@ import {
   NTT_MANAGER_CONTRACT,
   NTT_TOKENS,
   NTT_SUPPORTED_CHAINS,
+  getEvmTokenDecimals,
 } from '@wormhole-foundation/wormhole-monitor-common';
 
-import {
-  getCurrentInboundCapacity,
-  getCurrentOutboundCapacity,
-  getTokenDecimals,
-} from './evmNttHelpers';
+import { getCurrentInboundCapacity, getCurrentOutboundCapacity } from './evmNttHelpers';
 
 import {
   getTokenDecimals as getSolTokenDecimals,

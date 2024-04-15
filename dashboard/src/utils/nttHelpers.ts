@@ -82,7 +82,7 @@ async function getEvmRateLimits(
 ): Promise<RateLimit> {
   const rpcAddress = rpc.rpcAddress(network.name as SdkNetwork, chain);
 
-  const tokenDecimals = await getTokenDecimals(rpcAddress, contractAddress);
+  const tokenDecimals = await getEvmTokenDecimals(rpcAddress, contractAddress);
   const inboundCapacity: RateLimit[] = [];
   let totalInboundCapacity = BigInt(0);
 

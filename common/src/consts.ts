@@ -70,8 +70,12 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   [key in Network]: { [key in Chain]?: string };
 } = {
   ['Mainnet']: {
+    Solana: '260508723',
     Ethereum: '19583505',
     Fantom: '78727372',
+    Arbitrum: '201652677',
+    Optimism: '118840800',
+    Base: '13245519',
   },
   ['Testnet']: {
     Solana: '285100152',

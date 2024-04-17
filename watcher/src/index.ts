@@ -83,7 +83,7 @@ const supportedChains: Chain[] =
 const supportedNTTChains: Chain[] =
   network === 'Testnet'
     ? ['Solana', 'Sepolia', 'ArbitrumSepolia', 'BaseSepolia', 'OptimismSepolia']
-    : ['Ethereum', 'Fantom'];
+    : ['Solana', 'Ethereum', 'Fantom', 'Arbitrum', 'Optimism', 'Base'];
 
 if (mode === 'vaa') {
   startSupervisor(supportedChains);

@@ -84,8 +84,12 @@ export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Wat
   if (network === 'Mainnet') {
     if (chainName === 'Ethereum') {
       return new NTTWatcher(network, chainName, 'finalized');
-    } else if (chainName === 'Fantom') {
+    } else if (chainName === 'Fantom' || chainName === 'Base' || chainName === 'Optimism') {
       return new NTTWatcher(network, chainName);
+    } else if (chainName === 'Arbitrum') {
+      return new NTTArbitrumWatcher(network);
+    } else if (chainName === 'Solana') {
+      return new NTTSolanaWatcher(network);
     } else {
       throw new Error(
         `Attempted to create finalized NTT watcher for unsupported mainnet chain ${chainName}`

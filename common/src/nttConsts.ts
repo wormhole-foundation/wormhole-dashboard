@@ -41,6 +41,13 @@ export const NTT_MANAGER_CONTRACT: NTTContract = {
       Ethereum: '0xeBdCe9a913d9400EE75ef31Ce8bd34462D01a1c1',
       Fantom: '0x68dB2f05Aa2d77DEf981fd2be32661340c9222FB',
     },
+    W: {
+      Solana: 'NTtAaoDJhkeHeaVUHnyhwbPNAN6WgBpHkHBTc6d7vLK',
+      Ethereum: '0xc072B1AEf336eDde59A049699Ef4e8Fa9D594A48',
+      Arbitrum: '0x5333d0AcA64a450Add6FeF76D6D1375F726CB484',
+      Optimism: '0x1a4F1a790f23Ffb9772966cB6F36dCd658033e13',
+      Base: '0x5333d0AcA64a450Add6FeF76D6D1375F726CB484',
+    },
   },
   Testnet: {
     TEST_NTT: {
@@ -60,6 +67,13 @@ export const NTT_TRANSCEIVER_CONTRACT: NTTContract = {
       Ethereum: '0x55f7820357FA17A1ECb48E959D5E637bFF956d6F',
       Fantom: '0x8b47f02E7E20174C76Af910adc0Ad8A4B0342f4c',
     },
+    W: {
+      Solana: 'ExVbjD8inGXkt7Cx8jVr4GF175sQy1MeqgfaY53Ah8as',
+      Ethereum: '0xDb55492d7190D1baE8ACbE03911C4E3E7426870c',
+      Arbitrum: '0xD1a8AB69e00266e8B791a15BC47514153A5045a6',
+      Optimism: '0x9bD8b7b527CA4e6738cBDaBdF51C22466756073d',
+      Base: '0xD1a8AB69e00266e8B791a15BC47514153A5045a6',
+    },
   },
   Testnet: {
     TEST_NTT: {
@@ -78,6 +92,13 @@ export const NTT_TOKENS: NTTContract = {
     USDC: {
       Ethereum: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
       Fantom: '0x2F733095B80A04b38b0D10cC884524a3d09b836a',
+    },
+    W: {
+      Solana: '85VBFQZC9TZkfaptBWjvUw7YbZjy52A6mjtPGjstQAmQ',
+      Ethereum: '0xB0fFa8000886e57F86dd5264b9582b2Ad87b2b91',
+      Arbitrum: '0xB0fFa8000886e57F86dd5264b9582b2Ad87b2b91',
+      Optimism: '0xB0fFa8000886e57F86dd5264b9582b2Ad87b2b91',
+      Base: '0xB0fFa8000886e57F86dd5264b9582b2Ad87b2b91',
     },
   },
   Testnet: {

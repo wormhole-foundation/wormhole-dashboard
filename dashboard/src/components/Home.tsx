@@ -4,6 +4,7 @@ import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import useCloudGovernorInfo from '../hooks/useCloudGovernorInfo';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
+  NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET,
   NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET,
 } from '../utils/consts';
 import { Heartbeat } from '../utils/getLastHeartbeats';
@@ -40,6 +41,12 @@ function Home({
           <MainnetGovernor governorInfo={governorInfo} />
           <Divider />
           <Accountant governorInfo={governorInfo} accountantAddress={ACCOUNTANT_CONTRACT_ADDRESS} />
+          <Divider />
+          <Accountant
+            governorInfo={governorInfo}
+            accountantAddress={NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET}
+            isNTT
+          />
           <Divider />
           <Monitor governorInfo={governorInfo} />
         </>

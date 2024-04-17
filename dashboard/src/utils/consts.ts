@@ -94,6 +94,8 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';
 export const ACCOUNTANT_CONTRACT_ADDRESS =
   'wormhole14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9srrg465';
+export const NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET =
+  'wormhole1mc23vtzxh46e63vq22e8cnv23an06akvkqws04kghkrxrauzpgwq2hmwm7';
 export const NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET =
   'wormhole169tvyx49zmjqhlv7mzwj8j2weprascc0jq3rdglw9pynldqx34nscvhc7k';
 

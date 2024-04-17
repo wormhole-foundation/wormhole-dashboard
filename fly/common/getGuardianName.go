@@ -4,6 +4,7 @@ import "strings"
 
 // Guardian address to index map
 var guardianIndexMap = map[string]int{
+	strings.ToLower("0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3"): 0,
 	strings.ToLower("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157"): 1,
 	strings.ToLower("0x114De8460193bdf3A2fCf81f86a09765F4762fD1"): 2,
 	strings.ToLower("0x107A0086b32d7A0977926A205131d8731D39cbEB"): 3,
@@ -25,6 +26,7 @@ var guardianIndexMap = map[string]int{
 }
 
 var guardianIndexToNameMap = map[int]string{
+	0:  "RockawayX",
 	1:  "Staked",
 	2:  "Figment",
 	3:  "ChainodeTech",

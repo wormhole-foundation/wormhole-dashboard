@@ -206,8 +206,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
-export const explorerVaa = (network: string, key: string) =>
-  network === 'mainnet'
+export const explorerVaa = (network: Network, key: string) =>
+  network === 'Mainnet'
     ? `https://wormholescan.io/#/tx/${key}`
     : `https://wormholescan.io/#/tx/${key}?network=TESTNET`;
 

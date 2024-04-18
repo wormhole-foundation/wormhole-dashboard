@@ -176,7 +176,13 @@ export const NTT_SOLANA_IXS = [
 ];
 
 export const NTT_QUOTER_CONTRACT: { [key in Network]: { [key in Chain]?: string } } = {
-  ['Mainnet']: {},
+  ['Mainnet']: {
+    Solana: 'Nqd6XqA8LbsCuG8MLWWuP865NV6jR1MbXeKxD4HLKDJ',
+    Ethereum: '0x63BE47835c7D66c4aA5B2C688Dc6ed9771c94C74',
+    Arbitrum: '0x63BE47835c7D66c4aA5B2C688Dc6ed9771c94C74',
+    Optimism: '0x63BE47835c7D66c4aA5B2C688Dc6ed9771c94C74',
+    Base: '0x63BE47835c7D66c4aA5B2C688Dc6ed9771c94C74',
+  },
   ['Testnet']: {
     Solana: 'NqTdGLLL6b6bFo7YESNEezocgF8onH5cst5EdH791en',
   },

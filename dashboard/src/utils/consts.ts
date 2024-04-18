@@ -26,6 +26,7 @@ import oasisIcon from '../images/oasis-network-rose-logo.svg';
 import optimismIcon from '../images/optimism.svg';
 import osmosisIcon from '../images/osmosis.svg';
 import polygonIcon from '../images/polygon.svg';
+import provenanceIcon from '../images/provenance.svg';
 import pythnetIcon from '../images/pyth_logomark_white.svg';
 import scrollIcon from '../images/scroll.svg';
 import sedaIcon from '../images/seda.svg';
@@ -83,6 +84,7 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   4005: stargazeIcon,
   4006: sedaIcon,
   4007: dymensionIcon,
+  4008: provenanceIcon,
   10002: ethIcon,
   10003: arbitrumIcon,
   10004: baseIcon,

@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.4c0824fc.js",
+    "main.js": "/wormhole-dashboard/static/js/main.d6387c5b.js",
     "static/media/osmosis.svg": "/wormhole-dashboard/static/media/osmosis.e63cfefeb2a04452c70bc79d10edca03.svg",
     "static/media/dymension2.svg": "/wormhole-dashboard/static/media/dymension2.53975f485b10fc318e9617137738d311.svg",
     "static/media/wormchain.svg": "/wormhole-dashboard/static/media/wormchain.be86e5a58243fcf2111bbcaa83406d5d.svg",
@@ -44,6 +44,6 @@
     "static/media/eth.svg": "/wormhole-dashboard/static/media/eth.5a5de20bf3808241fc61ed9ad7680ab5.svg"
   },
   "entrypoints": [
-    "static/js/main.4c0824fc.js"
+    "static/js/main.d6387c5b.js"
   ]
 }

@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",
+    "@certusone/wormhole-spydk": "^0.0.1",
     "@coral-xyz/anchor": "^0.29.0",
     "@google-cloud/bigtable": "^4.1.0",
     "@google-cloud/pubsub": "^3.4.1",

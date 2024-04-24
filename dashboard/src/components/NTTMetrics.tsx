@@ -1,6 +1,5 @@
-import { Box, Divider } from '@mui/material';
+import { Divider } from '@mui/material';
 import { useNetworkContext } from '../contexts/NetworkContext';
-import CollapsibleSection from './CollapsibleSection';
 import { LookerDashboard } from './LookerDashboard';
 import { NTTRateLimits } from './NTTRateLimits';
 import { NTTTotalSupplyAndLocked } from './NTTTotalSupplyAndLocked';
@@ -16,39 +15,9 @@ function NTTMetrics() {
           hasTabs
         />
         <Divider />
-        <CollapsibleSection
-          defaultExpanded={false}
-          header={
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                paddingRight: 1,
-              }}
-            >
-              <Box>Rate Limit Capacity</Box>
-            </Box>
-          }
-        >
-          <NTTRateLimits />
-        </CollapsibleSection>
+        <NTTRateLimits />
         <Divider />
-        <CollapsibleSection
-          defaultExpanded={false}
-          header={
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                paddingRight: 1,
-              }}
-            >
-              <Box>Total Supply and Locked</Box>
-            </Box>
-          }
-        >
-          <NTTTotalSupplyAndLocked />
-        </CollapsibleSection>
+        <NTTTotalSupplyAndLocked />
       </>
     );
   }
@@ -60,39 +29,9 @@ function NTTMetrics() {
         src="https://lookerstudio.google.com/embed/reporting/a47057a8-15a0-4cc7-8086-eb00f5d09d2a/page/SPpuD"
       />
       <Divider />
-      <CollapsibleSection
-        defaultExpanded={false}
-        header={
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              paddingRight: 1,
-            }}
-          >
-            <Box>Rate Limit Capacity</Box>
-          </Box>
-        }
-      >
-        <NTTRateLimits />
-      </CollapsibleSection>
+      <NTTRateLimits />
       <Divider />
-      <CollapsibleSection
-        defaultExpanded={false}
-        header={
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              paddingRight: 1,
-            }}
-          >
-            <Box>Total Supply and Locked</Box>
-          </Box>
-        }
-      >
-        <NTTTotalSupplyAndLocked />
-      </CollapsibleSection>
+      <NTTTotalSupplyAndLocked />
     </>
   );
 }

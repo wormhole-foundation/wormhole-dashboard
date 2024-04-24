@@ -65,35 +65,42 @@ async function computeNTTRateLimits_(
     tokenDecimals = await getEvmTokenDecimals(rpcEndpoint, managerContract);
   }
 
-  const outboundCapacity = await ntt.getCurrentOutboundCapacity();
-  const normalizedOutboundCapacity = outboundCapacity / BigInt(10 ** tokenDecimals);
-
   const inboundChains = NTT_SUPPORTED_CHAINS(network, token).filter(
     (inboundChain) => inboundChain !== chain
   );
 
-  let totalInboundCapacity = BigInt(0);
+  let totalInboundCapacity = 0n;
   const inboundRateLimits = await Promise.all(
     inboundChains.map(async (inboundChain): Promise<NTTRateLimit> => {
       const inboundCapacity = await ntt.getCurrentInboundCapacity(inboundChain);
-      const normalizedInboundCapacity = inboundCapacity / BigInt(10 ** tokenDecimals);
-      totalInboundCapacity += normalizedInboundCapacity;
+      totalInboundCapacity += inboundCapacity;
 
       return {
         tokenName: token,
         srcChain: chainToChainId(inboundChain),
         destChain: chainToChainId(chain),
-        amount: normalizedInboundCapacity.toString(),
+        amount: {
+          amount: inboundCapacity.toString(),
+          decimals: tokenDecimals,
+        },
       };
     })
   );
 
+  const outboundCapacity = await ntt.getCurrentOutboundCapacity();
+
   return {
     tokenName: token,
     srcChain: chainToChainId(chain),
-    amount: normalizedOutboundCapacity.toString(),
+    amount: {
+      amount: outboundCapacity.toString(),
+      decimals: tokenDecimals,
+    },
     inboundCapacity: inboundRateLimits,
-    totalInboundCapacity: totalInboundCapacity.toString(),
+    totalInboundCapacity: {
+      amount: totalInboundCapacity.toString(),
+      decimals: tokenDecimals,
+    },
   };
 }
 

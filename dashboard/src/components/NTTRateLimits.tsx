@@ -14,6 +14,8 @@ import { useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
 import { NTTRateLimit, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
+import CollapsibleSection from './CollapsibleSection';
+import { normalizeBigNumber } from '../utils/normalizeBigNumber';
 
 const rateLimitColumnHelper = createColumnHelper<NTTRateLimit>();
 
@@ -82,7 +84,7 @@ const rateLimitColumns = [
           ? info.row.original.destChain
             ? null
             : info.row.original.amount
-            ? `${BigInt(info.row.original.amount).toLocaleString()}`
+            ? `${normalizeBigNumber(info.row.original.amount, 2)}`
             : null
           : null}
       </Box>
@@ -94,8 +96,8 @@ const rateLimitColumns = [
       <Box textAlign="right">
         {info.row.original.srcChain
           ? info.row.original.destChain
-            ? `${BigInt(info.row.original.amount!).toLocaleString()}`
-            : `${BigInt(info.row.original.totalInboundCapacity!).toLocaleString()}`
+            ? `${normalizeBigNumber(info.row.original.amount, 2)}`
+            : `${normalizeBigNumber(info.row.original.totalInboundCapacity, 2)}`
           : null}
       </Box>
     ),
@@ -126,10 +128,25 @@ export function NTTRateLimits() {
   });
 
   return (
-    <Box mt={2} mx={2}>
-      <Card>
-        <Table<NTTRateLimit> table={table} />
-      </Card>
-    </Box>
+    <CollapsibleSection
+      defaultExpanded={false}
+      header={
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            paddingRight: 1,
+          }}
+        >
+          <Box>Rate Limit Capacity</Box>
+        </Box>
+      }
+    >
+      <Box mt={2} mx={2}>
+        <Card>
+          <Table<NTTRateLimit> table={table} />
+        </Card>
+      </Box>
+    </CollapsibleSection>
   );
 }

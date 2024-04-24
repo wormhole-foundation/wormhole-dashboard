@@ -15,6 +15,8 @@ import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
 import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import { useTotalSupplyAndLocked } from '../hooks/useTotalSupplyAndLocked';
 import { NTTTotalSupplyAndLockedData } from '@wormhole-foundation/wormhole-monitor-common';
+import CollapsibleSection from './CollapsibleSection';
+import { normalizeBigNumber } from '../utils/normalizeBigNumber';
 
 const totalSupplyAndLockedColumnHelper = createColumnHelper<NTTTotalSupplyAndLockedData>();
 const rateLimitColumns = [
@@ -53,13 +55,17 @@ const rateLimitColumns = [
     header: () => <Box order="1">Locked</Box>,
     cell: (info) => (
       <Box textAlign="right">
-        {info.row.original.evmTotalSupply ? info.row.original.amountLocked?.toLocaleString() : null}
+        {info.row.original.evmTotalSupply
+          ? normalizeBigNumber(info.row.original.amountLocked, 2)
+          : null}
       </Box>
     ),
   }),
   totalSupplyAndLockedColumnHelper.accessor('totalSupply', {
     header: () => <Box order="1">Total EVM Supply</Box>,
-    cell: (info) => <Box textAlign="right">{info.row.original.totalSupply.toLocaleString()}</Box>,
+    cell: (info) => (
+      <Box textAlign="right">{normalizeBigNumber(info.row.original.totalSupply, 2)}</Box>
+    ),
   }),
 ];
 
@@ -90,10 +96,25 @@ export function NTTTotalSupplyAndLocked() {
   });
 
   return (
-    <Box mt={2} mx={2}>
-      <Card>
-        <Table<NTTTotalSupplyAndLockedData> table={table} />
-      </Card>
-    </Box>
+    <CollapsibleSection
+      defaultExpanded={false}
+      header={
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            paddingRight: 1,
+          }}
+        >
+          <Box>Total Supply and Locked</Box>
+        </Box>
+      }
+    >
+      <Box mt={2} mx={2}>
+        <Card>
+          <Table<NTTTotalSupplyAndLockedData> table={table} />
+        </Card>
+      </Box>
+    </CollapsibleSection>
   );
 }

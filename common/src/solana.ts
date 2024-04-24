@@ -5,10 +5,11 @@ import {
   MessageV0,
   PublicKeyInitData,
   PublicKey,
-} from '@solana/web3.js'; // NOTE: types only for bundling size
-import { decode } from 'bs58';
+} from '@solana/web3.js';
 import axios from 'axios';
+import { decode } from 'bs58';
 import { encoding } from '@wormhole-foundation/sdk-base';
+import { TokenAmount } from './types';
 
 export const isLegacyMessage = (message: Message | MessageV0): message is Message => {
   return message.version === 'legacy';
@@ -72,12 +73,18 @@ export async function getCustody(rpcUrl: string, programAddress: string): Promis
   return pubkey.toString();
 }
 
-export async function getCustodyAmount(rpcUrl: string, programAddress: string): Promise<number> {
+export async function getCustodyAmount(
+  rpcUrl: string,
+  programAddress: string
+): Promise<TokenAmount> {
   const accountInfo = await makeRpcCall(rpcUrl, 'getAccountInfo', [programAddress], 'jsonParsed');
   if (!accountInfo.value?.data?.parsed?.info?.tokenAmount?.uiAmount) {
     throw new Error('Custody amount not found or missing data');
   }
-  return Number(accountInfo.value.data.parsed.info.tokenAmount.uiAmount);
+  return {
+    amount: accountInfo.value.data.parsed.info.tokenAmount.amount,
+    decimals: accountInfo.value.data.parsed.info.tokenAmount.decimals,
+  };
 }
 
 // Helper function to make JSON-RPC requests

@@ -3,6 +3,7 @@ import { chainIdToChain } from '@wormhole-foundation/sdk-base';
 import {
   NTTRateLimit,
   assertEnvironmentVariable,
+  normalizeToDecimals,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Gauge, register } from 'prom-client';
 
@@ -58,7 +59,9 @@ async function handlePrometheusMetrics(rateLimits: NTTRateLimit[]) {
           network,
           product: PRODUCT,
         },
-        BigInt(rateLimit.amount)
+        // Normalize the amount to 18 decimals, Grafana should hold high precision
+        // It should also be able to handle the normalization to 0 decimals
+        normalizeToDecimals(rateLimit.amount, 18)
       );
 
       if (!rateLimit.inboundCapacity) return;
@@ -81,7 +84,7 @@ async function handlePrometheusMetrics(rateLimits: NTTRateLimit[]) {
             network,
             product: PRODUCT,
           },
-          BigInt(inboundRateLimit.amount)
+          normalizeToDecimals(inboundRateLimit.amount, 18)
         );
       });
     });

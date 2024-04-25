@@ -8,7 +8,8 @@ import {
   MessagesByChain,
   makeCache,
 } from './types';
-import { ChainId, isChainId, toChainId } from '@wormhole-foundation/sdk-base';
+import { ChainId } from '@wormhole-foundation/sdk-base';
+import { stringToChainId } from '@wormhole-foundation/wormhole-monitor-common';
 
 let noVaaCache: MessagesByChain = makeCache();
 
@@ -222,10 +223,8 @@ export async function getMessages(req: any, res: any) {
   if (pathVars) {
     chain = pathVars[1];
     console.log(chain);
-    let chainId: ChainId;
-    if (isChainId(Number(chain))) {
-      chainId = toChainId(chain);
-
+    const chainId: ChainId | undefined = stringToChainId(chain);
+    if (chainId) {
       let messageResponse: ObservedMessageResponse = {
         messages: [],
         lastUpdated: Date.now(),

@@ -78,19 +78,19 @@ export async function updateTokenMetadata(req: any, res: any) {
       decimals,
     } of result) {
       assertChainId(token_chain);
-      const tokenChain: ChainId = toChainId(token_chain);
+      const tokenChainId: ChainId = toChainId(token_chain);
       let shouldUpdate = false;
       if (native_address === null) {
-        native_address = await getNativeAddress(tokenChain, token_address);
+        native_address = await getNativeAddress(tokenChainId, token_address);
         shouldUpdate ||= native_address !== null;
       }
       if (
         coin_gecko_coin_id === null &&
         native_address !== null &&
         // TODO: this is a hack to avoid updating tokens that are denylisted
-        !isTokenDenylisted(tokenChain, native_address)
+        !isTokenDenylisted(tokenChainId, native_address)
       ) {
-        coin_gecko_coin_id = findCoinGeckoCoinId(tokenChain, native_address, coinGeckoCoins);
+        coin_gecko_coin_id = findCoinGeckoCoinId(tokenChainId, native_address, coinGeckoCoins);
         shouldUpdate ||= coin_gecko_coin_id !== null;
       }
       if (shouldUpdate) {

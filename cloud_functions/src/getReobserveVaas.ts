@@ -1,5 +1,5 @@
 import { Connection } from '@solana/web3.js';
-import { contracts, toChainId } from '@wormhole-foundation/sdk-base';
+import { chainToChainId, contracts } from '@wormhole-foundation/sdk-base';
 import {
   getNetwork,
   isLegacyMessage,
@@ -114,7 +114,7 @@ async function getAndProcessReobsVAAs(): Promise<Map<string, ReobserveInfo>> {
         // So we put the rest back in the collection
         let solanaCount = 0;
         for (const vaa of vaas) {
-          if (vaa.chain === toChainId('Solana')) {
+          if (vaa.chain === chainToChainId('Solana')) {
             solanaCount++;
             if (solanaCount > MAX_SOLANA_VAAS_TO_REOBSERVE) {
               putBack.push(vaa);
@@ -143,7 +143,7 @@ async function getAndProcessReobsVAAs(): Promise<Map<string, ReobserveInfo>> {
 async function processVaa(vaa: ReobserveInfo): Promise<ReobserveInfo[] | null> {
   let vaas: ReobserveInfo[] = [];
 
-  if (vaa.chain === toChainId('Solana')) {
+  if (vaa.chain === chainToChainId('Solana')) {
     const origTxHash = vaa.txhash;
     const convertedTxHash: string[] = await convertSolanaTxToAccts(origTxHash);
     console.log(`Converted solana txHash ${origTxHash} to account ${convertedTxHash}`);

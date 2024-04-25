@@ -1,4 +1,4 @@
-import { Network, encoding } from '@wormhole-foundation/sdk-base';
+import { ChainId, Network, encoding, toChainId } from '@wormhole-foundation/sdk-base';
 import { UniversalAddress } from '@wormhole-foundation/sdk-definitions';
 import { Mode } from './consts';
 
@@ -40,6 +40,20 @@ export function getMode(): Mode {
   throw new Error(`Unknown mode: ${mode}`);
 }
 
+// This function basically strips off the `0x` prefix from the hex string.
 export function universalAddress_stripped(u: UniversalAddress): string {
   return encoding.hex.encode(u.toUint8Array());
+}
+
+// This function takes a Chain or a ChainId as a string and returns
+// the corresponding ChainId (or undefined if the chain is not recognized).
+export function stringToChainId(input: string): ChainId | undefined {
+  try {
+    if (Number.isNaN(Number(input))) {
+      return toChainId(input);
+    }
+    return toChainId(Number(input));
+  } catch (e) {
+    return undefined;
+  }
 }

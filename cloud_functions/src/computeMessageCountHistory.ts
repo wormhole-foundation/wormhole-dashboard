@@ -3,7 +3,7 @@ import { assertEnvironmentVariable } from './utils';
 import { Firestore } from 'firebase-admin/firestore';
 import { MessageCountsHistory } from './types';
 import { deserialize } from '@wormhole-foundation/sdk-definitions';
-import { stringToChainId } from '@wormhole-foundation/wormhole-monitor-common';
+import { chainToChainId } from '@wormhole-foundation/sdk-base';
 
 export async function computeMessageCountHistory(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -46,11 +46,7 @@ export async function computeMessageCountHistory(req: any, res: any) {
           continue;
         }
         const date = new Date(parsed.timestamp * 1000).toISOString().slice(0, 10);
-        const chainId = stringToChainId(parsed.emitterChain);
-        if (!chainId) {
-          console.error(`Unknown emitter chain: ${parsed.emitterChain}`);
-          continue;
-        }
+        const chainId = chainToChainId(parsed.emitterChain);
         messageCounts.DailyTotals[date] = {
           ...messageCounts.DailyTotals[date],
           [chainId]: (messageCounts.DailyTotals[date]?.[chainId] || 0) + 1,

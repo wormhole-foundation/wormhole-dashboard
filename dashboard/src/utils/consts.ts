@@ -5,6 +5,7 @@ import arbitrumIcon from '../images/arbitrum.svg';
 import auroraIcon from '../images/aurora.svg';
 import avaxIcon from '../images/avax.svg';
 import baseIcon from '../images/base.svg';
+import blastIcon from '../images/blast.svg';
 import bscIcon from '../images/bsc.svg';
 import celestiaIcon from '../images/celestia.svg';
 import celoIcon from '../images/celo.svg';
@@ -75,6 +76,7 @@ export const CHAIN_ICON_MAP: { [key: string]: string } = {
   32: seiIcon,
   34: scrollIcon,
   35: mantleIcon,
+  36: blastIcon,
   3104: wormchainIcon,
   4000: cosmoshubIcon,
   4001: evmosIcon,

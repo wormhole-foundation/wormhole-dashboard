@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { ChainId, coalesceChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { Bigtable } from '@google-cloud/bigtable';
 import { BigtableSignedVAAsResultRow } from '../src/databases/types';
+import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
 
 // This script fetches the number of distinct emitters per chain
 
@@ -27,7 +27,7 @@ import { BigtableSignedVAAsResultRow } from '../src/databases/types';
       emittersByChain.set(chainId, [...(emitters || []), emitter]);
     }
     for (const [chainId, emitters] of emittersByChain) {
-      console.log(coalesceChainName(chainId), emitters.length);
+      console.log(chainIdToChain(chainId), emitters.length);
     }
   } catch (e) {
     console.error(e);

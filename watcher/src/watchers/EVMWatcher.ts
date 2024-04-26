@@ -1,4 +1,3 @@
-import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
 import { Log } from '@ethersproject/abstract-provider';
 import axios from 'axios';
 import { BigNumber } from 'ethers';
@@ -7,12 +6,14 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 import { Network, PlatformToChains, contracts } from '@wormhole-foundation/sdk-base';
+import { ethers_contracts } from '@wormhole-foundation/sdk-evm-core';
 
 // This is the hash for topic[0] of the core contract event LogMessagePublished
 // https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/contracts/Implementation.sol#L12
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
   '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
-export const wormholeInterface = Implementation__factory.createInterface();
+export const wormholeInterface: ethers_contracts.ImplementationInterface =
+  ethers_contracts.Implementation__factory.createInterface();
 
 export type BlockTag = 'finalized' | 'safe' | 'latest';
 export type Block = {
@@ -228,12 +229,13 @@ export class EVMWatcher extends Watcher {
     for (const log of logs) {
       const blockNumber = log.blockNumber;
       const emitter = log.topics[1].slice(2);
-      const {
-        args: { sequence },
-      } = wormholeInterface.parseLog(log);
-      const vaaKey = makeVaaKey(log.transactionHash, this.chain, emitter, sequence.toString());
-      const blockKey = makeBlockKey(blockNumber.toString(), timestampsByBlock[blockNumber]);
-      vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+      const retval = wormholeInterface.parseLog(log);
+      if (retval && retval.args && retval.args.sequence) {
+        const sequence = retval.args.sequence;
+        const vaaKey = makeVaaKey(log.transactionHash, this.chain, emitter, sequence.toString());
+        const blockKey = makeBlockKey(blockNumber.toString(), timestampsByBlock[blockNumber]);
+        vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+      }
     }
     return vaasByBlock;
   }

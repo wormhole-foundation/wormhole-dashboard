@@ -1,8 +1,3 @@
-import { ChainId, coalesceChainId } from '@certusone/wormhole-sdk';
-import {
-  PostedMessageData,
-  getPostedMessage,
-} from '@certusone/wormhole-sdk/lib/cjs/solana/wormhole';
 import { AnchorProvider, BorshCoder, Program, Wallet } from '@coral-xyz/anchor';
 import {
   Commitment,
@@ -13,7 +8,7 @@ import {
   PublicKey,
   VersionedTransactionResponse,
 } from '@solana/web3.js';
-import { Network, chainToChainId } from '@wormhole-foundation/sdk-base';
+import { Network, chainToChainId, toChainId } from '@wormhole-foundation/sdk-base';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
 import {
@@ -47,6 +42,7 @@ import {
   WormholeTransceiverMessage,
 } from './NTTPayloads';
 import { SolanaWatcher } from './SolanaWatcher';
+import { deserializePostMessage } from '@wormhole-foundation/sdk-solana-core';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
@@ -59,6 +55,12 @@ type OmitGenerics<T> = {
     : T[P] extends object
     ? OmitGenerics<T[P]>
     : T[P];
+};
+
+type SolanaMessageData = {
+  sequence: bigint;
+  emitterChain: number;
+  emitterAddress: Buffer;
 };
 
 export type ExampleNativeTokenTransfers = OmitGenerics<RawExampleNativeTokenTransfers>;
@@ -155,15 +157,26 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     accountKey: PublicKey,
     deserializer: (data: Buffer) => NttManagerMessage<NativeTokenTransfer>
   ): Promise<{
-    postMessage: PostedMessageData;
+    postMessage: SolanaMessageData;
     transceiverMessage: WormholeTransceiverMessage<NativeTokenTransfer>;
   }> {
-    const postMessage = await getPostedMessage(this.getConnection(), accountKey);
+    let msgData: SolanaMessageData;
+    const acctInfo = await this.getConnection().getAccountInfo(accountKey, COMMITMENT);
+    if (!acctInfo?.data) throw new Error('No data found in message account');
+    const { emitterAddress, sequence, emitterChain, payload } = deserializePostMessage(
+      new Uint8Array(acctInfo.data)
+    );
+    msgData = {
+      sequence,
+      emitterChain,
+      emitterAddress: Buffer.from(emitterAddress.toUint8Array()),
+    };
+    // const postMessage = await getPostedMessage(this.getConnection(), accountKey);
     const transceiverMessage = WormholeTransceiverMessage.deserialize(
-      postMessage.message.payload,
+      Buffer.from(payload),
       deserializer
     );
-    return { postMessage, transceiverMessage };
+    return { postMessage: msgData, transceiverMessage };
   }
 
   // parseTransferIx parses the instruction for both TransferLock and TransferBurn
@@ -209,7 +222,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
 
     const lc: LifeCycle = {
       srcChainId: chainToChainId(this.chain),
-      destChainId: coalesceChainId(nttManagerMessage.payload.recipientChain as ChainId),
+      destChainId: toChainId(nttManagerMessage.payload.recipientChain),
       sourceToken: config.mint.toBuffer().toString('hex'),
       tokenAmount: nttManagerMessage.payload.trimmedAmount.normalize(NTT_DECIMALS),
       transferSentTxhash: '',
@@ -266,7 +279,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       transceiverMessageAccountKey
     );
     const digest = getNttManagerMessageDigest(
-      coalesceChainId(transceiverMessage.chainId as ChainId),
+      transceiverMessage.chainId,
       transceiverMessage.ntt_managerPayload
     );
 
@@ -385,17 +398,15 @@ export class NTTSolanaWatcher extends SolanaWatcher {
     );
     const recipient =
       transceiverMessage.ntt_managerPayload.payload.recipientAddress.toString('hex');
-    const parsedVaa = postMessage.message;
+    const parsedVaa = postMessage;
     const digest = getNttManagerMessageDigest(
-      coalesceChainId(parsedVaa.emitterChain as ChainId),
+      toChainId(parsedVaa.emitterChain),
       transceiverMessage.ntt_managerPayload
     );
 
     let lc: LifeCycle = {
-      srcChainId: coalesceChainId(parsedVaa.emitterChain as ChainId),
-      destChainId: coalesceChainId(
-        transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId
-      ),
+      srcChainId: toChainId(parsedVaa.emitterChain),
+      destChainId: toChainId(transceiverMessage.ntt_managerPayload.payload.recipientChain),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
       tokenAmount:
         transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(NTT_DECIMALS),
@@ -443,17 +454,15 @@ export class NTTSolanaWatcher extends SolanaWatcher {
 
     const recipient =
       transceiverMessage.ntt_managerPayload.payload.recipientAddress.toString('hex');
-    const seq = postMessage.message.sequence;
+    const seq = postMessage.sequence;
     const emitterHex = Array.from(emitter.toBytes())
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
-    const vaaId = `${postMessage.message.emitterChain}/${emitterHex}/${seq}`;
+    const vaaId = `${postMessage.emitterChain}/${emitterHex}/${seq}`;
 
     let lc: LifeCycle = {
       srcChainId: chainToChainId(this.chain),
-      destChainId: coalesceChainId(
-        transceiverMessage.ntt_managerPayload.payload.recipientChain as ChainId
-      ),
+      destChainId: toChainId(transceiverMessage.ntt_managerPayload.payload.recipientChain),
       sourceToken: transceiverMessage.ntt_managerPayload.payload.sourceToken.toString('hex'),
       tokenAmount:
         transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(NTT_DECIMALS),

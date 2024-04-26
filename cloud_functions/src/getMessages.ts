@@ -7,6 +7,7 @@ import {
   ObservedMessageResponse,
   MessagesByChain,
   makeCache,
+  makeCacheEntry,
 } from './types';
 import { ChainId } from '@wormhole-foundation/sdk-base';
 import { stringToChainId } from '@wormhole-foundation/wormhole-monitor-common';
@@ -155,7 +156,7 @@ const REFRESH_TIME_INTERVAL =
 const NUM_ROWS = Number(process.env.CLOUD_FUNCTIONS_NUM_ROWS) || 100;
 const BLOCK_INCREMENT = Number(process.env.CLOUD_FUNCTIONS_BLOCK_INCREMENT) || 10_000;
 /*
-  The getMessages endpoint has 1 path param: chain id - required and multiple query params: 
+  The getMessages endpoint has 1 path param: chain id - required and multiple query params:
     (1) missingVaa - true/false
     (2) fromId - rowKey or prefix to start at for getRows()
     (3) reloadCache - true/false to reload the noVaaCache
@@ -163,7 +164,7 @@ const BLOCK_INCREMENT = Number(process.env.CLOUD_FUNCTIONS_BLOCK_INCREMENT) || 1
   if only chain is provided, the last numMessages will be returned regardless of hasSignedVaa status in descending order of timestamp
   if chain and missingVaa=true are used, then the rows will be filtered for hasSignedVaa=1
 
-  There is one cache: noVaaCache. It is keyed by ChainId and contains messages, last updated timestamp, and first missing vaa row key. 
+  There is one cache: noVaaCache. It is keyed by ChainId and contains messages, last updated timestamp, and first missing vaa row key.
   The cache is refreshed when the difference of current timestamp and last update timestamp is greater than refreshTimeInterval.
   When the cache is intially loaded, all of that chain's rows are retrieved and the latest "numMessages" messages returned. Each subsequent
   refresh first finds the most recent rows until first missing vaa row key.
@@ -219,10 +220,10 @@ export async function getMessages(req: any, res: any) {
     strict: false,
   });
   var pathVars = re.exec(req.path);
+
   let chain: string | undefined = undefined;
   if (pathVars) {
     chain = pathVars[1];
-    console.log(chain);
     const chainId: ChainId | undefined = stringToChainId(chain);
     if (chainId) {
       let messageResponse: ObservedMessageResponse = {
@@ -234,26 +235,29 @@ export async function getMessages(req: any, res: any) {
       let lastRowKey: string = '';
 
       if (missingVaa === 'true' || missingVaa === '1') {
-        if (
-          noVaaCache[chainId]['messages'].length === 0 ||
-          Date.now() - noVaaCache[chainId]['lastUpdated'] > REFRESH_TIME_INTERVAL
-        ) {
-          if (noVaaCache[chainId]['messages'].length === 0) {
-            console.log(`noVaaCache is empty, setting cache['messages] ${new Date()}`);
+        if (!noVaaCache[chainId]) {
+          noVaaCache[chainId] = makeCacheEntry();
+        }
+
+        const cache = noVaaCache[chainId]!;
+
+        if (cache.messages.length === 0 || Date.now() - cache.lastUpdated > REFRESH_TIME_INTERVAL) {
+          if (cache.messages.length === 0) {
+            console.log(`noVaaCache is empty, setting cache['messages'] ${new Date()}`);
           } else {
             console.log(
               `noVaaCache is older than ${REFRESH_TIME_INTERVAL} ms, refreshing ${new Date()}`
             );
           }
           let prevDate = Date.now();
-          lastRowKey = noVaaCache[chainId]['lastRowKey'];
+          lastRowKey = cache.lastRowKey;
           messageResponse = await getMessagesNoSignedVaa_(chainId, NUM_ROWS, lastRowKey);
           console.log('In noVaaCache, after getMessages_=', Date.now() - prevDate);
           messages = messageResponse['messages'];
           noVaaCache[chainId] = messageResponse;
         } else {
           // console.log(`noVaaCache is still valid, not refreshing ${new Date()}`);
-          messages = noVaaCache[chainId]['messages'];
+          messages = cache.messages;
         }
       } else {
         let prevDate = Date.now();

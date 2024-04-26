@@ -210,6 +210,31 @@ export function makeCache() {
       lastUpdated: 0,
       lastRowKey: '',
     },
+    36: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
+    37: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
+    38: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
+    39: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
+    40: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
     3104: {
       messages: [],
       lastUpdated: 0,
@@ -251,6 +276,11 @@ export function makeCache() {
       lastRowKey: '',
     },
     4007: {
+      messages: [],
+      lastUpdated: 0,
+      lastRowKey: '',
+    },
+    4008: {
       messages: [],
       lastUpdated: 0,
       lastRowKey: '',

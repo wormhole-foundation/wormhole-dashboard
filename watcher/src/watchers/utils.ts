@@ -33,6 +33,8 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
     chainName === 'Polygon' ||
     chainName === 'Celo' ||
     chainName === 'Optimism' ||
+    chainName === 'Scroll' ||
+    chainName === 'Blast' ||
     chainName === 'Base'
   ) {
     return new EVMWatcher(network, chainName);

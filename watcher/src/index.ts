@@ -77,6 +77,8 @@ const supportedChains: Chain[] =
         'Xpla',
         'Base',
         'Sei',
+        'Scroll',
+        'Blast',
         'Wormchain',
       ];
 

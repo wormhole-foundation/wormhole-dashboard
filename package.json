@@ -19,7 +19,7 @@
     "typescript": "^5.4.3"
   },
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.10.13",
-    "@wormhole-foundation/sdk-base": "^0.5.2"
+    "@certusone/wormhole-sdk": "^0.10.15",
+    "@wormhole-foundation/sdk-base": "^0.6.2"
   }
 }

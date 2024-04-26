@@ -181,7 +181,7 @@ const getEventData = (
         // if this is a wrapped token being burned and not being sent to its origin chain,
         // then it should be included in the volume by fixing the `to` address
         // https://docs.wormhole.com/wormhole/explore-wormhole/vaa#token-transfer
-        const to = toChain !== originChain ? tokenBridge.toString() : ethers.constants.AddressZero;
+        const to = toChain !== originChain ? tokenBridge.toString() : ethers.ZeroAddress;
         return {
           blockNumber,
           txHash,
@@ -237,7 +237,7 @@ const getEventData = (
           to: mintToIx.parsed.info?.account,
           // to be consistent with the ethereum adapter,
           // we set the `from` address to the zero address for minted tokens
-          from: ethers.constants.AddressZero,
+          from: ethers.ZeroAddress,
           token: mintToIx.parsed.info?.mint,
           amount: mintToIx.parsed.info?.amount,
           isDeposit: false,

@@ -57,6 +57,8 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
     Sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
     Base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
+    Scroll: process.env.SCROLL_RPC || 'https://rpc.ankr.com/scroll',
+    Blast: process.env.BLAST_RPC || 'https://rpc.ankr.com/blast',
     Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
     Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
   },

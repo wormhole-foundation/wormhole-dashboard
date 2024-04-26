@@ -1,17 +1,12 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import {
-  CHAINS,
-  CHAIN_ID_PYTHNET,
-  CHAIN_ID_UNSET,
-  coalesceChainName,
-} from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { assertEnvironmentVariable, padUint16 } from '@wormhole-foundation/wormhole-monitor-common';
 import { appendFileSync, closeSync, openSync } from 'fs';
 import ora from 'ora';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { BigtableMessagesResultRow } from '../src/databases/types';
 import { parseMessageId } from '../src/databases/utils';
+import { chainIdToChain, chainIds, chainToChainId } from '@wormhole-foundation/sdk-base';
 
 // This script dumps all VAAs to a csv file compatible with the guardian `sign-existing-vaas-csv` admin command
 
@@ -27,11 +22,9 @@ const LIMIT = 10000;
     const messageTableId = assertEnvironmentVariable('BIGTABLE_TABLE_ID');
     const instance = bt.bigtable.instance(bt.instanceId);
     const messageTable = instance.table(messageTableId);
-    const filteredChainIds = Object.values(CHAINS).filter(
-      (c) => c !== CHAIN_ID_PYTHNET && c !== CHAIN_ID_UNSET
-    );
+    const filteredChainIds = chainIds.filter((c) => c !== chainToChainId('Pythnet'));
     for (const chain of filteredChainIds) {
-      const chainName = coalesceChainName(chain);
+      const chainName = chainIdToChain(chain);
       let total = 0;
       let log = ora(`Fetching all ${chainName} messages...`).start();
       let start = `${padUint16(chain.toString())}/`;

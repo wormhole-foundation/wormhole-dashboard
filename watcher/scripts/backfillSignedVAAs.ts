@@ -6,7 +6,7 @@ import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import ora from 'ora';
 import { makeSignedVAAsRowKey } from '../src/databases/utils';
-import { ChainId } from '@certusone/wormhole-sdk';
+import { ChainId } from '@wormhole-foundation/sdk-base';
 
 // This script writes all VAAs from a csv file compatible with the guardian `sign-existing-vaas-csv` admin command to bigtable
 

@@ -6,9 +6,9 @@ import ora from 'ora';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { makeSignedVAAsRowKey, parseMessageId } from '../src/databases/utils';
 import { AXIOS_CONFIG_JSON, GUARDIAN_RPC_HOSTS } from '../src/consts';
-import { parseVaa } from '@certusone/wormhole-sdk';
 import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
 import { Network } from '@wormhole-foundation/sdk-base';
+import { deserialize } from '@wormhole-foundation/sdk-definitions';
 
 // This script checks for messages which don't have VAAs and attempts to fetch the VAAs from the guardians
 // This is useful for cases where the VAA doesn't exist in bigtable (perhaps due to an outage) but is available
@@ -62,7 +62,7 @@ const missingVaas: { [id: string]: string | undefined } = {};
       if (vaaBytes) {
         found++;
         const signedVAA = Buffer.from(vaaBytes, 'base64');
-        const vaa = parseVaa(signedVAA);
+        const vaa = deserialize('Uint8Array', signedVAA);
         const vaaTime = vaa.timestamp;
         if (now - vaaTime > 3600) {
           // More than one hour old.

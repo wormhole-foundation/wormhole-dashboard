@@ -1,4 +1,4 @@
-import { Implementation__factory } from '@certusone/wormhole-sdk/lib/cjs/ethers-contracts/factories/Implementation__factory';
+import { ethers_contracts } from '@wormhole-foundation/sdk-evm-core';
 import { parseWormholeLog } from '@certusone/wormhole-sdk/lib/cjs/relayer';
 import { Log } from '@ethersproject/abstract-provider';
 import {
@@ -34,7 +34,7 @@ import { Watcher } from './Watcher';
 
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
   '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
-export const wormholeInterface = Implementation__factory.createInterface();
+export const wormholeInterface = ethers_contracts.Implementation__factory.createInterface();
 
 export type BlockTag = 'finalized' | 'safe' | 'latest';
 export type Block = {
@@ -294,9 +294,12 @@ export class NTTWatcher extends Watcher {
             }
             let emitter = coreLog.topics[1].slice(2);
             // If this emitter is a relayer, parse differently
-            let {
-              args: { sequence, payload },
-            } = wormholeInterface.parseLog(coreLog);
+            const retval = wormholeInterface.parseLog(log);
+            if (!retval || !retval.args || !retval.args.sequence || !retval.args.payload) {
+              continue;
+            }
+            const sequence = retval.args.sequence;
+            let payload = retval.args.payload;
             const vaaId = makeVaaId(chainToChainId(this.chain), emitter, sequence);
             // Strip off leading 0x, if present
             if (payload.startsWith('0x')) {

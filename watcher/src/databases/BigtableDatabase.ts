@@ -1,4 +1,3 @@
-import { parseVaa } from '@certusone/wormhole-sdk/lib/cjs/vaa/wormhole';
 import { Bigtable } from '@google-cloud/bigtable';
 import { PubSub } from '@google-cloud/pubsub';
 import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
@@ -6,6 +5,7 @@ import {
   assertEnvironmentVariable,
   chunkArray,
   sleep,
+  universalAddress_stripped,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -25,6 +25,7 @@ import {
   makeVAAsByTxHashRowKey,
   parseMessageId,
 } from './utils';
+import { deserialize } from '@wormhole-foundation/sdk-definitions';
 
 const WATCH_MISSING_TIMEOUT = 2 * 60 * 1000;
 
@@ -237,12 +238,13 @@ export class BigtableDatabase extends Database {
           for (const row of vaaRows) {
             try {
               const vaaBytes = row.data.info.bytes[0].value;
-              const parsed = parseVaa(vaaBytes);
+              // const parsed = parseVaa(vaaBytes);
+              const parsed = deserialize('Uint8Array', vaaBytes);
               const matchingIndex = missingVaaMessages.findIndex((observedMessage) => {
                 const { chain, emitter, sequence } = parseMessageId(observedMessage.id);
                 if (
-                  parsed.emitterChain === chain &&
-                  parsed.emitterAddress.toString('hex') === emitter &&
+                  chainToChainId(parsed.emitterChain) === chain &&
+                  universalAddress_stripped(parsed.emitterAddress) === emitter &&
                   parsed.sequence === sequence
                 ) {
                   return true;

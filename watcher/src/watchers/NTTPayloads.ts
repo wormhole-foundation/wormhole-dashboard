@@ -3,8 +3,8 @@
 // File: solana/ts/sdk/payloads/common.ts
 //
 
-import { ChainId } from '@certusone/wormhole-sdk';
 import { PublicKey } from '@solana/web3.js';
+import { ChainId } from '@wormhole-foundation/sdk-base';
 import BN from 'bn.js';
 
 export class TransceiverMessage<A> {

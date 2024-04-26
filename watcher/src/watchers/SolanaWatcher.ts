@@ -1,4 +1,3 @@
-import { getPostedMessage } from '@certusone/wormhole-sdk/lib/cjs/solana/wormhole';
 import {
   Commitment,
   ConfirmedSignatureInfo,
@@ -15,9 +14,11 @@ import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import {
   isLegacyMessage,
   normalizeCompileInstruction,
+  universalAddress_stripped,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Watcher } from './Watcher';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
+import { deserializePostMessage } from '@wormhole-foundation/sdk-solana-core';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
@@ -220,15 +221,18 @@ export class SolanaWatcher extends Watcher {
           if (instructionId[0] !== 0x08 && instructionId[0] !== 0x01) continue;
 
           const accountId = accountKeys[instruction.accountKeyIndexes[1]];
-          const {
-            message: { emitterAddress, sequence },
-          } = await getPostedMessage(this.getConnection(), accountId.toBase58(), COMMITMENT);
+
+          const acctInfo = await this.getConnection().getAccountInfo(accountId, COMMITMENT);
+          if (!acctInfo?.data) throw new Error('No data found in message account');
+          const { emitterAddress, sequence } = deserializePostMessage(
+            new Uint8Array(acctInfo.data)
+          );
 
           vaaKeys.push(
             makeVaaKey(
               res.transaction.signatures[0],
               this.chain,
-              emitterAddress.toString('hex'),
+              universalAddress_stripped(emitterAddress),
               sequence.toString()
             )
           );

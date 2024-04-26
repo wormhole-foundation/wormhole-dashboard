@@ -1,11 +1,11 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { CHAINS, coalesceChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { padUint16 } from '@wormhole-foundation/wormhole-monitor-common';
 import { appendFileSync, closeSync, openSync } from 'fs';
 import ora from 'ora';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { BigtableSignedVAAsResultRow } from '../src/databases/types';
+import { chainIdToChain, chainIds } from '@wormhole-foundation/sdk-base';
 
 // This script dumps all VAAs to a csv file compatible with the guardian `sign-existing-vaas-csv` admin command
 
@@ -20,17 +20,17 @@ const LIMIT = 10000;
     }
     const instance = bt.bigtable.instance(bt.instanceId);
     const vaaTable = instance.table(bt.signedVAAsTableId);
-    for (const chain of Object.values(CHAINS)) {
-      const chainName = coalesceChainName(chain);
+    for (const chainId of chainIds) {
+      const chainName = chainIdToChain(chainId);
       let total = 0;
       let log = ora(`Fetching all ${chainName} VAAs...`).start();
-      let start = `${padUint16(chain.toString())}/`;
+      let start = `${padUint16(chainId.toString())}/`;
       while (start) {
         log.text = `Fetching ${LIMIT}/${total} ${chainName} VAAs starting at ${start}...`;
         let vaaRows = (
           await vaaTable.getRows({
             start,
-            end: `${padUint16(chain.toString())}/z`,
+            end: `${padUint16(chainId.toString())}/z`,
             decode: false,
             limit: LIMIT,
           })

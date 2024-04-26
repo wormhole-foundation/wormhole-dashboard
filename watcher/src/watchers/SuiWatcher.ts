@@ -1,4 +1,3 @@
-import { CHAIN_ID_SUI } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import {
   Checkpoint,
   JsonRpcClient,

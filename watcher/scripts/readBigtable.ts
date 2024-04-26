@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
-import { ChainId, CHAINS, coalesceChainName } from '@certusone/wormhole-sdk/lib/cjs/utils/consts';
 import { MAX_UINT_64, padUint16 } from '@wormhole-foundation/wormhole-monitor-common';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
+import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
 
 // This script provides a summary of the message db
 
@@ -18,7 +18,7 @@ import { BigtableDatabase } from '../src/databases/BigtableDatabase';
     const prefix = `${padUint16(chain.toString())}/`;
     const observedMessages = await messageTable.getRows({ prefix, limit: 100 });
     console.log(
-      coalesceChainName(chain).padEnd(12),
+      chainIdToChain(chain).padEnd(12),
       observedMessages[0].length.toString().padStart(6)
     );
     if (observedMessages[0][0]) {

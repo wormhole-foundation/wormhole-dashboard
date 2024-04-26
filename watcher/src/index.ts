@@ -23,7 +23,7 @@ const supportedChains: Chain[] =
         // 'Ethereum',
         // 'Terra',
         'Bsc',
-        'Polygon',
+        // 'Polygon',
         'Avalanche',
         'Oasis',
         'Algorand',

@@ -238,7 +238,6 @@ export class BigtableDatabase extends Database {
           for (const row of vaaRows) {
             try {
               const vaaBytes = row.data.info.bytes[0].value;
-              // const parsed = parseVaa(vaaBytes);
               const parsed = deserialize('Uint8Array', vaaBytes);
               const matchingIndex = missingVaaMessages.findIndex((observedMessage) => {
                 const { chain, emitter, sequence } = parseMessageId(observedMessage.id);

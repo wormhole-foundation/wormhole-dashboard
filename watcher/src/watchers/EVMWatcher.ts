@@ -230,12 +230,15 @@ export class EVMWatcher extends Watcher {
       const blockNumber = log.blockNumber;
       const emitter = log.topics[1].slice(2);
       const retval = wormholeInterface.parseLog(log);
+      let sequence: number = 0;
       if (retval && retval.args && retval.args.sequence) {
-        const sequence = retval.args.sequence;
-        const vaaKey = makeVaaKey(log.transactionHash, this.chain, emitter, sequence.toString());
-        const blockKey = makeBlockKey(blockNumber.toString(), timestampsByBlock[blockNumber]);
-        vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
+        sequence = retval.args.sequence;
+      } else {
+        this.logger.error(`failed to parse log ${log}`);
       }
+      const vaaKey = makeVaaKey(log.transactionHash, this.chain, emitter, sequence.toString());
+      const blockKey = makeBlockKey(blockNumber.toString(), timestampsByBlock[blockNumber]);
+      vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
     }
     return vaasByBlock;
   }

@@ -171,7 +171,6 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       emitterChain,
       emitterAddress: Buffer.from(emitterAddress.toUint8Array()),
     };
-    // const postMessage = await getPostedMessage(this.getConnection(), accountKey);
     const transceiverMessage = WormholeTransceiverMessage.deserialize(
       Buffer.from(payload),
       deserializer

@@ -1,5 +1,4 @@
 import { ethers_contracts } from '@wormhole-foundation/sdk-evm-core';
-import { parseWormholeLog } from '@certusone/wormhole-sdk/lib/cjs/relayer';
 import { Log } from '@ethersproject/abstract-provider';
 import {
   Chain,
@@ -31,6 +30,7 @@ import { WormholeLogger } from '../utils/logger';
 import { formatIntoTimestamp } from '../utils/timestamp';
 import { NativeTokenTransfer, NttManagerMessage, WormholeTransceiverMessage } from './NTTPayloads';
 import { Watcher } from './Watcher';
+import { parseWormholeLog } from './NTTUtils';
 
 export const LOG_MESSAGE_PUBLISHED_TOPIC =
   '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
@@ -585,7 +585,6 @@ async function saveToPG(pg: Knex, lc: LifeCycle, initiatingEvent: string, logger
 }
 
 function isRelayer(network: Network, chain: Chain, emitter: string): boolean {
-  // let relayer = RELAYER_CONTRACTS[ucNetwork][chain]?.wormholeRelayerAddress;
   const relayer = contracts.relayer.get(network, chain);
   if (!relayer) {
     return false;

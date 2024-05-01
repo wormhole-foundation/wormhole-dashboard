@@ -1,4 +1,5 @@
-import { AnchorProvider, BorshCoder, Program, Wallet } from '@coral-xyz/anchor';
+import { AnchorProvider, BorshCoder, Wallet } from '@coral-xyz/anchor';
+import { Program } from 'anchor-0.29.0';
 import {
   Commitment,
   ConfirmedSignatureInfo,

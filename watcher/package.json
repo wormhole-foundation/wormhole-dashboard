@@ -29,7 +29,8 @@
   "dependencies": {
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",
     "@certusone/wormhole-spydk": "^0.0.1",
-    "@coral-xyz/anchor": "^0.29.0",
+    "@coral-xyz/anchor": "^0.30.0",
+    "@coral-xyz/spl-token": "^0.30.0",
     "@google-cloud/bigtable": "^4.1.0",
     "@google-cloud/pubsub": "^3.4.1",
     "@mysten/sui.js": "^0.33.0",
@@ -37,6 +38,7 @@
     "@types/bn.js": "^5.1.5",
     "@wormhole-foundation/wormhole-monitor-common": "^0.0.1",
     "algosdk": "^2.4.0",
+    "anchor-0.29.0": "npm:@coral-xyz/anchor@^0.29.0",
     "aptos": "^1.4.0",
     "axios": "^1.2.1",
     "bs58": "^5.0.0",

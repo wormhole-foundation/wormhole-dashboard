@@ -1,4 +1,5 @@
-import { BorshCoder, Program } from '@coral-xyz/anchor';
+import { BorshCoder } from '@coral-xyz/anchor';
+import { Program } from 'anchor-0.29.0';
 import { Connection, PublicKey, PublicKeyInitData } from '@solana/web3.js';
 import IDL from '../idls/ntt_quoter.json';
 import { NttQuoter as Idl } from '../types/ntt_quoter';

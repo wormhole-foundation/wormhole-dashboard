@@ -1,2202 +1,15 @@
 {
-  "version": "0.0.0",
-  "name": "matching_engine",
+  "address": "MatchingEngine11111111111111111111111111111",
+  "metadata": {
+    "name": "matching_engine",
+    "version": "0.0.0",
+    "spec": "0.1.0",
+    "description": "Example Matching Engine Program",
+    "repository": "https://github.com/wormhole-foundation/example-liquidity-layer"
+  },
   "instructions": [
     {
-      "name": "initialize",
-      "docs": [
-        "This instruction is be used to generate the program's `custodian` and `auction_config`",
-        "configs. It also reates the `owner` and `fee_recipient` accounts. Finally, it sets the upgrade",
-        "authority to the `upgrade_manager_authority`. Upgrades are managed by the `upgrade_manager_program`.",
-        "# Arguments",
-        "",
-        "* `ctx`            - `Initialize` context.",
-        "* `auction_params` - The auction parameters, see `auction_config.rs`."
-      ],
-      "accounts": [
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true,
-          "docs": ["Owner of the program, who presumably deployed this program."]
-        },
-        {
-          "name": "custodian",
-          "isMut": true,
-          "isSigner": false,
-          "docs": ["Custodian account, which saves program data useful for other", "instructions."]
-        },
-        {
-          "name": "auctionConfig",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "ownerAssistant",
-          "isMut": false,
-          "isSigner": false,
-          "docs": ["TODO: do we prevent the owner from being the owner assistant?"]
-        },
-        {
-          "name": "feeRecipient",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "feeRecipientToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "cctpMintRecipient",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdc",
-          "accounts": [
-            {
-              "name": "mint",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "programData",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "We use the program data to make sure this owner is the upgrade authority (the true owner,",
-            "who deployed this program)."
-          ]
-        },
-        {
-          "name": "upgradeManagerAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "upgradeManagerProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "bpfLoaderUpgradeableProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "auctionParams",
-          "type": {
-            "defined": "AuctionParameters"
-          }
-        }
-      ]
-    },
-    {
-      "name": "setPause",
-      "docs": [
-        "This instruction is used to pause or unpause further processing of new auctions. Only the `owner`",
-        "or `owner_assistant` can pause the program.",
-        "# Arguments",
-        "",
-        "* `ctx`   - `SetPause` context.",
-        "* `pause` - Boolean indicating whether to pause the program."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "ownerOrAssistant",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "pause",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "addCctpRouterEndpoint",
-      "docs": [
-        "This instruction is used to add a new Token Router endpoint from a foreign chain. The endpoint",
-        "must be CCTP compatible. This instruction can only be called by the `owner` or `owner_assistant`.",
-        "# Arguments",
-        "",
-        "* `ctx`  - `AddCctpRouterEndpoint` context.",
-        "* `args` - The `AddCctpRouterEndpointArgs`, see `admin.rs`."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "ownerOrAssistant",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "accounts": [
-                {
-                  "name": "custodian",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "routerEndpoint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "localCustodyToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdc",
-          "accounts": [
-            {
-              "name": "mint",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "remoteTokenMessenger",
-          "isMut": false,
-          "isSigner": false,
-          "docs": ["Messenger Minter program)."]
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": "AddCctpRouterEndpointArgs"
-          }
-        }
-      ]
-    },
-    {
-      "name": "addLocalRouterEndpoint",
-      "docs": [
-        "This instruction is used to add a new Local Router endpoint. Local means that the",
-        "Token Router program exists on Solana. This instruction can only be called by the",
-        "`owner` or `owner_assistant`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `AddLocalRouterEndpoint` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "ownerOrAssistant",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "accounts": [
-                {
-                  "name": "custodian",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "routerEndpoint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "local",
-          "accounts": [
-            {
-              "name": "tokenRouterProgram",
-              "isMut": false,
-              "isSigner": false,
-              "docs": ["emitter (router endpoint) address."]
-            },
-            {
-              "name": "tokenRouterEmitter",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "tokenRouterMintRecipient",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "disableRouterEndpoint",
-      "docs": [
-        "This instruction is used to disable a router endpoint. This instruction does not close the",
-        "account, it only sets the `protocol` to `None` and clears the `address` and `mint_recipient`.",
-        "This instruction can only be called by the `owner`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `DisableRouterEndpoint` context."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "owner",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "accounts": [
-                {
-                  "name": "custodian",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "routerEndpoint",
-          "accounts": [
-            {
-              "name": "endpoint",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "updateCctpRouterEndpoint",
-      "docs": [
-        "This instruction is used to update a CCTP router endpoint. It allows the caller to change",
-        "the `address`, `mint_recipient`, and `domain`. This instruction can only be called by the",
-        "`owner`.",
-        "# Arguments",
-        "",
-        "* `ctx`  - `UpdateCctpRouterEndpoint` context.",
-        "* `args` - The `AddCctpRouterEndpointArgs`, see `admin.rs`."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "owner",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "accounts": [
-                {
-                  "name": "custodian",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "routerEndpoint",
-          "accounts": [
-            {
-              "name": "endpoint",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "remoteTokenMessenger",
-          "isMut": false,
-          "isSigner": false,
-          "docs": ["Messenger Minter program)."]
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": "AddCctpRouterEndpointArgs"
-          }
-        }
-      ]
-    },
-    {
-      "name": "updateLocalRouterEndpoint",
-      "docs": [
-        "This instruction is used to update a Local router endpoint. It allows the caller to change",
-        "the `address` and `mint_recipient`. This instruction can only be called by the `owner`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `UpdateLocalRouterEndpoint` context."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "owner",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "accounts": [
-                {
-                  "name": "custodian",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "routerEndpoint",
-          "accounts": [
-            {
-              "name": "endpoint",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "local",
-          "accounts": [
-            {
-              "name": "tokenRouterProgram",
-              "isMut": false,
-              "isSigner": false,
-              "docs": ["emitter (router endpoint) address."]
-            },
-            {
-              "name": "tokenRouterEmitter",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "tokenRouterMintRecipient",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "submitOwnershipTransferRequest",
-      "docs": [
-        "This instruction sets the `pending_owner` field in the `Custodian` account. This instruction",
-        "can only be called by the `owner`. The `pending_owner` address must be valid, meaning it",
-        "cannot be the zero address or the current owner.",
-        "# Arguments",
-        "",
-        "* `ctx` - `SubmitOwnershipTransferRequest` context."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "owner",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "newOwner",
-          "isMut": false,
-          "isSigner": false,
-          "docs": ["New Owner.", ""]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "confirmOwnershipTransferRequest",
-      "docs": [
-        "This instruction confirms the ownership transfer request and sets the new `owner` in the",
-        "`Custodian` account. This instruction can only be called by the `pending_owner`. The",
-        "`pending_owner` must be the same as the `pending_owner` in the `Custodian` account.",
-        "# Arguments",
-        "",
-        "* `ctx` - `ConfirmOwnershipTransferRequest` context."
-      ],
-      "accounts": [
-        {
-          "name": "pendingOwner",
-          "isMut": false,
-          "isSigner": true,
-          "docs": [
-            "Must be the pending owner of the program set in the [`OwnerConfig`]",
-            "account."
-          ]
-        },
-        {
-          "name": "custodian",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "cancelOwnershipTransferRequest",
-      "docs": [
-        "This instruction cancels an ownership transfer request by resetting the `pending_owner` field",
-        "in the `Custodian` account. This instruction can only be called by the `owner`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `CancelOwnershipTransferRequest` context."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "owner",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "proposeAuctionParameters",
-      "docs": [
-        "This instruction is used to propose new auction parameters. A proposal cannot be enacted",
-        "until one epoch has passed. This instruction can only be called by the `owner` or",
-        "`owner_assistant`.",
-        "# Arguments",
-        "",
-        "* `ctx`    - `ProposeAuctionParameters` context.",
-        "* `params` - The new `AuctionParameters`, see `auction_config.rs`."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "ownerOrAssistant",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "accounts": [
-                {
-                  "name": "custodian",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "proposal",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "epochSchedule",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "AuctionParameters"
-          }
-        }
-      ]
-    },
-    {
-      "name": "updateAuctionParameters",
-      "docs": [
-        "This instruction is used to enact an existing auction update proposal. It can only be",
-        "executed after the `slot_enact_delay` has passed. This instruction can only be called by",
-        "the `owner` of the proposal.",
-        "# Arguments",
-        "",
-        "* `ctx` - `UpdateAuctionParameters` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "owner",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "proposal",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "auctionConfig",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "closeProposal",
-      "docs": [
-        "This instruction is used to close an existing proposal by closing the propsal account. This",
-        "instruction can only be called by the `owner`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `CloseProposal` context."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "ownerOrAssistant",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "accounts": [
-                {
-                  "name": "custodian",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "proposedBy",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "proposal",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "updateOwnerAssistant",
-      "docs": [
-        "This instruction is used to update the `owner_assistant` field in the `Custodian` account. This",
-        "instruction can only be called by the `owner`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `UpdateOwnerAssistant` context."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "owner",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "newOwnerAssistant",
-          "isMut": false,
-          "isSigner": false,
-          "docs": ["New Assistant.", ""]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "updateFeeRecipient",
-      "docs": [
-        "This instruction is used to update the `fee_recipient` field in the `Custodian` account. This",
-        "instruction can only be called by the `owner`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `UpdateFeeRecipient` context."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "ownerOrAssistant",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "newFeeRecipientToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "newFeeRecipient",
-          "isMut": false,
-          "isSigner": false,
-          "docs": ["New Fee Recipient.", ""]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "migrate",
-      "docs": [
-        "This instruction is used for executing logic during an upgrade. This instruction can only be",
-        "called by the `upgrade_manager_program`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `Migrate` context."
-      ],
-      "accounts": [
-        {
-          "name": "admin",
-          "accounts": [
-            {
-              "name": "owner",
-              "isMut": false,
-              "isSigner": true
-            },
-            {
-              "name": "custodian",
-              "accounts": [
-                {
-                  "name": "custodian",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "placeInitialOfferCctp",
-      "docs": [
-        "This instruction is used to create a new auction given a valid `FastMarketOrder` vaa. This",
-        "instruction will record information about the auction and transfer funds from the payer to",
-        "an auction-specific token custody account. This instruction can be called by anyone.",
-        "# Arguments",
-        "",
-        "* `ctx`       - `PlaceInitialOfferCctp` context.",
-        "* `offer_price` - The fee that the caller is willing to accept in order for fufilling the fast",
-        "order. This fee is paid in USDC."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "transferAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "docs": ["The auction participant needs to set approval to this PDA.", ""]
-        },
-        {
-          "name": "custodian",
-          "accounts": [
-            {
-              "name": "custodian",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "auctionConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "fastOrderPath",
-          "accounts": [
-            {
-              "name": "fastVaa",
-              "accounts": [
-                {
-                  "name": "vaa",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "path",
-              "accounts": [
-                {
-                  "name": "fromEndpoint",
-                  "accounts": [
-                    {
-                      "name": "endpoint",
-                      "isMut": false,
-                      "isSigner": false
-                    }
-                  ]
-                },
-                {
-                  "name": "toEndpoint",
-                  "accounts": [
-                    {
-                      "name": "endpoint",
-                      "isMut": false,
-                      "isSigner": false
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "auction",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "This account should only be created once, and should never be changed to",
-            "init_if_needed. Otherwise someone can game an existing auction."
-          ]
-        },
-        {
-          "name": "offerToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "auctionCustodyToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdc",
-          "accounts": [
-            {
-              "name": "mint",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "offerPrice",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "improveOffer",
-      "docs": [
-        "This instruction is used to improve an existing auction offer. The `offer_price` must be",
-        "greater than the current `offer_price` in the auction. This instruction will revert if the",
-        "`offer_price` is less than the current `offer_price`. This instruction can be called by anyone.",
-        "# Arguments",
-        "",
-        "* `ctx`       - `ImproveOffer` context.",
-        "* `offer_price` - The fee that the caller is willing to accept in order for fufilling the fast",
-        "order. This fee is paid in USDC."
-      ],
-      "accounts": [
-        {
-          "name": "transferAuthority",
-          "isMut": false,
-          "isSigner": false,
-          "docs": ["The auction participant needs to set approval to this PDA.", ""]
-        },
-        {
-          "name": "activeAuction",
-          "accounts": [
-            {
-              "name": "auction",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "custodyToken",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "config",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "bestOfferToken",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "offerToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "offerPrice",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "executeFastOrderCctp",
-      "docs": [
-        "This instruction is used to execute the fast order after the auction period has ended.",
-        "It should be executed before the `grace_period` has ended, otherwise the `highest_bidder`",
-        "will incur a penalty. Once executed, a CCTP transfer will be sent to the recipient encoded",
-        "in the `FastMarketOrder` VAA on the target chain.",
-        "# Arguments",
-        "",
-        "* `ctx` - `ExecuteFastOrderCctp` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "coreMessage",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "cctpMessage",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "custodian",
-          "accounts": [
-            {
-              "name": "custodian",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "executeOrder",
-          "accounts": [
-            {
-              "name": "fastVaa",
-              "accounts": [
-                {
-                  "name": "vaa",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "activeAuction",
-              "accounts": [
-                {
-                  "name": "auction",
-                  "isMut": true,
-                  "isSigner": false
-                },
-                {
-                  "name": "custodyToken",
-                  "isMut": true,
-                  "isSigner": false
-                },
-                {
-                  "name": "config",
-                  "isMut": false,
-                  "isSigner": false
-                },
-                {
-                  "name": "bestOfferToken",
-                  "isMut": true,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "executorToken",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "initialOfferToken",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "toRouterEndpoint",
-          "accounts": [
-            {
-              "name": "endpoint",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "wormhole",
-          "accounts": [
-            {
-              "name": "config",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "emitterSequence",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "feeCollector",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "coreBridgeProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "cctp",
-          "accounts": [
-            {
-              "name": "mint",
-              "isMut": true,
-              "isSigner": false,
-              "docs": [
-                "Circle-supported mint.",
-                "",
-                "Token Messenger Minter program's local token account."
-              ]
-            },
-            {
-              "name": "tokenMessengerMinterSenderAuthority",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "messageTransmitterConfig",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "tokenMessenger",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "remoteTokenMessenger",
-              "isMut": false,
-              "isSigner": false,
-              "docs": ["Messenger Minter program)."]
-            },
-            {
-              "name": "tokenMinter",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "CHECK Seeds must be \\[\"token_minter\"\\] (CCTP Token Messenger Minter program)."
-              ]
-            },
-            {
-              "name": "localToken",
-              "isMut": true,
-              "isSigner": false,
-              "docs": [
-                "Local token account, which this program uses to validate the `mint` used to burn.",
-                ""
-              ]
-            },
-            {
-              "name": "tokenMessengerMinterEventAuthority",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "tokenMessengerMinterProgram",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "messageTransmitterProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "sysvars",
-          "accounts": [
-            {
-              "name": "clock",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Wormhole Core Bridge needs the clock sysvar based on its legacy implementation.",
-                ""
-              ]
-            },
-            {
-              "name": "rent",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Wormhole Core Bridge needs the rent sysvar based on its legacy implementation.",
-                ""
-              ]
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "executeFastOrderLocal",
-      "docs": [
-        "This instruction is used to execute the fast order after the auction period has ended.",
-        "It should be executed before the `grace_period` has ended, otherwise the `highest_bidder`",
-        "will incur a penalty. Once executed, a `fast_fill` VAA will be emitted.",
-        "# Arguments",
-        "",
-        "* `ctx` - `ExecuteFastOrderLocal` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "coreMessage",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "custodian",
-          "accounts": [
-            {
-              "name": "custodian",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "executeOrder",
-          "accounts": [
-            {
-              "name": "fastVaa",
-              "accounts": [
-                {
-                  "name": "vaa",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "activeAuction",
-              "accounts": [
-                {
-                  "name": "auction",
-                  "isMut": true,
-                  "isSigner": false
-                },
-                {
-                  "name": "custodyToken",
-                  "isMut": true,
-                  "isSigner": false
-                },
-                {
-                  "name": "config",
-                  "isMut": false,
-                  "isSigner": false
-                },
-                {
-                  "name": "bestOfferToken",
-                  "isMut": true,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "executorToken",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "initialOfferToken",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "toRouterEndpoint",
-          "accounts": [
-            {
-              "name": "endpoint",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "wormhole",
-          "accounts": [
-            {
-              "name": "config",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "emitterSequence",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "feeCollector",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "coreBridgeProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "localCustodyToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "sysvars",
-          "accounts": [
-            {
-              "name": "clock",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Wormhole Core Bridge needs the clock sysvar based on its legacy implementation.",
-                ""
-              ]
-            },
-            {
-              "name": "rent",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Wormhole Core Bridge needs the rent sysvar based on its legacy implementation.",
-                ""
-              ]
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "completeFastFill",
-      "docs": [
-        "This instruction is used to complete the fast fill after the `fast_fill` VAA has been",
-        "emitted. The Token Router program on Solana will invoke this instruction to complete the",
-        "fast fill. Tokens will be deposited into the local endpoint's custody account.",
-        "# Arguments",
-        "",
-        "* `ctx` - `CompleteFastFill` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "custodian",
-          "accounts": [
-            {
-              "name": "custodian",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "fastFillVaa",
-          "accounts": [
-            {
-              "name": "vaa",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "redeemedFastFill",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenRouterEmitter",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "tokenRouterCustodyToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "path",
-          "accounts": [
-            {
-              "name": "fromEndpoint",
-              "accounts": [
-                {
-                  "name": "endpoint",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "toEndpoint",
-              "accounts": [
-                {
-                  "name": "endpoint",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "localCustodyToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "prepareOrderResponseCctp",
-      "docs": [
-        "This instruction is used to prepare the order response for a CCTP transfer. This instruction",
-        "will redeem the finalized transfer associated with a particular auction, and deposit the funds",
-        "to the `prepared_custody_token` account that is created during execution. This instruction",
-        "will create a `PreparedOrderResponse` account that will be used to settle the auction.",
-        "# Arguments",
-        "",
-        "* `ctx` - `PrepareOrderResponseCctp` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "custodian",
-          "accounts": [
-            {
-              "name": "custodian",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "fastVaa",
-          "accounts": [
-            {
-              "name": "vaa",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "finalizedVaa",
-          "accounts": [
-            {
-              "name": "vaa",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "preparedOrderResponse",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "preparedCustodyToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "usdc",
-          "accounts": [
-            {
-              "name": "mint",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "cctp",
-          "accounts": [
-            {
-              "name": "mintRecipient",
-              "accounts": [
-                {
-                  "name": "mintRecipient",
-                  "isMut": true,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "messageTransmitterAuthority",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "messageTransmitterConfig",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "usedNonces",
-              "isMut": true,
-              "isSigner": false,
-              "docs": ["first_nonce.to_string()\\] (CCTP Message Transmitter program)."]
-            },
-            {
-              "name": "messageTransmitterEventAuthority",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "tokenMessenger",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "remoteTokenMessenger",
-              "isMut": false,
-              "isSigner": false,
-              "docs": ["Messenger Minter program)."]
-            },
-            {
-              "name": "tokenMinter",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "localToken",
-              "isMut": true,
-              "isSigner": false,
-              "docs": [
-                "Token Messenger Minter's Local Token account. This program uses the mint of this account to",
-                "validate the `mint_recipient` token account's mint.",
-                ""
-              ]
-            },
-            {
-              "name": "tokenPair",
-              "isMut": false,
-              "isSigner": false,
-              "docs": ["Token Messenger Minter program)."]
-            },
-            {
-              "name": "tokenMessengerMinterCustodyToken",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "tokenMessengerMinterEventAuthority",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "tokenMessengerMinterProgram",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "messageTransmitterProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": "CctpMessageArgs"
-          }
-        }
-      ]
-    },
-    {
-      "name": "settleAuctionComplete",
-      "docs": [
-        "This instruction is used to settle the acution after the `FastMarketOrder` has been executed,",
-        "and the `PreparedOrderResponse` has been created. This instruction will settle the auction",
-        "by transferring the funds from the `prepared_custody_token` account to the `highest_bidder`",
-        "account.",
-        "# Arguments",
-        "",
-        "* `ctx` - `SettleAuctionComplete` context."
-      ],
-      "accounts": [
-        {
-          "name": "executor",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "we will always reward the owner of the executor token account with the lamports from the",
-            "prepared order response and its custody token account when we close these accounts. This",
-            "means we disregard the `prepared_by` field in the prepared order response."
-          ]
-        },
-        {
-          "name": "executorToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "bestOfferToken",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Destination token account, which the redeemer may not own. But because the redeemer is a",
-            "signer and is the one encoded in the Deposit Fill message, he may have the tokens be sent",
-            "to any account he chooses (this one).",
-            ""
-          ]
-        },
-        {
-          "name": "preparedOrderResponse",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "preparedCustodyToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "auction",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "settleAuctionNoneCctp",
-      "docs": [
-        "This instruction is used to route funds to the `recipient` for a `FastMarketOrder` with",
-        "no corresponding auction on Solana. This instruction can be called by anyone, but the",
-        "`base_fee` associated with relaying a finalized VAA will be paid to the `fee_recipient`.",
-        "This instruction generates a `Fill` message.",
-        "# Arguments",
-        "",
-        "* `ctx` - `SettleAuctionNoneCctp` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "coreMessage",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "cctpMessage",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "custodian",
-          "accounts": [
-            {
-              "name": "custodian",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "feeRecipientToken",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Destination token account, which the redeemer may not own. But because the redeemer is a",
-            "signer and is the one encoded in the Deposit Fill message, he may have the tokens be sent",
-            "to any account he chooses (this one).",
-            ""
-          ]
-        },
-        {
-          "name": "prepared",
-          "accounts": [
-            {
-              "name": "by",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "orderResponse",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "custodyToken",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "fastOrderPath",
-          "accounts": [
-            {
-              "name": "fastVaa",
-              "accounts": [
-                {
-                  "name": "vaa",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "path",
-              "accounts": [
-                {
-                  "name": "fromEndpoint",
-                  "accounts": [
-                    {
-                      "name": "endpoint",
-                      "isMut": false,
-                      "isSigner": false
-                    }
-                  ]
-                },
-                {
-                  "name": "toEndpoint",
-                  "accounts": [
-                    {
-                      "name": "endpoint",
-                      "isMut": false,
-                      "isSigner": false
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "auction",
-          "isMut": true,
-          "isSigner": false,
-          "docs": ["There should be no account data here because an auction was never created."]
-        },
-        {
-          "name": "wormhole",
-          "accounts": [
-            {
-              "name": "config",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "emitterSequence",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "feeCollector",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "coreBridgeProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "cctp",
-          "accounts": [
-            {
-              "name": "mint",
-              "isMut": true,
-              "isSigner": false,
-              "docs": [
-                "Circle-supported mint.",
-                "",
-                "Token Messenger Minter program's local token account."
-              ]
-            },
-            {
-              "name": "tokenMessengerMinterSenderAuthority",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "messageTransmitterConfig",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "tokenMessenger",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "remoteTokenMessenger",
-              "isMut": false,
-              "isSigner": false,
-              "docs": ["Messenger Minter program)."]
-            },
-            {
-              "name": "tokenMinter",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "CHECK Seeds must be \\[\"token_minter\"\\] (CCTP Token Messenger Minter program)."
-              ]
-            },
-            {
-              "name": "localToken",
-              "isMut": true,
-              "isSigner": false,
-              "docs": [
-                "Local token account, which this program uses to validate the `mint` used to burn.",
-                ""
-              ]
-            },
-            {
-              "name": "tokenMessengerMinterEventAuthority",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "tokenMessengerMinterProgram",
-              "isMut": false,
-              "isSigner": false
-            },
-            {
-              "name": "messageTransmitterProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "sysvars",
-          "accounts": [
-            {
-              "name": "clock",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Wormhole Core Bridge needs the clock sysvar based on its legacy implementation.",
-                ""
-              ]
-            },
-            {
-              "name": "rent",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Wormhole Core Bridge needs the rent sysvar based on its legacy implementation.",
-                ""
-              ]
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "settleAuctionNoneLocal",
-      "docs": [
-        "This instruction is used to settle a `FastMarketOrder` with no corresponding auction. The funds",
-        "are routed to the `recipient` on the target chain by executing a CCTP transfer and sending a `Fill`",
-        "message. This instruction can be called by anyone, but the `base_fee` associated with relaying a",
-        "finalized VAA will be paid to the `fee_recipient`.",
-        "# Arguments",
-        "",
-        "* `ctx` - `SettleAuctionNoneLocal` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "coreMessage",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "custodian",
-          "accounts": [
-            {
-              "name": "custodian",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "feeRecipientToken",
-          "isMut": true,
-          "isSigner": false,
-          "docs": [
-            "Destination token account, which the redeemer may not own. But because the redeemer is a",
-            "signer and is the one encoded in the Deposit Fill message, he may have the tokens be sent",
-            "to any account he chooses (this one).",
-            ""
-          ]
-        },
-        {
-          "name": "prepared",
-          "accounts": [
-            {
-              "name": "by",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "orderResponse",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "custodyToken",
-              "isMut": true,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "fastOrderPath",
-          "accounts": [
-            {
-              "name": "fastVaa",
-              "accounts": [
-                {
-                  "name": "vaa",
-                  "isMut": false,
-                  "isSigner": false
-                }
-              ]
-            },
-            {
-              "name": "path",
-              "accounts": [
-                {
-                  "name": "fromEndpoint",
-                  "accounts": [
-                    {
-                      "name": "endpoint",
-                      "isMut": false,
-                      "isSigner": false
-                    }
-                  ]
-                },
-                {
-                  "name": "toEndpoint",
-                  "accounts": [
-                    {
-                      "name": "endpoint",
-                      "isMut": false,
-                      "isSigner": false
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "auction",
-          "isMut": true,
-          "isSigner": false,
-          "docs": ["There should be no account data here because an auction was never created."]
-        },
-        {
-          "name": "wormhole",
-          "accounts": [
-            {
-              "name": "config",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "emitterSequence",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "feeCollector",
-              "isMut": true,
-              "isSigner": false
-            },
-            {
-              "name": "coreBridgeProgram",
-              "isMut": false,
-              "isSigner": false
-            }
-          ]
-        },
-        {
-          "name": "localCustodyToken",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "sysvars",
-          "accounts": [
-            {
-              "name": "clock",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Wormhole Core Bridge needs the clock sysvar based on its legacy implementation.",
-                ""
-              ]
-            },
-            {
-              "name": "rent",
-              "isMut": false,
-              "isSigner": false,
-              "docs": [
-                "Wormhole Core Bridge needs the rent sysvar based on its legacy implementation.",
-                ""
-              ]
-            }
-          ]
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "createFirstAuctionHistory",
-      "docs": [
-        "This instruction is used to create the first `AuctionHistory` account, whose PDA is derived",
-        "using ID == 0.",
-        "# Arguments",
-        "",
-        "* `ctx` - `CreateFirstAuctionHistory` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "firstHistory",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "createNewAuctionHistory",
-      "docs": [
-        "This instruction is used to create a new `AuctionHistory` account. The PDA is derived using",
-        "its ID. A new history account can be created only when the current one is full (number of",
-        "entries equals the hard-coded max entries).",
-        "# Arguments",
-        "",
-        "* `ctx` - `CreateNewAuctionHistory` context."
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "currentHistory",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "newHistory",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "addAuctionHistoryEntry",
+      "name": "add_auction_history_entry",
       "docs": [
         "This instruction is used to add a new entry to the `AuctionHistory` account if there is an",
         "`Auction` with some info. Regardless of whether there is info in this account, the",
@@ -2213,50 +26,1870 @@
         "",
         "* `ctx` - `AddAuctionHistoryEntry` context."
       ],
+      "discriminator": [158, 73, 252, 70, 4, 234, 186, 49],
       "accounts": [
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
           "name": "custodian",
           "accounts": [
             {
-              "name": "custodian",
-              "isMut": false,
-              "isSigner": false
+              "name": "custodian"
             }
           ]
         },
         {
           "name": "history",
-          "isMut": true,
-          "isSigner": false,
           "docs": [
             "because we will be writing to this account without using Anchor's [AccountsExit]."
+          ],
+          "writable": true
+        },
+        {
+          "name": "auction",
+          "writable": true
+        },
+        {
+          "name": "beneficiary",
+          "docs": ["was no auction) or the owner of the initial offer token account."],
+          "writable": true
+        },
+        {
+          "name": "beneficiary_token"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "add_cctp_router_endpoint",
+      "docs": [
+        "This instruction is used to add a new Token Router endpoint from a foreign chain. The endpoint",
+        "must be CCTP compatible. This instruction can only be called by the `owner` or `owner_assistant`.",
+        "# Arguments",
+        "",
+        "* `ctx`  - `AddCctpRouterEndpoint` context.",
+        "* `args` - The `AddCctpRouterEndpointArgs`, see `admin.rs`."
+      ],
+      "discriminator": [21, 58, 235, 71, 68, 47, 52, 80],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "router_endpoint",
+          "writable": true
+        },
+        {
+          "name": "local_custody_token",
+          "writable": true
+        },
+        {
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "remote_token_messenger",
+          "docs": ["Messenger Minter program)."]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "AddCctpRouterEndpointArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "add_local_router_endpoint",
+      "docs": [
+        "This instruction is used to add a new Local Router endpoint. Local means that the",
+        "Token Router program exists on Solana. This instruction can only be called by the",
+        "`owner` or `owner_assistant`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `AddLocalRouterEndpoint` context."
+      ],
+      "discriminator": [198, 42, 183, 17, 125, 218, 182, 136],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "router_endpoint",
+          "writable": true
+        },
+        {
+          "name": "local",
+          "accounts": [
+            {
+              "name": "token_router_program",
+              "docs": ["emitter (router endpoint) address."]
+            },
+            {
+              "name": "token_router_emitter"
+            },
+            {
+              "name": "token_router_mint_recipient"
+            }
+          ]
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "cancel_ownership_transfer_request",
+      "docs": [
+        "This instruction cancels an ownership transfer request by resetting the `pending_owner` field",
+        "in the `Custodian` account. This instruction can only be called by the `owner`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `CancelOwnershipTransferRequest` context."
+      ],
+      "discriminator": [167, 61, 9, 35, 192, 41, 64, 178],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_proposal",
+      "docs": [
+        "This instruction is used to close an existing proposal by closing the proposal account. This",
+        "instruction can only be called by the `owner` or `owner_assistant`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `CloseProposal` context."
+      ],
+      "discriminator": [213, 178, 139, 19, 50, 191, 82, 245],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "proposed_by",
+          "writable": true
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "complete_fast_fill",
+      "docs": [
+        "This instruction is used to complete the fast fill after the `fast_fill` VAA has been",
+        "emitted. The Token Router program on Solana will invoke this instruction to complete the",
+        "fast fill. Tokens will be deposited into the local endpoint's custody account.",
+        "# Arguments",
+        "",
+        "* `ctx` - `CompleteFastFill` context."
+      ],
+      "discriminator": [113, 252, 68, 134, 84, 61, 113, 203],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "fast_fill_vaa",
+          "accounts": [
+            {
+              "name": "vaa"
+            }
+          ]
+        },
+        {
+          "name": "redeemed_fast_fill",
+          "writable": true
+        },
+        {
+          "name": "token_router_emitter",
+          "signer": true
+        },
+        {
+          "name": "token_router_custody_token",
+          "writable": true
+        },
+        {
+          "name": "path",
+          "accounts": [
+            {
+              "name": "from_endpoint",
+              "accounts": [
+                {
+                  "name": "endpoint"
+                }
+              ]
+            },
+            {
+              "name": "to_endpoint",
+              "accounts": [
+                {
+                  "name": "endpoint"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "local_custody_token",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "confirm_ownership_transfer_request",
+      "docs": [
+        "This instruction confirms the ownership transfer request and sets the new `owner` in the",
+        "`Custodian` account. This instruction can only be called by the `pending_owner`. The",
+        "`pending_owner` must be the same as the `pending_owner` in the `Custodian` account.",
+        "# Arguments",
+        "",
+        "* `ctx` - `ConfirmOwnershipTransferRequest` context."
+      ],
+      "discriminator": [118, 148, 109, 68, 201, 30, 139, 53],
+      "accounts": [
+        {
+          "name": "pending_owner",
+          "docs": [
+            "Must be the pending owner of the program set in the [`OwnerConfig`]",
+            "account."
+          ],
+          "signer": true
+        },
+        {
+          "name": "custodian",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_first_auction_history",
+      "docs": [
+        "This instruction is used to create the first `AuctionHistory` account, whose PDA is derived",
+        "using ID == 0.",
+        "# Arguments",
+        "",
+        "* `ctx` - `CreateFirstAuctionHistory` context."
+      ],
+      "discriminator": [225, 203, 74, 36, 233, 11, 54, 75],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "first_history",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_new_auction_history",
+      "docs": [
+        "This instruction is used to create a new `AuctionHistory` account. The PDA is derived using",
+        "its ID. A new history account can be created only when the current one is full (number of",
+        "entries equals the hard-coded max entries).",
+        "# Arguments",
+        "",
+        "* `ctx` - `CreateNewAuctionHistory` context."
+      ],
+      "discriminator": [63, 157, 83, 157, 231, 58, 207, 227],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "current_history"
+        },
+        {
+          "name": "new_history",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "disable_router_endpoint",
+      "docs": [
+        "This instruction is used to disable a router endpoint. This instruction does not close the",
+        "account, it only sets the `protocol` to `None` and clears the `address` and `mint_recipient`.",
+        "This instruction can only be called by the `owner`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `DisableRouterEndpoint` context."
+      ],
+      "discriminator": [119, 145, 105, 95, 65, 77, 61, 69],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "router_endpoint",
+          "accounts": [
+            {
+              "name": "endpoint",
+              "writable": true
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "execute_fast_order_cctp",
+      "docs": [
+        "This instruction is used to execute the fast order after the auction period has ended.",
+        "It should be executed before the `grace_period` has ended, otherwise the `highest_bidder`",
+        "will incur a penalty. Once executed, a CCTP transfer will be sent to the recipient encoded",
+        "in the `FastMarketOrder` VAA on the target chain.",
+        "# Arguments",
+        "",
+        "* `ctx` - `ExecuteFastOrderCctp` context."
+      ],
+      "discriminator": [176, 38, 30, 17, 230, 78, 206, 157],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "core_message",
+          "writable": true
+        },
+        {
+          "name": "cctp_message",
+          "writable": true
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "execute_order",
+          "accounts": [
+            {
+              "name": "fast_vaa",
+              "accounts": [
+                {
+                  "name": "vaa"
+                }
+              ]
+            },
+            {
+              "name": "active_auction",
+              "accounts": [
+                {
+                  "name": "auction",
+                  "writable": true
+                },
+                {
+                  "name": "custody_token",
+                  "writable": true
+                },
+                {
+                  "name": "config"
+                },
+                {
+                  "name": "best_offer_token",
+                  "writable": true
+                }
+              ]
+            },
+            {
+              "name": "executor_token",
+              "writable": true
+            },
+            {
+              "name": "initial_offer_token",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "to_router_endpoint",
+          "accounts": [
+            {
+              "name": "endpoint"
+            }
+          ]
+        },
+        {
+          "name": "wormhole",
+          "accounts": [
+            {
+              "name": "config",
+              "writable": true
+            },
+            {
+              "name": "emitter_sequence",
+              "writable": true
+            },
+            {
+              "name": "fee_collector",
+              "writable": true
+            },
+            {
+              "name": "core_bridge_program"
+            }
+          ]
+        },
+        {
+          "name": "cctp",
+          "accounts": [
+            {
+              "name": "mint",
+              "docs": [
+                "Circle-supported mint.",
+                "",
+                "Token Messenger Minter program's local token account."
+              ],
+              "writable": true
+            },
+            {
+              "name": "token_messenger_minter_sender_authority"
+            },
+            {
+              "name": "message_transmitter_config",
+              "writable": true
+            },
+            {
+              "name": "token_messenger"
+            },
+            {
+              "name": "remote_token_messenger",
+              "docs": ["Messenger Minter program)."]
+            },
+            {
+              "name": "token_minter",
+              "docs": [
+                "CHECK Seeds must be \\[\"token_minter\"\\] (CCTP Token Messenger Minter program)."
+              ]
+            },
+            {
+              "name": "local_token",
+              "docs": [
+                "Local token account, which this program uses to validate the `mint` used to burn.",
+                ""
+              ],
+              "writable": true
+            },
+            {
+              "name": "token_messenger_minter_event_authority"
+            },
+            {
+              "name": "token_messenger_minter_program"
+            },
+            {
+              "name": "message_transmitter_program"
+            }
+          ]
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "sysvars",
+          "accounts": [
+            {
+              "name": "clock",
+              "docs": [
+                "Wormhole Core Bridge needs the clock sysvar based on its legacy implementation.",
+                ""
+              ]
+            },
+            {
+              "name": "rent",
+              "docs": [
+                "Wormhole Core Bridge needs the rent sysvar based on its legacy implementation.",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "execute_fast_order_local",
+      "docs": [
+        "This instruction is used to execute the fast order after the auction period has ended.",
+        "It should be executed before the `grace_period` has ended, otherwise the `highest_bidder`",
+        "will incur a penalty. Once executed, a `fast_fill` VAA will be emitted.",
+        "# Arguments",
+        "",
+        "* `ctx` - `ExecuteFastOrderLocal` context."
+      ],
+      "discriminator": [140, 206, 26, 243, 243, 66, 24, 240],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "core_message",
+          "writable": true
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "execute_order",
+          "accounts": [
+            {
+              "name": "fast_vaa",
+              "accounts": [
+                {
+                  "name": "vaa"
+                }
+              ]
+            },
+            {
+              "name": "active_auction",
+              "accounts": [
+                {
+                  "name": "auction",
+                  "writable": true
+                },
+                {
+                  "name": "custody_token",
+                  "writable": true
+                },
+                {
+                  "name": "config"
+                },
+                {
+                  "name": "best_offer_token",
+                  "writable": true
+                }
+              ]
+            },
+            {
+              "name": "executor_token",
+              "writable": true
+            },
+            {
+              "name": "initial_offer_token",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "to_router_endpoint",
+          "accounts": [
+            {
+              "name": "endpoint"
+            }
+          ]
+        },
+        {
+          "name": "wormhole",
+          "accounts": [
+            {
+              "name": "config",
+              "writable": true
+            },
+            {
+              "name": "emitter_sequence",
+              "writable": true
+            },
+            {
+              "name": "fee_collector",
+              "writable": true
+            },
+            {
+              "name": "core_bridge_program"
+            }
+          ]
+        },
+        {
+          "name": "local_custody_token",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "sysvars",
+          "accounts": [
+            {
+              "name": "clock",
+              "docs": [
+                "Wormhole Core Bridge needs the clock sysvar based on its legacy implementation.",
+                ""
+              ]
+            },
+            {
+              "name": "rent",
+              "docs": [
+                "Wormhole Core Bridge needs the rent sysvar based on its legacy implementation.",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "improve_offer",
+      "docs": [
+        "This instruction is used to improve an existing auction offer. The `offer_price` must be",
+        "greater than the current `offer_price` in the auction. This instruction will revert if the",
+        "`offer_price` is less than the current `offer_price`. This instruction can be called by anyone.",
+        "# Arguments",
+        "",
+        "* `ctx`       - `ImproveOffer` context.",
+        "* `offer_price` - The fee that the caller is willing to accept in order for fufilling the fast",
+        "order. This fee is paid in USDC."
+      ],
+      "discriminator": [171, 112, 46, 172, 194, 135, 23, 102],
+      "accounts": [
+        {
+          "name": "transfer_authority",
+          "docs": ["The auction participant needs to set approval to this PDA.", ""]
+        },
+        {
+          "name": "active_auction",
+          "accounts": [
+            {
+              "name": "auction",
+              "writable": true
+            },
+            {
+              "name": "custody_token",
+              "writable": true
+            },
+            {
+              "name": "config"
+            },
+            {
+              "name": "best_offer_token",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "offer_token"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "offer_price",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "This instruction is be used to generate the program's `custodian` and `auction_config`",
+        "configs. It also reates the `owner` and `fee_recipient` accounts. Finally, it sets the upgrade",
+        "authority to the `upgrade_manager_authority`. Upgrades are managed by the `upgrade_manager_program`.",
+        "# Arguments",
+        "",
+        "* `ctx`            - `Initialize` context.",
+        "* `auction_params` - The auction parameters, see `auction_config.rs`."
+      ],
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": ["Owner of the program, who presumably deployed this program."],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "custodian",
+          "docs": ["Custodian account, which saves program data useful for other", "instructions."],
+          "writable": true
+        },
+        {
+          "name": "auction_config",
+          "writable": true
+        },
+        {
+          "name": "owner_assistant",
+          "docs": ["TODO: do we prevent the owner from being the owner assistant?"]
+        },
+        {
+          "name": "fee_recipient"
+        },
+        {
+          "name": "fee_recipient_token"
+        },
+        {
+          "name": "cctp_mint_recipient",
+          "writable": true
+        },
+        {
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "We use the program data to make sure this owner is the upgrade authority (the true owner,",
+            "who deployed this program)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "upgrade_manager_authority"
+        },
+        {
+          "name": "upgrade_manager_program"
+        },
+        {
+          "name": "bpf_loader_upgradeable_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "associated_token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "migrate",
+      "docs": [
+        "This instruction is used for executing logic during an upgrade. This instruction can only be",
+        "called by the `upgrade_manager_program`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `Migrate` context."
+      ],
+      "discriminator": [155, 234, 231, 146, 236, 158, 162, 30],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "place_initial_offer_cctp",
+      "docs": [
+        "This instruction is used to create a new auction given a valid `FastMarketOrder` vaa. This",
+        "instruction will record information about the auction and transfer funds from the payer to",
+        "an auction-specific token custody account. This instruction can be called by anyone.",
+        "# Arguments",
+        "",
+        "* `ctx`       - `PlaceInitialOfferCctp` context.",
+        "* `offer_price` - The fee that the caller is willing to accept in order for fufilling the fast",
+        "order. This fee is paid in USDC."
+      ],
+      "discriminator": [157, 156, 175, 35, 91, 249, 1, 129],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "transfer_authority",
+          "docs": ["The auction participant needs to set approval to this PDA.", ""]
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "auction_config"
+        },
+        {
+          "name": "fast_order_path",
+          "accounts": [
+            {
+              "name": "fast_vaa",
+              "accounts": [
+                {
+                  "name": "vaa"
+                }
+              ]
+            },
+            {
+              "name": "path",
+              "accounts": [
+                {
+                  "name": "from_endpoint",
+                  "accounts": [
+                    {
+                      "name": "endpoint"
+                    }
+                  ]
+                },
+                {
+                  "name": "to_endpoint",
+                  "accounts": [
+                    {
+                      "name": "endpoint"
+                    }
+                  ]
+                }
+              ]
+            }
           ]
         },
         {
           "name": "auction",
-          "isMut": true,
-          "isSigner": false
+          "docs": [
+            "This account should only be created once, and should never be changed to",
+            "init_if_needed. Otherwise someone can game an existing auction."
+          ],
+          "writable": true
         },
         {
-          "name": "beneficiary",
-          "isMut": true,
-          "isSigner": false,
-          "docs": ["was no auction) or the owner of the initial offer token account."]
+          "name": "offer_token"
         },
         {
-          "name": "beneficiaryToken",
-          "isMut": false,
-          "isSigner": false
+          "name": "auction_custody_token",
+          "writable": true
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "offer_price",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "prepare_order_response_cctp",
+      "docs": [
+        "This instruction is used to prepare the order response for a CCTP transfer. This instruction",
+        "will redeem the finalized transfer associated with a particular auction, and deposit the funds",
+        "to the `prepared_custody_token` account that is created during execution. This instruction",
+        "will create a `PreparedOrderResponse` account that will be used to settle the auction.",
+        "# Arguments",
+        "",
+        "* `ctx` - `PrepareOrderResponseCctp` context."
+      ],
+      "discriminator": [221, 178, 184, 43, 247, 248, 90, 160],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "fast_order_path",
+          "accounts": [
+            {
+              "name": "fast_vaa",
+              "accounts": [
+                {
+                  "name": "vaa"
+                }
+              ]
+            },
+            {
+              "name": "path",
+              "accounts": [
+                {
+                  "name": "from_endpoint",
+                  "accounts": [
+                    {
+                      "name": "endpoint"
+                    }
+                  ]
+                },
+                {
+                  "name": "to_endpoint",
+                  "accounts": [
+                    {
+                      "name": "endpoint"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "finalized_vaa",
+          "accounts": [
+            {
+              "name": "vaa"
+            }
+          ]
+        },
+        {
+          "name": "prepared_order_response",
+          "writable": true
+        },
+        {
+          "name": "prepared_custody_token",
+          "writable": true
+        },
+        {
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "cctp",
+          "accounts": [
+            {
+              "name": "mint_recipient",
+              "accounts": [
+                {
+                  "name": "mint_recipient",
+                  "writable": true
+                }
+              ]
+            },
+            {
+              "name": "message_transmitter_authority"
+            },
+            {
+              "name": "message_transmitter_config"
+            },
+            {
+              "name": "used_nonces",
+              "docs": ["first_nonce.to_string()\\] (CCTP Message Transmitter program)."],
+              "writable": true
+            },
+            {
+              "name": "message_transmitter_event_authority"
+            },
+            {
+              "name": "token_messenger"
+            },
+            {
+              "name": "remote_token_messenger",
+              "docs": ["Messenger Minter program)."]
+            },
+            {
+              "name": "token_minter"
+            },
+            {
+              "name": "local_token",
+              "docs": [
+                "Token Messenger Minter's Local Token account. This program uses the mint of this account to",
+                "validate the `mint_recipient` token account's mint.",
+                ""
+              ],
+              "writable": true
+            },
+            {
+              "name": "token_pair",
+              "docs": ["Token Messenger Minter program)."]
+            },
+            {
+              "name": "token_messenger_minter_custody_token",
+              "writable": true
+            },
+            {
+              "name": "token_messenger_minter_event_authority"
+            },
+            {
+              "name": "token_messenger_minter_program"
+            },
+            {
+              "name": "message_transmitter_program"
+            }
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "CctpMessageArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_auction_parameters",
+      "docs": [
+        "This instruction is used to propose new auction parameters. A proposal cannot be enacted",
+        "until one epoch has passed. This instruction can only be called by the `owner` or",
+        "`owner_assistant`.",
+        "# Arguments",
+        "",
+        "* `ctx`    - `ProposeAuctionParameters` context.",
+        "* `params` - The new `AuctionParameters`, see `auction_config.rs`."
+      ],
+      "discriminator": [86, 19, 21, 43, 32, 106, 249, 80],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "epoch_schedule"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "AuctionParameters"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_pause",
+      "docs": [
+        "This instruction is used to pause or unpause further processing of new auctions. Only the `owner`",
+        "or `owner_assistant` can pause the program.",
+        "# Arguments",
+        "",
+        "* `ctx`   - `SetPause` context.",
+        "* `pause` - Boolean indicating whether to pause the program."
+      ],
+      "discriminator": [63, 32, 154, 2, 56, 103, 79, 45],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "pause",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "settle_auction_complete",
+      "docs": [
+        "This instruction is used to settle the acution after the `FastMarketOrder` has been executed,",
+        "and the `PreparedOrderResponse` has been created. This instruction will settle the auction",
+        "by transferring the funds from the `prepared_custody_token` account to the `highest_bidder`",
+        "account.",
+        "# Arguments",
+        "",
+        "* `ctx` - `SettleAuctionComplete` context."
+      ],
+      "discriminator": [84, 39, 0, 132, 21, 101, 222, 137],
+      "accounts": [
+        {
+          "name": "executor",
+          "docs": [
+            "we will always reward the owner of the executor token account with the lamports from the",
+            "prepared order response and its custody token account when we close these accounts. This",
+            "means we disregard the `prepared_by` field in the prepared order response."
+          ],
+          "writable": true
+        },
+        {
+          "name": "executor_token",
+          "writable": true
+        },
+        {
+          "name": "best_offer_token",
+          "docs": [
+            "Destination token account, which the redeemer may not own. But because the redeemer is a",
+            "signer and is the one encoded in the Deposit Fill message, he may have the tokens be sent",
+            "to any account he chooses (this one).",
+            ""
+          ],
+          "writable": true
+        },
+        {
+          "name": "prepared_order_response",
+          "writable": true
+        },
+        {
+          "name": "prepared_custody_token",
+          "writable": true
+        },
+        {
+          "name": "auction",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle_auction_none_cctp",
+      "docs": [
+        "This instruction is used to route funds to the `recipient` for a `FastMarketOrder` with",
+        "no corresponding auction on Solana. This instruction can be called by anyone, but the",
+        "`base_fee` associated with relaying a finalized VAA will be paid to the `fee_recipient`.",
+        "This instruction generates a `Fill` message.",
+        "# Arguments",
+        "",
+        "* `ctx` - `SettleAuctionNoneCctp` context."
+      ],
+      "discriminator": [120, 236, 82, 121, 242, 118, 74, 161],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "core_message",
+          "writable": true
+        },
+        {
+          "name": "cctp_message",
+          "writable": true
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "fee_recipient_token",
+          "docs": [
+            "Destination token account, which the redeemer may not own. But because the redeemer is a",
+            "signer and is the one encoded in the Deposit Fill message, he may have the tokens be sent",
+            "to any account he chooses (this one).",
+            ""
+          ],
+          "writable": true
+        },
+        {
+          "name": "prepared",
+          "accounts": [
+            {
+              "name": "by",
+              "writable": true
+            },
+            {
+              "name": "order_response",
+              "writable": true
+            },
+            {
+              "name": "custody_token",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "auction",
+          "docs": ["There should be no account data here because an auction was never created."],
+          "writable": true
+        },
+        {
+          "name": "wormhole",
+          "accounts": [
+            {
+              "name": "config",
+              "writable": true
+            },
+            {
+              "name": "emitter_sequence",
+              "writable": true
+            },
+            {
+              "name": "fee_collector",
+              "writable": true
+            },
+            {
+              "name": "core_bridge_program"
+            }
+          ]
+        },
+        {
+          "name": "cctp",
+          "accounts": [
+            {
+              "name": "mint",
+              "docs": [
+                "Circle-supported mint.",
+                "",
+                "Token Messenger Minter program's local token account."
+              ],
+              "writable": true
+            },
+            {
+              "name": "token_messenger_minter_sender_authority"
+            },
+            {
+              "name": "message_transmitter_config",
+              "writable": true
+            },
+            {
+              "name": "token_messenger"
+            },
+            {
+              "name": "remote_token_messenger",
+              "docs": ["Messenger Minter program)."]
+            },
+            {
+              "name": "token_minter",
+              "docs": [
+                "CHECK Seeds must be \\[\"token_minter\"\\] (CCTP Token Messenger Minter program)."
+              ]
+            },
+            {
+              "name": "local_token",
+              "docs": [
+                "Local token account, which this program uses to validate the `mint` used to burn.",
+                ""
+              ],
+              "writable": true
+            },
+            {
+              "name": "token_messenger_minter_event_authority"
+            },
+            {
+              "name": "token_messenger_minter_program"
+            },
+            {
+              "name": "message_transmitter_program"
+            }
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "sysvars",
+          "accounts": [
+            {
+              "name": "clock",
+              "docs": [
+                "Wormhole Core Bridge needs the clock sysvar based on its legacy implementation.",
+                ""
+              ]
+            },
+            {
+              "name": "rent",
+              "docs": [
+                "Wormhole Core Bridge needs the rent sysvar based on its legacy implementation.",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle_auction_none_local",
+      "docs": [
+        "This instruction is used to settle a `FastMarketOrder` with no corresponding auction. The funds",
+        "are routed to the `recipient` on the target chain by executing a CCTP transfer and sending a `Fill`",
+        "message. This instruction can be called by anyone, but the `base_fee` associated with relaying a",
+        "finalized VAA will be paid to the `fee_recipient`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `SettleAuctionNoneLocal` context."
+      ],
+      "discriminator": [253, 213, 132, 148, 31, 119, 215, 162],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "core_message",
+          "writable": true
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "fee_recipient_token",
+          "docs": [
+            "Destination token account, which the redeemer may not own. But because the redeemer is a",
+            "signer and is the one encoded in the Deposit Fill message, he may have the tokens be sent",
+            "to any account he chooses (this one).",
+            ""
+          ],
+          "writable": true
+        },
+        {
+          "name": "prepared",
+          "accounts": [
+            {
+              "name": "by",
+              "writable": true
+            },
+            {
+              "name": "order_response",
+              "writable": true
+            },
+            {
+              "name": "custody_token",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "auction",
+          "docs": ["There should be no account data here because an auction was never created."],
+          "writable": true
+        },
+        {
+          "name": "wormhole",
+          "accounts": [
+            {
+              "name": "config",
+              "writable": true
+            },
+            {
+              "name": "emitter_sequence",
+              "writable": true
+            },
+            {
+              "name": "fee_collector",
+              "writable": true
+            },
+            {
+              "name": "core_bridge_program"
+            }
+          ]
+        },
+        {
+          "name": "local_custody_token",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "sysvars",
+          "accounts": [
+            {
+              "name": "clock",
+              "docs": [
+                "Wormhole Core Bridge needs the clock sysvar based on its legacy implementation.",
+                ""
+              ]
+            },
+            {
+              "name": "rent",
+              "docs": [
+                "Wormhole Core Bridge needs the rent sysvar based on its legacy implementation.",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "submit_ownership_transfer_request",
+      "docs": [
+        "This instruction sets the `pending_owner` field in the `Custodian` account. This instruction",
+        "can only be called by the `owner`. The `pending_owner` address must be valid, meaning it",
+        "cannot be the zero address or the current owner.",
+        "# Arguments",
+        "",
+        "* `ctx` - `SubmitOwnershipTransferRequest` context."
+      ],
+      "discriminator": [215, 13, 88, 199, 48, 195, 19, 225],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "new_owner",
+          "docs": ["New Owner.", ""]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_auction_parameters",
+      "docs": [
+        "This instruction is used to enact an existing auction update proposal. It can only be",
+        "executed after the `slot_enact_delay` has passed. This instruction can only be called by",
+        "the `owner` of the proposal.",
+        "# Arguments",
+        "",
+        "* `ctx` - `UpdateAuctionParameters` context."
+      ],
+      "discriminator": [10, 33, 10, 75, 17, 63, 21, 245],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "proposal",
+          "writable": true
+        },
+        {
+          "name": "auction_config",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_cctp_router_endpoint",
+      "docs": [
+        "This instruction is used to update a CCTP router endpoint. It allows the caller to change",
+        "the `address`, `mint_recipient`, and `domain`. This instruction can only be called by the",
+        "`owner`.",
+        "# Arguments",
+        "",
+        "* `ctx`  - `UpdateCctpRouterEndpoint` context.",
+        "* `args` - The `AddCctpRouterEndpointArgs`, see `admin.rs`."
+      ],
+      "discriminator": [34, 122, 31, 38, 73, 126, 94, 127],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "router_endpoint",
+          "accounts": [
+            {
+              "name": "endpoint",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "remote_token_messenger",
+          "docs": ["Messenger Minter program)."]
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "AddCctpRouterEndpointArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_fee_recipient",
+      "docs": [
+        "This instruction is used to update the `fee_recipient` field in the `Custodian` account. This",
+        "instruction can only be called by the `owner` or `owner_assistant`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `UpdateFeeRecipient` context."
+      ],
+      "discriminator": [249, 0, 198, 35, 183, 123, 57, 188],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "new_fee_recipient_token"
+        },
+        {
+          "name": "new_fee_recipient",
+          "docs": ["New Fee Recipient.", ""]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_local_router_endpoint",
+      "docs": [
+        "This instruction is used to update a Local router endpoint. It allows the caller to change",
+        "the `address` and `mint_recipient`. This instruction can only be called by the `owner`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `UpdateLocalRouterEndpoint` context."
+      ],
+      "discriminator": [222, 237, 142, 228, 88, 3, 49, 102],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "router_endpoint",
+          "accounts": [
+            {
+              "name": "endpoint",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "local",
+          "accounts": [
+            {
+              "name": "token_router_program",
+              "docs": ["emitter (router endpoint) address."]
+            },
+            {
+              "name": "token_router_emitter"
+            },
+            {
+              "name": "token_router_mint_recipient"
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_owner_assistant",
+      "docs": [
+        "This instruction is used to update the `owner_assistant` field in the `Custodian` account. This",
+        "instruction can only be called by the `owner`.",
+        "# Arguments",
+        "",
+        "* `ctx` - `UpdateOwnerAssistant` context."
+      ],
+      "discriminator": [153, 83, 175, 53, 168, 34, 131, 22],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "new_owner_assistant",
+          "docs": ["New Assistant.", ""]
         }
       ],
       "args": []
@@ -2264,781 +1897,66 @@
   ],
   "accounts": [
     {
+      "name": "Auction",
+      "discriminator": [218, 94, 247, 242, 126, 233, 131, 81]
+    },
+    {
       "name": "AuctionConfig",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "id",
-            "docs": ["Monotonically increasing identifier for auction configs."],
-            "type": "u32"
-          },
-          {
-            "name": "parameters",
-            "docs": [
-              "Auction parameters, which are validated by [crate::utils::auction::require_valid_parameters]."
-            ],
-            "type": {
-              "defined": "AuctionParameters"
-            }
-          }
-        ]
-      }
+      "discriminator": [195, 54, 8, 51, 28, 231, 33, 142]
     },
     {
       "name": "AuctionHistory",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "header",
-            "type": {
-              "defined": "AuctionHistoryHeader"
-            }
-          },
-          {
-            "name": "data",
-            "type": {
-              "vec": {
-                "defined": "AuctionEntry"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "Auction",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "vaaHash",
-            "docs": ["VAA hash of the auction."],
-            "type": {
-              "array": ["u8", 32]
-            }
-          },
-          {
-            "name": "vaaTimestamp",
-            "docs": ["Timestamp of the fast market order VAA."],
-            "type": "u32"
-          },
-          {
-            "name": "targetProtocol",
-            "docs": ["Transfer protocol used to move assets."],
-            "type": {
-              "defined": "MessageProtocol"
-            }
-          },
-          {
-            "name": "status",
-            "docs": ["Auction status."],
-            "type": {
-              "defined": "AuctionStatus"
-            }
-          },
-          {
-            "name": "info",
-            "docs": ["Optional auction info. This field will be `None`` if there is no auction."],
-            "type": {
-              "option": {
-                "defined": "AuctionInfo"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "Custodian",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "owner",
-            "docs": ["Program's owner."],
-            "type": "publicKey"
-          },
-          {
-            "name": "pendingOwner",
-            "type": {
-              "option": "publicKey"
-            }
-          },
-          {
-            "name": "paused",
-            "docs": ["Boolean indicating whether inbound auctions are paused."],
-            "type": "bool"
-          },
-          {
-            "name": "pausedSetBy",
-            "type": "publicKey"
-          },
-          {
-            "name": "ownerAssistant",
-            "docs": ["Program's assistant."],
-            "type": "publicKey"
-          },
-          {
-            "name": "feeRecipientToken",
-            "type": "publicKey"
-          },
-          {
-            "name": "auctionConfigId",
-            "type": "u32"
-          },
-          {
-            "name": "nextProposalId",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "PreparedOrderResponse",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "fastVaaHash",
-            "type": {
-              "array": ["u8", 32]
-            }
-          },
-          {
-            "name": "preparedBy",
-            "type": "publicKey"
-          },
-          {
-            "name": "sourceChain",
-            "type": "u16"
-          },
-          {
-            "name": "baseFee",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Proposal",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "id",
-            "type": "u64"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "action",
-            "type": {
-              "defined": "ProposalAction"
-            }
-          },
-          {
-            "name": "by",
-            "type": "publicKey"
-          },
-          {
-            "name": "owner",
-            "type": "publicKey"
-          },
-          {
-            "name": "slotProposedAt",
-            "type": "u64"
-          },
-          {
-            "name": "slotEnactDelay",
-            "type": "u64"
-          },
-          {
-            "name": "slotEnactedAt",
-            "type": {
-              "option": "u64"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "RedeemedFastFill",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "vaaHash",
-            "type": {
-              "array": ["u8", 32]
-            }
-          },
-          {
-            "name": "sequence",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "RouterEndpoint",
-      "docs": ["Foreign emitter account data."],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "chain",
-            "docs": ["Emitter chain. Cannot equal `1` (Solana's Chain ID)."],
-            "type": "u16"
-          },
-          {
-            "name": "address",
-            "docs": ["Emitter address. Cannot be zero address."],
-            "type": {
-              "array": ["u8", 32]
-            }
-          },
-          {
-            "name": "mintRecipient",
-            "docs": [
-              "Future-proof field in case another network has token accounts to send assets to instead of",
-              "sending to the address directly."
-            ],
-            "type": {
-              "array": ["u8", 32]
-            }
-          },
-          {
-            "name": "protocol",
-            "docs": ["Specific message protocol used to move assets."],
-            "type": {
-              "defined": "MessageProtocol"
-            }
-          }
-        ]
-      }
-    }
-  ],
-  "types": [
-    {
-      "name": "CctpMessageArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "encodedCctpMessage",
-            "type": "bytes"
-          },
-          {
-            "name": "cctpAttestation",
-            "type": "bytes"
-          }
-        ]
-      }
-    },
-    {
-      "name": "AuctionParameters",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "userPenaltyRewardBps",
-            "type": "u32"
-          },
-          {
-            "name": "initialPenaltyBps",
-            "type": "u32"
-          },
-          {
-            "name": "duration",
-            "type": "u16"
-          },
-          {
-            "name": "gracePeriod",
-            "docs": [
-              "* The grace period of the auction in slots. This is the number of slots the highest bidder\n     * has to execute the fast order before incurring a penalty. About 15 seconds on Avalanche.\n     * This value INCLUDES the `_auctionDuration`."
-            ],
-            "type": "u16"
-          },
-          {
-            "name": "penaltyPeriod",
-            "type": "u16"
-          },
-          {
-            "name": "minOfferDeltaBps",
-            "type": "u32"
-          },
-          {
-            "name": "securityDepositBase",
-            "docs": [
-              "The base security deposit, which will the the additional amount an auction participant must",
-              "deposit to participate in an auction."
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "securityDepositBps",
-            "docs": ["Additional security deposit based on the notional of the order amount."],
-            "type": "u32"
-          }
-        ]
-      }
-    },
-    {
-      "name": "AuctionEntry",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "vaaHash",
-            "type": {
-              "array": ["u8", 32]
-            }
-          },
-          {
-            "name": "vaaTimestamp",
-            "type": "u32"
-          },
-          {
-            "name": "info",
-            "type": {
-              "defined": "AuctionInfo"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "AuctionHistoryHeader",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "id",
-            "type": "u64"
-          },
-          {
-            "name": "minTimestamp",
-            "type": {
-              "option": "u32"
-            }
-          },
-          {
-            "name": "maxTimestamp",
-            "type": {
-              "option": "u32"
-            }
-          }
-        ]
-      }
+      "discriminator": [149, 208, 45, 154, 47, 248, 102, 245]
     },
     {
       "name": "AuctionHistoryInternal",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "header",
-            "type": {
-              "defined": "AuctionHistoryHeader"
-            }
-          },
-          {
-            "name": "numEntries",
-            "type": "u32"
-          }
-        ]
-      }
+      "discriminator": [149, 208, 45, 154, 47, 248, 102, 245]
     },
     {
-      "name": "AuctionDestinationAssetInfo",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "custodyTokenBump",
-            "type": "u8"
-          },
-          {
-            "name": "amountOut",
-            "type": "u64"
-          }
-        ]
-      }
+      "name": "Custodian",
+      "discriminator": [132, 228, 139, 184, 112, 228, 108, 240]
     },
     {
-      "name": "AuctionInfo",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "configId",
-            "type": "u32"
-          },
-          {
-            "name": "custodyTokenBump",
-            "type": "u8"
-          },
-          {
-            "name": "vaaSequence",
-            "docs": ["Sequence of the fast market order VAA."],
-            "type": "u64"
-          },
-          {
-            "name": "sourceChain",
-            "docs": ["The chain where the transfer is initiated."],
-            "type": "u16"
-          },
-          {
-            "name": "bestOfferToken",
-            "docs": ["The highest bidder of the auction."],
-            "type": "publicKey"
-          },
-          {
-            "name": "initialOfferToken",
-            "docs": ["The initial bidder of the auction."],
-            "type": "publicKey"
-          },
-          {
-            "name": "startSlot",
-            "docs": ["The slot when the auction started."],
-            "type": "u64"
-          },
-          {
-            "name": "amountIn",
-            "docs": [
-              "The amount reflecting the amount of assets transferred into the matching engine. This plus",
-              "and the security deposit are used to participate in the auction."
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "securityDeposit",
-            "docs": [
-              "The additional deposit made by the highest bidder.",
-              "",
-              "NOTE: This may not be the same denomination as the `amount_in`."
-            ],
-            "type": "u64"
-          },
-          {
-            "name": "offerPrice",
-            "docs": ["The offer price of the auction."],
-            "type": "u64"
-          },
-          {
-            "name": "destinationAssetInfo",
-            "docs": [
-              "If the destination asset is not equal to the asset used for auctions, this will be some",
-              "value specifying its custody token bump and amount out.",
-              "",
-              "NOTE: Because this is an option, the `AuctionDestinationAssetInfo` having some definition while this",
-              "field is None will not impact future serialization because the option's serialized value is",
-              "zero. Only when there will be other assets will this struct's members have to be carefully",
-              "considered."
-            ],
-            "type": {
-              "option": {
-                "defined": "AuctionDestinationAssetInfo"
-              }
-            }
-          }
-        ]
-      }
+      "name": "PreparedOrderResponse",
+      "discriminator": [20, 123, 155, 182, 141, 189, 18, 173]
     },
     {
-      "name": "AddCctpRouterEndpointArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "chain",
-            "type": "u16"
-          },
-          {
-            "name": "cctpDomain",
-            "type": "u32"
-          },
-          {
-            "name": "address",
-            "type": {
-              "array": ["u8", 32]
-            }
-          },
-          {
-            "name": "mintRecipient",
-            "type": {
-              "option": {
-                "array": ["u8", 32]
-              }
-            }
-          }
-        ]
-      }
+      "name": "Proposal",
+      "discriminator": [26, 94, 189, 187, 116, 136, 53, 33]
     },
     {
-      "name": "AuctionStatus",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "NotStarted"
-          },
-          {
-            "name": "Active"
-          },
-          {
-            "name": "Completed",
-            "fields": [
-              {
-                "name": "slot",
-                "type": "u64"
-              },
-              {
-                "name": "executePenalty",
-                "type": {
-                  "option": "u64"
-                }
-              }
-            ]
-          },
-          {
-            "name": "Settled",
-            "fields": [
-              {
-                "name": "fee",
-                "type": "u64"
-              },
-              {
-                "name": "totalPenalty",
-                "type": {
-                  "option": "u64"
-                }
-              }
-            ]
-          }
-        ]
-      }
+      "name": "RedeemedFastFill",
+      "discriminator": [44, 188, 179, 117, 17, 246, 14, 11]
     },
     {
-      "name": "ProposalAction",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "None"
-          },
-          {
-            "name": "UpdateAuctionParameters",
-            "fields": [
-              {
-                "name": "id",
-                "type": "u32"
-              },
-              {
-                "name": "parameters",
-                "type": {
-                  "defined": "AuctionParameters"
-                }
-              }
-            ]
-          }
-        ]
-      }
+      "name": "RemoteTokenMessenger",
+      "discriminator": [105, 115, 174, 34, 95, 233, 138, 252]
     },
     {
-      "name": "MessageProtocol",
-      "docs": ["Protocol used to transfer assets."],
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "None"
-          },
-          {
-            "name": "Local",
-            "fields": [
-              {
-                "name": "programId",
-                "type": "publicKey"
-              }
-            ]
-          },
-          {
-            "name": "Cctp",
-            "fields": [
-              {
-                "name": "domain",
-                "docs": ["CCTP domain, which is how CCTP registers identifies foreign networks."],
-                "type": "u32"
-              }
-            ]
-          }
-        ]
-      }
+      "name": "RouterEndpoint",
+      "discriminator": [217, 148, 188, 203, 183, 105, 154, 205]
     }
   ],
   "events": [
     {
       "name": "AuctionSettled",
-      "fields": [
-        {
-          "name": "auction",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "bestOfferToken",
-          "type": {
-            "option": "publicKey"
-          },
-          "index": false
-        },
-        {
-          "name": "tokenBalanceAfter",
-          "type": "u64",
-          "index": false
-        }
-      ]
+      "discriminator": [61, 151, 131, 170, 95, 203, 219, 147]
     },
     {
       "name": "AuctionUpdated",
-      "fields": [
-        {
-          "name": "configId",
-          "type": "u32",
-          "index": false
-        },
-        {
-          "name": "auction",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "vaa",
-          "type": {
-            "option": "publicKey"
-          },
-          "index": false
-        },
-        {
-          "name": "sourceChain",
-          "type": "u16",
-          "index": false
-        },
-        {
-          "name": "targetProtocol",
-          "type": {
-            "defined": "MessageProtocol"
-          },
-          "index": false
-        },
-        {
-          "name": "endSlot",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "bestOfferToken",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "tokenBalanceBefore",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "amountIn",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "totalDeposit",
-          "type": "u64",
-          "index": false
-        },
-        {
-          "name": "maxOfferPriceAllowed",
-          "type": "u64",
-          "index": false
-        }
-      ]
+      "discriminator": [67, 35, 50, 236, 108, 230, 253, 111]
     },
     {
       "name": "Enacted",
-      "fields": [
-        {
-          "name": "action",
-          "type": {
-            "defined": "ProposalAction"
-          },
-          "index": false
-        }
-      ]
+      "discriminator": [200, 226, 146, 0, 188, 24, 141, 143]
     },
     {
       "name": "OrderExecuted",
-      "fields": [
-        {
-          "name": "auction",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "vaa",
-          "type": "publicKey",
-          "index": false
-        },
-        {
-          "name": "sourceChain",
-          "type": "u16",
-          "index": false
-        },
-        {
-          "name": "targetProtocol",
-          "type": {
-            "defined": "MessageProtocol"
-          },
-          "index": false
-        },
-        {
-          "name": "penalized",
-          "type": "bool",
-          "index": false
-        }
-      ]
+      "discriminator": [74, 135, 231, 5, 168, 106, 194, 117]
     },
     {
       "name": "Proposed",
-      "fields": [
-        {
-          "name": "action",
-          "type": {
-            "defined": "ProposalAction"
-          },
-          "index": false
-        }
-      ]
+      "discriminator": [216, 37, 138, 141, 130, 208, 180, 153]
     }
   ],
   "errors": [
@@ -3093,6 +2011,10 @@
     {
       "code": 6076,
       "name": "VaaMismatch"
+    },
+    {
+      "code": 6078,
+      "name": "RedeemerMessageTooLarge"
     },
     {
       "code": 6096,
@@ -3251,6 +2173,10 @@
       "name": "ExecutorNotPreparedBy"
     },
     {
+      "code": 7060,
+      "name": "InvalidOfferToken"
+    },
+    {
       "code": 7280,
       "name": "CannotCloseAuctionYet"
     },
@@ -3263,7 +2189,915 @@
       "name": "AuctionHistoryFull"
     }
   ],
-  "metadata": {
-    "address": "MatchingEngine11111111111111111111111111111"
-  }
+  "types": [
+    {
+      "name": "AddCctpRouterEndpointArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "chain",
+            "type": "u16"
+          },
+          {
+            "name": "cctp_domain",
+            "type": "u32"
+          },
+          {
+            "name": "address",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "mint_recipient",
+            "type": {
+              "option": {
+                "array": ["u8", 32]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Auction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vaa_hash",
+            "docs": ["VAA hash of the auction."],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "vaa_timestamp",
+            "docs": ["Timestamp of the fast market order VAA."],
+            "type": "u32"
+          },
+          {
+            "name": "target_protocol",
+            "docs": ["Transfer protocol used to move assets."],
+            "type": {
+              "defined": {
+                "name": "MessageProtocol"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "docs": ["Auction status."],
+            "type": {
+              "defined": {
+                "name": "AuctionStatus"
+              }
+            }
+          },
+          {
+            "name": "info",
+            "docs": ["Optional auction info. This field will be `None`` if there is no auction."],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "AuctionInfo"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "docs": ["Monotonically increasing identifier for auction configs."],
+            "type": "u32"
+          },
+          {
+            "name": "parameters",
+            "docs": [
+              "Auction parameters, which are validated by [crate::utils::auction::require_valid_parameters]."
+            ],
+            "type": {
+              "defined": {
+                "name": "AuctionParameters"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionDestinationAssetInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "custody_token_bump",
+            "type": "u8"
+          },
+          {
+            "name": "amount_out",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionEntry",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "vaa_hash",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "vaa_timestamp",
+            "type": "u32"
+          },
+          {
+            "name": "info",
+            "type": {
+              "defined": {
+                "name": "AuctionInfo"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionHistory",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "header",
+            "type": {
+              "defined": {
+                "name": "AuctionHistoryHeader"
+              }
+            }
+          },
+          {
+            "name": "data",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "AuctionEntry"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionHistoryHeader",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "min_timestamp",
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "max_timestamp",
+            "type": {
+              "option": "u32"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionHistoryInternal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "header",
+            "type": {
+              "defined": {
+                "name": "AuctionHistoryHeader"
+              }
+            }
+          },
+          {
+            "name": "num_entries",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config_id",
+            "type": "u32"
+          },
+          {
+            "name": "custody_token_bump",
+            "type": "u8"
+          },
+          {
+            "name": "vaa_sequence",
+            "docs": ["Sequence of the fast market order VAA."],
+            "type": "u64"
+          },
+          {
+            "name": "source_chain",
+            "docs": ["The chain where the transfer is initiated."],
+            "type": "u16"
+          },
+          {
+            "name": "best_offer_token",
+            "docs": ["The highest bidder of the auction."],
+            "type": "pubkey"
+          },
+          {
+            "name": "initial_offer_token",
+            "docs": ["The initial bidder of the auction."],
+            "type": "pubkey"
+          },
+          {
+            "name": "start_slot",
+            "docs": ["The slot when the auction started."],
+            "type": "u64"
+          },
+          {
+            "name": "amount_in",
+            "docs": [
+              "The amount reflecting the amount of assets transferred into the matching engine. This plus",
+              "and the security deposit are used to participate in the auction."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "security_deposit",
+            "docs": [
+              "The additional deposit made by the highest bidder.",
+              "",
+              "NOTE: This may not be the same denomination as the `amount_in`."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "offer_price",
+            "docs": ["The offer price of the auction."],
+            "type": "u64"
+          },
+          {
+            "name": "destination_asset_info",
+            "docs": [
+              "If the destination asset is not equal to the asset used for auctions, this will be some",
+              "value specifying its custody token bump and amount out.",
+              "",
+              "NOTE: Because this is an option, the `AuctionDestinationAssetInfo` having some definition while this",
+              "field is None will not impact future serialization because the option's serialized value is",
+              "zero. Only when there will be other assets will this struct's members have to be carefully",
+              "considered."
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "AuctionDestinationAssetInfo"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionParameters",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user_penalty_reward_bps",
+            "type": "u32"
+          },
+          {
+            "name": "initial_penalty_bps",
+            "type": "u32"
+          },
+          {
+            "name": "duration",
+            "type": "u16"
+          },
+          {
+            "name": "grace_period",
+            "docs": [
+              "* The grace period of the auction in slots. This is the number of slots the highest bidder\n     * has to execute the fast order before incurring a penalty. About 15 seconds on Avalanche.\n     * This value INCLUDES the `_auctionDuration`."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "penalty_period",
+            "type": "u16"
+          },
+          {
+            "name": "min_offer_delta_bps",
+            "type": "u32"
+          },
+          {
+            "name": "security_deposit_base",
+            "docs": [
+              "The base security deposit, which will the the additional amount an auction participant must",
+              "deposit to participate in an auction."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "security_deposit_bps",
+            "docs": ["Additional security deposit based on the notional of the order amount."],
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction",
+            "docs": ["The pubkey of the auction that was settled."],
+            "type": "pubkey"
+          },
+          {
+            "name": "best_offer_token",
+            "docs": [
+              "If there was an active auction, this pubkey is the best offer token that was paid back."
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "token_balance_after",
+            "docs": [
+              "Token account's new balance. If there was no auction, this balance will be of the fee",
+              "recipient token account."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "NotStarted"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Completed",
+            "fields": [
+              {
+                "name": "slot",
+                "type": "u64"
+              },
+              {
+                "name": "execute_penalty",
+                "type": {
+                  "option": "u64"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Settled",
+            "fields": [
+              {
+                "name": "fee",
+                "type": "u64"
+              },
+              {
+                "name": "total_penalty",
+                "type": {
+                  "option": "u64"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "config_id",
+            "type": "u32"
+          },
+          {
+            "name": "auction",
+            "type": "pubkey"
+          },
+          {
+            "name": "vaa",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "source_chain",
+            "type": "u16"
+          },
+          {
+            "name": "target_protocol",
+            "type": {
+              "defined": {
+                "name": "MessageProtocol"
+              }
+            }
+          },
+          {
+            "name": "end_slot",
+            "type": "u64"
+          },
+          {
+            "name": "best_offer_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_balance_before",
+            "type": "u64"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "total_deposit",
+            "type": "u64"
+          },
+          {
+            "name": "max_offer_price_allowed",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CctpMessageArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "encoded_cctp_message",
+            "type": "bytes"
+          },
+          {
+            "name": "cctp_attestation",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Custodian",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "docs": ["Program's owner."],
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_owner",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "paused",
+            "docs": ["Boolean indicating whether inbound auctions are paused."],
+            "type": "bool"
+          },
+          {
+            "name": "paused_set_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner_assistant",
+            "docs": ["Program's assistant."],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_recipient_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "auction_config_id",
+            "type": "u32"
+          },
+          {
+            "name": "next_proposal_id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Enacted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": {
+              "defined": {
+                "name": "ProposalAction"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EndpointInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "chain",
+            "docs": ["Emitter chain. Cannot equal `1` (Solana's Chain ID)."],
+            "type": "u16"
+          },
+          {
+            "name": "address",
+            "docs": ["Emitter address. Cannot be zero address."],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "mint_recipient",
+            "docs": [
+              "Future-proof field in case another network has token accounts to send assets to instead of",
+              "sending to the address directly."
+            ],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "protocol",
+            "docs": ["Specific message protocol used to move assets."],
+            "type": {
+              "defined": {
+                "name": "MessageProtocol"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction_params",
+            "type": {
+              "defined": {
+                "name": "AuctionParameters"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MessageProtocol",
+      "docs": ["Protocol used to transfer assets."],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Local",
+            "fields": [
+              {
+                "name": "program_id",
+                "type": "pubkey"
+              }
+            ]
+          },
+          {
+            "name": "Cctp",
+            "fields": [
+              {
+                "name": "domain",
+                "docs": ["CCTP domain, which is how CCTP registers identifies foreign networks."],
+                "type": "u32"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "OrderExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction",
+            "type": "pubkey"
+          },
+          {
+            "name": "vaa",
+            "type": "pubkey"
+          },
+          {
+            "name": "source_chain",
+            "type": "u16"
+          },
+          {
+            "name": "target_protocol",
+            "type": {
+              "defined": {
+                "name": "MessageProtocol"
+              }
+            }
+          },
+          {
+            "name": "penalized",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PreparedOrderResponse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "info",
+            "type": {
+              "defined": {
+                "name": "PreparedOrderResponseInfo"
+              }
+            }
+          },
+          {
+            "name": "to_endpoint",
+            "type": {
+              "defined": {
+                "name": "EndpointInfo"
+              }
+            }
+          },
+          {
+            "name": "redeemer_message",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PreparedOrderResponseInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fast_vaa_hash",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "prepared_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "fast_vaa_timestamp",
+            "type": "u32"
+          },
+          {
+            "name": "source_chain",
+            "type": "u16"
+          },
+          {
+            "name": "base_fee",
+            "type": "u64"
+          },
+          {
+            "name": "init_auction_fee",
+            "type": "u64"
+          },
+          {
+            "name": "sender",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "redeemer",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Proposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "action",
+            "type": {
+              "defined": {
+                "name": "ProposalAction"
+              }
+            }
+          },
+          {
+            "name": "by",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "slot_proposed_at",
+            "type": "u64"
+          },
+          {
+            "name": "slot_enact_delay",
+            "type": "u64"
+          },
+          {
+            "name": "slot_enacted_at",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProposalAction",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "UpdateAuctionParameters",
+            "fields": [
+              {
+                "name": "id",
+                "type": "u32"
+              },
+              {
+                "name": "parameters",
+                "type": {
+                  "defined": {
+                    "name": "AuctionParameters"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Proposed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "action",
+            "type": {
+              "defined": {
+                "name": "ProposalAction"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemedFastFill",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vaa_hash",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "sequence",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RemoteTokenMessenger",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "domain",
+            "type": "u32"
+          },
+          {
+            "name": "token_messenger",
+            "type": {
+              "array": ["u8", 32]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RouterEndpoint",
+      "docs": ["Foreign emitter account data."],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "info",
+            "type": {
+              "defined": {
+                "name": "EndpointInfo"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
 }

@@ -30,6 +30,9 @@ export const findNextValidBlock = async (
   return block;
 };
 
+// returns the signatures of the first and last transactions in the block range
+// fromSignature is the first transaction of the last block
+// toSignature is the last transaction of the first block
 export const findFromSignatureAndToSignature = async (
   connection: Connection,
   fromSlot: number,

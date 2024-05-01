@@ -69,9 +69,10 @@ export class LiquidityLayerMessage {
           const redeemer = Array.from(buf.subarray(offset, (offset += 32)));
           const sender = Array.from(buf.subarray(offset, (offset += 32)));
           const refundAddress = Array.from(buf.subarray(offset, (offset += 32)));
-          const maxFee = buf.readBigInt64BE(offset);
+          const maxFee = buf.readBigUInt64BE(offset);
           offset += 8;
-          const initAuctionFee = buf.readBigInt64BE(offset);
+          const initAuctionFee = buf.readBigUInt64BE(offset);
+          offset += 8;
           const deadline = buf.readUInt32BE(offset);
           offset += 4;
           const redeemerMessageLen = buf.readUInt32BE(offset);

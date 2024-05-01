@@ -24,6 +24,8 @@ function useChainHeartbeats(heartbeats: Heartbeat[]) {
             contractAddress: '',
             errorCount: '0',
             height: '0',
+            safeHeight: '0',
+            finalizedHeight: '0',
           },
         }));
       }

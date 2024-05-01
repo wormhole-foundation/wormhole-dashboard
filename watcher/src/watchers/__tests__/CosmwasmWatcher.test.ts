@@ -17,53 +17,31 @@ test('getFinalizedBlockNumber(terra2)', async () => {
 
 test('getMessagesForBlocks(terra2)', async () => {
   const watcher = new CosmwasmWatcher('Mainnet', 'Terra2');
-  const vaasByBlock = await watcher.getMessagesForBlocks(3165191, 3165192);
+  const vaasByBlock = await watcher.getMessagesForBlocks(10094466, 10094467);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['3165191/2023-01-03T12:12:54.922Z']).toBeDefined();
-  expect(vaasByBlock['3165191/2023-01-03T12:12:54.922Z'].length).toEqual(1);
-  expect(vaasByBlock['3165191/2023-01-03T12:12:54.922Z'][0]).toEqual(
-    '4FF15C860D78E65AA25DC41F634E158CC4D79BBD4EB5F72C0D09A1F6AC25810C:18/a463ad028fb79679cfc8ce1efba35ac0e77b35080a1abe9bebe83461f176b0a3/651'
+  expect(vaasByBlock['10094466/2024-04-28T18:26:24.793Z']).toBeDefined();
+  expect(vaasByBlock['10094466/2024-04-28T18:26:24.793Z'].length).toEqual(1);
+  expect(vaasByBlock['10094466/2024-04-28T18:26:24.793Z'][0]).toEqual(
+    'BA2A1A38B3E8C30626B9E2DD0308163CC72463B099A9CE18DBAC98805C69447E:18/a463ad028fb79679cfc8ce1efba35ac0e77b35080a1abe9bebe83461f176b0a3/3416'
   );
 });
 
 test('getMessagesForBlocks(terra2)', async () => {
   const watcher = new CosmwasmWatcher('Mainnet', 'Terra2');
-  const vaasByBlock = await watcher.getMessagesForBlocks(5635710, 5635712);
+  const vaasByBlock = await watcher.getMessagesForBlocks(10094467, 10094469);
   const entries = Object.entries(vaasByBlock);
   // console.log(entries); // Leave this in for future debugging
   expect(entries.length).toEqual(3);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(3);
   expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(0);
   expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['5635710/2023-06-23T12:54:10.949Z']).toBeDefined();
-  expect(vaasByBlock['5635711/2023-06-23T12:54:16.979Z']).toBeDefined();
-  expect(vaasByBlock['5635712/2023-06-23T12:54:23.010Z']).toBeDefined();
-});
-
-test.skip('getFinalizedBlockNumber(terra)', async () => {
-  const watcher = new CosmwasmWatcher('Mainnet', 'Terra');
-  const blockNumber = await watcher.getFinalizedBlockNumber();
-  expect(blockNumber).toBeGreaterThan(10980872);
-});
-
-// flaky rpc, skip
-test.skip('getMessagesForBlocks(terra)', async () => {
-  const watcher = new CosmwasmWatcher('Mainnet', 'Terra');
-  const vaasByBlock = await watcher.getMessagesForBlocks(10974196, 10974197);
-  const entries = Object.entries(vaasByBlock);
-  expect(entries.length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z']).toBeDefined();
-  expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z'].length).toEqual(1);
-  expect(vaasByBlock['10974196/2023-01-06T04:23:21.045Z'][0]).toEqual(
-    '8A31CDE56ED3ACB7239D705949BD6C164747210A6C4C69D98756E0CF6D22C9EB:3/0000000000000000000000007cf7b764e38a0a5e967972c1df77d432510564e2/256813'
-  );
+  expect(vaasByBlock['10094467/2024-04-28T18:26:31.162Z']).toBeDefined();
+  expect(vaasByBlock['10094468/2024-04-28T18:26:37.231Z']).toBeDefined();
+  expect(vaasByBlock['10094469/2024-04-28T18:26:43.063Z']).toBeDefined();
 });
 
 test('getFinalizedBlockNumber(terra explorer)', async () => {
@@ -72,7 +50,6 @@ test('getFinalizedBlockNumber(terra explorer)', async () => {
   expect(blockNumber).toBeGreaterThan(10980872);
 });
 
-// flaky rpc, skip
 test('getMessagesForBlocks(terra explorer)', async () => {
   const watcher = new TerraExplorerWatcher('Mainnet', 'Terra');
   const vaasByBlock = await watcher.getMessagesForBlocks(14506733, 14506740);
@@ -146,7 +123,6 @@ test.skip('getMessagesForBlocks(injective)', async () => {
 test.skip('getFinalizedBlockNumber(sei)', async () => {
   const watcher = new CosmwasmWatcher('Mainnet', 'Sei');
   const blockNumber = await watcher.getFinalizedBlockNumber();
-  console.log(blockNumber);
   expect(blockNumber).toBeGreaterThan(0);
 });
 
@@ -155,7 +131,6 @@ test.skip('getMessagesForBlocks(sei)', async () => {
   const watcher = new CosmwasmWatcher('Mainnet', 'Sei');
   const vaasByBlock = await watcher.getMessagesForBlocks(18907686, 18907687);
   const entries = Object.entries(vaasByBlock);
-  console.log(entries);
   expect(entries.length).toEqual(2);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(0);
@@ -171,7 +146,6 @@ test.skip('getMessagesForBlocks(sei)', async () => {
 test('getFinalizedBlockNumber(sei explorer)', async () => {
   const watcher = new SeiExplorerWatcher('Mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();
-  console.log(blockNumber);
   expect(blockNumber).toBeGreaterThan(0);
 });
 
@@ -180,7 +154,6 @@ test.skip('getMessagesForBlocks(sei explorer)', async () => {
   const watcher = new SeiExplorerWatcher('Mainnet');
   const vaasByBlock = await watcher.getMessagesForBlocks(19061244, 19061245);
   const entries = Object.entries(vaasByBlock);
-  console.log(entries);
   expect(entries.length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(0);
   expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
@@ -195,7 +168,6 @@ test.skip('getMessagesForBlocks(sei explorer)', async () => {
 test('getFinalizedBlockNumber(wormchain)', async () => {
   const watcher = new WormchainWatcher('Mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();
-  console.log(blockNumber);
   expect(blockNumber).toBeGreaterThan(
     Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Wormchain)
   );
@@ -205,7 +177,6 @@ test('getMessagesForBlocks(wormchain)', async () => {
   const watcher = new WormchainWatcher('Mainnet');
   const vaasByBlock = await watcher.getMessagesForBlocks(4510119, 4510119);
   const entries = Object.entries(vaasByBlock);
-  console.log(entries);
   expect(entries.length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(0);
   expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);

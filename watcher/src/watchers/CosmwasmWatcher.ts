@@ -24,8 +24,8 @@ export class CosmwasmWatcher extends Watcher {
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
-    this.latestBlockTag = 'blocks/latest';
-    this.getBlockTag = 'blocks/';
+    this.latestBlockTag = 'cosmos/base/tendermint/v1beta1/blocks/latest';
+    this.getBlockTag = 'cosmos/base/tendermint/v1beta1/blocks/';
     this.hashTag = 'cosmos/tx/v1beta1/txs/';
     this.latestBlockHeight = 0;
     if (chain === 'Sei') {

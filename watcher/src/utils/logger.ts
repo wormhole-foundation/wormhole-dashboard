@@ -74,11 +74,13 @@ const createBaseLogger = (): WormholeLogger => {
       })
     );
   }
-  console.log(
-    `watcher is logging to ${logPath ?? 'the console'} ${
-      usingLoki ? 'and loki' : ''
-    } at level ${logLevel}`
-  );
+  if (process.env.CI !== 'true') {
+    console.log(
+      `watcher is logging to ${logPath ?? 'the console'} ${
+        usingLoki ? 'and loki' : ''
+      } at level ${logLevel}`
+    );
+  }
 
   const loggerConfig: LoggerOptions = {
     level: logLevel,

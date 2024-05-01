@@ -12,7 +12,8 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Keccak } from 'sha3';
-import { IDL, TokenRouter } from '../../types/token_router';
+import IDL from '../../idls/token_router.json';
+import { TokenRouter } from '../../types/token_router';
 import {
   CctpTokenBurnMessage,
   MessageTransmitterProgram,
@@ -124,9 +125,12 @@ export class TokenRouterProgram {
   constructor(connection: Connection, programId: ProgramId, mint: PublicKey) {
     this._programId = programId;
     this._mint = mint;
-    this.program = new Program(IDL, new PublicKey(this._programId), {
-      connection,
-    });
+    this.program = new Program(
+      { ...(IDL as any), address: this._programId },
+      {
+        connection,
+      }
+    );
   }
 
   get ID(): PublicKey {
@@ -310,6 +314,8 @@ export class TokenRouterProgram {
       preparedFill,
       custodyToken: this.preparedCustodyTokenAddress(preparedFill),
       usdc: this.usdcComposite(),
+      tokenProgram: splToken.TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
     };
   }
 
@@ -372,6 +378,8 @@ export class TokenRouterProgram {
         refundToken,
         preparedCustodyToken: this.preparedCustodyTokenAddress(preparedOrder),
         usdc: this.usdcComposite(),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
 
@@ -404,6 +412,7 @@ export class TokenRouterProgram {
         preparedOrder,
         refundToken,
         preparedCustodyToken: this.preparedCustodyTokenAddress(preparedOrder),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
       })
       .instruction();
   }
@@ -424,6 +433,7 @@ export class TokenRouterProgram {
         preparedFill,
         dstToken,
         preparedCustodyToken: this.preparedCustodyTokenAddress(preparedFill),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
       })
       .instruction();
   }
@@ -464,7 +474,7 @@ export class TokenRouterProgram {
     const cctpMessage = this.cctpMessageAddress(preparedOrder);
 
     if (destinationDomain === undefined) {
-      const { protocol } = await matchingEngine.fetchRouterEndpoint({
+      const { protocol } = await matchingEngine.fetchRouterEndpointInfo({
         address: routerEndpoint,
       });
       if (protocol.cctp === undefined) {
@@ -517,6 +527,10 @@ export class TokenRouterProgram {
         coreBridgeProgram,
         tokenMessengerMinterProgram,
         messageTransmitterProgram,
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+        clock: SYSVAR_CLOCK_PUBKEY,
       })
       .instruction();
   }
@@ -629,6 +643,8 @@ export class TokenRouterProgram {
           tokenMessengerMinterProgram,
           messageTransmitterProgram,
         },
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -691,6 +707,8 @@ export class TokenRouterProgram {
         matchingEngineToEndpoint,
         matchingEngineLocalCustodyToken,
         matchingEngineProgram,
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -709,12 +727,15 @@ export class TokenRouterProgram {
         owner,
         custodian: this.custodianAddress(),
         ownerAssistant,
-        mint: inputMint ?? this.mint,
+        mint: this.usdcComposite(inputMint),
         cctpMintRecipient: this.cctpMintRecipientAddress(),
         programData: programDataAddress(this.ID),
         upgradeManagerAuthority: upgradeManager.upgradeAuthorityAddress(),
         upgradeManagerProgram: upgradeManager.ID,
         bpfLoaderUpgradeableProgram: BPF_LOADER_UPGRADEABLE_PROGRAM_ID,
+        associatedTokenProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -833,43 +854,17 @@ export class TokenRouterProgram {
   }
 
   tokenMessengerMinterProgram(): TokenMessengerMinterProgram {
-    switch (this._programId) {
-      case testnet(): {
-        return new TokenMessengerMinterProgram(
-          this.program.provider.connection,
-          'CCTPiPYPc6AsJuwueEnWgSgucamXDZwBd53dQ11YiKX3'
-        );
-      }
-      case localnet(): {
-        return new TokenMessengerMinterProgram(
-          this.program.provider.connection,
-          'CCTPiPYPc6AsJuwueEnWgSgucamXDZwBd53dQ11YiKX3'
-        );
-      }
-      default: {
-        throw new Error('unsupported network');
-      }
-    }
+    return new TokenMessengerMinterProgram(
+      this.program.provider.connection,
+      'CCTPiPYPc6AsJuwueEnWgSgucamXDZwBd53dQ11YiKX3'
+    );
   }
 
   messageTransmitterProgram(): MessageTransmitterProgram {
-    switch (this._programId) {
-      case testnet(): {
-        return new MessageTransmitterProgram(
-          this.program.provider.connection,
-          'CCTPmbSD7gX1bxKPAmg77w8oFzNFpaQiQUWD43TKaecd'
-        );
-      }
-      case localnet(): {
-        return new MessageTransmitterProgram(
-          this.program.provider.connection,
-          'CCTPmbSD7gX1bxKPAmg77w8oFzNFpaQiQUWD43TKaecd'
-        );
-      }
-      default: {
-        throw new Error('unsupported network');
-      }
-    }
+    return new MessageTransmitterProgram(
+      this.program.provider.connection,
+      'CCTPmbSD7gX1bxKPAmg77w8oFzNFpaQiQUWD43TKaecd'
+    );
   }
 
   matchingEngineProgram(): matchingEngineSdk.MatchingEngineProgram {
@@ -900,7 +895,7 @@ export class TokenRouterProgram {
         return new PublicKey('3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5');
       }
       case localnet(): {
-        return new PublicKey('3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5');
+        return new PublicKey('worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth');
       }
       default: {
         throw new Error('unsupported network');

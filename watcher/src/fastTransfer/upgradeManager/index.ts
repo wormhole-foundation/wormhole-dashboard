@@ -1,8 +1,16 @@
 export * from './state';
 
 import { Program } from '@coral-xyz/anchor';
-import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { IDL, UpgradeManager } from '../../types/upgrade_manager';
+import {
+  Connection,
+  PublicKey,
+  SYSVAR_CLOCK_PUBKEY,
+  SYSVAR_RENT_PUBKEY,
+  SystemProgram,
+  TransactionInstruction,
+} from '@solana/web3.js';
+import IDL from '../../idls/upgrade_manager.json';
+import { UpgradeManager } from '../../types/upgrade_manager';
 import * as matchingEngineSdk from '../matchingEngine';
 import * as tokenRouterSdk from '../tokenRouter';
 import { BPF_LOADER_UPGRADEABLE_PROGRAM_ID, programDataAddress } from '../utils';
@@ -22,9 +30,12 @@ export class UpgradeManagerProgram {
 
   constructor(connection: Connection, programId: ProgramId) {
     this._programId = programId;
-    this.program = new Program(IDL as any, new PublicKey(this._programId), {
-      connection,
-    });
+    this.program = new Program(
+      { ...(IDL as any), address: this._programId },
+      {
+        connection,
+      }
+    );
   }
 
   get ID(): PublicKey {
@@ -51,6 +62,16 @@ export class UpgradeManagerProgram {
     return { owner, upgradeAuthority: this.upgradeAuthorityAddress() };
   }
 
+  requiredSysvarsComposite(): {
+    rent: PublicKey;
+    clock: PublicKey;
+  } {
+    return {
+      rent: SYSVAR_RENT_PUBKEY,
+      clock: SYSVAR_CLOCK_PUBKEY,
+    };
+  }
+
   executeUpgradeComposite(accounts: {
     owner: PublicKey;
     program: PublicKey;
@@ -66,6 +87,8 @@ export class UpgradeManagerProgram {
       programData: programDataAddress(program),
       program,
       bpfLoaderUpgradeableProgram: BPF_LOADER_UPGRADEABLE_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      sysvars: this.requiredSysvarsComposite(),
     };
   }
 

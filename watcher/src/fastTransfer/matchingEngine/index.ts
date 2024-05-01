@@ -1,7 +1,7 @@
 export * from './state';
 
 import * as wormholeSdk from '@certusone/wormhole-sdk';
-import { BN, Program } from '@coral-xyz/anchor';
+import { BN, Program, EventParser, BorshCoder } from '@coral-xyz/anchor';
 import * as splToken from '@solana/spl-token';
 import {
   ConfirmOptions,
@@ -15,7 +15,8 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { PreparedTransaction, PreparedTransactionOptions } from '..';
-import { IDL, MatchingEngine } from '../../../../watcher/src/types/matching_engine';
+import IDL from '../../idls/matching_engine.json';
+import { MatchingEngine } from '../../types/matching_engine';
 import { MessageTransmitterProgram, TokenMessengerMinterProgram } from '../cctp';
 import {
   LiquidityLayerMessage,
@@ -29,7 +30,12 @@ import {
   writeUint64BE,
 } from '../common';
 import { UpgradeManagerProgram } from '../upgradeManager';
-import { BPF_LOADER_UPGRADEABLE_PROGRAM_ID, programDataAddress } from '../utils';
+import {
+  BPF_LOADER_UPGRADEABLE_PROGRAM_ID,
+  convertKeysToCamelCase,
+  isPublicKey,
+  programDataAddress,
+} from '../utils';
 import { VaaAccount } from '../wormhole';
 import {
   Auction,
@@ -39,13 +45,16 @@ import {
   AuctionInfo,
   AuctionParameters,
   Custodian,
+  EndpointInfo,
   MessageProtocol,
   PreparedOrderResponse,
   Proposal,
   ProposalAction,
   RedeemedFastFill,
   RouterEndpoint,
+  isMessageProtocol,
 } from './state';
+import { convertIdlToCamelCase } from '@coral-xyz/anchor/dist/cjs/idl';
 
 export const PROGRAM_IDS = [
   'MatchingEngine11111111111111111111111111111',
@@ -135,6 +144,16 @@ export type AuctionSettled = {
   tokenBalanceAfter: BN;
 };
 
+export function isAuctionSettled(thing: any): thing is AuctionSettled {
+  return (
+    typeof thing === 'object' &&
+    thing !== null &&
+    isPublicKey(thing.auction) &&
+    (thing.bestOfferToken === null || isPublicKey(thing.bestOfferToken)) &&
+    BN.isBN(thing.tokenBalanceAfter)
+  );
+}
+
 export type AuctionUpdated = {
   configId: number;
   auction: PublicKey;
@@ -148,6 +167,24 @@ export type AuctionUpdated = {
   totalDeposit: BN;
   maxOfferPriceAllowed: BN;
 };
+
+export function isAuctionUpdated(thing: any): thing is AuctionUpdated {
+  return (
+    typeof thing === 'object' &&
+    thing !== null &&
+    typeof thing.configId === 'number' &&
+    isPublicKey(thing.auction) &&
+    (thing.vaa === null || isPublicKey(thing.vaa)) &&
+    typeof thing.sourceChain === 'number' &&
+    isMessageProtocol(thing.targetProtocol) &&
+    BN.isBN(thing.endSlot) &&
+    isPublicKey(thing.bestOfferToken) &&
+    BN.isBN(thing.tokenBalanceAfter) &&
+    BN.isBN(thing.amountIn) &&
+    BN.isBN(thing.totalDeposit) &&
+    BN.isBN(thing.ma1xOfferPriceAllowed)
+  );
+}
 
 export type OrderExecuted = {
   auction: PublicKey;
@@ -163,18 +200,34 @@ export type Enacted = {
   action: ProposalAction;
 };
 
+// TODO: do for every event
+type MatchingEngineEvent =
+  | {
+      name: 'AuctionSettled';
+      data: AuctionSettled;
+    }
+  | {
+      name: 'AuctionUpdated';
+      data: AuctionUpdated;
+    };
+
 export class MatchingEngineProgram {
   private _programId: ProgramId;
   private _mint: PublicKey;
 
   program: Program<MatchingEngine>;
+  eventParser: EventParser;
 
   constructor(connection: Connection, programId: ProgramId, mint: PublicKey) {
     this._programId = programId;
     this._mint = mint;
-    this.program = new Program(IDL as any, new PublicKey(this._programId), {
-      connection,
-    });
+    this.program = new Program(
+      { ...(IDL as any), address: this._programId },
+      {
+        connection,
+      }
+    );
+    this.eventParser = new EventParser(new PublicKey(programId), new BorshCoder(IDL as any));
   }
 
   get ID(): PublicKey {
@@ -186,23 +239,23 @@ export class MatchingEngineProgram {
   }
 
   onAuctionSettled(callback: (event: AuctionSettled, slot: number, signature: string) => void) {
-    return this.program.addEventListener('AuctionSettled', callback);
+    return this.program.addEventListener('auctionSettled', callback);
   }
 
   onAuctionUpdated(callback: (event: AuctionUpdated, slot: number, signature: string) => void) {
-    return this.program.addEventListener('AuctionUpdated', callback);
+    return this.program.addEventListener('auctionUpdated', callback);
   }
 
   onOrderExecuted(callback: (event: OrderExecuted, slot: number, signature: string) => void) {
-    return this.program.addEventListener('OrderExecuted', callback);
+    return this.program.addEventListener('orderExecuted', callback);
   }
 
   onProposed(callback: (event: Proposed, slot: number, signature: string) => void) {
-    return this.program.addEventListener('Proposed', callback);
+    return this.program.addEventListener('proposed', callback);
   }
 
   onEnacted(callback: (event: Enacted, slot: number, signature: string) => void) {
-    return this.program.addEventListener('Enacted', callback);
+    return this.program.addEventListener('enacted', callback);
   }
 
   custodianAddress(): PublicKey {
@@ -247,6 +300,13 @@ export class MatchingEngineProgram {
         ? input.address
         : this.routerEndpointAddress(input);
     return this.program.account.routerEndpoint.fetch(addr);
+  }
+
+  async fetchRouterEndpointInfo(
+    input: wormholeSdk.ChainId | { address: PublicKey }
+  ): Promise<EndpointInfo> {
+    const { info } = await this.fetchRouterEndpoint(input);
+    return info;
   }
 
   auctionAddress(vaaHash: VaaHash): PublicKey {
@@ -628,6 +688,16 @@ export class MatchingEngineProgram {
     };
   }
 
+  requiredSysvarsComposite(): {
+    rent: PublicKey;
+    clock: PublicKey;
+  } {
+    return {
+      rent: SYSVAR_RENT_PUBKEY,
+      clock: SYSVAR_CLOCK_PUBKEY,
+    };
+  }
+
   async initializeIx(
     accounts: {
       owner: PublicKey;
@@ -641,7 +711,7 @@ export class MatchingEngineProgram {
 
     const upgradeManager = this.upgradeManagerProgram();
     return this.program.methods
-      .initialize(auctionParams)
+      .initialize({ auctionParams })
       .accounts({
         owner,
         custodian: this.custodianAddress(),
@@ -655,6 +725,9 @@ export class MatchingEngineProgram {
         upgradeManagerAuthority: upgradeManager.upgradeAuthorityAddress(),
         upgradeManagerProgram: upgradeManager.ID,
         bpfLoaderUpgradeableProgram: BPF_LOADER_UPGRADEABLE_PROGRAM_ID,
+        associatedTokenProgram: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -759,6 +832,8 @@ export class MatchingEngineProgram {
         localCustodyToken: this.localCustodyTokenAddress(chain),
         remoteTokenMessenger,
         usdc: this.usdcComposite(),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -818,6 +893,7 @@ export class MatchingEngineProgram {
         },
         proposal,
         epochSchedule: SYSVAR_EPOCH_SCHEDULE_PUBKEY,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -879,6 +955,7 @@ export class MatchingEngineProgram {
         admin: this.ownerOnlyMutComposite(owner, custodian),
         proposal,
         auctionConfig,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -903,6 +980,7 @@ export class MatchingEngineProgram {
         admin: this.adminComposite(ownerOrAssistant, custodian),
         routerEndpoint,
         local: this.localTokenRouterComposite(tokenRouterProgram),
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -1093,6 +1171,8 @@ export class MatchingEngineProgram {
         offerToken,
         auctionCustodyToken,
         usdc: this.usdcComposite(),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
 
@@ -1179,6 +1259,7 @@ export class MatchingEngineProgram {
           { auctionInfo }
         ),
         offerToken: splToken.getAssociatedTokenAddressSync(this.mint, participant),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
       })
       .instruction();
 
@@ -1196,6 +1277,14 @@ export class MatchingEngineProgram {
     const { payer, fastVaa, finalizedVaa } = accounts;
 
     const fastVaaAcct = await VaaAccount.fetch(this.program.provider.connection, fastVaa);
+    const fromEndpoint = this.routerEndpointAddress(fastVaaAcct.emitterInfo().chain);
+
+    const { fastMarketOrder } = LiquidityLayerMessage.decode(fastVaaAcct.payload());
+    if (fastMarketOrder === undefined) {
+      throw new Error('Message not FastMarketOrder');
+    }
+    const toEndpoint = this.routerEndpointAddress(fastMarketOrder.targetChain);
+
     const { encodedCctpMessage } = args;
     const {
       authority: messageTransmitterAuthority,
@@ -1222,7 +1311,7 @@ export class MatchingEngineProgram {
       .accounts({
         payer,
         custodian: this.checkedCustodianComposite(),
-        fastVaa: this.liquidityLayerVaaComposite(fastVaa),
+        fastOrderPath: this.fastOrderPathComposite({ fastVaa, fromEndpoint, toEndpoint }),
         finalizedVaa: this.liquidityLayerVaaComposite(finalizedVaa),
         preparedOrderResponse,
         preparedCustodyToken: this.preparedCustodyTokenAddress(preparedOrderResponse),
@@ -1243,6 +1332,8 @@ export class MatchingEngineProgram {
           tokenMessengerMinterProgram,
           messageTransmitterProgram,
         },
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
   }
@@ -1310,7 +1401,9 @@ export class MatchingEngineProgram {
     let { auction, bestOfferToken } = accounts;
 
     if (auction === undefined) {
-      const { fastVaaHash } = await this.fetchPreparedOrderResponse({
+      const {
+        info: { fastVaaHash },
+      } = await this.fetchPreparedOrderResponse({
         address: preparedOrderResponse,
       });
 
@@ -1335,6 +1428,7 @@ export class MatchingEngineProgram {
         preparedCustodyToken: this.preparedCustodyTokenAddress(preparedOrderResponse),
         auction,
         bestOfferToken,
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
       })
       .instruction();
   }
@@ -1449,11 +1543,6 @@ export class MatchingEngineProgram {
           by: payer,
           orderResponse: preparedOrderResponse,
         }),
-        fastOrderPath: this.fastOrderPathComposite({
-          fastVaa,
-          fromEndpoint: this.routerEndpointAddress(sourceChain),
-          toEndpoint: this.routerEndpointAddress(wormholeSdk.CHAIN_ID_SOLANA),
-        }),
         auction,
         wormhole: {
           config: coreBridgeConfig,
@@ -1461,6 +1550,10 @@ export class MatchingEngineProgram {
           feeCollector: coreFeeCollector,
           coreBridgeProgram,
         },
+        localCustodyToken: this.localCustodyTokenAddress(sourceChain),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        sysvars: this.requiredSysvarsComposite(),
       })
       .instruction();
   }
@@ -1534,11 +1627,6 @@ export class MatchingEngineProgram {
           by: payer,
           orderResponse: preparedOrderResponse,
         }),
-        fastOrderPath: this.fastOrderPathComposite({
-          fastVaa,
-          fromEndpoint: this.routerEndpointAddress(sourceChain),
-          toEndpoint: toRouterEndpoint,
-        }),
         auction,
         wormhole: {
           config: coreBridgeConfig,
@@ -1558,6 +1646,9 @@ export class MatchingEngineProgram {
           tokenMessengerMinterProgram,
           messageTransmitterProgram,
         },
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        sysvars: this.requiredSysvarsComposite(),
       })
       .instruction();
   }
@@ -1742,6 +1833,9 @@ export class MatchingEngineProgram {
           tokenMessengerMinterProgram,
           messageTransmitterProgram,
         },
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        sysvars: this.requiredSysvarsComposite(),
       })
       .instruction();
   }
@@ -1825,6 +1919,9 @@ export class MatchingEngineProgram {
           coreBridgeProgram,
         },
         localCustodyToken: this.localCustodyTokenAddress(sourceChain),
+        tokenProgram: splToken.TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        sysvars: this.requiredSysvarsComposite(),
       })
       .instruction();
   }
@@ -1896,7 +1993,7 @@ export class MatchingEngineProgram {
     let { destinationCctpDomain } = args;
 
     if (destinationCctpDomain === undefined) {
-      const { protocol } = await this.fetchRouterEndpoint(targetChain);
+      const { protocol } = await this.fetchRouterEndpointInfo(targetChain);
       if (protocol.cctp === undefined) {
         throw new Error('not CCTP endpoint');
       }
@@ -1969,43 +2066,17 @@ export class MatchingEngineProgram {
   }
 
   tokenMessengerMinterProgram(): TokenMessengerMinterProgram {
-    switch (this._programId) {
-      case testnet(): {
-        return new TokenMessengerMinterProgram(
-          this.program.provider.connection,
-          'CCTPiPYPc6AsJuwueEnWgSgucamXDZwBd53dQ11YiKX3'
-        );
-      }
-      case localnet(): {
-        return new TokenMessengerMinterProgram(
-          this.program.provider.connection,
-          'CCTPiPYPc6AsJuwueEnWgSgucamXDZwBd53dQ11YiKX3'
-        );
-      }
-      default: {
-        throw new Error('unsupported network');
-      }
-    }
+    return new TokenMessengerMinterProgram(
+      this.program.provider.connection,
+      'CCTPiPYPc6AsJuwueEnWgSgucamXDZwBd53dQ11YiKX3'
+    );
   }
 
   messageTransmitterProgram(): MessageTransmitterProgram {
-    switch (this._programId) {
-      case testnet(): {
-        return new MessageTransmitterProgram(
-          this.program.provider.connection,
-          'CCTPmbSD7gX1bxKPAmg77w8oFzNFpaQiQUWD43TKaecd'
-        );
-      }
-      case localnet(): {
-        return new MessageTransmitterProgram(
-          this.program.provider.connection,
-          'CCTPmbSD7gX1bxKPAmg77w8oFzNFpaQiQUWD43TKaecd'
-        );
-      }
-      default: {
-        throw new Error('unsupported network');
-      }
-    }
+    return new MessageTransmitterProgram(
+      this.program.provider.connection,
+      'CCTPmbSD7gX1bxKPAmg77w8oFzNFpaQiQUWD43TKaecd'
+    );
   }
 
   coreBridgeProgramId(): PublicKey {
@@ -2014,7 +2085,7 @@ export class MatchingEngineProgram {
         return new PublicKey('3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5');
       }
       case localnet(): {
-        return new PublicKey('3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5');
+        return new PublicKey('worm2ZoG2kUd4vFXhvjh93UUH596ayRfgQ2MgjNMTth');
       }
       default: {
         throw new Error('unsupported network');

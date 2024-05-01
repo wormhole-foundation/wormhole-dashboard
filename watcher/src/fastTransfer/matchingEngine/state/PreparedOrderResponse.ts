@@ -1,25 +1,36 @@
 import { BN } from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
 import { VaaHash } from '../../common';
-export class PreparedOrderResponse {
-  bump: number;
+import { EndpointInfo } from './RouterEndpoint';
+
+export type PreparedOrderResponseInfo = {
   preparedBy: PublicKey;
   fastVaaHash: Array<number>;
+  fastVaaTimestamp: number;
   sourceChain: number;
   baseFee: BN;
+  initAuctionFee: BN;
+  sender: Array<number>;
+  redeemer: Array<number>;
+  amountIn: BN;
+};
+
+export class PreparedOrderResponse {
+  bump: number;
+  info: PreparedOrderResponseInfo;
+  toEndpoint: EndpointInfo;
+  redeemerMessage: Buffer;
 
   constructor(
     bump: number,
-    preparedBy: PublicKey,
-    fastVaaHash: Array<number>,
-    sourceChain: number,
-    baseFee: BN
+    info: PreparedOrderResponseInfo,
+    toEndpoint: EndpointInfo,
+    redeemerMessage: Buffer
   ) {
     this.bump = bump;
-    this.preparedBy = preparedBy;
-    this.fastVaaHash = fastVaaHash;
-    this.sourceChain = sourceChain;
-    this.baseFee = baseFee;
+    this.info = info;
+    this.toEndpoint = toEndpoint;
+    this.redeemerMessage = redeemerMessage;
   }
 
   static address(programId: PublicKey, fastVaaHash: VaaHash) {

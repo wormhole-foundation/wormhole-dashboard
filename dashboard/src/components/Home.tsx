@@ -14,6 +14,7 @@ import Governor from './Governor';
 import Guardians from './Guardians';
 import MainnetGovernor from './MainnetGovernor';
 import Monitor from './Monitor';
+import useTokenData from '../hooks/useTokenData';
 
 function Home({
   heartbeats,
@@ -26,6 +27,7 @@ function Home({
 }) {
   const { currentNetwork } = useNetworkContext();
   const governorInfo = useCloudGovernorInfo();
+  const tokenData = useTokenData();
   return (
     <>
       <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} />
@@ -40,10 +42,15 @@ function Home({
         <>
           <MainnetGovernor governorInfo={governorInfo} />
           <Divider />
-          <Accountant governorInfo={governorInfo} accountantAddress={ACCOUNTANT_CONTRACT_ADDRESS} />
+          <Accountant
+            governorInfo={governorInfo}
+            tokenData={tokenData}
+            accountantAddress={ACCOUNTANT_CONTRACT_ADDRESS}
+          />
           <Divider />
           <Accountant
             governorInfo={governorInfo}
+            tokenData={tokenData}
             accountantAddress={NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET}
             isNTT
           />
@@ -54,6 +61,7 @@ function Home({
         <>
           <Accountant
             governorInfo={governorInfo}
+            tokenData={tokenData}
             accountantAddress={NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET}
             isNTT
           />

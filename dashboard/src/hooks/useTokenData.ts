@@ -24,6 +24,7 @@ function useTokenData(skip?: boolean): TokenDataByChainAddress | null {
     if (skip) return;
     let cancelled = false;
     (async () => {
+      setTokenData(null);
       while (!cancelled) {
         const response = await axios.get<{ data: TokenDataEntry[] }>(
           `${currentNetwork.endpoint}/latest-tokendata`

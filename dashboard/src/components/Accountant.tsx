@@ -35,7 +35,7 @@ import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAcco
 import useGetAccountantPendingTransfers, {
   PendingTransfer,
 } from '../hooks/useGetAccountantPendingTransfers';
-import useTokenData, { TokenDataEntry } from '../hooks/useTokenData';
+import { TokenDataByChainAddress, TokenDataEntry } from '../hooks/useTokenData';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   CHAIN_ICON_MAP,
@@ -46,6 +46,15 @@ import { queryContractSmart } from '../utils/queryContractSmart';
 import CollapsibleSection from './CollapsibleSection';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
+
+const NTT_ACCOUNTANT_TOKEN_ADDRESS_OVERRIDE: {
+  [chain: number]: { [tokenAddress: string]: string };
+} = {
+  1: {
+    cf5f3614e2cd9b374558f35c7618b25f0d306d5e749b7d29cc030a1a15686238:
+      '6927fdc01ea906f96d7137874cdd7adad00ca35764619310e54196c781d84d5b',
+  },
+};
 
 type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
 type AccountWithTokenData = Account & {
@@ -382,10 +391,12 @@ const MemoizedAccountantSearch = memo(AccountantSearch);
 
 function Accountant({
   governorInfo,
+  tokenData,
   accountantAddress,
   isNTT,
 }: {
   governorInfo?: CloudGovernorInfo;
+  tokenData: TokenDataByChainAddress | null;
   accountantAddress: string;
   isNTT?: boolean;
 }) {
@@ -401,8 +412,6 @@ function Accountant({
   const pendingTransferInfo = useGetAccountantPendingTransfers(accountantAddress);
 
   const accountsInfo = useGetAccountantAccounts(accountantAddress);
-
-  const tokenData = useTokenData(isNTT);
 
   const governorInfoIsDefined = !!governorInfo;
 
@@ -441,7 +450,13 @@ function Accountant({
 
   const accountsWithTokenData: AccountWithTokenData[] = useMemo(() => {
     return accountsInfo.map<AccountWithTokenData>((a) => {
-      const thisTokenData = tokenData?.[`${a.key.token_chain}/${a.key.token_address}`];
+      let token_chain = a.key.token_chain;
+      let token_address = a.key.token_address;
+      if (isNTT) {
+        token_address =
+          NTT_ACCOUNTANT_TOKEN_ADDRESS_OVERRIDE[token_chain]?.[token_address] || token_address;
+      }
+      const thisTokenData = tokenData?.[`${token_chain}/${token_address}`];
       if (!thisTokenData)
         return {
           ...a,
@@ -467,7 +482,7 @@ function Accountant({
         tvlTvm,
       };
     });
-  }, [accountsInfo, tokenData]);
+  }, [accountsInfo, tokenData, isNTT]);
   const tvlTvmPerChain: ChainTvlTvm[] = useMemo(
     () =>
       Object.values(

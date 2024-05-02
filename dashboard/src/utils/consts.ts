@@ -1,99 +1,18 @@
-import acalaIcon from '../images/acala.svg';
-import algorandIcon from '../images/algorand.svg';
-import aptosIcon from '../images/aptos.svg';
-import arbitrumIcon from '../images/arbitrum.svg';
-import auroraIcon from '../images/aurora.svg';
-import avaxIcon from '../images/avax.svg';
-import baseIcon from '../images/base.svg';
-import blastIcon from '../images/blast.svg';
-import bscIcon from '../images/bsc.svg';
-import celestiaIcon from '../images/celestia.svg';
-import celoIcon from '../images/celo.svg';
-import cosmoshubIcon from '../images/cosmoshub.svg';
-import dymensionIcon from '../images/dymension2.svg';
-import ethIcon from '../images/eth.svg';
-import evmosIcon from '../images/evmos.svg';
-import fantomIcon from '../images/fantom.svg';
-import injectiveIcon from '../images/injective.svg';
-import karuraIcon from '../images/karura.svg';
-import klaytnIcon from '../images/klaytn.svg';
-import kujiraIcon from '../images/kujira.svg';
-import mantleIcon from '../images/mantle-mnt-logo.svg';
-import moonbeamIcon from '../images/moonbeam.svg';
-import nearIcon from '../images/near.svg';
-import neonIcon from '../images/neon.svg';
-import neutronIcon from '../images/neutron.svg';
-import oasisIcon from '../images/oasis-network-rose-logo.svg';
-import optimismIcon from '../images/optimism.svg';
-import osmosisIcon from '../images/osmosis.svg';
-import polygonIcon from '../images/polygon.svg';
-import provenanceIcon from '../images/provenance.svg';
-import pythnetIcon from '../images/pyth_logomark_white.svg';
-import scrollIcon from '../images/scroll.svg';
-import sedaIcon from '../images/seda.svg';
-import seiIcon from '../images/sei.svg';
-import solanaIcon from '../images/solana.svg';
-import stargazeIcon from '../images/stargaze_white.svg';
-import suiIcon from '../images/sui.svg';
-import terraIcon from '../images/terra.svg';
-import terra2Icon from '../images/terra2.svg';
-import wormchainIcon from '../images/wormchain.svg';
-import xplaIcon from '../images/xpla.svg';
+import { chainIdToChain, chainIds } from '@wormhole-foundation/sdk-base';
+import { chainToIcon } from '@wormhole-foundation/sdk-icons';
 
 export const WORMCHAIN_URL = 'https://tncnt-eu-wormchain-main-01.rpc.p2p.world';
 export const TESTNET_WORMCHAIN_URL = `https://corsproxy.io/?${encodeURIComponent(
   'https://gateway.testnet.xlabs.xyz'
 )}`;
 
-export const CHAIN_ICON_MAP: { [key: string]: string } = {
-  1: solanaIcon,
-  2: ethIcon,
-  3: terraIcon,
-  4: bscIcon,
-  5: polygonIcon,
-  6: avaxIcon,
-  7: oasisIcon,
-  8: algorandIcon,
-  9: auroraIcon,
-  10: fantomIcon,
-  11: karuraIcon,
-  12: acalaIcon,
-  13: klaytnIcon,
-  14: celoIcon,
-  15: nearIcon,
-  16: moonbeamIcon,
-  17: neonIcon,
-  18: terra2Icon,
-  19: injectiveIcon,
-  20: osmosisIcon,
-  21: suiIcon,
-  22: aptosIcon,
-  23: arbitrumIcon,
-  24: optimismIcon,
-  26: pythnetIcon,
-  28: xplaIcon,
-  30: baseIcon,
-  32: seiIcon,
-  34: scrollIcon,
-  35: mantleIcon,
-  36: blastIcon,
-  3104: wormchainIcon,
-  4000: cosmoshubIcon,
-  4001: evmosIcon,
-  4002: kujiraIcon,
-  4003: neutronIcon,
-  4004: celestiaIcon,
-  4005: stargazeIcon,
-  4006: sedaIcon,
-  4007: dymensionIcon,
-  4008: provenanceIcon,
-  10002: ethIcon,
-  10003: arbitrumIcon,
-  10004: baseIcon,
-  10005: optimismIcon,
-  10006: ethIcon,
-  10007: polygonIcon,
-};
+export const CHAIN_ICON_MAP: { [key: string]: string } = chainIds.reduce<{ [key: string]: string }>(
+  (icons, chainId) => {
+    icons[chainId] = chainToIcon(chainIdToChain(chainId));
+    return icons;
+  },
+  {}
+);
 
 export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';
 export const ACCOUNTANT_CONTRACT_ADDRESS =

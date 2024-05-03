@@ -19,6 +19,7 @@ import { LiquidityLayerMessage } from '../fastTransfer/common';
 import { AuctionOffer, FastTransfer, ParsedLogs } from '../fastTransfer/types';
 import knex, { Knex } from 'knex';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import { getLogger } from '../utils/logger';
 
 // TODO: this is devnet consts
 const MATCHING_ENGINE_PROGRAM_ID = 'mPydpGUWxzERTNpyvTKdvS7v8kvw5sgwfiP8WQFrXVS';
@@ -44,25 +45,29 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       new PublicKey(USDC_MINT)
     );
     this.getSignaturesLimit = 100;
-
+    this.logger = getLogger('fast_transfer_solana');
     // hacky way to not connect to the db in tests
     // this is to allow ci to run without a db
-    if (!isTest) {
-      this.pg = knex({
-        client: 'pg',
-        connection: {
-          user: assertEnvironmentVariable('PG_NTT_USER'),
-          password: assertEnvironmentVariable('PG_NTT_PASSWORD'),
-          database: assertEnvironmentVariable('PG_NTT_DATABASE'),
-          host: assertEnvironmentVariable('PG_NTT_HOST'),
-          port: Number(assertEnvironmentVariable('PG_NTT_PORT')),
-        },
-      });
+    if (isTest) {
+      // Components needed for testing is complete
+      return;
     }
+    this.pg = knex({
+      client: 'pg',
+      connection: {
+        user: assertEnvironmentVariable('PG_NTT_USER'),
+        password: assertEnvironmentVariable('PG_NTT_PASSWORD'),
+        database: assertEnvironmentVariable('PG_NTT_DATABASE'),
+        host: assertEnvironmentVariable('PG_NTT_HOST'),
+        port: Number(assertEnvironmentVariable('PG_NTT_PORT')),
+      },
+    });
   }
 
   // TODO: Modify this so watcher can actually call this function (Add enum for mode)
   async getMessagesByBlock(fromSlot: number, toSlot: number): Promise<string> {
+    if (fromSlot > toSlot) throw new Error('solana: invalid block range');
+
     this.logger.info(`fetching info for blocks ${fromSlot} to ${toSlot}`);
     const { fromSignature, toSignature, toBlock } = await findFromSignatureAndToSignature(
       this.getConnection(),
@@ -303,7 +308,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     if (!this.pg) {
       return;
     }
-    this.logger.info('saving fast transfer');
+    this.logger.debug(`saving fast transfer ${fastTransfer.fast_vaa_hash}`);
 
     // Upsert the fast transfer
     await this.pg('fast_transfers').insert(fastTransfer).onConflict('fast_transfer_id').merge();
@@ -314,7 +319,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     if (!this.pg) {
       return;
     }
-    this.logger.info('saving auction logs');
+    this.logger.debug(`saving auction logs for ${auctionLogs.fast_vaa_hash}`);
 
     await this.pg('auction_logs').insert(auctionLogs);
   }

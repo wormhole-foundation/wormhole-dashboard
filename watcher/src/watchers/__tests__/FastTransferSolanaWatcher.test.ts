@@ -1,5 +1,4 @@
 import { jest, test } from '@jest/globals';
-import knex from 'knex';
 import { FastTransferSolanaWatcher } from '../FastTransferSolanaWatcher';
 import { PublicKey } from '@solana/web3.js';
 

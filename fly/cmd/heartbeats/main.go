@@ -28,16 +28,38 @@ import (
 )
 
 var (
-	rootCtx       context.Context
-	rootCtxCancel context.CancelFunc
+	envStr       = flag.String("env", "mainnet", `environment (may be "mainnet", "testnet" or "devnet", required)`)
+	logLevel     = flag.String("logLevel", "warn", "Logging level (debug, info, warn, error, dpanic, panic, fatal)")
+	p2pNetworkID = flag.String("network", "", "P2P network identifier (optional, overrides default, required for devnet)")
+	p2pPort      = flag.Uint("port", 8999, "P2P UDP listener port")
+	p2pBootstrap = flag.String("bootstrap", "", "P2P bootstrap peers (optional, overrides default)")
+	nodeKeyPath  = flag.String("nodeKey", "/tmp/node.key", "Path to node key (will be generated if it doesn't exist)")
+	ethRPC       = flag.String("ethRPC", "", "Ethereum RPC for fetching current guardian set (default is based on env)")
+	ethContract  = flag.String("ethContract", "", "Ethereum core bridge address for fetching current guardian set (default is based on env)")
+	loadTesting  = flag.Bool("loadTesting", false, "Should extra load testing analysis be performed)")
 )
 
 var (
-	p2pNetworkID string
-	p2pPort      uint
-	p2pBootstrap string
-	nodeKeyPath  string
-	logLevel     string
+	rootCtx       context.Context
+	rootCtxCancel context.CancelFunc
+
+	rpcUrl         string
+	coreBridgeAddr string
+
+	numGuardians int
+	totalsRow    uint
+	uniqueRow    uint
+
+	// Guardian address to index map
+	guardianIndexMap = map[string]int{}
+
+	// Guardian index to address map
+	guardianIndexToNameMap = map[int]string{}
+
+	// The known token bridge emitters
+	knownEmitters = map[string]bool{}
+
+	lastTime = time.Now()
 )
 
 type heartbeat struct {
@@ -60,97 +82,149 @@ type obsvRateRow struct {
 
 var currentObsvData map[uint]uint
 var currentObsvTable map[uint]uint
-var obsvRateRows [numGuardians]obsvRateRow
+var obsvRateRows []obsvRateRow
 
-var knownEmitters map[string]bool // Holds the known token bridge emitters.
-
-// Guardian address to index map
-var guardianIndexMap = map[string]int{
-	strings.ToLower("0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5"): 0,
-	strings.ToLower("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157"): 1,
-	strings.ToLower("0x114De8460193bdf3A2fCf81f86a09765F4762fD1"): 2,
-	strings.ToLower("0x107A0086b32d7A0977926A205131d8731D39cbEB"): 3,
-	strings.ToLower("0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2"): 4,
-	strings.ToLower("0x11b39756C042441BE6D8650b69b54EbE715E2343"): 5,
-	strings.ToLower("0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd"): 6,
-	strings.ToLower("0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20"): 7,
-	strings.ToLower("0x74a3bf913953D695260D88BC1aA25A4eeE363ef0"): 8,
-	strings.ToLower("0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e"): 9,
-	strings.ToLower("0xAF45Ced136b9D9e24903464AE889F5C8a723FC14"): 10,
-	strings.ToLower("0xf93124b7c738843CBB89E864c862c38cddCccF95"): 11,
-	strings.ToLower("0xD2CC37A4dc036a8D232b48f62cDD4731412f4890"): 12,
-	strings.ToLower("0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811"): 13,
-	strings.ToLower("0x71AA1BE1D36CaFE3867910F99C09e347899C19C3"): 14,
-	strings.ToLower("0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf"): 15,
-	strings.ToLower("0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8"): 16,
-	strings.ToLower("0x5E1487F35515d02A92753504a8D75471b9f49EdB"): 17,
-	strings.ToLower("0x6FbEBc898F403E4773E95feB15E80C9A99c8348d"): 18,
+type guardianEntry struct {
+	index   int
+	name    string
+	address string
 }
 
-var guardianIndexToNameMap = map[int]string{
-	0:  "Jump Crypto",
-	1:  "Staked",
-	2:  "Figment",
-	3:  "ChainodeTech",
-	4:  "Inotel",
-	5:  "HashQuark",
-	6:  "ChainLayer",
-	7:  "xLabs",
-	8:  "Forbole",
-	9:  "Staking Fund",
-	10: "MoonletWallet",
-	11: "P2P Validator",
-	12: "01node",
-	13: "MCF-V2-MAINNET",
-	14: "Everstake",
-	15: "Chorus One",
-	16: "syncnode",
-	17: "Triton",
-	18: "Staking Facilities",
-	19: "Totals:",
+var mainnetGuardians = []guardianEntry{
+	{0, "RockawayX", "0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3"},
+	{1, "Staked", "0xfF6CB952589BDE862c25Ef4392132fb9D4A42157"},
+	{2, "Figment", "0x114De8460193bdf3A2fCf81f86a09765F4762fD1"},
+	{3, "ChainodeTech", "0x107A0086b32d7A0977926A205131d8731D39cbEB"},
+	{4, "Inotel", "0x8C82B2fd82FaeD2711d59AF0F2499D16e726f6b2"},
+	{5, "HashKey Cloud", "0x11b39756C042441BE6D8650b69b54EbE715E2343"},
+	{6, "ChainLayer", "0x54Ce5B4D348fb74B958e8966e2ec3dBd4958a7cd"},
+	{7, "xLabs", "0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20"},
+	{8, "Forbole", "0x74a3bf913953D695260D88BC1aA25A4eeE363ef0"},
+	{9, "Staking Fund", "0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e"},
+	{10, "Moonlet", "0xAF45Ced136b9D9e24903464AE889F5C8a723FC14"},
+	{11, "P2P Validator", "0xf93124b7c738843CBB89E864c862c38cddCccF95"},
+	{12, "01node", "0xD2CC37A4dc036a8D232b48f62cDD4731412f4890"},
+	{13, "MCF", "0xDA798F6896A3331F64b48c12D1D57Fd9cbe70811"},
+	{14, "Everstake", "0x71AA1BE1D36CaFE3867910F99C09e347899C19C3"},
+	{15, "Chorus One", "0x8192b6E7387CCd768277c17DAb1b7a5027c0b3Cf"},
+	{16, "syncnode", "0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8"},
+	{17, "Triton", "0x5E1487F35515d02A92753504a8D75471b9f49EdB"},
+	{18, "Staking Facilities", "0x6FbEBc898F403E4773E95feB15E80C9A99c8348d"},
 }
 
-var lastTime = time.Now()
+// Although there are multiple testnet guardians running, they all use the same key, so it looks like one.
+var testnetGuardians = []guardianEntry{
+	{0, "Testnet", "0x13947Bd48b18E53fdAeEe77F3473391aC727C638"},
+}
 
-const numGuardians = 19
-const totalsRow = numGuardians
+var devnetGuardians = []guardianEntry{
+	{0, "guardian-0", "0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe"},
+	{1, "guardian-1", "0x88D7D8B32a9105d228100E72dFFe2Fae0705D31c"},
+	{2, "guardian-2", "0x58076F561CC62A47087B567C86f986426dFCD000"},
+	{3, "guardian-3", "0xBd6e9833490F8fA87c733A183CD076a6cBD29074"},
+	{4, "guardian-4", "0xb853FCF0a5C78C1b56D15fCE7a154e6ebe9ED7a2"},
+	{5, "guardian-5", "0xAF3503dBD2E37518ab04D7CE78b630F98b15b78a"},
+	{6, "guardian-6", "0x785632deA5609064803B1c8EA8bB2c77a6004Bd1"},
+	{7, "guardian-7", "0x09a281a698C0F5BA31f158585B41F4f33659e54D"},
+	{8, "guardian-8", "0x3178443AB76a60E21690DBfB17f7F59F09Ae3Ea1"},
+	{9, "guardian-9", "0x647ec26ae49b14060660504f4DA1c2059E1C5Ab6"},
+	{10, "guardian-10", "0x810AC3D8E1258Bd2F004a94Ca0cd4c68Fc1C0611"},
+	{11, "guardian-11", "0x80610e96d645b12f47ae5cf4546b18538739e90F"},
+	{12, "guardian-12", "0x2edb0D8530E31A218E72B9480202AcBaeB06178d"},
+	{13, "guardian-13", "0xa78858e5e5c4705CdD4B668FFe3Be5bae4867c9D"},
+	{14, "guardian-14", "0x5Efe3A05Efc62D60e1D19fAeB56A80223CDd3472"},
+	{15, "guardian-15", "0xD791b7D32C05aBB1cc00b6381FA0c4928f0c56fC"},
+	{16, "guardian-16", "0x14Bc029B8809069093D712A3fd4DfAb31963597e"},
+	{17, "guardian-17", "0x246Ab29FC6EBeDf2D392a51ab2Dc5C59d0902A03"},
+	{18, "guardian-18", "0x132A84dFD920b35a3D0BA5f7A0635dF298F9033e"},
+}
 
 func main() {
-
-	// Fill in the known emitters
-	knownEmitters = make(map[string]bool)
-	for _, knownEmitter := range sdk.KnownEmitters {
-		knownEmitters[strings.ToLower(knownEmitter.Emitter)] = true
-	}
-	initObsvTableData(true)
-	// TODO: pass in config instead of hard-coding it
-	p2pNetworkID = "/wormhole/mainnet/2"
-	p2pBootstrap = "/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC,/dns4/wormhole.mcf.rocks/udp/8999/quic/p2p/12D3KooWDZVv7BhZ8yFLkarNdaSWaB43D6UbQwExJ8nnGAEmfHcU,/dns4/wormhole-v2-mainnet-bootstrap.staking.fund/udp/8999/quic/p2p/12D3KooWG8obDX9DNi1KUwZNu9xkGwfKqTp2GFwuuHpWZ3nQruS1"
-	p2pPort = 8999
-	nodeKeyPath = "/tmp/node.key"
-	logLevel = "warn"
-
-	rpcUrl := flag.String("rpcUrl", "https://rpc.ankr.com/eth", "RPC URL for fetching current guardian set")
-	coreBridgeAddr := flag.String("coreBridgeAddr", "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B", "Core bridge address for fetching guardian set")
 	flag.Parse()
-	if *rpcUrl == "" {
-		fmt.Println("rpcUrl must be specified")
-		os.Exit(1)
-	}
-	if *coreBridgeAddr == "" {
-		fmt.Println("coreBridgeAddr must be specified")
-		os.Exit(1)
-	}
 
-	lvl, err := ipfslog.LevelFromString(logLevel)
+	// Set up the logger.
+	lvl, err := ipfslog.LevelFromString(*logLevel)
 	if err != nil {
 		fmt.Println("Invalid log level")
 		os.Exit(1)
 	}
 
 	logger := ipfslog.Logger("wormhole-fly").Desugar()
-
 	ipfslog.SetAllLoggers(lvl)
+
+	if *envStr == "" {
+		logger.Fatal("--env is required")
+	}
+
+	env, err := common.ParseEnvironment(*envStr)
+	if err != nil || (env != common.UnsafeDevNet && env != common.TestNet && env != common.MainNet) {
+		if *envStr == "" {
+			logger.Fatal("Please specify --env")
+		}
+		logger.Fatal("Invalid value for --env, should be devnet, testnet or mainnet", zap.String("val", *envStr))
+	}
+
+	// Build the set of guardians based on our environment, where the default is mainnet.
+	var guardians []guardianEntry
+	var knownEmitter []sdk.EmitterInfo
+	if env == common.MainNet {
+		guardians = mainnetGuardians
+		knownEmitter = sdk.KnownEmitters
+		rpcUrl = "https://rpc.ankr.com/eth"
+		coreBridgeAddr = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
+	} else if env == common.TestNet {
+		guardians = testnetGuardians
+		knownEmitter = sdk.KnownTestnetEmitters
+		rpcUrl = "https://rpc.ankr.com/eth_holesky"
+		coreBridgeAddr = "0x706abc4E45D419950511e474C7B9Ed348A4a716c"
+	} else if env == common.UnsafeDevNet {
+		guardians = devnetGuardians
+		knownEmitter = sdk.KnownDevnetEmitters
+		rpcUrl = "http://localhost:8545"
+		coreBridgeAddr = "0xC89Ce4735882C9F0f0FE26686c53074E09B0D550"
+	}
+
+	for _, gse := range guardians {
+		guardianIndexToNameMap[gse.index] = gse.name
+		guardianIndexMap[strings.ToLower(gse.address)] = gse.index
+	}
+
+	// Fill in the known emitters
+	for _, knownEmitter := range knownEmitter {
+		knownEmitters[strings.ToLower(knownEmitter.Emitter)] = true
+	}
+
+	numGuardians = len(guardianIndexToNameMap)
+	totalsRow = uint(numGuardians)
+	obsvRateRows = make([]obsvRateRow, numGuardians)
+
+	if *loadTesting {
+		uniqueRow = uint(numGuardians + 1)
+		guardianIndexToNameMap[int(totalsRow)] = "=== Totals ==="
+		guardianIndexToNameMap[int(uniqueRow)] = "=== Unique ==="
+	}
+
+	// Set up P2P.
+	if *p2pNetworkID == "" {
+		*p2pNetworkID = p2p.GetNetworkId(env)
+	}
+
+	if *p2pBootstrap == "" {
+		*p2pBootstrap, err = p2p.GetBootstrapPeers(env)
+		if err != nil {
+			logger.Fatal("failed to determine the bootstrap peers from the environment", zap.String("env", string(env)), zap.Error(err))
+		}
+	}
+
+	// If they specified the RPC or contract address, override the defaults.
+	if *ethRPC != "" {
+		rpcUrl = *ethRPC
+	}
+	if *ethContract != "" {
+		coreBridgeAddr = *ethContract
+	}
+
+	initObsvTableData(true)
 
 	// ctx := context.Background()
 
@@ -195,7 +269,7 @@ func main() {
 	// Governor status
 	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 1024)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
-	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
+	idx, sgs, err := utils.FetchCurrentGuardianSet(rpcUrl, coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.Error(err))
 	}
@@ -214,13 +288,21 @@ func main() {
 	// Second dimension = gossip message type
 	// Value = count
 	if len(gs.Keys) != numGuardians {
-		logger.Error("Invalid number of guardians.", zap.Int("found", len(gs.Keys)), zap.Uint32("expected", numGuardians))
+		logger.Error("Invalid number of guardians.", zap.Int("found", len(gs.Keys)), zap.Int("expected", numGuardians))
 		return
 	}
 
 	var gossipLock sync.Mutex
 	// The extra row is for the totals
-	var gossipCounter [numGuardians + 1][GSM_maxTypeVal]int
+	numRows := numGuardians + 1
+	if *loadTesting {
+		// The extra row is for the count of unique keys.
+		numRows += 1
+	}
+	gossipCounter := make([][]int, numRows)
+	for idx := range gossipCounter {
+		gossipCounter[idx] = make([]int, GSM_maxTypeVal)
+	}
 
 	activeTable := 1 // 0 = chains, 1 = guardians, 2 = message counts, 3 = obsv rate
 
@@ -306,6 +388,7 @@ func main() {
 
 	// Just count observations
 	go func() {
+		uniqueObs := map[string]struct{}{}
 		for {
 			select {
 			case <-rootCtx.Done():
@@ -327,6 +410,12 @@ func main() {
 				}
 				gossipCounter[idx][GSM_signedObservation]++
 				gossipCounter[totalsRow][GSM_signedObservation]++
+
+				if *loadTesting {
+					uniqueObs[hex.EncodeToString(o.Msg.Hash)] = struct{}{}
+					gossipCounter[uniqueRow][GSM_signedObservation] = len(uniqueObs)
+				}
+
 				gossipLock.Lock()
 				gossipMsgTable.ResetRows()
 				for idx, r := range gossipCounter {
@@ -360,13 +449,26 @@ func main() {
 
 	// Just count signed VAAs
 	go func() {
+		uniqueVAAs := map[string]struct{}{}
 		for {
 			select {
 			case <-rootCtx.Done():
 				return
-			case <-signedInC:
+			case m := <-signedInC:
 				// This only has VAABytes. It doesn't have the guardian address
 				gossipCounter[totalsRow][GSM_signedVaaWithQuorum]++
+
+				if *loadTesting {
+					v, err := vaa.Unmarshal(m.Vaa)
+					if err != nil {
+						logger.Warn("received invalid VAA in SignedVAAWithQuorum message", zap.Error(err), zap.Any("message", m))
+						os.Exit(0)
+					} else {
+						uniqueVAAs[v.HexDigest()] = struct{}{}
+						gossipCounter[uniqueRow][GSM_signedVaaWithQuorum] = len(uniqueVAAs)
+					}
+				}
+
 				gossipLock.Lock()
 				gossipMsgTable.ResetRows()
 				for idx, r := range gossipCounter {
@@ -504,14 +606,14 @@ func main() {
 
 	// Load p2p private key
 	var priv crypto.PrivKey
-	priv, err = common.GetOrCreateNodeKey(logger, nodeKeyPath)
+	priv, err = common.GetOrCreateNodeKey(logger, *nodeKeyPath)
 	if err != nil {
 		logger.Fatal("Failed to load node key", zap.Error(err))
 	}
 
 	// Run supervisor.
 	components := p2p.DefaultComponents()
-	components.Port = p2pPort
+	components.Port = *p2pPort
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
@@ -523,8 +625,8 @@ func main() {
 				priv,
 				nil,
 				gst,
-				p2pNetworkID,
-				p2pBootstrap,
+				*p2pNetworkID,
+				*p2pBootstrap,
 				"",
 				false,
 				rootCtxCancel,
@@ -597,12 +699,14 @@ func handleObsv(idx uint) bool {
 		}
 		for i := 0; i < numGuardians; i++ {
 			obsvRateRows[i].obsvCount = currentObsvTable[uint(i)]
-			pct := currentObsvTable[uint(i)] * 100 / currentObsvTable[totalsRow]
-			for j := 0; j < 10; j++ {
-				if pct >= uint(j+1) {
-					obsvRateRows[i].percents[j] = "="
-				} else {
-					obsvRateRows[i].percents[j] = " "
+			if currentObsvTable[totalsRow] != 0 {
+				pct := currentObsvTable[uint(i)] * 100 / currentObsvTable[totalsRow]
+				for j := 0; j < 10; j++ {
+					if pct >= uint(j+1) {
+						obsvRateRows[i].percents[j] = "="
+					} else {
+						obsvRateRows[i].percents[j] = " "
+					}
 				}
 			}
 		}

@@ -21,6 +21,10 @@
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.10.15",
     "@wormhole-foundation/sdk-base": "^0.6.7",
-    "@wormhole-foundation/sdk-solana": "^0.6.7"
+    "@wormhole-foundation/sdk-definitions": "^0.6.7",
+    "@wormhole-foundation/sdk-evm": "^0.6.7",
+    "@wormhole-foundation/sdk-evm-core": "^0.6.7",
+    "@wormhole-foundation/sdk-solana": "^0.6.7",
+    "@wormhole-foundation/sdk-solana-core": "^0.6.7"
   }
 }

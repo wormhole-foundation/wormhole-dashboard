@@ -85,6 +85,8 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Solana: process.env.SOLANA_RPC,
     Sui: process.env.SUI_RPC,
     Base: process.env.BASE_RPC,
+    Scroll: process.env.SCROLL_RPC || 'https://rpc.ankr.com/scroll_sepolia_testnet',
+    Blast: process.env.BLAST_RPC || 'https://rpc.ankr.com/blast_testnet_sepolia',
     Sei: process.env.SEI_RPC,
     Wormchain: process.env.WORMCHAIN_RPC,
     ArbitrumSepolia: process.env.ARBITRUM_SEPOLIA_RPC,

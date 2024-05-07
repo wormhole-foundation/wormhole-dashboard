@@ -43,6 +43,8 @@ const supportedChains: Chain[] =
         'Xpla',
         // 'Base',
         'Sei',
+        'Blast',
+        'Scroll',
         // 'Wormchain',
         'Sepolia',
         'ArbitrumSepolia',

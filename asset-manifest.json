@@ -1,9 +1,9 @@
 {
   "files": {
-    "main.js": "/wormhole-dashboard/static/js/main.3404a0fa.js",
+    "main.js": "/wormhole-dashboard/static/js/main.a350a31b.js",
     "index.html": "/wormhole-dashboard/index.html"
   },
   "entrypoints": [
-    "static/js/main.3404a0fa.js"
+    "static/js/main.a350a31b.js"
   ]
 }

@@ -62,6 +62,8 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     Xpla: '0',
     Solana: '0',
     Sui: '0',
+    Scroll: '0',
+    Blast: '0',
     Base: '0',
     Sei: '0',
     Wormchain: '0',

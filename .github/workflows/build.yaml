@@ -17,10 +17,9 @@ jobs:
         run: |
           npm ci
           npm run build
-          IFS='/' read -a strarr <<< $GITHUB_REPOSITORY && sed -i "`wc -l < dashboard/package.json`i\,\"homepage\":\"https://${strarr[0]}.github.io/${strarr[1]}\"" dashboard/package.json
-          NODE_OPTIONS=--max-old-space-size=4096 npm run build -w dashboard
+          npm run build -w dashboard
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
           branch: gh-pages # The branch the action should deploy to.
-          folder: dashboard/build # The folder the action should deploy.
+          folder: dashboard/dist # The folder the action should deploy.

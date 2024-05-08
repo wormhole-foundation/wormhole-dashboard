@@ -6,16 +6,6 @@ import {
   TOKEN_BRIDGE_EMITTERS,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import ora from 'ora';
-import {
-  ChainName,
-  ParsedAttestMetaVaa,
-  ParsedTokenTransferVaa,
-  TokenBridgePayload,
-  coalesceChainId,
-  parseAttestMetaPayload,
-  parseTokenTransferPayload,
-  parseVaa,
-} from '@certusone/wormhole-sdk';
 import { Bigtable } from '@google-cloud/bigtable';
 import knex from 'knex';
 import {
@@ -28,6 +18,8 @@ import {
   createTokenMetadata,
   createTokenTransfer,
 } from '../src';
+import { chainToChainId, toChain } from '@wormhole-foundation/sdk-base';
+import { blindDeserializePayload, deserialize } from '@wormhole-foundation/sdk';
 
 const PG_USER = assertEnvironmentVariable('PG_USER');
 const PG_PASSWORD = assertEnvironmentVariable('PG_PASSWORD');
@@ -76,7 +68,7 @@ const getStatusString = (
     const tokenBridgeEmitters = Object.entries(TOKEN_BRIDGE_EMITTERS);
     for (const [chain, emitter] of tokenBridgeEmitters) {
       log.start();
-      const paddedChainId = padUint16(coalesceChainId(chain as ChainName).toString());
+      const paddedChainId = padUint16(chainToChainId(toChain(chain)).toString());
       let start = `${paddedChainId}/${emitter}/`;
       const end = `${start}z`;
       let numRowsRead = 0;
@@ -103,21 +95,19 @@ const getStatusString = (
           }
           try {
             const vaaBytes = row.data.info.bytes[0].value;
-            const vaa = parseVaa(vaaBytes);
+            const vaa = deserialize('Uint8Array', vaaBytes);
             if (vaa.payload.length > 0) {
-              const payloadType = vaa.payload[0];
-              if (
-                payloadType === TokenBridgePayload.Transfer ||
-                payloadType === TokenBridgePayload.TransferWithPayload
-              ) {
-                const payload = parseTokenTransferPayload(vaa.payload);
-                const tokenTransferVaa: ParsedTokenTransferVaa = { ...vaa, ...payload };
-                tokenTransfers.push(createTokenTransfer(tokenTransferVaa));
-              } else if (payloadType === TokenBridgePayload.AttestMeta) {
-                const payload = parseAttestMetaPayload(vaa.payload);
-                const attestMetaVaa: ParsedAttestMetaVaa = { ...vaa, ...payload };
-                attestMessages.push(createAttestMessage(attestMetaVaa));
-                tokenMetadata.push(createTokenMetadata(attestMetaVaa));
+              const blind = blindDeserializePayload(vaa.payload);
+              if (blind[0][0] === 'TokenBridge:Transfer') {
+                const tbt = deserialize('TokenBridge:Transfer', vaaBytes);
+                tokenTransfers.push(createTokenTransfer(tbt));
+              } else if (blind[0][0] === 'TokenBridge:TransferWithPayload') {
+                const tbtwp = deserialize('TokenBridge:TransferWithPayload', vaaBytes);
+                tokenTransfers.push(createTokenTransfer(tbtwp));
+              } else if (blind[0][0] === 'TokenBridge:AttestMeta') {
+                const tbam = deserialize('TokenBridge:AttestMeta', vaaBytes);
+                attestMessages.push(createAttestMessage(tbam));
+                tokenMetadata.push(createTokenMetadata(tbam));
               }
             }
           } catch {}

@@ -1,30 +1,25 @@
-import {
-  CHAIN_ID_ALGORAND,
-  CHAIN_ID_APTOS,
-  CHAIN_ID_INJECTIVE,
-  CHAIN_ID_NEAR,
-  CHAIN_ID_SOLANA,
-  CHAIN_ID_SUI,
-  CHAIN_ID_TERRA,
-  CHAIN_ID_TERRA2,
-  CHAIN_ID_XPLA,
-  ChainId,
-  getTypeFromExternalAddress,
-  hexToUint8Array,
-  isEVMChain,
-  queryExternalId,
-  queryExternalIdInjective,
-  tryHexToNativeAssetString,
-  tryHexToNativeStringNear,
-} from '@certusone/wormhole-sdk';
-import { getTokenCoinType } from '@certusone/wormhole-sdk/lib/cjs/sui';
+import { tryHexToNativeAssetString, tryHexToNativeStringNear } from './array';
 import { getNetworkInfo, Network } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
-import { Connection, JsonRpcProvider } from '@mysten/sui.js';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client';
 import { LCDClient } from '@terra-money/terra.js';
-import { contracts } from '@wormhole-foundation/sdk-base';
+import {
+  ChainId,
+  chainIdToChain,
+  chainToChainId,
+  chainToPlatform,
+  contracts,
+  encoding,
+} from '@wormhole-foundation/sdk-base';
 import { AptosClient } from 'aptos';
 import { connect } from 'near-api-js';
+import { AptosTokenBridge } from '@wormhole-foundation/sdk-aptos-tokenbridge';
+import { wormhole } from '@wormhole-foundation/sdk';
+import aptos from '@wormhole-foundation/sdk/aptos';
+import { LCDClient as TerraLCDClient } from '@terra-money/terra.js';
+import { LCDClient as XplaLCDClient } from '@xpla/xpla.js';
+import { queryExternalIdInjective } from './injective';
+import { getTokenCoinType } from '@wormhole-foundation/sdk-sui-tokenbridge';
 
 export const getNativeAddress = async (
   tokenChain: ChainId,
@@ -32,13 +27,13 @@ export const getNativeAddress = async (
 ): Promise<string | null> => {
   try {
     if (
-      isEVMChain(tokenChain) ||
-      tokenChain === CHAIN_ID_SOLANA ||
-      tokenChain === CHAIN_ID_ALGORAND ||
-      tokenChain === CHAIN_ID_TERRA
+      chainToPlatform(chainIdToChain(tokenChain)) === 'Evm' ||
+      tokenChain === chainToChainId('Solana') ||
+      tokenChain === chainToChainId('Algorand') ||
+      tokenChain === chainToChainId('Terra')
     ) {
       return tryHexToNativeAssetString(tokenAddress, tokenChain);
-    } else if (tokenChain === CHAIN_ID_XPLA) {
+    } else if (tokenChain === chainToChainId('Xpla')) {
       const client = new LCDClient({
         URL: 'https://dimension-lcd.xpla.dev',
         chainID: 'dimension_37-1',
@@ -47,7 +42,7 @@ export const getNativeAddress = async (
         (await queryExternalId(client, contracts.tokenBridge('Mainnet', 'Xpla'), tokenAddress)) ||
         null
       );
-    } else if (tokenChain === CHAIN_ID_TERRA2) {
+    } else if (tokenChain === chainToChainId('Terra2')) {
       const client = new LCDClient({
         URL: 'https://phoenix-lcd.terra.dev',
         chainID: 'phoenix-1',
@@ -56,21 +51,23 @@ export const getNativeAddress = async (
         (await queryExternalId(client, contracts.tokenBridge('Mainnet', 'Terra2'), tokenAddress)) ||
         null
       );
-    } else if (tokenChain === CHAIN_ID_INJECTIVE) {
+    } else if (tokenChain === chainToChainId('Injective')) {
       const client = new ChainGrpcWasmApi(getNetworkInfo(Network.MainnetK8s).grpc);
       return await queryExternalIdInjective(
         client,
         contracts.tokenBridge('Mainnet', 'Injective'),
         tokenAddress
       );
-    } else if (tokenChain === CHAIN_ID_APTOS) {
+    } else if (tokenChain === chainToChainId('Aptos')) {
+      const wh = await wormhole('Mainnet', [aptos]);
       const client = new AptosClient('https://fullnode.mainnet.aptoslabs.com');
-      return await getTypeFromExternalAddress(
-        client,
-        contracts.tokenBridge('Mainnet', 'Aptos'),
-        tokenAddress
-      );
-    } else if (tokenChain === CHAIN_ID_NEAR) {
+      const contracts = wh.getContracts('Aptos');
+      if (!contracts) {
+        return null;
+      }
+      const aptosTB = new AptosTokenBridge('Mainnet', 'Aptos', client, contracts);
+      return await aptosTB.getTypeFromExternalAddress(tokenAddress);
+    } else if (tokenChain === chainToChainId('Near')) {
       const NATIVE_NEAR_WH_ADDRESS =
         '0000000000000000000000000000000000000000000000000000000000000000';
       const NATIVE_NEAR_PLACEHOLDER = 'near';
@@ -87,19 +84,56 @@ export const getNativeAddress = async (
           tokenAddress
         );
       }
-    } else if (tokenChain === CHAIN_ID_SUI) {
-      const provider = new JsonRpcProvider(
-        new Connection({ fullnode: 'https://fullnode.mainnet.sui.io' })
-      );
+    } else if (tokenChain === chainToChainId('Sui')) {
+      const provider = new SuiClient({ url: getFullnodeUrl('mainnet') });
       return await getTokenCoinType(
         provider,
         contracts.tokenBridge('Mainnet', 'Sui'),
-        hexToUint8Array(tokenAddress),
-        CHAIN_ID_SUI
+        encoding.hex.decode(tokenAddress),
+        chainToChainId('Sui')
       );
     }
   } catch (e) {
     console.error(e);
   }
   return null;
+};
+
+export interface ExternalIdResponse {
+  token_id: {
+    Bank?: { denom: string };
+    Contract?: {
+      NativeCW20?: {
+        contract_address: string;
+      };
+      ForeignToken?: {
+        chain_id: string;
+        foreign_address: string;
+      };
+    };
+  };
+}
+
+// returns the TokenId corresponding to the ExternalTokenId
+// see cosmwasm token_addresses.rs
+export const queryExternalId = async (
+  client: TerraLCDClient | XplaLCDClient,
+  tokenBridgeAddress: string,
+  externalTokenId: string
+) => {
+  try {
+    const response = await client.wasm.contractQuery<ExternalIdResponse>(tokenBridgeAddress, {
+      external_id: {
+        external_id: Buffer.from(externalTokenId, 'hex').toString('base64'),
+      },
+    });
+    return (
+      // response depends on the token type
+      response.token_id.Bank?.denom ||
+      response.token_id.Contract?.NativeCW20?.contract_address ||
+      response.token_id.Contract?.ForeignToken?.foreign_address
+    );
+  } catch {
+    return null;
+  }
 };

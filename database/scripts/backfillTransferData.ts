@@ -18,7 +18,7 @@ import {
   createTokenMetadata,
   createTokenTransfer,
 } from '../src';
-import { chainToChainId, toChain } from '@wormhole-foundation/sdk-base';
+import { toChainId } from '@wormhole-foundation/sdk-base';
 import { blindDeserializePayload, deserialize } from '@wormhole-foundation/sdk';
 
 const PG_USER = assertEnvironmentVariable('PG_USER');
@@ -68,7 +68,7 @@ const getStatusString = (
     const tokenBridgeEmitters = Object.entries(TOKEN_BRIDGE_EMITTERS);
     for (const [chain, emitter] of tokenBridgeEmitters) {
       log.start();
-      const paddedChainId = padUint16(chainToChainId(toChain(chain)).toString());
+      const paddedChainId = padUint16(toChainId(chain).toString());
       let start = `${paddedChainId}/${emitter}/`;
       const end = `${start}z`;
       let numRowsRead = 0;

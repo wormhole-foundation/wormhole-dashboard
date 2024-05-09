@@ -49,7 +49,7 @@ export const getNativeAddress = async (
       );
     } else if (tokenChain === CHAIN_ID_TERRA2) {
       const client = new LCDClient({
-        URL: 'https://phoenix-lcd.terra.dev',
+        URL: 'https://lcd-terra.tfl.foundation',
         chainID: 'phoenix-1',
       });
       return (

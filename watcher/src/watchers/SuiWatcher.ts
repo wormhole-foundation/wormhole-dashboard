@@ -89,9 +89,11 @@ export class SuiWatcher extends Watcher {
         : null;
       cursor = response.nextCursor;
       hasNextPage = response.hasNextPage;
+      const digestArrayWithDups = response.data.map((e) => e.id.txDigest);
+      const digestArray = Array.from(new Set(digestArrayWithDups));
       const txBlocks = await this.client.requestWithType(
         'sui_multiGetTransactionBlocks',
-        { digests: response.data.map((e) => e.id.txDigest) },
+        { digests: digestArray },
         array(SuiTransactionBlockResponse)
       );
       const checkpointByTxDigest = txBlocks.reduce<Record<string, string | undefined>>(

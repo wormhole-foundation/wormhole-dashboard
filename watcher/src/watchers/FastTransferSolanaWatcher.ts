@@ -1,6 +1,6 @@
-import { Network } from '@wormhole-foundation/sdk-base';
+import { Network, chainToChainId } from '@wormhole-foundation/sdk-base';
 import { SolanaWatcher } from './SolanaWatcher';
-import { MatchingEngineProgram } from '../fastTransfer/matchingEngine';
+import { MatchingEngineProgram } from '@wormhole-foundation/example-liquidity-layer-solana/matchingEngine';
 import {
   ConfirmedSignatureInfo,
   Connection,
@@ -12,14 +12,14 @@ import {
 } from '@solana/web3.js';
 import { findFromSignatureAndToSignature } from '../utils/solana';
 import { makeBlockKey } from '../databases/utils';
-import { BorshCoder, Instruction, BN } from '@coral-xyz/anchor';
+import { BorshCoder, BorshInstructionCoder, Instruction } from '@coral-xyz/anchor';
 import { decodeTransferInstruction } from '@solana/spl-token';
 
 import MATCHING_ENGINE_IDL from '../idls/matching_engine.json';
 import TOKEN_ROUTER_IDL from '../idls/token_router.json';
 import { RPCS_BY_CHAIN } from '../consts';
-import { VaaAccount } from '../fastTransfer/wormhole';
-import { LiquidityLayerMessage } from '../fastTransfer/common';
+import { VaaAccount } from '@wormhole-foundation/example-liquidity-layer-solana/wormhole';
+import { LiquidityLayerMessage } from '@wormhole-foundation/example-liquidity-layer-solana/common';
 import {
   AuctionOffer,
   FastTransfer,
@@ -246,6 +246,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     let fast_transfer: FastTransfer | null = null;
     let auction_offer: AuctionOffer | null = null;
+
     switch (ixName) {
       case 'place_initial_offer_cctp':
         const data = decodedData?.data;
@@ -305,6 +306,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
         `[parsePlaceInitialOfferCctp] invalid data: ${JSON.stringify(decodedData.data)}`
       );
     }
+
     const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
     const payer = accountKeys[accountKeyIndexes[0]];
@@ -341,6 +343,12 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       local_program_id = auction.targetProtocol.local.programId.toBase58();
     }
 
+    if (!fastVaaMessage.fastMarketOrder) {
+      throw new Error(
+        `[parsePlaceInitialOfferCctp] no fast market order for ${res.transaction.signatures[0]}`
+      );
+    }
+
     const fast_transfer: FastTransfer = {
       fast_transfer_id: vaaId,
       fast_vaa_hash: Buffer.from(fastVaaAccount.digest()).toString('hex'),
@@ -348,13 +356,9 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       amount: fastVaaMessage.fastMarketOrder?.amountIn || 0n,
       initial_offer_time: new Date(fastVaaAccount.timestamp() * 1000),
       src_chain: fastVaaAccount.postedVaaV1.emitterChain,
-      dst_chain: fastVaaMessage.fastMarketOrder?.targetChain || 0,
-      sender: fastVaaMessage.fastMarketOrder?.sender
-        ? Buffer.from(fastVaaMessage.fastMarketOrder.sender).toString('hex')
-        : '',
-      redeemer: fastVaaMessage.fastMarketOrder?.redeemer
-        ? Buffer.from(fastVaaMessage.fastMarketOrder.redeemer).toString('hex')
-        : '',
+      dst_chain: chainToChainId(fastVaaMessage.fastMarketOrder.targetChain),
+      sender: fastVaaMessage.fastMarketOrder.sender.toString(),
+      redeemer: fastVaaMessage.fastMarketOrder.redeemer.toString(),
       start_slot: BigInt(startSlot.toString()),
       end_slot: BigInt(startSlot.addn(duration).toString()),
       deadline_slot: BigInt(startSlot.addn(duration).addn(gracePeriod).toString()),

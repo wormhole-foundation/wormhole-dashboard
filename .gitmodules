@@ -1,0 +1,4 @@
+[submodule "watcher/sdk/example-liquidity-layer"]
+    path = watcher/sdk/example-liquidity-layer
+    url = https://github.com/wormhole-foundation/example-liquidity-layer.git
+    rev = 40b328135c95453f41ffb12804cfcce440143c46

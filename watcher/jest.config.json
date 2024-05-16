@@ -1,8 +1,10 @@
 {
+  "preset": "ts-jest/presets/default-esm",
   "transform": {
     "^.+\\.tsx?$": "ts-jest"
   },
   "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-  "setupFiles": ["./setup-jest.ts"]
+  "setupFiles": ["./setup-jest.ts"],
+  "testPathIgnorePatterns": ["sdk"]
 }

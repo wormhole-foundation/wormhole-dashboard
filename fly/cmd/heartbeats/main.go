@@ -20,6 +20,8 @@ import (
 	ipfslog "github.com/ipfs/go-log/v2"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 	"github.com/wormhole-foundation/wormhole/sdk"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
@@ -249,25 +251,25 @@ func main() {
 	sendC := make(chan []byte)
 
 	// Inbound observations
-	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
+	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 20000)
 
 	// Inbound observation requests
-	obsvReqC := make(chan *gossipv1.ObservationRequest, 1024)
+	obsvReqC := make(chan *gossipv1.ObservationRequest, 20000)
 
 	// Inbound signed VAAs
-	signedInC := make(chan *gossipv1.SignedVAAWithQuorum, 1024)
+	signedInC := make(chan *gossipv1.SignedVAAWithQuorum, 20000)
 
 	// Heartbeat updates
-	heartbeatC := make(chan *gossipv1.Heartbeat, 1024)
+	heartbeatC := make(chan *gossipv1.Heartbeat, 20000)
 
 	// Guardian set state managed by processor
 	gst := common.NewGuardianSetState(heartbeatC)
 
 	// Governor cfg
-	govConfigC := make(chan *gossipv1.SignedChainGovernorConfig, 1024)
+	govConfigC := make(chan *gossipv1.SignedChainGovernorConfig, 20000)
 
 	// Governor status
-	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 1024)
+	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 20000)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
 	idx, sgs, err := utils.FetchCurrentGuardianSet(rpcUrl, coreBridgeAddr)
 	if err != nil {
@@ -720,4 +722,12 @@ func handleObsv(idx uint) bool {
 
 func prompt() {
 	fmt.Print("[C]hains, [G]uardians, [M]essage Counts, [O]bsv Rate, [Q]uit: ")
+}
+
+func getGaugeValue(gauge prometheus.Gauge) (float64, error) {
+	metric := &dto.Metric{}
+	if err := gauge.Write(metric); err != nil {
+		return 0, fmt.Errorf("failed to read metric value: %w", err)
+	}
+	return metric.GetGauge().GetValue(), nil
 }

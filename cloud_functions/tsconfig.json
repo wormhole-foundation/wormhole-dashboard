@@ -3,7 +3,10 @@
   "references": [{ "path": "../common" }, { "path": "../database" }],
   "compilerOptions": {
     "outDir": "dist",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true
   },
   "include": ["src", "src/data/*.json"]
 }

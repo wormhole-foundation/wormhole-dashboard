@@ -6,11 +6,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive # Initialize submodules recursively
       - uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: package-lock.json
+      - uses: metadaoproject/setup-anchor@v2
+        with:
+          node-version: "20.11.0"
+          solana-cli-version: "1.18.11"
+          anchor-version: "0.30.0"
+      - name: Set default Rust toolchain
+        run: rustup default stable
+      - name: make fast-transfer-sdk
+        run: make fast-transfer-sdk
       - run: npm ci
       - run: npm run build
       - run: npm run build -w dashboard
@@ -24,10 +35,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive # Initialize submodules recursively
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-      - run: npm ci
+      - uses: metadaoproject/setup-anchor@v2
+        with:
+          node-version: "20.11.0"
+          solana-cli-version: "1.18.11"
+          anchor-version: "0.30.0"
+      - name: Set default Rust toolchain
+        run: rustup default stable
+      - name: make fast-transfer-sdk
+        run: make fast-transfer-sdk
+      - run: npm  ci
       - run: npx prettier --check .
   build-fly:
     runs-on: ubuntu-latest

@@ -1,4 +1,4 @@
-import { Context, EventFunction } from '@google-cloud/functions-framework/build/src/functions';
+import { Context, EventFunction } from '@google-cloud/functions-framework';
 import { PubsubMessage } from '@google-cloud/pubsub/build/src/publisher';
 import { Bigtable, Instance, Table } from '@google-cloud/bigtable';
 import knex, { Knex } from 'knex';

@@ -2,7 +2,13 @@
   "extends": "../tsconfig.base.json",
   "references": [{ "path": "../common" }],
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "@wormhole-foundation/example-liquidity-layer-solana/*": [
+        "./sdk/example-liquidity-layer/node_modules/@wormhole-foundation/example-liquidity-layer-solana/dist/esm/*"
+      ]
+    }
   },
   "include": ["scripts", "src", "src/abi/*.json", "src/idls/*.json"]
 }

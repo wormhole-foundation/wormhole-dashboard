@@ -440,8 +440,22 @@
           ]
         },
         {
-          "name": "transfer_authority",
-          "docs": ["The auction participant needs to set approval to this PDA.", ""]
+          "name": "program_transfer_authority",
+          "docs": [
+            "The auction participant needs to set approval to this PDA if the sender (signer) is not",
+            "provided.",
+            ""
+          ],
+          "optional": true
+        },
+        {
+          "name": "sender",
+          "docs": [
+            "Sender, who has the authority to transfer assets from the sender token account. If this",
+            "account is not provided, the program transfer authority account must be some account."
+          ],
+          "signer": true,
+          "optional": true
         },
         {
           "name": "prepared_order",
@@ -514,6 +528,11 @@
       "discriminator": [61, 85, 136, 127, 30, 118, 37, 126],
       "accounts": [
         {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "custodian",
           "accounts": [
             {
@@ -522,48 +541,32 @@
           ]
         },
         {
-          "name": "prepared_fill",
+          "name": "fill_vaa",
           "accounts": [
             {
-              "name": "payer",
-              "writable": true,
-              "signer": true
-            },
+              "name": "vaa"
+            }
+          ]
+        },
+        {
+          "name": "prepared_fill",
+          "writable": true
+        },
+        {
+          "name": "prepared_custody_token",
+          "docs": [
+            "Mint recipient token account, which is encoded as the mint recipient in the CCTP message.",
+            "The CCTP Token Messenger Minter program will transfer the amount encoded in the CCTP message",
+            "from its custody account to this account.",
+            ""
+          ],
+          "writable": true
+        },
+        {
+          "name": "usdc",
+          "accounts": [
             {
-              "name": "fill_vaa",
-              "accounts": [
-                {
-                  "name": "vaa"
-                }
-              ]
-            },
-            {
-              "name": "prepared_fill",
-              "writable": true
-            },
-            {
-              "name": "custody_token",
-              "docs": [
-                "Mint recipient token account, which is encoded as the mint recipient in the CCTP message.",
-                "The CCTP Token Messenger Minter program will transfer the amount encoded in the CCTP message",
-                "from its custody account to this account.",
-                ""
-              ],
-              "writable": true
-            },
-            {
-              "name": "usdc",
-              "accounts": [
-                {
-                  "name": "mint"
-                }
-              ]
-            },
-            {
-              "name": "token_program"
-            },
-            {
-              "name": "system_program"
+              "name": "mint"
             }
           ]
         },
@@ -671,6 +674,11 @@
       "discriminator": [11, 52, 181, 5, 101, 194, 200, 15],
       "accounts": [
         {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
           "name": "custodian",
           "accounts": [
             {
@@ -679,58 +687,33 @@
           ]
         },
         {
+          "name": "fast_fill",
+          "writable": true
+        },
+        {
           "name": "prepared_fill",
+          "writable": true
+        },
+        {
+          "name": "prepared_custody_token",
+          "docs": [
+            "Mint recipient token account, which is encoded as the mint recipient in the CCTP message.",
+            "The CCTP Token Messenger Minter program will transfer the amount encoded in the CCTP message",
+            "from its custody account to this account.",
+            ""
+          ],
+          "writable": true
+        },
+        {
+          "name": "usdc",
           "accounts": [
             {
-              "name": "payer",
-              "writable": true,
-              "signer": true
-            },
-            {
-              "name": "fill_vaa",
-              "accounts": [
-                {
-                  "name": "vaa"
-                }
-              ]
-            },
-            {
-              "name": "prepared_fill",
-              "writable": true
-            },
-            {
-              "name": "custody_token",
-              "docs": [
-                "Mint recipient token account, which is encoded as the mint recipient in the CCTP message.",
-                "The CCTP Token Messenger Minter program will transfer the amount encoded in the CCTP message",
-                "from its custody account to this account.",
-                ""
-              ],
-              "writable": true
-            },
-            {
-              "name": "usdc",
-              "accounts": [
-                {
-                  "name": "mint"
-                }
-              ]
-            },
-            {
-              "name": "token_program"
-            },
-            {
-              "name": "system_program"
+              "name": "mint"
             }
           ]
         },
         {
-          "name": "matching_engine_custodian",
-          "writable": true
-        },
-        {
-          "name": "matching_engine_redeemed_fast_fill",
-          "writable": true
+          "name": "matching_engine_custodian"
         },
         {
           "name": "matching_engine_from_endpoint"
@@ -858,6 +841,10 @@
       "discriminator": [132, 228, 139, 184, 112, 228, 108, 240]
     },
     {
+      "name": "FastFill",
+      "discriminator": [89, 120, 166, 41, 106, 227, 218, 121]
+    },
+    {
       "name": "PreparedFill",
       "discriminator": [202, 241, 65, 186, 110, 235, 238, 80]
     },
@@ -894,6 +881,10 @@
     {
       "code": 6070,
       "name": "InvalidPayloadId"
+    },
+    {
+      "code": 6072,
+      "name": "InvalidDepositPayloadId"
     },
     {
       "code": 6078,
@@ -944,6 +935,14 @@
       "name": "NotPendingOwner"
     },
     {
+      "code": 6522,
+      "name": "MissingAuthority"
+    },
+    {
+      "code": 6523,
+      "name": "TooManyAuthorities"
+    },
+    {
       "code": 7024,
       "name": "InsufficientAmount"
     },
@@ -954,6 +953,10 @@
     {
       "code": 7028,
       "name": "InvalidRedeemer"
+    },
+    {
+      "code": 7030,
+      "name": "PreparedFillTooLarge"
     }
   ],
   "types": [
@@ -1048,6 +1051,103 @@
                 "name": "MessageProtocol"
               }
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FastFill",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seeds",
+            "type": {
+              "defined": {
+                "name": "FastFillSeeds"
+              }
+            }
+          },
+          {
+            "name": "redeemed",
+            "docs": ["Whether the [FastFill] has been redeemed via the local Token Router."],
+            "type": "bool"
+          },
+          {
+            "name": "info",
+            "type": {
+              "defined": {
+                "name": "FastFillInfo"
+              }
+            }
+          },
+          {
+            "name": "redeemer_message",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FastFillInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "prepared_by",
+            "docs": ["Who paid the lamports to create the [FastFill] account."],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": ["Fill amount."],
+            "type": "u64"
+          },
+          {
+            "name": "redeemer",
+            "docs": ["Authority allowed to redeem [FastFill]."],
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "docs": [
+              "Timestamp at the time a fill was issued. When the fast fill is created, it is set using the",
+              "current [Clock] unix timestamp."
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FastFillSeeds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "source_chain",
+            "docs": ["Wormhole chain ID reflecting where the order was created."],
+            "type": "u16"
+          },
+          {
+            "name": "order_sender",
+            "docs": ["Universal address of the order sender."],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "sequence",
+            "docs": [
+              "Sequence generated by the [FastFillSequencer](crate::state::FastFillSequencer) when it",
+              "reserved a sequence number for this fill."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "docs": ["Bump seed for the [FastFill] account."],
+            "type": "u8"
           }
         ]
       }
@@ -1169,6 +1269,14 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "seeds",
+            "type": {
+              "defined": {
+                "name": "PreparedFillSeeds"
+              }
+            }
+          },
+          {
             "name": "info",
             "type": {
               "defined": {
@@ -1189,25 +1297,18 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "vaa_hash",
-            "type": {
-              "array": ["u8", 32]
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
             "name": "prepared_custody_token_bump",
+            "docs": ["Bump seed for the custody token account associated with [PreparedFill]."],
             "type": "u8"
           },
           {
             "name": "prepared_by",
+            "docs": ["Who paid the lamports to create the [PreparedFill] account."],
             "type": "pubkey"
           },
           {
             "name": "fill_type",
+            "docs": ["NOTE: If [FillType::Unset], the [PreparedFill] account is invalid."],
             "type": {
               "defined": {
                 "name": "FillType"
@@ -1216,17 +1317,48 @@
           },
           {
             "name": "source_chain",
+            "docs": ["Wormhole chain ID reflecting where the order was created."],
             "type": "u16"
           },
           {
             "name": "order_sender",
+            "docs": ["Universal address of the order sender."],
             "type": {
               "array": ["u8", 32]
             }
           },
           {
             "name": "redeemer",
+            "docs": ["Authority allowed to redeem [PreparedFill]."],
             "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "docs": [
+              "Timestamp at the time a fill was issued. This time will either be a VAA time for a direct",
+              "fill from another Token Router or timestamp from [matching_engine::state::FastFill] as a",
+              "result of a market order.",
+              "",
+              "NOTE: This timestamp is not used by the Token Router. It only provides more information for",
+              "an integrator so he can perform special handling based on when the fill happened."
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PreparedFillSeeds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fill_source",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

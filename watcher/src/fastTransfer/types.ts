@@ -41,6 +41,12 @@ export type FastTransfer = {
   execution_slot?: bigint;
   execution_time?: Date;
   execution_tx_hash?: string;
+  // === fast transfer settled fields ===
+  repayment?: bigint;
+  settle_tx_hash?: string;
+  settle_time?: Date;
+  settle_slot?: bigint;
+  settle_payer?: string;
 };
 
 export type AuctionOffer = {

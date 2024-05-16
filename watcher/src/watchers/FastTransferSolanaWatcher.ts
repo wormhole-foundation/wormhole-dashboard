@@ -36,32 +36,44 @@ import knex, { Knex } from 'knex';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import { getLogger } from '../utils/logger';
 import base58 from 'bs58';
-import { FAST_TRANSFER_CONTRACTS } from '../fastTransfer/consts';
+import {
+  FAST_TRANSFER_CONTRACTS,
+  MatchingEngineProgramId,
+  TokenRouterProgramId,
+  USDCMintAddress,
+} from '../fastTransfer/consts';
 
 export class FastTransferSolanaWatcher extends SolanaWatcher {
+  readonly network: Network;
   readonly rpc: string;
   readonly matchingEngineBorshCoder: BorshCoder;
   readonly tokenRouterBorshCoder: BorshCoder;
   readonly matchingEngineProgram: MatchingEngineProgram;
   readonly pg: Knex | null = null;
-  readonly MATCHING_ENGINE_PROGRAM_ID = FAST_TRANSFER_CONTRACTS.Testnet?.MatchingEngine!;
-  readonly USDC_MINT = FAST_TRANSFER_CONTRACTS.Testnet?.USDCMint!;
-  readonly TOKEN_ROUTER_PROGRAM_ID = FAST_TRANSFER_CONTRACTS.Testnet?.TokenRouter!;
-  lastSlot = 0;
+  readonly MATCHING_ENGINE_PROGRAM_ID: MatchingEngineProgramId;
+  readonly USDC_MINT: USDCMintAddress;
+  readonly TOKEN_ROUTER_PROGRAM_ID: TokenRouterProgramId;
 
   constructor(network: Network, isTest: boolean = false) {
     super(network, false);
 
-    this.rpc = isTest ? 'https://api.devnet.solana.com' : RPCS_BY_CHAIN[this.network].Solana!;
+    this.network = network;
+    this.rpc = isTest ? 'https://api.devnet.solana.com' : RPCS_BY_CHAIN[network].Solana!;
     this.matchingEngineBorshCoder = new BorshCoder(MATCHING_ENGINE_IDL as any);
     this.tokenRouterBorshCoder = new BorshCoder(TOKEN_ROUTER_IDL as any);
+
+    this.MATCHING_ENGINE_PROGRAM_ID = FAST_TRANSFER_CONTRACTS[network]?.MatchingEngine!;
+    this.USDC_MINT = FAST_TRANSFER_CONTRACTS[network]?.USDCMint!;
+    this.TOKEN_ROUTER_PROGRAM_ID = FAST_TRANSFER_CONTRACTS[network]?.TokenRouter!;
+
     this.matchingEngineProgram = new MatchingEngineProgram(
       new Connection(this.rpc),
       this.MATCHING_ENGINE_PROGRAM_ID,
       new PublicKey(this.USDC_MINT)
     );
     this.getSignaturesLimit = 100;
-    this.logger = getLogger('fast_transfer_solana');
+    this.logger = getLogger(`fast_transfer_solana_${network.toLowerCase()}`);
+
     // hacky way to not connect to the db in tests
     // this is to allow ci to run without a db
     if (isTest) {
@@ -111,7 +123,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     programId: PublicKey
   ): Promise<ConfirmedSignatureInfo[]> {
     let numSignatures = this.getSignaturesLimit;
-    let currSignature: string | undefined = fromSignature;
+    let currSignature = fromSignature;
     let allSignatures: ConfirmedSignatureInfo[] = [];
 
     while (numSignatures === this.getSignaturesLimit) {
@@ -128,8 +140,9 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
       // Check if the last signature of this batch is the same as the current signature
       // If it is, it means we are not progressing and should break the loop
+      // Index is 0 because `getSignaturesForAddress` returns the signatures in descending order
       if (batchSignatures[0].signature === currSignature) {
-        console.warn('No new signatures fetched, breaking the loop.');
+        this.logger.warn('No new signatures fetched, breaking the loop.');
         break;
       }
 
@@ -204,7 +217,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
       for (const ix of programInstructions) {
         try {
-          await this.parseInstruction(res, ix.ix, programId, ix.seq);
+          await this.parseInstruction(res, ix.ix, ix.seq);
         } catch (error) {
           this.logger.error('error:', error);
         }
@@ -217,7 +230,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   async parseInstruction(
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction,
-    programId: PublicKey,
     seq: number
   ): Promise<ParsedLogs | null> {
     const decodedData = this.matchingEngineBorshCoder.instruction.decode(
@@ -226,6 +238,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     );
 
     const ixName = decodedData?.name;
+
     if (!decodedData || !ixName) {
       this.logger.debug('decodedData is null');
       return null;
@@ -386,7 +399,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     decodedData: Instruction
   ): Promise<ParsedLogs> {
     if (decodedData.data === undefined || !isOfferArgs(decodedData.data)) {
-      throw new Error(`[parseImproveOffer] invalid data: ${JSON.stringify(decodedData.data)}`);
+      throw new Error(`[parseImproveOffer] invalid data for ${res.transaction.signatures[0]}`);
     }
 
     const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;

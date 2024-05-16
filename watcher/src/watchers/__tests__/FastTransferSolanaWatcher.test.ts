@@ -26,12 +26,7 @@ test('placeInitialOfferCctp', async () => {
 
   const ix = tx.transaction.message.compiledInstructions[3];
 
-  const parsedLogs = await watcher.parseInstruction(
-    tx,
-    ix,
-    new PublicKey('mPydpGUWxzERTNpyvTKdvS7v8kvw5sgwfiP8WQFrXVS'),
-    3
-  );
+  const parsedLogs = await watcher.parseInstruction(tx, ix, 3);
 
   expect(parsedLogs?.fast_transfer).toEqual({
     fast_transfer_id:
@@ -86,12 +81,7 @@ test('should parse improveOffer', async () => {
 
   const ix = tx.transaction.message.compiledInstructions[1];
 
-  const message = await watcher.parseInstruction(
-    tx,
-    ix,
-    new PublicKey('mPydpGUWxzERTNpyvTKdvS7v8kvw5sgwfiP8WQFrXVS'),
-    1
-  );
+  const message = await watcher.parseInstruction(tx, ix, 1);
 
   expect(message?.fast_transfer).toEqual(null);
   expect(message?.auction_offer).toEqual({

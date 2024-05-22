@@ -33,7 +33,7 @@ export class SolanaWatcher extends Watcher {
   // transactions returned. Since we don't know the number of transactions in advance, we use
   // a block range of 100K slots. Technically, batch size can be arbitrarily large since pagination
   // of the WH transactions within that range is handled internally below.
-  maximumBatchSize = 100_000;
+  maximumBatchSize = 1_000;
 
   connection: Connection | undefined;
 

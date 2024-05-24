@@ -98,10 +98,10 @@ test('should parse improveOffer', async () => {
 
 // TODO: solver is broken and not running after latest deployment,
 // will update tests when they are fixed and running
-test.skip('should parse executeFastOrderLocal', async () => {
+test('should parse executeFastOrderLocal', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet', true);
   const txHash =
-    'wKDEbC56KnUFkbPgmnyxPRxwfZpAJ2vBLxeZif9VQWrWgLj1AByEBsDMdJm7rTeVmhiBGcB6PsGfmxKDcP978r9';
+    '7AfmUeb6sM4HRLyw8ZmmaC5R2SFAzgQAH4YbD2fmnDmDPAcdxAk9Rhi3xktrGoE7bB2VHiBhs3JSvgiFzo6yUPr';
 
   const tx = await watcher.getConnection().getTransaction(txHash, {
     maxSupportedTransactionVersion: 0,
@@ -116,11 +116,11 @@ test.skip('should parse executeFastOrderLocal', async () => {
   const info = await watcher.parseExecuteFastOrderLocal(tx, ix);
   expect(info).toEqual({
     status: 'executed',
-    penalty: 0n,
-    user_amount: 8000000n,
-    execution_payer: 'gyVfT39y3tWQnfXwxY6Hj7ZeLFN2K8Z6heWEJ4zxYRB',
-    execution_slot: 294811396n,
-    execution_time: new Date('2024-04-26T14:38:17.000Z'),
+    penalty: 439875n,
+    user_amount: 8293250n,
+    execution_payer: 'ToML4kX31x56WDnXW4mVzivUTgXk1kL53cmVTaNeaZi',
+    execution_slot: 300868424n,
+    execution_time: new Date('2024-05-23T15:58:23.000Z'),
     execution_tx_hash: txHash,
   });
 });

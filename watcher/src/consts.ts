@@ -91,7 +91,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Blast: process.env.BLAST_RPC || 'https://rpc.ankr.com/blast_testnet_sepolia',
     Sei: process.env.SEI_RPC,
     Wormchain: process.env.WORMCHAIN_RPC,
-    ArbitrumSepolia: process.env.ARBITRUM_SEPOLIA_RPC,
+    ArbitrumSepolia: process.env.ARBITRUM_SEPOLIA_RPC || 'https://rpc.ankr.com/arbitrum_sepolia',
     BaseSepolia: process.env.BASE_SEPOLIA_RPC,
     OptimismSepolia:
       process.env.OPTIMISM_SEPOLIA_RPC || 'https://optimism-sepolia-rpc.publicnode.com',

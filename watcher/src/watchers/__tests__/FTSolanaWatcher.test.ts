@@ -1,13 +1,13 @@
 import { jest, test, expect } from '@jest/globals';
-import { FastTransferSolanaWatcher } from '../FastTransferSolanaWatcher';
+import { FastTransferSolanaWatcher } from '../FTSolanaWatcher';
 
-jest.setTimeout(360_000);
+jest.setTimeout(60_000);
 
 // This test is working, but testing it is not very useful since the return value is just the lastBlockKey.
 // It is just an entrypoint to test the whole thing with a local postgres database.
 test.skip('getMessagesByBlock', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');
-  await watcher.getMessagesByBlock(299513411, 300551112);
+  await watcher.getMessagesByBlock(299707624, 302567900);
 });
 
 test('placeInitialOfferCctp', async () => {
@@ -24,30 +24,30 @@ test('placeInitialOfferCctp', async () => {
   }
 
   const ix = tx.transaction.message.compiledInstructions[1];
+  const decodedData = watcher.matchingEngineBorshCoder.instruction.decode(
+    Buffer.from(ix.data),
+    'base58'
+  );
+  if (!decodedData) {
+    throw new Error('Unable to decode instruction');
+  }
 
-  const parsedLogs = await watcher.parseInstruction(tx, ix, 1);
+  const parsedLogs = await watcher.parsePlaceInitialOfferCctp(tx, ix, decodedData);
 
-  expect(parsedLogs?.fast_transfer).toEqual({
-    fast_transfer_id: '10003/000000000000000000000000e0418c44f06b0b0d7d1706e01706316dbb0b210e/643',
-    fast_vaa_hash: 'd59b2b7c01853524165f92524193af7a1c812277bf1898c00843fee64f9b4839',
+  expect(parsedLogs?.auction).toEqual({
     auction_pubkey: '77W4Votv6bK1tyq4xcvyo2V9gXYknXBwcZ53XErgcEs9',
-    amount: 10000000n,
-    initial_offer_time: new Date('2024-05-22T06:05:10.000Z'),
-    src_chain: 10003,
-    dst_chain: 1,
-    sender: '0x000000000000000000000000b028e6fe28743e4e0db2884a6fc81ff0c6461847',
-    redeemer: '0xb2621b860cfa5d7f324e06771e4ef1d7f12e9dddf30026d282a78e520625b571',
     start_slot: 300551112n,
     end_slot: 300551117n,
     deadline_slot: 300551127n,
+    initial_offer_timestamp: new Date('2024-05-22T06:05:16.000Z'),
+    initial_offer_tx_hash:
+      '622s4otqmig2LB6AjnhvQv4gwBpUX9Ewnnh2XKa7YfsRhr4h1AU1GJRweii4C9rwqNzX1piMQ3jZQTMTv7aS4pyE',
     best_offer_amount: 1500000n,
     best_offer_token: 'tomvTppiaT5T56Gm5gTegXnSEEf4tVBCz99VkcvYcT8',
     message_protocol: 'local',
     cctp_domain: undefined,
     local_program_id: 'tD8RmtdcV7bzBeuFgyrFc8wvayj988ChccEzRQzo6md',
-    tx_hash:
-      '622s4otqmig2LB6AjnhvQv4gwBpUX9Ewnnh2XKa7YfsRhr4h1AU1GJRweii4C9rwqNzX1piMQ3jZQTMTv7aS4pyE',
-    timestamp: new Date('2024-05-22T06:05:16.000Z'),
+    fast_vaa_hash: 'd59b2b7c01853524165f92524193af7a1c812277bf1898c00843fee64f9b4839',
   });
 
   expect(parsedLogs?.auction_offer).toEqual({
@@ -78,11 +78,17 @@ test('should parse improveOffer', async () => {
   }
 
   const ix = tx.transaction.message.compiledInstructions[1];
+  const decodedData = watcher.matchingEngineBorshCoder.instruction.decode(
+    Buffer.from(ix.data),
+    'base58'
+  );
+  if (!decodedData) {
+    throw new Error('Unable to decode instruction');
+  }
 
-  const message = await watcher.parseInstruction(tx, ix, 1);
+  const message = await watcher.parseImproveOffer(tx, ix, decodedData);
 
-  expect(message?.fast_transfer).toEqual(null);
-  expect(message?.auction_offer).toEqual({
+  expect(message).toEqual({
     fast_vaa_hash: 'd863c96834b4d83003ab941697d43a64261345d77b3b4e8e64dab837a1378671',
     payer: 'gyVfT39y3tWQnfXwxY6Hj7ZeLFN2K8Z6heWEJ4zxYRB',
     is_initial_offer: false,
@@ -115,13 +121,13 @@ test('should parse executeFastOrderLocal', async () => {
 
   const info = await watcher.parseExecuteFastOrderLocal(tx, ix);
   expect(info).toEqual({
-    status: 'executed',
     penalty: 439875n,
     user_amount: 8293250n,
     execution_payer: 'ToML4kX31x56WDnXW4mVzivUTgXk1kL53cmVTaNeaZi',
     execution_slot: 300868424n,
     execution_time: new Date('2024-05-23T15:58:23.000Z'),
     execution_tx_hash: txHash,
+    fast_vaa_hash: 'fd99d2d20f7458cae97de7d7bcf94cbdc5ac734264fa495bf01f1748e28039da',
   });
 });
 
@@ -137,7 +143,7 @@ test.skip('should parse executeFastOrderCctp', async () => {
     throw new Error('Unable to get transaction');
   }
 
-  const ix = tx.transaction.message.compiledInstructions[2];
+  const ix = tx.transaction.message.compiledInstructions[0];
 
   const info = await watcher.parseExecuteFastOrderCctp(tx, ix);
   expect(info).toEqual({
@@ -168,9 +174,12 @@ test('should parse settleAuctionComplete', async () => {
   const info = await watcher.parseSettleAuctionComplete(tx, ix, 1);
   expect(info).toEqual({
     id: {
-      auction_pubkey: 'CpDnbzqqnWv2ww6FNgxxnWADFnHG1sEM537GMTBiq7rf',
+      // in production, we will get this from the based on the `auction_pubkey`
+      // in test we cant get it from the db since it is disabled for github CI
+      fast_vaa_hash: '',
     },
     info: {
+      fast_vaa_hash: '',
       repayment: 1000000n,
       settle_payer: '6H68dreG5qZHUVjBwf4kCGQYmW3hULedbezwzPasTr68',
       settle_slot: 302130744n,

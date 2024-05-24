@@ -1,4 +1,4 @@
-import { Network } from '@wormhole-foundation/sdk-base';
+import { Chain, Network } from '@wormhole-foundation/sdk-base';
 
 export type FastTransferContracts = 'MatchingEngine' | 'TokenRouter' | 'USDCMint';
 
@@ -7,26 +7,41 @@ export type MatchingEngineProgramId = 'mPydpGUWxzERTNpyvTKdvS7v8kvw5sgwfiP8WQFrX
 export type TokenRouterProgramId = 'tD8RmtdcV7bzBeuFgyrFc8wvayj988ChccEzRQzo6md';
 export type USDCMintAddress = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
 
-// Define the structure for the contract addresses
-export interface ContractAddresses {
+export interface SolanaContractAddresses {
   MatchingEngine: MatchingEngineProgramId;
   TokenRouter: TokenRouterProgramId;
   USDCMint: USDCMintAddress;
 }
 
-// Define the structure for the environments
-export type FastTransferContractAddresses = { [key in Network]?: ContractAddresses };
+export interface EthereumContractAddresses {
+  TokenRouter: string;
+  CircleBridge?: string;
+}
 
+export type ContractAddresses = SolanaContractAddresses | EthereumContractAddresses;
+
+export type FastTransferContractAddresses = {
+  [key in Network]?: {
+    Solana?: SolanaContractAddresses;
+    ArbitrumSepolia?: EthereumContractAddresses;
+  };
+};
+
+// Will add more chains as needed
 export const FAST_TRANSFER_CONTRACTS: FastTransferContractAddresses = {
-  Mainnet: {
-    // TODO: change this to actual mainnet address when they are deployed
-    MatchingEngine: 'mPydpGUWxzERTNpyvTKdvS7v8kvw5sgwfiP8WQFrXVS',
-    TokenRouter: 'tD8RmtdcV7bzBeuFgyrFc8wvayj988ChccEzRQzo6md',
-    USDCMint: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
-  },
+  Mainnet: {},
   Testnet: {
-    MatchingEngine: 'mPydpGUWxzERTNpyvTKdvS7v8kvw5sgwfiP8WQFrXVS',
-    TokenRouter: 'tD8RmtdcV7bzBeuFgyrFc8wvayj988ChccEzRQzo6md',
-    USDCMint: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
+    Solana: {
+      MatchingEngine: 'mPydpGUWxzERTNpyvTKdvS7v8kvw5sgwfiP8WQFrXVS',
+      TokenRouter: 'tD8RmtdcV7bzBeuFgyrFc8wvayj988ChccEzRQzo6md',
+      USDCMint: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
+    },
+    ArbitrumSepolia: {
+      TokenRouter: '0xe0418C44F06B0b0D7D1706E01706316DBB0B210E',
+      CircleBridge: '0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5',
+    },
   },
 };
+
+// Will add more chains as needed
+export type FTChains = 'ArbitrumSepolia';

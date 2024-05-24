@@ -2,11 +2,16 @@
   "extends": "../tsconfig.base.json",
   "references": [{ "path": "../common" }],
   "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "outDir": "dist",
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
+      "@wormhole-foundation/example-liquidity-layer-evm": [
+        "../node_modules/@wormhole-foundation/example-liquidity-layer-evm/dist/cjs/src/index"
+      ],
       "@wormhole-foundation/example-liquidity-layer-solana/*": [
-        "../node_modules/@wormhole-foundation/example-liquidity-layer-solana/dist/esm/*"
+        "../node_modules/@wormhole-foundation/example-liquidity-layer-solana/dist/cjs/*"
       ]
     }
   },

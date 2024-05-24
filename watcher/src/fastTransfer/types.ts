@@ -8,45 +8,62 @@ export enum FastTransferProtocol {
 }
 
 export enum FastTransferStatus {
-  PENDING = 'pending',
-  EXECUTED = 'executed',
-  SETTLED = 'settled',
-  EXPIRED = 'expired',
+  PENDING = 'pending', // market order is placed but no auction started
+  AUCTION = 'auction', // auction started and ongoing
+  EXECUTED = 'executed', // fast transfer executed
+  SETTLED = 'settled', // fast transfer settled
+  NO_OFFER = 'no_offer', // no offer made for the auction. Confirmed in settlement phase
 }
 
-export type FastTransfer = {
-  fast_transfer_id: string;
-  fast_vaa_hash: string;
-  auction_pubkey: string;
-  amount: bigint;
-  initial_offer_time: Date;
+export type MarketOrder = {
+  fast_vaa_id: string;
+  // fast_vaa_hash is null on tokenRouter, easier to get this on matching engine
+  // but we still want this to link fast transfer to the other stages
+  fast_vaa_hash?: string;
+  amount_in: bigint;
+  min_amount_out?: bigint;
   src_chain: number;
   dst_chain: number;
   sender: string;
   redeemer: string;
-  tx_hash: string;
-  timestamp: Date;
+  market_order_tx_hash: string;
+  market_order_timestamp: Date;
+};
+
+export type FastTransferAuctionInfo = {
+  fast_vaa_hash: string;
+  auction_pubkey: string;
+  initial_offer_tx_hash: string;
+  initial_offer_timestamp: Date;
   start_slot: bigint;
   end_slot: bigint;
   deadline_slot: bigint;
-  // === best offer fields ===
-  best_offer_amount?: bigint;
-  best_offer_token?: string;
-  // === protocol fields ===
+  best_offer_amount: bigint;
+  best_offer_token: string;
   message_protocol: FastTransferProtocol;
   cctp_domain?: number;
   local_program_id?: string;
-  // === fast transfer execution fields ===
-  execution_payer?: string;
-  execution_slot?: bigint;
-  execution_time?: Date;
-  execution_tx_hash?: string;
-  // === fast transfer settled fields ===
-  repayment?: bigint;
-  settle_tx_hash?: string;
-  settle_time?: Date;
-  settle_slot?: bigint;
-  settle_payer?: string;
+};
+
+export type FastTransferExecutionInfo = {
+  fast_vaa_hash: string;
+  user_amount: bigint;
+  // amount that a winner will be penalized for not executing the fast transfer
+  penalty: bigint;
+  execution_payer: string;
+  execution_time: Date;
+  execution_tx_hash: string;
+  execution_slot: bigint;
+};
+
+export type FastTransferSettledInfo = {
+  fast_vaa_hash: string;
+  // amount that the executor will receive for executing the fast transfer
+  repayment: bigint;
+  settle_tx_hash: string;
+  settle_time: Date;
+  settle_slot: bigint;
+  settle_payer: string;
 };
 
 export type AuctionOffer = {
@@ -61,8 +78,19 @@ export type AuctionOffer = {
   timestamp: Date;
 };
 
+export type FastTransferUpdate = {
+  status?: FastTransferStatus;
+  fast_vaa_hash?: string;
+  fast_vaa_id?: string;
+};
+
+export type FastTransferAuctionUpdate = {
+  best_offer_token?: string;
+  best_offer_amount?: bigint;
+};
+
 export type ParsedLogs = {
-  fast_transfer: FastTransfer | null;
+  auction: FastTransferAuctionInfo;
   auction_offer: AuctionOffer | null;
 };
 
@@ -77,31 +105,6 @@ export function isOfferArgs(obj: any): obj is OfferArgs {
 
 export type FastTransferId = {
   fast_vaa_hash?: string;
+  fast_vaa_id?: string;
   auction_pubkey?: string;
-};
-
-export type FastTransferImprovementInfo = {
-  best_offer_token: string;
-  best_offer_amount: bigint;
-};
-
-export type FastTransferExecutionInfo = {
-  status: string;
-  user_amount: bigint;
-  // amount that a winner will be penalized for not executing the fast transfer
-  penalty: bigint;
-  execution_payer: string;
-  execution_time: Date;
-  execution_tx_hash: string;
-  execution_slot: bigint;
-};
-
-export type FastTransferSettledInfo = {
-  status: string;
-  // amount that the executor will receive for executing the fast transfer
-  repayment: bigint;
-  settle_tx_hash: string;
-  settle_time: Date;
-  settle_slot: bigint;
-  settle_payer: string;
 };

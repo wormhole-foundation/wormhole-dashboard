@@ -1,4 +1,4 @@
-import { Network, chainToChainId } from '@wormhole-foundation/sdk-base';
+import { Network } from '@wormhole-foundation/sdk-base';
 import { SolanaWatcher } from './SolanaWatcher';
 import { MatchingEngineProgram } from '@wormhole-foundation/example-liquidity-layer-solana/matchingEngine';
 import {
@@ -22,10 +22,12 @@ import { VaaAccount } from '@wormhole-foundation/example-liquidity-layer-solana/
 import { LiquidityLayerMessage } from '@wormhole-foundation/example-liquidity-layer-solana/common';
 import {
   AuctionOffer,
-  FastTransfer,
+  MarketOrder,
+  FastTransferUpdate,
+  FastTransferAuctionInfo,
   FastTransferExecutionInfo,
   FastTransferId,
-  FastTransferImprovementInfo,
+  FastTransferAuctionUpdate,
   FastTransferProtocol,
   FastTransferSettledInfo,
   FastTransferStatus,
@@ -42,6 +44,7 @@ import {
   TokenRouterProgramId,
   USDCMintAddress,
 } from '../fastTransfer/consts';
+import { FastMarketOrder } from '@wormhole-foundation/example-liquidity-layer-definitions';
 
 export class FastTransferSolanaWatcher extends SolanaWatcher {
   readonly network: Network;
@@ -62,9 +65,9 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     this.matchingEngineBorshCoder = new BorshCoder(MATCHING_ENGINE_IDL as any);
     this.tokenRouterBorshCoder = new BorshCoder(TOKEN_ROUTER_IDL as any);
 
-    this.MATCHING_ENGINE_PROGRAM_ID = FAST_TRANSFER_CONTRACTS[network]?.MatchingEngine!;
-    this.USDC_MINT = FAST_TRANSFER_CONTRACTS[network]?.USDCMint!;
-    this.TOKEN_ROUTER_PROGRAM_ID = FAST_TRANSFER_CONTRACTS[network]?.TokenRouter!;
+    this.MATCHING_ENGINE_PROGRAM_ID = FAST_TRANSFER_CONTRACTS[network]?.Solana?.MatchingEngine!;
+    this.USDC_MINT = FAST_TRANSFER_CONTRACTS[network]?.Solana?.USDCMint!;
+    this.TOKEN_ROUTER_PROGRAM_ID = FAST_TRANSFER_CONTRACTS[network]?.Solana?.TokenRouter!;
 
     this.matchingEngineProgram = new MatchingEngineProgram(
       new Connection(this.rpc),
@@ -83,11 +86,11 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     this.pg = knex({
       client: 'pg',
       connection: {
-        user: assertEnvironmentVariable('PG_NTT_USER'),
-        password: assertEnvironmentVariable('PG_NTT_PASSWORD'),
-        database: assertEnvironmentVariable('PG_NTT_DATABASE'),
-        host: assertEnvironmentVariable('PG_NTT_HOST'),
-        port: Number(assertEnvironmentVariable('PG_NTT_PORT')),
+        user: assertEnvironmentVariable('PG_FT_USER'),
+        password: assertEnvironmentVariable('PG_FT_PASSWORD'),
+        database: assertEnvironmentVariable('PG_FT_DATABASE'),
+        host: assertEnvironmentVariable('PG_FT_HOST'),
+        port: Number(assertEnvironmentVariable('PG_FT_PORT')),
       },
     });
   }
@@ -231,7 +234,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction,
     seq: number
-  ): Promise<ParsedLogs | null> {
+  ): Promise<void> {
     const decodedData = this.matchingEngineBorshCoder.instruction.decode(
       Buffer.from(instruction.data),
       'base58'
@@ -241,11 +244,8 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     if (!decodedData || !ixName) {
       this.logger.debug('decodedData is null');
-      return null;
+      return;
     }
-
-    let fast_transfer: FastTransfer | null = null;
-    let auction_offer: AuctionOffer | null = null;
 
     switch (ixName) {
       case 'place_initial_offer_cctp':
@@ -254,14 +254,10 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
           throw new Error('no data');
         }
 
-        ({ fast_transfer, auction_offer } = await this.parsePlaceInitialOfferCctp(
-          res,
-          instruction,
-          decodedData
-        ));
+        await this.parsePlaceInitialOfferCctp(res, instruction, decodedData);
         break;
       case 'improve_offer':
-        ({ auction_offer } = await this.parseImproveOffer(res, instruction, decodedData));
+        await this.parseImproveOffer(res, instruction, decodedData);
         break;
       case 'execute_fast_order_cctp':
         await this.parseExecuteFastOrderCctp(res, instruction);
@@ -270,7 +266,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
         await this.parseExecuteFastOrderLocal(res, instruction);
         break;
       case 'settle_auction_complete':
-        console.log('settle_auction_complete', res.transaction.signatures[0]);
         await this.parseSettleAuctionComplete(res, instruction, seq);
         break;
       case 'settle_auction_none_local':
@@ -280,9 +275,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
         await this.parseSettleAuctionNoneCctp(res, instruction);
         break;
     }
-
-    // returning this for testing purposes
-    return { fast_transfer, auction_offer };
   }
 
   // This assumes that there is only one signer
@@ -328,9 +320,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       fastVaaAccountPubkey
     );
     const fastVaaMessage = LiquidityLayerMessage.decode(fastVaaAccount.payload());
-    const vaaId = `${fastVaaAccount.emitterInfo().chain}/${Buffer.from(
-      fastVaaAccount.emitterInfo().address
-    ).toString('hex')}/${fastVaaAccount.emitterInfo().sequence}`;
 
     let message_protocol: FastTransferProtocol = FastTransferProtocol.NONE;
     let cctp_domain: number | undefined;
@@ -349,31 +338,26 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       );
     }
 
-    const fast_transfer: FastTransfer = {
-      fast_transfer_id: vaaId,
+    const fast_transfer: FastTransferAuctionInfo = {
       fast_vaa_hash: Buffer.from(fastVaaAccount.digest()).toString('hex'),
       auction_pubkey: auctionAccountPubkey.toBase58(),
-      amount: fastVaaMessage.fastMarketOrder?.amountIn || 0n,
-      initial_offer_time: new Date(fastVaaAccount.timestamp() * 1000),
-      src_chain: fastVaaAccount.postedVaaV1.emitterChain,
-      dst_chain: chainToChainId(fastVaaMessage.fastMarketOrder.targetChain),
-      sender: fastVaaMessage.fastMarketOrder.sender.toString(),
-      redeemer: fastVaaMessage.fastMarketOrder.redeemer.toString(),
       start_slot: BigInt(startSlot.toString()),
       end_slot: BigInt(startSlot.addn(duration).toString()),
       deadline_slot: BigInt(startSlot.addn(duration).addn(gracePeriod).toString()),
+      initial_offer_tx_hash: res.transaction.signatures[0],
+      initial_offer_timestamp: new Date(res.blockTime! * 1000),
       best_offer_amount: BigInt(decodedData.data.offer_price.toString()),
       best_offer_token: auction.info?.bestOfferToken?.toBase58() || '',
       message_protocol,
       cctp_domain,
       local_program_id,
-      tx_hash: res.transaction.signatures[0],
-      timestamp: new Date(res.blockTime! * 1000),
     };
+
+    const fastVaaHash = Buffer.from(fastVaaAccount.digest()).toString('hex');
 
     // create an offer for this auction
     const auction_offer: AuctionOffer = {
-      fast_vaa_hash: fast_transfer.fast_vaa_hash,
+      fast_vaa_hash: fastVaaHash,
       payer: payer.toBase58(),
       is_initial_offer: true,
       amount_in: auction.info?.amountIn ? BigInt(auction.info.amountIn.toString()) : 0n,
@@ -386,10 +370,17 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       slot: BigInt(res.slot),
     };
 
-    await this.saveFastTransfer(fast_transfer);
+    await this.saveFastTransferInfo('fast_transfer_auctions', fast_transfer);
     await this.saveAuctionLogs(auction_offer);
+    await this.updateMarketOrder({
+      fast_vaa_hash: fastVaaHash,
+      status: FastTransferStatus.AUCTION,
+      fast_vaa_id: `${fastVaaAccount.emitterInfo().chain}/${Buffer.from(
+        fastVaaAccount.emitterInfo().address
+      ).toString('hex')}/${fastVaaAccount.emitterInfo().sequence}`,
+    });
 
-    return { fast_transfer, auction_offer };
+    return { auction: fast_transfer, auction_offer };
   }
 
   /**
@@ -401,7 +392,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction,
     decodedData: Instruction
-  ): Promise<ParsedLogs> {
+  ): Promise<AuctionOffer> {
     if (decodedData.data === undefined || !isOfferArgs(decodedData.data)) {
       throw new Error(`[parseImproveOffer] invalid data for ${res.transaction.signatures[0]}`);
     }
@@ -433,7 +424,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     // this is fine because if the offer price is higher than current offer price,
     // smart contract will throw an error `CarpingNotAllowed`
     const fast_vaa_hash = Buffer.from(auction.vaaHash).toString('hex');
-    await this.updateFastTransfer(
+    await this.updateAuction(
       { fast_vaa_hash },
       {
         best_offer_token: best_offer_token || '',
@@ -443,7 +434,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     await this.saveAuctionLogs(auction_offer);
 
-    return { fast_transfer: null, auction_offer };
+    return auction_offer;
   }
 
   /**
@@ -484,11 +475,12 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     );
     const userAmount =
       BigInt(amountIn.sub(offerPrice).toString()) - fastMarketOrder.initAuctionFee + userReward;
+    const fast_vaa_hash = Buffer.from(vaaAccount.digest()).toString('hex');
 
     return {
-      id: { fast_vaa_hash: Buffer.from(vaaAccount.digest()).toString('hex') },
+      id: { fast_vaa_hash },
       info: {
-        status: FastTransferStatus.EXECUTED,
+        fast_vaa_hash,
         user_amount: userAmount,
         penalty,
         execution_payer: payerAccount.toBase58(),
@@ -509,14 +501,18 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[4]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[5]];
 
-    const { id, info } = await this.computeExecutionData(
+    const { info } = await this.computeExecutionData(
       res,
       payerAccountPubkey,
       auctionAccountPubkey,
       fastVaaAccountPubkey
     );
 
-    await this.updateFastTransfer(id, info);
+    await this.saveFastTransferInfo('fast_transfer_executions', info);
+    await this.updateMarketOrder({
+      fast_vaa_hash: info.fast_vaa_hash,
+      status: FastTransferStatus.EXECUTED,
+    });
 
     // return this for testing purposes
     return info;
@@ -532,14 +528,18 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[2]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[3]];
 
-    const { id, info } = await this.computeExecutionData(
+    const { info } = await this.computeExecutionData(
       res,
       payerAccountPubkey,
       auctionAccountPubkey,
       fastVaaAccountPubkey
     );
 
-    await this.updateFastTransfer(id, info);
+    await this.saveFastTransferInfo('fast_transfer_executions', info);
+    await this.updateMarketOrder({
+      fast_vaa_hash: info.fast_vaa_hash,
+      status: FastTransferStatus.EXECUTED,
+    });
 
     // return this for testing purposes
     return info;
@@ -600,11 +600,10 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     // we can use `auction_pubkey` to know which fast_transfer this is for.
     // if there is a auction to settle, the auction must exist. And the pubkey
     // will be in the db since we parse everything chronologically
-    const id = {
-      auction_pubkey: auctionAccountPubkey.pubkey.toBase58(),
-    };
+    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auctionAccountPubkey.pubkey);
 
     const info = {
+      fast_vaa_hash: fast_vaa_hash,
       status: FastTransferStatus.SETTLED,
       repayment: BigInt(decodedData.data.amount.toString()),
       settle_payer: accountKeys[transferSplIx.accounts[0]].pubkey.toBase58(),
@@ -613,10 +612,10 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       settle_time: new Date(res.blockTime! * 1000),
     };
 
-    await this.updateFastTransfer(id, info);
+    await this.saveFastTransferInfo('fast_transfer_settlements', info);
 
     return {
-      id,
+      id: { fast_vaa_hash },
       info,
     };
   }
@@ -648,7 +647,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     throw new Error('[parseSettleAuctionNoneCctp] not implemented');
   }
 
-  async saveFastTransfer(fastTransfer: FastTransfer): Promise<void> {
+  async saveFastTransfer(fastTransfer: MarketOrder): Promise<void> {
     // this is to allow ci to run without a db
     if (!this.pg) {
       return;
@@ -656,18 +655,52 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     this.logger.debug(`saving fast transfer ${fastTransfer.fast_vaa_hash}`);
 
     // Upsert the fast transfer
-    await this.pg('fast_transfers').insert(fastTransfer).onConflict('fast_transfer_id').merge();
+    await this.pg('fast_transfers').insert(fastTransfer).onConflict('fast_vaa_id').merge();
   }
 
-  async updateFastTransfer(
-    id: FastTransferId,
-    info: FastTransferExecutionInfo | FastTransferSettledInfo | FastTransferImprovementInfo
-  ): Promise<void> {
+  async updateMarketOrder(update: FastTransferUpdate): Promise<void> {
     if (!this.pg) {
       return;
     }
 
-    await this.pg('fast_transfers').where(id).update(info);
+    await this.pg('market_orders').insert(update).onConflict('fast_vaa_id').merge();
+  }
+
+  async updateAuction(id: FastTransferId, update: FastTransferAuctionUpdate): Promise<void> {
+    if (!this.pg) {
+      return;
+    }
+
+    await this.pg('fast_transfer_auctions').where(id).update(update);
+  }
+
+  async getFastVaaHashFromAuctionPubkey(auctionPubkey: PublicKey): Promise<string> {
+    // this is to allow ci to run without a db
+    if (!this.pg) {
+      return '';
+    }
+
+    const result = await this.pg('auctions')
+      .where({ auction_pubkey: auctionPubkey.toBase58() })
+      .first();
+    return result?.fast_vaa_hash || '';
+  }
+
+  // generic function to save any fast transfer info to the db
+  async saveFastTransferInfo(
+    table: string,
+    info:
+      | FastMarketOrder
+      | FastTransferAuctionInfo
+      | FastTransferExecutionInfo
+      | FastTransferSettledInfo
+  ): Promise<void> {
+    // this is to allow ci to run without a db
+    if (!this.pg) {
+      return;
+    }
+
+    await this.pg(table).insert(info);
   }
 
   async saveAuctionLogs(auctionLogs: AuctionOffer): Promise<void> {

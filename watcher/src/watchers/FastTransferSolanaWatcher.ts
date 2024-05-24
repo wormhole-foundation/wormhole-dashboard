@@ -12,7 +12,7 @@ import {
 } from '@solana/web3.js';
 import { findFromSignatureAndToSignature } from '../utils/solana';
 import { makeBlockKey } from '../databases/utils';
-import { BorshCoder, BorshInstructionCoder, Instruction } from '@coral-xyz/anchor';
+import { BorshCoder, Instruction } from '@coral-xyz/anchor';
 import { decodeTransferInstruction } from '@solana/spl-token';
 
 import MATCHING_ENGINE_IDL from '../idls/matching_engine.json';
@@ -529,8 +529,8 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
     const payerAccountPubkey = accountKeys[accountKeyIndexes[0]];
-    const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[3]];
-    const auctionAccountPubkey = accountKeys[accountKeyIndexes[4]];
+    const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[2]];
+    const auctionAccountPubkey = accountKeys[accountKeyIndexes[3]];
 
     const { id, info } = await this.computeExecutionData(
       res,

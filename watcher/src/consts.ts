@@ -60,6 +60,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Blast: process.env.BLAST_RPC || 'https://rpc.ankr.com/blast',
     Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
     Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
+    Xlayer: process.env.XLAYER_RPC || 'https://rpc.ankr.com/xlayer',
   },
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,

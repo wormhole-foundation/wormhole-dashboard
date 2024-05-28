@@ -77,7 +77,7 @@ var (
 )
 
 // ourGuardianIndex specifies the guardian index that we want to monitor.
-const ourGuardianIndex = 0 // Certus One
+const ourGuardianIndex = 0 // RockawayX
 
 func main() {
 	// TODO: pass in config instead of hard-coding it

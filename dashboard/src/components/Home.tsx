@@ -2,11 +2,6 @@ import { Divider } from '@mui/material';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import useCloudGovernorInfo from '../hooks/useCloudGovernorInfo';
-import {
-  ACCOUNTANT_CONTRACT_ADDRESS,
-  NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET,
-  NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET,
-} from '../utils/consts';
 import { Heartbeat } from '../utils/getLastHeartbeats';
 import Accountant from './Accountant';
 import Chains from './Chains';
@@ -15,6 +10,11 @@ import Guardians from './Guardians';
 import MainnetGovernor from './MainnetGovernor';
 import Monitor from './Monitor';
 import useTokenData from '../hooks/useTokenData';
+import {
+  ACCOUNTANT_CONTRACT_ADDRESS,
+  NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET,
+  NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 function Home({
   heartbeats,

@@ -17,9 +17,8 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
-import { GUARDIAN_SET_3 } from '../utils/consts';
 import { Heartbeat } from '../utils/getLastHeartbeats';
-import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
+import { GUARDIAN_SET_4, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 export const BEHIND_DIFF = 1000;
 export const CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD = 2;
@@ -31,7 +30,7 @@ export const getBehindDiffForChain = (chainId: number) =>
   isLayer2(chainId) ? BEHIND_DIFF * 2 : BEHIND_DIFF;
 
 export const getNumGuardians = (environment: Environment) =>
-  environment === 'Mainnet' ? GUARDIAN_SET_3.length : 1;
+  environment === 'Mainnet' ? GUARDIAN_SET_4.length : 1;
 
 export function getQuorumCount(environment: Environment): number {
   return Math.floor((getNumGuardians(environment) * 2) / 3 + 1);

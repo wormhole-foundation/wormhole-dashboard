@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
-import { GUARDIAN_SET_3, JUMP_GUARDIAN_ADDRESS } from '../utils/consts';
 import { getQuorumCount } from '../components/Alerts';
+import { GUARDIAN_SET_4 } from '@wormhole-foundation/wormhole-monitor-common';
 
 export interface AvailableNotionalByChain {
   guardianName?: string;
@@ -110,7 +110,7 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
     axios.get<GovernorStatusResponse>(`${endpoint}/governor-status`),
   ]);
 
-  let jumpConfig: GovernorConfig | undefined = undefined;
+  let firstConfig: GovernorConfig | undefined = undefined;
   const availableNotionalByChain: {
     [chainId: number]: bigint[];
   } = {};
@@ -124,11 +124,13 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
     [chainId: number]: AvailableNotionalByChain[];
   } = {};
   for (const config of configs.data.governorConfigs) {
-    if (config.guardianAddress.toLowerCase() === JUMP_GUARDIAN_ADDRESS) {
-      jumpConfig = config;
+    if (
+      config.guardianAddress.toLowerCase() === GUARDIAN_SET_4[0].pubkey.toLowerCase().substring(2)
+    ) {
+      firstConfig = config;
     }
     const guardianName =
-      GUARDIAN_SET_3.find(
+      GUARDIAN_SET_4.find(
         (g) => `0x${config.guardianAddress}`.toLowerCase() === g.pubkey.toLowerCase()
       )?.name || config.guardianAddress;
     for (const chain of config.chains) {
@@ -191,7 +193,7 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
     });
   }
 
-  const tokens = jumpConfig?.tokens || [];
+  const tokens = firstConfig?.tokens || [];
 
   const vaaById: { [key: string]: EnqueuedVAA } = {};
   const totalEnqueuedVaas: TotalEnqueuedVaasByGuardianByChain = {};

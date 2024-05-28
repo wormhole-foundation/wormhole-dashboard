@@ -6,7 +6,7 @@
     "baseUrl": ".",
     "paths": {
       "@wormhole-foundation/example-liquidity-layer-solana/*": [
-        "./sdk/example-liquidity-layer/node_modules/@wormhole-foundation/example-liquidity-layer-solana/dist/esm/*"
+        "../node_modules/@wormhole-foundation/example-liquidity-layer-solana/dist/esm/*"
       ]
     }
   },

@@ -38,13 +38,13 @@ import {
   EnqueuedVAA,
   GovernorToken,
 } from '../hooks/useCloudGovernorInfo';
-import { CHAIN_ICON_MAP, GUARDIAN_SET_3 } from '../utils/consts';
+import { CHAIN_ICON_MAP } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import { ExplorerAssetURL } from './ExplorerAssetURL';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
-import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
+import { GUARDIAN_SET_4, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const calculatePercent = (notional: AvailableNotionalByChain): number => {
   try {
@@ -281,13 +281,13 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
     onSortingChange: setNotionalSorting,
   });
   const guardianHoldingStats: GuardianHoldingStat[] = useMemo(() => {
-    const stats: GuardianHoldingStat[] = GUARDIAN_SET_3.map((g) => ({
+    const stats: GuardianHoldingStat[] = GUARDIAN_SET_4.map((g) => ({
       name: g.name,
       numHeld: 0,
       byChain: {},
     }));
     for (const gPub of Object.keys(governorInfo.totalEnqueuedVaas)) {
-      const idx = GUARDIAN_SET_3.findIndex(
+      const idx = GUARDIAN_SET_4.findIndex(
         (g) => `0x${gPub}`.toLowerCase() === g.pubkey.toLowerCase()
       );
       if (idx !== -1) {

@@ -20,11 +20,11 @@ const misses: { chain: ChainId; txHash: string }[] = [
 
 type GuardianSetEntry = { pubkey: string; name: string };
 
-// https://github.com/wormhole-foundation/wormhole-networks/blob/master/mainnetv2/guardianset/v3.prototxt
-const gs3: GuardianSetEntry[] = [
+// https://github.com/wormhole-foundation/wormhole-networks/blob/master/mainnetv2/guardianset/v4.prototxt
+const gs4: GuardianSetEntry[] = [
   {
-    pubkey: '0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5',
-    name: 'Certus One',
+    pubkey: '0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3',
+    name: 'RockawayX',
   },
   {
     pubkey: '0xfF6CB952589BDE862c25Ef4392132fb9D4A42157',
@@ -172,7 +172,7 @@ const gs3: GuardianSetEntry[] = [
       let sig_64 = Buffer.from(observation.signature, 'base64');
       const signature = sig_64.toString('hex');
       const address = observation.guardianAddr;
-      const idx = gs3.findIndex((g) => g.pubkey.toLowerCase() === address.toLowerCase());
+      const idx = gs4.findIndex((g) => g.pubkey.toLowerCase() === address.toLowerCase());
       if (idx === -1) {
         console.warn('skipping signature from guardian not in set');
         continue;
@@ -193,9 +193,9 @@ const gs3: GuardianSetEntry[] = [
       console.error(miss.txHash);
       console.error(`${emitterChain}/${emitterAddress.slice(2)}/${sequence.toString()}`);
       console.error(`${signatures.length} signed`);
-      for (let idx = 0; idx < gs3.length; idx++) {
+      for (let idx = 0; idx < gs4.length; idx++) {
         if (!signatures.find((s) => s.guardianSetIndex === idx)) {
-          console.error(`missing signature for index ${idx}: ${gs3[idx].name} ${gs3[idx].pubkey}`);
+          console.error(`missing signature for index ${idx}: ${gs4[idx].name} ${gs4[idx].pubkey}`);
         }
       }
       continue;

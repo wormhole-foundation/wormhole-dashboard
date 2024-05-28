@@ -172,14 +172,17 @@ export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {
   7: chainToChainId('Polygon'),
 };
 
-export const JUMP_GUARDIAN_ADDRESS = '58cc3ae5c097b213ce3c81979e1b9f9570746aa5';
 export const ACCOUNTANT_CONTRACT_ADDRESS =
   'wormhole14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9srrg465';
+export const NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET =
+  'wormhole1mc23vtzxh46e63vq22e8cnv23an06akvkqws04kghkrxrauzpgwq2hmwm7';
+export const NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET =
+  'wormhole169tvyx49zmjqhlv7mzwj8j2weprascc0jq3rdglw9pynldqx34nscvhc7k';
 
-export const GUARDIAN_SET_3 = [
+export const GUARDIAN_SET_4 = [
   {
-    pubkey: '0x58CC3AE5C097b213cE3c81979e1B9f9570746AA5',
-    name: 'Jump Crypto',
+    pubkey: '0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3',
+    name: 'RockawayX',
   },
   {
     pubkey: '0xfF6CB952589BDE862c25Ef4392132fb9D4A42157',

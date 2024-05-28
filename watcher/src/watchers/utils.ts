@@ -34,6 +34,7 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
     chainName === 'Celo' ||
     chainName === 'Optimism' ||
     chainName === 'Scroll' ||
+    chainName === 'Mantle' ||
     chainName === 'Blast' ||
     chainName === 'Xlayer' ||
     chainName === 'Base'

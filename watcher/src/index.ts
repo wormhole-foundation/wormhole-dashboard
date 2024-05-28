@@ -80,6 +80,7 @@ const supportedChains: Chain[] =
         'Base',
         'Sei',
         'Scroll',
+        'Mantle',
         'Blast',
         'Xlayer',
         'Wormchain',

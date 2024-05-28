@@ -50,6 +50,13 @@ export const networkOptions: Network[] = [
   },
   {
     env: 'Mainnet',
+    endpoint: 'https://worm-dash-01.rockrpc.net',
+    name: 'RockawayX',
+    logo: '',
+    type: 'guardian',
+  },
+  {
+    env: 'Mainnet',
     endpoint: 'https://wormhole-v2-mainnet-api.staking.fund',
     name: 'Staking Fund',
     logo: '',

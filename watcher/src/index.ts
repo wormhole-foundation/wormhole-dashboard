@@ -81,6 +81,7 @@ const supportedChains: Chain[] =
         'Sei',
         'Scroll',
         'Blast',
+        'Xlayer',
         'Wormchain',
       ];
 

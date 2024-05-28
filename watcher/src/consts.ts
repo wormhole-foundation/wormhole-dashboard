@@ -57,6 +57,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
     Base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
     Scroll: process.env.SCROLL_RPC || 'https://rpc.ankr.com/scroll',
+    Mantle: process.env.MANTLE_RPC || 'https://mantle-rpc.publicnode.com',
     Blast: process.env.BLAST_RPC || 'https://rpc.ankr.com/blast',
     Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
     Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',

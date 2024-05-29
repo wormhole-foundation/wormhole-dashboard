@@ -151,10 +151,10 @@ test.skip('should parse executeFastOrderCctp', async () => {
   });
 });
 
-test.skip('should parse settleAuctionComplete', async () => {
+test('should parse settleAuctionComplete', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet', true);
   const txHash =
-    '59LKdrZ4cdHq9hnyZttxP1ZkbYGNNbMpUFM8A68UCtk8qE9y4eUkMm9bkxbwj7WM6i29YxfJ3pb19EUYC2SXCVmp';
+    '5L2tBfpE35gHBTRmqet4UUGoUJrwYZe6LVCLomVkEDU1TBXNbWW2Xs8pPT5Zz2JQgX2vS8pE4bxmyDEZxL9fBVbs';
   const tx = await watcher.getConnection().getTransaction(txHash, {
     maxSupportedTransactionVersion: 0,
   });
@@ -163,20 +163,20 @@ test.skip('should parse settleAuctionComplete', async () => {
     throw new Error('Unable to get transaction');
   }
 
-  const ix = tx.transaction.message.compiledInstructions[3];
+  const ix = tx.transaction.message.compiledInstructions[1];
 
-  const info = await watcher.parseSettleAuctionComplete(tx, ix, 3);
+  const info = await watcher.parseSettleAuctionComplete(tx, ix, 1);
   expect(info).toEqual({
     id: {
-      auction_pubkey: 'FS4EAzWA2WuMKyGBy2C7EBvHL9W63NDX9JR4CPveAiDK',
+      auction_pubkey: 'CpDnbzqqnWv2ww6FNgxxnWADFnHG1sEM537GMTBiq7rf',
     },
     info: {
-      repayment: 10000000n,
-      settle_payer: '9FPvGxE1cNVTrDgHhSdYi2i12HFiepeqNM9Q1kEXgiX2',
-      settle_slot: 298315989n,
-      settle_time: new Date('2024-05-12T06:15:56.000Z'),
+      repayment: 1000000n,
+      settle_payer: '6H68dreG5qZHUVjBwf4kCGQYmW3hULedbezwzPasTr68',
+      settle_slot: 302130744n,
+      settle_time: new Date('2024-05-29T08:09:11.000Z'),
       settle_tx_hash:
-        '59LKdrZ4cdHq9hnyZttxP1ZkbYGNNbMpUFM8A68UCtk8qE9y4eUkMm9bkxbwj7WM6i29YxfJ3pb19EUYC2SXCVmp',
+        '5L2tBfpE35gHBTRmqet4UUGoUJrwYZe6LVCLomVkEDU1TBXNbWW2Xs8pPT5Zz2JQgX2vS8pE4bxmyDEZxL9fBVbs',
       status: 'settled',
     },
   });

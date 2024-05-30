@@ -5,8 +5,10 @@ import {
   SyncAltOutlined,
 } from '@mui/icons-material';
 import { AppBar, Box, Button, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
+import { contracts } from '@wormhole-foundation/sdk-base';
 import { NavLink, Route, Switch, useLocation } from 'react-router-dom';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';
+import useGetGuardianSet from '../hooks/useGetGuardianSet';
 import useHeartbeats from '../hooks/useHeartbeats';
 import useLatestRelease from '../hooks/useLatestRelease';
 import WormholeStatsIcon from '../icons/WormholeStatsIcon';
@@ -113,7 +115,11 @@ function NavLinks() {
 }
 
 function Main() {
-  const heartbeats = useHeartbeats();
+  const [, currentGuardianSet] = useGetGuardianSet(
+    'Ethereum',
+    contracts.coreBridge('Mainnet', 'Ethereum')
+  );
+  const heartbeats = useHeartbeats(currentGuardianSet);
   const chainIdsToHeartbeats = useChainHeartbeats(heartbeats);
   const latestRelease = useLatestRelease();
   return (

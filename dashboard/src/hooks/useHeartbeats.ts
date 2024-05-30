@@ -2,17 +2,17 @@ import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { getLastHeartbeats, Heartbeat } from '../utils/getLastHeartbeats';
 
-function useHeartbeats(): Heartbeat[] {
+function useHeartbeats(currentGuardianSet: string | null): Heartbeat[] {
   const { currentNetwork } = useNetworkContext();
   const [heartbeats, setHeartbeats] = useState<Heartbeat[]>([]);
   useEffect(() => {
     setHeartbeats([]);
-  }, [currentNetwork]);
+  }, [currentNetwork, currentGuardianSet]);
   useEffect(() => {
     let cancelled = false;
     (async () => {
       while (!cancelled) {
-        const heartbeats = await getLastHeartbeats(currentNetwork);
+        const heartbeats = await getLastHeartbeats(currentNetwork, currentGuardianSet);
         if (!cancelled) {
           setHeartbeats(heartbeats.sort((a, b) => a.nodeName.localeCompare(b.nodeName)));
           await new Promise((resolve) =>
@@ -24,7 +24,7 @@ function useHeartbeats(): Heartbeat[] {
     return () => {
       cancelled = true;
     };
-  }, [currentNetwork]);
+  }, [currentNetwork, currentGuardianSet]);
   return heartbeats;
 }
 export default useHeartbeats;

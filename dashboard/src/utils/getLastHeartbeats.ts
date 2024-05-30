@@ -24,13 +24,22 @@ export interface HeartbeatNetwork {
   finalizedHeight: string;
 }
 
-export async function getLastHeartbeats(network: Network): Promise<Heartbeat[]> {
+export async function getLastHeartbeats(
+  network: Network,
+  currentGuardianSet: string | null
+): Promise<Heartbeat[]> {
   if (network.type === 'guardian') {
     const rpc = new GrpcWebImpl(network.endpoint, {});
     const api = new PublicRPCServiceClientImpl(rpc);
     const lastHeartbeats = await api.GetLastHeartbeats({});
     return lastHeartbeats.entries.reduce<Heartbeat[]>((heartbeats, entry) => {
-      if (entry.rawHeartbeat) {
+      if (
+        entry.rawHeartbeat &&
+        (!currentGuardianSet ||
+          currentGuardianSet
+            .toLowerCase()
+            .includes(entry.rawHeartbeat.guardianAddr.toLowerCase().substring(2)))
+      ) {
         heartbeats.push({ ...entry.rawHeartbeat, p2pNodeAddr: entry.p2pNodeAddr });
       }
       return heartbeats;

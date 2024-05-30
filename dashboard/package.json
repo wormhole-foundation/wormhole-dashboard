@@ -29,7 +29,8 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "tsc && vite build",
+    "lint": "eslint --max-warnings=0 src",
+    "build": "npm run lint && tsc && vite build",
     "analyze": "vite-bundle-visualizer"
   },
   "eslintConfig": {
@@ -57,6 +58,8 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/react-timeago": "^4.1.3",
     "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "eslint-config-react-app": "^7.0.1",
     "prettier": "^2.3.2",
     "typescript": "^5.4.5",
     "vite": "^5.2.11",

@@ -17,14 +17,15 @@ export type TokenDataByChainAddress = {
   [chainAddress: string]: TokenDataEntry;
 };
 
-function useTokenData(skip?: boolean): TokenDataByChainAddress | null {
+function useTokenData(): TokenDataByChainAddress | null {
   const { currentNetwork } = useNetworkContext();
+  const skip = currentNetwork.type !== 'cloudfunction';
   const [tokenData, setTokenData] = useState<TokenDataByChainAddress | null>(null);
   useEffect(() => {
+    setTokenData(null);
     if (skip) return;
     let cancelled = false;
     (async () => {
-      setTokenData(null);
       while (!cancelled) {
         const response = await axios.get<{ data: TokenDataEntry[] }>(
           `${currentNetwork.endpoint}/latest-tokendata`

@@ -40,7 +40,7 @@ export function getWarningCount(environment: Environment): number {
   return Math.max(getNumGuardians(environment) - CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD + 1, 1);
 }
 
-function getQuorumLossCount(environment: Environment): number {
+export function getQuorumLossCount(environment: Environment): number {
   return getNumGuardians(environment) - getQuorumCount(environment) + 1;
 }
 

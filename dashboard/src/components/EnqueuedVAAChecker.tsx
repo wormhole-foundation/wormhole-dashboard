@@ -3,14 +3,9 @@ import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { ChainId } from '@wormhole-foundation/sdk-base';
 import getSignedVAAWithRetry, { getSignedVAA } from '../utils/getSignedVaa';
+import { WORMHOLE_RPC_HOSTS } from '../utils/consts';
 
 const VAA_CHECK_TIMEOUT = 60000;
-const WORMHOLE_RPC_HOSTS = [
-  'https://wormhole-v2-mainnet-api.certus.one',
-  'https://wormhole-v2-mainnet-api.mcf.rocks',
-  'https://wormhole-v2-mainnet-api.chainlayer.network',
-  'https://wormhole-v2-mainnet-api.staking.fund',
-];
 
 function EnqueuedVAAChecker({
   vaa: { emitterAddress, emitterChain, sequence },

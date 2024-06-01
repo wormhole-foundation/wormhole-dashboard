@@ -30,6 +30,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { GUARDIAN_SET_4, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import numeral from 'numeral';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -38,13 +39,13 @@ import {
   EnqueuedVAA,
   GovernorToken,
 } from '../hooks/useCloudGovernorInfo';
-import { CHAIN_ICON_MAP } from '../utils/consts';
+import { CHAIN_ICON_MAP, WORMHOLE_RPC_HOSTS } from '../utils/consts';
+import { getQuorumLossCount } from './Alerts';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import { ExplorerAssetURL } from './ExplorerAssetURL';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
-import { GUARDIAN_SET_4, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const calculatePercent = (notional: AvailableNotionalByChain): number => {
   try {
@@ -185,7 +186,26 @@ const enqueuedColumnHelper = createColumnHelper<EnqueuedVAA>();
 const enqueuedColumns = [
   enqueuedColumnHelper.accessor('emitterChain', {
     header: () => 'Chain',
-    cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
+    cell: (info) => (
+      <Typography variant="body2" noWrap sx={{ pl: info.row.original.byGuardian ? 0 : 3 }}>
+        {info.row.getCanExpand() ? (
+          <IconButton
+            size="small"
+            sx={{ ml: -1 }}
+            {...{
+              onClick: info.row.getToggleExpandedHandler(),
+            }}
+          >
+            {info.row.getIsExpanded() ? (
+              <KeyboardArrowDown fontSize="inherit" />
+            ) : (
+              <KeyboardArrowRight fontSize="inherit" />
+            )}
+          </IconButton>
+        ) : null}{' '}
+        {chainIdToName(info.getValue())} ({info.getValue()})
+      </Typography>
+    ),
     sortingFn: `text`,
   }),
   enqueuedColumnHelper.accessor('emitterAddress', {
@@ -195,7 +215,7 @@ const enqueuedColumns = [
     header: () => 'Sequence',
     cell: (info) => (
       <Link
-        href={`https://wormhole-v2-mainnet-api.certus.one/v1/signed_vaa/${info.row.original.emitterChain}/${info.row.original.emitterAddress}/${info.row.original.sequence}`}
+        href={`${WORMHOLE_RPC_HOSTS[0]}/v1/signed_vaa/${info.row.original.emitterChain}/${info.row.original.emitterAddress}/${info.row.original.sequence}`}
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -206,12 +226,13 @@ const enqueuedColumns = [
   enqueuedColumnHelper.display({
     id: 'hasQuorum',
     header: () => 'Has Quorum?',
-    cell: (info) => <EnqueuedVAAChecker vaa={info.row.original} />,
+    cell: (info) =>
+      info.row.original.byGuardian ? <EnqueuedVAAChecker vaa={info.row.original} /> : null,
   }),
   enqueuedColumnHelper.display({
     id: 'numGuardians',
     header: () => 'Num Holding',
-    cell: (info) => Object.keys(info.row.original.byGuardian).length,
+    cell: (info) => info.row.original.byGuardian?.length || info.row.original.guardianName || null,
   }),
   enqueuedColumnHelper.accessor('txHash', {
     header: () => 'Transaction Hash',
@@ -220,8 +241,19 @@ const enqueuedColumns = [
     ),
   }),
   enqueuedColumnHelper.accessor('releaseTime', {
-    header: () => 'Release Time',
-    cell: (info) => new Date(info.getValue() * 1000).toLocaleString(),
+    header: () => 'Estimated Release Time',
+    cell: (info) => {
+      const sortedTimes = info.row.original.byGuardian?.map((v) => v.releaseTime).sort();
+      const quorumTime =
+        sortedTimes && sortedTimes[Math.max(0, sortedTimes.length - getQuorumLossCount('Mainnet'))];
+      const rawTime = quorumTime ? quorumTime : info.getValue();
+      const date = new Date(rawTime * 1000);
+      return (
+        <>
+          {date.toLocaleString()} ({date.toISOString()})
+        </>
+      );
+    },
   }),
   enqueuedColumnHelper.accessor('notionalValue', {
     header: () => <Box order="1">Notional Value</Box>,
@@ -313,14 +345,25 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
     onSortingChange: setGuardianHoldingSorting,
   });
   const [enqueuedSorting, setEnqueuedSorting] = useState<SortingState>([]);
+  const [enqueuedExpanded, setEnqueuedExpanded] = useState<ExpandedState>({});
   const enqueuedTable = useReactTable({
     columns: enqueuedColumns,
     data: governorInfo.enqueuedVAAs,
     state: {
+      expanded: enqueuedExpanded,
       sorting: enqueuedSorting,
     },
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: 50,
+      },
+    },
     getRowId: (vaa) => JSON.stringify(vaa),
+    getSubRows: (row) => row.byGuardian,
     getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    onExpandedChange: setEnqueuedExpanded,
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setEnqueuedSorting,

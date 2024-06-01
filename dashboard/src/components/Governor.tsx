@@ -29,7 +29,7 @@ import {
 import numeral from 'numeral';
 import { useCallback, useMemo, useState } from 'react';
 import useGovernorInfo from '../hooks/useGovernorInfo';
-import { CHAIN_ICON_MAP } from '../utils/consts';
+import { CHAIN_ICON_MAP, WORMHOLE_RPC_HOSTS } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import { ExplorerAssetURL } from './ExplorerAssetURL';
@@ -106,7 +106,7 @@ const enqueuedColumns = [
     header: () => 'Sequence',
     cell: (info) => (
       <Link
-        href={`https://wormhole-v2-mainnet-api.certus.one/v1/signed_vaa/${info.row.original.emitterChain}/${info.row.original.emitterAddress}/${info.row.original.sequence}`}
+        href={`${WORMHOLE_RPC_HOSTS[0]}/v1/signed_vaa/${info.row.original.emitterChain}/${info.row.original.emitterAddress}/${info.row.original.sequence}`}
         target="_blank"
         rel="noopener noreferrer"
       >

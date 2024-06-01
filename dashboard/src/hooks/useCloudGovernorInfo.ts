@@ -24,15 +24,14 @@ export interface GovernorToken {
 }
 
 export interface EnqueuedVAA {
+  guardianName?: string;
   emitterChain: number;
   emitterAddress: string;
   sequence: string;
   releaseTime: number;
   notionalValue: string;
   txHash: string;
-  byGuardian: {
-    [guardianAddress: string]: EnqueuedVAAResponse;
-  };
+  byGuardian?: EnqueuedVAA[];
 }
 
 export interface TotalEnqueuedVaasByGuardianByChain {
@@ -198,6 +197,9 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
   const vaaById: { [key: string]: EnqueuedVAA } = {};
   const totalEnqueuedVaas: TotalEnqueuedVaasByGuardianByChain = {};
   for (const s of status.data.governorStatus) {
+    const guardianName =
+      GUARDIAN_SET_4.find((g) => `0x${s.guardianAddress}`.toLowerCase() === g.pubkey.toLowerCase())
+        ?.name || s.guardianAddress;
     for (const chain of s.chains) {
       for (const emitter of chain.emitters) {
         if (!totalEnqueuedVaas[s.guardianAddress]) {
@@ -216,7 +218,10 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
             ...vaa,
             emitterChain: chain.chainId,
             emitterAddress,
-            byGuardian: { ...(vaaById[vaaId]?.byGuardian || {}), [s.guardianAddress]: vaa },
+            byGuardian: [
+              ...(vaaById[vaaId]?.byGuardian || []),
+              { ...vaa, emitterChain: chain.chainId, emitterAddress, guardianName },
+            ],
           };
         }
       }

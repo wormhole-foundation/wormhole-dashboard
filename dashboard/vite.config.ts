@@ -22,4 +22,18 @@ export default defineConfig({
       include: [/common/, /node_modules/],
     },
   },
+  server: {
+    proxy: {
+      '/wormchain': {
+        target: 'https://gateway.mainnet.xlabs.xyz',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/wormchain/, ''),
+      },
+      '/wormchain-testnet': {
+        target: 'https://gateway.testnet.xlabs.xyz',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/wormchain-testnet/, ''),
+      },
+    },
+  },
 });

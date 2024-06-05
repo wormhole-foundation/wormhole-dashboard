@@ -1,10 +1,12 @@
 import { chainIdToChain, chainIds } from '@wormhole-foundation/sdk-base';
 import { chainToIcon } from '@wormhole-foundation/sdk-icons';
 
-export const WORMCHAIN_URL = 'https://tncnt-eu-wormchain-main-01.rpc.p2p.world';
-export const TESTNET_WORMCHAIN_URL = `https://corsproxy.io/?${encodeURIComponent(
-  'https://gateway.testnet.xlabs.xyz'
-)}`;
+export const WORMCHAIN_URL = import.meta.env.DEV
+  ? '/wormchain'
+  : 'https://gateway.mainnet.xlabs.xyz';
+export const TESTNET_WORMCHAIN_URL = import.meta.env.DEV
+  ? '/wormchain-testnet'
+  : 'https://gateway.testnet.xlabs.xyz';
 
 export const WORMHOLE_RPC_HOSTS = [
   'https://wormhole-v2-mainnet-api.mcf.rocks',

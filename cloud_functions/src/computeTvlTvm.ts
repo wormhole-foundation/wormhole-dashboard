@@ -7,6 +7,7 @@ import { Firestore } from 'firebase-admin/firestore';
 import { ACCOUNTANT_CONTRACT_ADDRESS } from '@wormhole-foundation/wormhole-monitor-common';
 
 const WORMCHAIN_URLS: string[] = [
+  'https://gateway.mainnet.xlabs.xyz',
   'https://tncnt-eu-wormchain-main-01.rpc.p2p.world',
   'https://wormchain-rpc.quickapi.com',
 ];

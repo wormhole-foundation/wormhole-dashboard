@@ -1,5 +1,3 @@
-import { BN } from '@project-serum/anchor';
-
 export enum CircleIntegrationPayload {
   DepositWithPayload = 1,
 }
@@ -25,7 +23,7 @@ export function parseCircleIntegrationDepositWithPayload(
     throw new Error('not circle integration payload VAA');
   }
   const tokenAddress = payload.subarray(1, 33);
-  const amount = BigInt(new BN(payload.subarray(33, 65)).toString());
+  const amount = BigInt(`0x${payload.subarray(33, 65).toString('hex')}`);
   const sourceDomain = payload.readUInt32BE(65);
   const targetDomain = payload.readUInt32BE(69);
   const nonce = payload.readBigUInt64BE(73);

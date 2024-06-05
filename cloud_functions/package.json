@@ -12,7 +12,6 @@
     "gcp-build": "npm i ./dist/src/wormhole-foundation-wormhole-monitor-common-0.0.1.tgz ./dist/src/wormhole-foundation-wormhole-monitor-database-0.0.1.tgz"
   },
   "dependencies": {
-    "@certusone/wormhole-sdk": "^0.10.15",
     "@coral-xyz/anchor": "^0.29.0",
     "@cosmjs/cosmwasm-stargate": "^0.31.1",
     "@google-cloud/bigtable": "^4.1.0",
@@ -22,7 +21,6 @@
     "@solana/web3.js": "^1.87.3",
     "@wormhole-foundation/sdk-evm-ntt": "^0.0.1-beta.4",
     "@wormhole-foundation/sdk-solana-ntt": "^0.0.1-beta.4",
-    "axios": "^1.5.0",
     "borsh": "^1.0.0",
     "dotenv": "^16.0.3",
     "ethers": "6.12.0",

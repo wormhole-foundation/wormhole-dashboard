@@ -1,5 +1,4 @@
 import {
-  assertEnvironmentVariable,
   NTT_MANAGER_CONTRACT,
   NTT_TOKENS,
   NTT_TRANSCEIVER_CONTRACT,
@@ -7,6 +6,7 @@ import {
   getEvmTokenDecimals,
   getSolanaTokenDecimals,
   NTTRateLimit,
+  getNetwork,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { EvmPlatform, EvmChains } from '@wormhole-foundation/sdk-evm';
 import { SolanaPlatform } from '@wormhole-foundation/sdk-solana';
@@ -17,7 +17,8 @@ import { Storage } from '@google-cloud/storage';
 
 const storage = new Storage();
 let bucketName: string = 'wormhole-ntt-cache';
-if (assertEnvironmentVariable('NETWORK') === 'Testnet') {
+const network = getNetwork();
+if (network === 'Testnet') {
   bucketName = 'wormhole-ntt-cache-testnet';
 }
 
@@ -115,7 +116,6 @@ export async function computeNTTRateLimits(req: any, res: any) {
   }
 
   try {
-    const network = assertEnvironmentVariable('NETWORK') as Network;
     const managerContracts = NTT_MANAGER_CONTRACT[network];
 
     const rateLimits = await Promise.all(

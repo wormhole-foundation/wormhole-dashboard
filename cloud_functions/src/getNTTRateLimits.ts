@@ -2,7 +2,7 @@ import { Storage } from '@google-cloud/storage';
 import { chainIdToChain } from '@wormhole-foundation/sdk-base';
 import {
   NTTRateLimit,
-  assertEnvironmentVariable,
+  getNetwork,
   normalizeToDecimals,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Gauge, register } from 'prom-client';
@@ -33,7 +33,7 @@ async function setCapacityGauge(
 const storage = new Storage();
 
 let bucketName: string = 'wormhole-ntt-cache';
-const network = assertEnvironmentVariable('NETWORK');
+const network = getNetwork();
 if (network === 'Testnet') {
   bucketName = 'wormhole-ntt-cache-testnet';
 }

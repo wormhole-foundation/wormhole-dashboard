@@ -1,11 +1,8 @@
 import { Storage } from '@google-cloud/storage';
-import {
-  NTTRateLimit,
-  assertEnvironmentVariable,
-} from '@wormhole-foundation/wormhole-monitor-common';
+import { NTTRateLimit, getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
 
 const storage = new Storage();
-const network = assertEnvironmentVariable('NETWORK');
+const network = getNetwork();
 let bucketName: string = 'wormhole-ntt-cache';
 if (network === 'Testnet') {
   bucketName = 'wormhole-ntt-cache-testnet';

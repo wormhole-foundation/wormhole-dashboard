@@ -1,24 +1,23 @@
 import {
   NTT_MANAGER_CONTRACT,
   NTT_TOKENS,
-  assertEnvironmentVariable,
+  NTTTotalSupplyAndLockedData,
   derivePda,
+  getCustody,
+  getCustodyAmount,
   getEvmTokenDecimals,
   getEvmTotalSupply,
+  getNetwork,
   normalizeToDecimals,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { PublicKey } from '@solana/web3.js';
-import {
-  getCustody,
-  getCustodyAmount,
-  NTTTotalSupplyAndLockedData,
-} from '@wormhole-foundation/wormhole-monitor-common';
 import { Network, rpc, Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
 import { Storage } from '@google-cloud/storage';
 
 const storage = new Storage();
 let bucketName: string = 'wormhole-ntt-cache';
-if (assertEnvironmentVariable('NETWORK') === 'Testnet') {
+const network = getNetwork();
+if (network === 'Testnet') {
   bucketName = 'wormhole-ntt-cache-testnet';
 }
 
@@ -96,7 +95,6 @@ export async function computeTotalSupplyAndLocked(req: any, res: any) {
   }
 
   try {
-    const network = assertEnvironmentVariable('NETWORK') as Network;
     const totalSupplyAndLocked = await fetchTotalSupplyAndLocked(network);
     await cloudStorageCache.save(JSON.stringify(totalSupplyAndLocked));
     res.status(200).send('Total supply and locked saved');

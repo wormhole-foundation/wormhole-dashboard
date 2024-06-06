@@ -10,13 +10,13 @@ import {
   normalizeCompileInstruction,
 } from '@wormhole-foundation/wormhole-monitor-common/src/solana';
 import { getMissThreshold } from '@wormhole-foundation/wormhole-monitor-common';
-import { contracts, toChainId } from '@wormhole-foundation/sdk-base';
+import { contracts } from '@wormhole-foundation/sdk-base';
 
 // This script finds the message accounts which correspond to solana misses
 
 (async () => {
   const now = new Date();
-  const missThreshold = getMissThreshold(now, toChainId('Solana'))
+  const missThreshold = getMissThreshold(now, 'Solana');
   let log = ora('Fetching Solana misses').start();
   try {
     const response = await axios.get(

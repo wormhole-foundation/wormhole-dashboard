@@ -1,4 +1,4 @@
-import { ChainId, Network } from '@wormhole-foundation/sdk-base';
+import { ChainId, Network, toChainId } from '@wormhole-foundation/sdk-base';
 import {
   MISS_THRESHOLD_IN_MINS,
   explorerBlock,
@@ -92,7 +92,7 @@ export async function alarmMissingVaas(req: any, res: any) {
       thePast.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
       const missThreshold = thePast.toISOString();
       for (const chain of Object.keys(messages)) {
-        const chainId = chain as unknown as ChainId;
+        const chainId: ChainId = toChainId(Number(chain));
         const msgs = messages[chainId];
         if (msgs && msgs.messages) {
           for (let i = 0; i < msgs.messages.length; i++) {
@@ -154,7 +154,7 @@ export async function alarmMissingVaas(req: any, res: any) {
   return;
 }
 
-// This function gets all the enqueued VAAs from he governorStatus collection.
+// This function gets all the enqueued VAAs from the governorStatus collection.
 async function getGovernedVaas(): Promise<GovernedVAAMap> {
   const vaas: GovernedVAAMap = new Map<string, GovernedVAA>();
   // Walk all the guardians and retrieve the enqueued VAAs
@@ -292,8 +292,8 @@ function convert(msg: ObservedMessage): FirestoreVAA {
 function formatMessage(msg: ObservedMessage): string {
   const cName: string = chainIdToName(msg.chain);
   const vaaKeyUrl: string = `https://wormholescan.io/#/tx/${msg.chain}/${msg.emitter}/${msg.seq}`;
-  const txHashUrl: string = explorerTx(network, msg.chain as ChainId, msg.txHash);
-  const blockUrl: string = explorerBlock(network, msg.chain as ChainId, msg.block.toString());
+  const txHashUrl: string = explorerTx(network, toChainId(msg.chain), msg.txHash);
+  const blockUrl: string = explorerBlock(network, toChainId(msg.chain), msg.block.toString());
   const formattedMsg = `*Chain:* ${cName}(${msg.chain})\n*TxHash:* <${txHashUrl}|${msg.txHash}>\n*VAA Key:* <${vaaKeyUrl}|${msg.chain}/${msg.emitter}/${msg.seq}> \n*Block:* <${blockUrl}|${msg.block}> \n*Timestamp:* ${msg.timestamp}`;
   return formattedMsg;
 }
@@ -310,7 +310,7 @@ async function getLastBlockTimeFromFirestore(): Promise<LatestTimeByChain> {
     snapshot.docs
       .sort((a, b) => Number(a.id) - Number(b.id))
       .forEach((doc) => {
-        values[Number(doc.id) as ChainId] = { latestTime: doc.data().lastBlockKey.split('/')[1] };
+        values[toChainId(Number(doc.id))] = { latestTime: doc.data().lastBlockKey.split('/')[1] };
       });
   } catch (e) {
     console.error(e);
@@ -338,7 +338,7 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
   // Walk all chains and check the latest block time.
   const now = new Date();
   for (const chain of Object.keys(latestTimes)) {
-    const chainId: ChainId = chain as any as ChainId;
+    const chainId: ChainId = toChainId(Number(chain));
     const latestTime: string | undefined = latestTimes[chainId]?.latestTime;
     if (!latestTime) {
       continue;

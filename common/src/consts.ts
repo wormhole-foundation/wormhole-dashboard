@@ -1,9 +1,12 @@
-import { Chain, ChainId, Network, chainToChainId, toChain } from '@wormhole-foundation/sdk-base';
+import { Chain, ChainId, Network, chainToChainId, toChain, toChainId } from '@wormhole-foundation/sdk-base';
 
 export type Mode = 'vaa' | 'ntt';
 
-export const MISS_THRESHOLD_IN_MINS = 40;
+// This is defined here in an effort to keep the number and text in sync.
+// The default value is not exported because the getMissThreshold() function should be used to get the value.
+const MISS_THRESHOLD_IN_MINS_DEFAULT = 40;
 export const MISS_THRESHOLD_LABEL = '40 minutes';
+
 export const MAX_VAA_DECIMALS = 8;
 export const VAA_VERSION = 1;
 
@@ -95,7 +98,14 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   ['Devnet']: {},
 };
 
-export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
+export function getMissThreshold(date: Date, chainId: ChainId): string {
+  const missThresholdInMins = chainId === toChainId("Scroll") ? 120 : MISS_THRESHOLD_IN_MINS_DEFAULT;
+  const missDate = new Date(date);
+  missDate.setMinutes(missDate.getMinutes() - missThresholdInMins);
+  return missDate.toISOString();
+}
+
+ export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Solana: 'ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5',
   Ethereum: '0000000000000000000000003ee18b2214aff97000d974cf647e7c347e8fa585',
   Terra: '0000000000000000000000007cf7b764e38a0a5e967972c1df77d432510564e2',

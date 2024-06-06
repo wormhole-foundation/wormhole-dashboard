@@ -1,8 +1,8 @@
 import { ChainId, Network, toChainId } from '@wormhole-foundation/sdk-base';
 import {
-  MISS_THRESHOLD_IN_MINS,
   explorerBlock,
   explorerTx,
+  getMissThreshold,
   getNetwork,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
@@ -88,9 +88,6 @@ export async function alarmMissingVaas(req: any, res: any) {
     const messages: MissingVaasByChain = await commonGetMissingVaas();
     if (messages) {
       const now = new Date();
-      const thePast = now;
-      thePast.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
-      const missThreshold = thePast.toISOString();
       for (const chain of Object.keys(messages)) {
         const chainId: ChainId = toChainId(Number(chain));
         const msgs = messages[chainId];
@@ -99,13 +96,12 @@ export async function alarmMissingVaas(req: any, res: any) {
             // Check the timestamp and only send messages that are older than MISS_THRESHOLD_IN_MINS
             const msg: ObservedMessage = msgs.messages[i];
             // If there is a reference time for this chain, use it.  Otherwise, use the current time.
-            let timeToCheck = missThreshold;
+            let timeToCheck = getMissThreshold(now, chainId);
             if (refTimes[chainId]) {
               let refTime = refTimes[chainId]?.latestTime;
               if (refTime) {
                 const refDateTime = new Date(refTime);
-                refDateTime.setMinutes(refDateTime.getMinutes() - MISS_THRESHOLD_IN_MINS);
-                timeToCheck = refDateTime.toISOString();
+                timeToCheck = getMissThreshold(refDateTime, chainId);
               }
             }
             if (msg.timestamp < timeToCheck) {
@@ -197,7 +193,7 @@ async function getGovernedVaas(): Promise<GovernedVAAMap> {
 }
 
 // This function gets all the VAAs in the firestore table,
-// checks the timestamp (keeping any that are less than MISS_THRESHOLD_IN_MINS old),
+// checks the timestamp (keeping any that are less than the thresholdold),
 // and returns a map of those VAAs.
 async function getAndProcessFirestore(): Promise<Map<string, FirestoreVAA>> {
   // Get VAAs in the firestore holding area.
@@ -207,9 +203,6 @@ async function getAndProcessFirestore(): Promise<Map<string, FirestoreVAA>> {
   );
   let current = new Map<string, FirestoreVAA>();
   const now = new Date();
-  const thePast = now;
-  thePast.setMinutes(now.getMinutes() - MISS_THRESHOLD_IN_MINS);
-  const missThreshold = thePast.toISOString();
   await collection
     .doc('VAAs')
     .get()
@@ -217,10 +210,11 @@ async function getAndProcessFirestore(): Promise<Map<string, FirestoreVAA>> {
       if (doc.exists) {
         const data = doc.data();
         if (data) {
-          // if VAA < MISS_THRESHOLD_IN_MINS old, leave in firestore
+          // if VAA < missThreshold old, leave in firestore
           const vaas: FirestoreVAA[] = data.VAAs;
           vaas.forEach((vaa) => {
-            if (vaa.noticedTS > missThreshold) {
+            // vaa.chain is guaranteed to be a string representation of a number e.g. "34"
+            if (vaa.noticedTS > getMissThreshold(now, toChainId(Number(vaa.chain)))) {
               // console.log('keeping VAA in firestore', vaa.vaaKey);
               current.set(vaa.vaaKey, vaa);
             }

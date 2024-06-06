@@ -214,7 +214,7 @@ async function getAndProcessFirestore(): Promise<Map<string, FirestoreVAA>> {
           const vaas: FirestoreVAA[] = data.VAAs;
           vaas.forEach((vaa) => {
             // vaa.chain is guaranteed to be a string representation of a number e.g. "34"
-            if (vaa.noticedTS > getMissThreshold(now, toChainId(Number(vaa.chain)))) {
+            if (vaa.noticedTS > getMissThreshold(now, vaa.chain)) {
               // console.log('keeping VAA in firestore', vaa.vaaKey);
               current.set(vaa.vaaKey, vaa);
             }

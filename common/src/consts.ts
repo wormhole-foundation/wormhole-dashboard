@@ -1,4 +1,11 @@
-import { Chain, ChainId, Network, chainToChainId, toChain, toChainId } from '@wormhole-foundation/sdk-base';
+import {
+  Chain,
+  ChainId,
+  Network,
+  chainToChainId,
+  toChain,
+  toChainId,
+} from '@wormhole-foundation/sdk-base';
 
 export type Mode = 'vaa' | 'ntt';
 
@@ -98,14 +105,29 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   ['Devnet']: {},
 };
 
-export function getMissThreshold(date: Date, chainId: ChainId): string {
-  const missThresholdInMins = chainId === toChainId("Scroll") ? 120 : MISS_THRESHOLD_IN_MINS_DEFAULT;
-  const missDate = new Date(date);
+export function getMissThreshold(date: Date, chainish: number | string | Chain | ChainId): string {
+  // We would like chainish to really be a ChainId.
+  let missThresholdInMins: number;
+  try {
+    let chainId: ChainId;
+    if (typeof chainish === 'string' && !Number.isNaN(Number(chainish))) {
+      // e.g. Handle '1'
+      chainId = toChainId(Number(chainish));
+    } else {
+      // At this point we either have a number, a non-number string, a Chain, or a ChainId
+      chainId = toChainId(chainish);
+    }
+    missThresholdInMins = chainId === toChainId('Scroll') ? 120 : MISS_THRESHOLD_IN_MINS_DEFAULT;
+  } catch (e) {
+    // If we can't get the chainId, we'll use the default value.
+    missThresholdInMins = MISS_THRESHOLD_IN_MINS_DEFAULT;
+  }
+  const missDate = date;
   missDate.setMinutes(missDate.getMinutes() - missThresholdInMins);
   return missDate.toISOString();
 }
 
- export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
+export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Solana: 'ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5',
   Ethereum: '0000000000000000000000003ee18b2214aff97000d974cf647e7c347e8fa585',
   Terra: '0000000000000000000000007cf7b764e38a0a5e967972c1df77d432510564e2',

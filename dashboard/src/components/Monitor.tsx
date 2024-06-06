@@ -16,13 +16,13 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { chainIdToChain, toChainId } from '@wormhole-foundation/sdk-base';
+import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
 import {
   MISS_THRESHOLD_LABEL,
   explorerBlock,
   explorerTx,
   explorerVaa,
-  getMissThreshold
+  getMissThreshold,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -78,7 +78,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
           gutterBottom
         >
           <IconButton
-            href={explorerTx(network, toChainId(Number(chain)), message.txHash)}
+            href={explorerTx(network, Number(chain) as ChainId, message.txHash)}
             target="_blank"
             size="small"
             sx={inlineIconButtonSx}
@@ -106,7 +106,7 @@ function BlockDetail({ chain, message }: { chain: string; message: ObservedMessa
       <Typography gutterBottom>
         Block {message.block}{' '}
         <IconButton
-          href={explorerBlock(network, toChainId(Number(chain)), message.block.toString())}
+          href={explorerBlock(network, Number(chain) as ChainId, message.block.toString())}
           target="_blank"
           size="small"
           sx={inlineIconButtonSx}
@@ -240,7 +240,7 @@ function ReobserveCodeContent({ misses }: { misses: MissesByChain }) {
         .map(([chain, info]) => {
           const filteredMisses = showAllMisses
             ? info.messages
-            : info.messages.filter((message) => message.timestamp < getMissThreshold(now, toChainId(Number(chain))));
+            : info.messages.filter((message) => message.timestamp < getMissThreshold(now, chain));
           return filteredMisses.length === 0
             ? null
             : filteredMisses
@@ -295,7 +295,7 @@ function Misses({
           const filteredMisses = showAllMisses
             ? info.messages
             : info.messages
-                .filter((message) => message.timestamp < getMissThreshold(now, toChainId(Number(chain))))
+                .filter((message) => message.timestamp < getMissThreshold(now, chain))
                 .filter(
                   (message) =>
                     !governorInfo?.enqueuedVAAs.some(
@@ -309,7 +309,7 @@ function Misses({
             <CollapsibleSection
               key={chain}
               defaultExpanded={false}
-              header={`${chainIdToChain.get(toChainId(Number(chain)))} (${chain}) - ${
+              header={`${chainIdToChain.get(Number(chain) as ChainId)} (${chain}) - ${
                 filteredMisses.length
               }`}
             >
@@ -385,7 +385,7 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
           const filteredMisses = showAllMisses
             ? info.messages
             : info.messages
-                .filter((message) => message.timestamp < getMissThreshold(now, toChainId(Number(chain))))
+                .filter((message) => message.timestamp < getMissThreshold(now, chain))
                 .filter(
                   (message) =>
                     !governorInfo?.enqueuedVAAs.some(
@@ -397,7 +397,7 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                 );
           return filteredMisses.length === 0
             ? counts
-            : { ...counts, [toChainId(Number(chain))]: filteredMisses.length };
+            : { ...counts, [Number(chain) as ChainId]: filteredMisses.length };
         }, {})
       : {};
   }, [governorInfo?.enqueuedVAAs, misses, showAllMisses]);
@@ -499,14 +499,14 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                     header={
                       <div>
                         <Typography variant="h5" sx={{ mb: 0.5 }}>
-                          {chainIdToChain.get(toChainId(Number(chain)))} ({chain})
+                          {chainIdToChain.get(Number(chain) as ChainId)} ({chain})
                         </Typography>
                         <Typography variant="body2" sx={{ mb: 0.5 }}>
                           Last Indexed Block - {lastBlock.split('/')[0]}
                           {' - '}
                           {new Date(lastBlock.split('/')[1]).toLocaleString()}
                         </Typography>
-                        {messageCounts?.[toChainId(Number(chain))] ? (
+                        {messageCounts?.[Number(chain) as ChainId] ? (
                           <Typography
                             component="div"
                             sx={{
@@ -516,12 +516,12 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                           >
                             <Box sx={missingBlockSx} />
                             &nbsp;={' '}
-                            {messageCounts?.[toChainId(Number(chain))]?.numMessagesWithoutVaas}
+                            {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
                             &nbsp;&nbsp;
                             <Box sx={doneBlockSx} />
                             &nbsp;={' '}
-                            {(messageCounts?.[toChainId(Number(chain))]?.numTotalMessages || 0) -
-                              (messageCounts?.[toChainId(Number(chain))]?.numMessagesWithoutVaas ||
+                            {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
+                              (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas ||
                                 0)}
                           </Typography>
                         ) : null}

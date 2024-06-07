@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS fast_transfer_auctions;
 DROP TABLE IF EXISTS fast_transfer_executions;
 DROP TABLE IF EXISTS fast_transfer_settlements;
 DROP TABLE IF EXISTS auction_logs;
+DROP TABLE IF EXISTS auction_history_mapping;
 
 DROP TYPE IF EXISTS FastTransferStatus;
 DROP TYPE IF EXISTS FastTransferProtocol;
@@ -79,4 +80,12 @@ CREATE TABLE auction_logs (
   security_deposit BIGINT NOT NULL,
   offer_price BIGINT NOT NULL,
   timestamp TIMESTAMP NOT NULL
+);
+
+-- Auction History Mapping tracks which auction history pubkey is associated with
+-- which auction pubkey. This is to prevent having to search for the auction in auction
+-- history on chain which takes O(n) time, where n is the number of auction histories.
+CREATE TABLE auction_history_mapping (
+  auction_pubkey VARCHAR(255) PRIMARY KEY,
+  index INT NOT NULL
 );

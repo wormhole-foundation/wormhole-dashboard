@@ -7,7 +7,7 @@ jest.setTimeout(60_000);
 // It is just an entrypoint to test the whole thing with a local postgres database.
 test.skip('getMessagesByBlock', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');
-  await watcher.getMessagesByBlock(299707624, 302567900);
+  await watcher.getMessagesByBlock(301864980, 302864980);
 });
 
 test('placeInitialOfferCctp', async () => {
@@ -131,10 +131,10 @@ test('should parse executeFastOrderLocal', async () => {
   });
 });
 
-test.skip('should parse executeFastOrderCctp', async () => {
+test('should parse executeFastOrderCctp', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet', true);
   const txHash =
-    'oGtHH2x7hLapWkRnBVE9iUqEPJ5UbAjgTYHxDgfPLQru1mQBDYFWyuA1b2NEvRgXvper8KK55MMs3GUYmvhtP4h';
+    '4XiWZGfB9KymYuNgJP7z7rMcKroN3VXYL1QWAevZ4HNTgB3tgj1EGPdaeSgFA8uhj4QUNTdtB7aSb7pxNM7Vd77p';
   const tx = await watcher.getConnection().getTransaction(txHash, {
     maxSupportedTransactionVersion: 0,
   });
@@ -146,14 +146,15 @@ test.skip('should parse executeFastOrderCctp', async () => {
   const ix = tx.transaction.message.compiledInstructions[0];
 
   const info = await watcher.parseExecuteFastOrderCctp(tx, ix);
+
   expect(info).toEqual({
-    status: 'executed',
     user_amount: 8000000n,
     penalty: 0n,
     execution_tx_hash: txHash,
-    execution_payer: 'RiCKPaEpYYR2M8eGeUfRp43Yj63xfoAmkpeeNG3Mso7',
-    execution_slot: 293282685n,
-    execution_time: new Date('2024-04-18T17:53:10.000Z'),
+    execution_payer: 'RoXdiG9eHCYvZjrVfM6DTNSsX1xAzhubvEUxproxybn',
+    execution_slot: 301864332n,
+    execution_time: new Date('2024-05-28T03:15:19.000Z'),
+    fast_vaa_hash: '14a5187e40e4fd2b2950cd8332b4142259757f4cbf7cffcb7cc95249df8415b9',
   });
 });
 
@@ -189,4 +190,112 @@ test('should parse settleAuctionComplete', async () => {
       status: 'settled',
     },
   });
+});
+
+// Skipping this since it requires database
+test.skip('should fetch closed Auction', async () => {
+  const watcher = new FastTransferSolanaWatcher('Testnet');
+  const auction = await watcher.fetchAuction('FS4EAzWA2WuMKyGBy2C7EBvHL9W63NDX9JR4CPveAiDK');
+
+  if (!auction) {
+    throw new Error('Auction not found');
+  }
+
+  // We need to convert one by one because we can't compare BN directly
+  expect({
+    vaaHash: auction.vaaHash,
+    info: {
+      configId: auction.info.configId,
+      custodyTokenBump: auction.info.custodyTokenBump,
+      vaaSequence: auction.info.vaaSequence.toString(10),
+      sourceChain: auction.info.sourceChain,
+      bestOfferToken: auction.info.bestOfferToken.toString(),
+      initialOfferToken: auction.info.initialOfferToken.toString(),
+      startSlot: auction.info.startSlot.toString(10),
+      amountIn: auction.info.amountIn.toString(10),
+      securityDeposit: auction.info.securityDeposit.toString(10),
+      offerPrice: auction.info.offerPrice.toString(10),
+      redeemerMessageLen: auction.info.redeemerMessageLen,
+      destinationAssetInfo: auction.info.destinationAssetInfo,
+    },
+  }).toEqual({
+    vaaHash: '76cf535a7c06f6463c65db5c6cc8366494beb3742de4b64bb97c8c46bd6f1a63',
+    info: {
+      configId: 2,
+      custodyTokenBump: 254,
+      startSlot: '297529247',
+      vaaSequence: '12193',
+      sourceChain: 10005,
+      bestOfferToken: 'RoX5UsxwSMD2f3TmQA8aDsWqyYuyCGKZHwZEaDZHa6e',
+      initialOfferToken: 'RoX5UsxwSMD2f3TmQA8aDsWqyYuyCGKZHwZEaDZHa6e',
+      amountIn: '10000000',
+      securityDeposit: '2550000',
+      offerPrice: '1500000',
+      redeemerMessageLen: 0,
+      destinationAssetInfo: null,
+    },
+  });
+});
+
+test('should fetch auction update from logs', async () => {
+  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const txHash =
+    '2YJAG7smyau6GbuEQT9NHJmuj4BFQWc8XrF2CTsmh1m626ZEd681DJoRmzQQGhj51UATB84o8TqMMaehC8nsFrVa';
+  const tx = await watcher.getConnection().getTransaction(txHash, {
+    maxSupportedTransactionVersion: 0,
+  });
+
+  if (!tx) {
+    throw new Error('Unable to get transaction');
+  }
+
+  if (!tx.meta?.logMessages) {
+    throw new Error('No log messages');
+  }
+  const auctionUpdate = await watcher.fetchEventFromLogs('AuctionUpdated', tx.meta.logMessages);
+
+  if (!auctionUpdate) {
+    throw new Error('Auction update not found');
+  }
+
+  expect({
+    config_id: 2,
+    auction: auctionUpdate.auction.toString(),
+    vaa: auctionUpdate.vaa.toString(),
+    source_chain: auctionUpdate.source_chain,
+    target_protocol: {
+      Local: {
+        program_id: auctionUpdate.target_protocol.Local?.program_id.toString(),
+      },
+    },
+    redeemer_message_len: auctionUpdate.redeemer_message_len,
+    end_slot: auctionUpdate.end_slot.toString(10),
+    best_offer_token: auctionUpdate.best_offer_token.toString(),
+    token_balance_before: auctionUpdate.token_balance_before.toString(10),
+    amount_in: auctionUpdate.amount_in.toString(10),
+    total_deposit: auctionUpdate.total_deposit.toString(10),
+    max_offer_price_allowed: auctionUpdate.max_offer_price_allowed.toString(10),
+  }).toEqual({
+    config_id: 2,
+    auction: '4Pmg1kmeMQnjoGYP2PzNxMyuBE8tP5YYZbqv7tayz9LC',
+    vaa: '7GP7KfYUUSxLhQQCaBzmC5QDDQcWWqpm6nbGNDNpLh2p',
+    source_chain: 10003,
+    target_protocol: {
+      Local: {
+        program_id: 'tD8RmtdcV7bzBeuFgyrFc8wvayj988ChccEzRQzo6md',
+      },
+    },
+    redeemer_message_len: 4,
+    end_slot: '301745909',
+    best_offer_token: 'RoX5UsxwSMD2f3TmQA8aDsWqyYuyCGKZHwZEaDZHa6e',
+    token_balance_before: '11462602341',
+    amount_in: '10000000',
+    total_deposit: '12550000',
+    max_offer_price_allowed: '1425000',
+  });
+});
+
+test.skip('should index all auction history', async () => {
+  const watcher = new FastTransferSolanaWatcher('Testnet');
+  await watcher.indexAuctionHistory('77W4Votv6bK1tyq4xcvyo2V9gXYknXBwcZ53XErgcEs9');
 });

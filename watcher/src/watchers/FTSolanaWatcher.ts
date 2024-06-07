@@ -1,6 +1,10 @@
 import { Network } from '@wormhole-foundation/sdk-base';
 import { SolanaWatcher } from './SolanaWatcher';
-import { MatchingEngineProgram } from '@wormhole-foundation/example-liquidity-layer-solana/matchingEngine';
+import {
+  AuctionEntry,
+  AuctionInfo,
+  MatchingEngineProgram,
+} from '@wormhole-foundation/example-liquidity-layer-solana/matchingEngine';
 import {
   ConfirmedSignatureInfo,
   Connection,
@@ -12,7 +16,7 @@ import {
 } from '@solana/web3.js';
 import { findFromSignatureAndToSignature } from '../utils/solana';
 import { makeBlockKey } from '../databases/utils';
-import { BorshCoder, Instruction } from '@coral-xyz/anchor';
+import { BorshCoder, EventParser, Instruction } from '@coral-xyz/anchor';
 import { decodeTransferInstruction } from '@solana/spl-token';
 
 import MATCHING_ENGINE_IDL from '../idls/matching_engine.json';
@@ -56,6 +60,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   readonly MATCHING_ENGINE_PROGRAM_ID: MatchingEngineProgramId;
   readonly USDC_MINT: USDCMintAddress;
   readonly TOKEN_ROUTER_PROGRAM_ID: TokenRouterProgramId;
+  readonly eventParser: EventParser;
 
   constructor(network: Network, isTest: boolean = false) {
     super(network, false);
@@ -76,6 +81,10 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     );
     this.getSignaturesLimit = 100;
     this.logger = getLogger(`fast_transfer_solana_${network.toLowerCase()}`);
+    this.eventParser = new EventParser(
+      new PublicKey(this.MATCHING_ENGINE_PROGRAM_ID),
+      this.matchingEngineBorshCoder
+    );
 
     // hacky way to not connect to the db in tests
     // this is to allow ci to run without a db
@@ -226,7 +235,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
         }
       }
     }
-
     return signatures;
   }
 
@@ -305,10 +313,8 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[4]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[7]];
 
-    const auction = await this.matchingEngineProgram.fetchAuction({
-      address: auctionAccountPubkey,
-    });
-    if (!auction.info) {
+    const auction = await this.fetchAuction(auctionAccountPubkey.toBase58());
+    if (!auction || !auction.info) {
       throw new Error(`[parsePlaceInitialOfferCctp] no auction info`);
     }
     const { configId, startSlot } = auction.info;
@@ -324,12 +330,16 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     let message_protocol: FastTransferProtocol = FastTransferProtocol.NONE;
     let cctp_domain: number | undefined;
     let local_program_id: string | undefined;
-    if (auction.targetProtocol.cctp) {
-      message_protocol = FastTransferProtocol.CCTP;
-      cctp_domain = auction.targetProtocol.cctp.domain;
-    } else if (auction.targetProtocol.local) {
-      message_protocol = FastTransferProtocol.LOCAL;
-      local_program_id = auction.targetProtocol.local.programId.toBase58();
+
+    if (res.meta?.logMessages) {
+      const auctionUpdate = await this.fetchEventFromLogs('AuctionUpdated', res.meta.logMessages);
+      if (auctionUpdate.target_protocol.Cctp) {
+        message_protocol = FastTransferProtocol.CCTP;
+        cctp_domain = auctionUpdate.target_protocol.Cctp.domain;
+      } else if (auctionUpdate.target_protocol.Local) {
+        message_protocol = FastTransferProtocol.LOCAL;
+        local_program_id = auctionUpdate.target_protocol.Local.program_id.toBase58();
+      }
     }
 
     if (!fastVaaMessage.fastMarketOrder) {
@@ -347,7 +357,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       initial_offer_tx_hash: res.transaction.signatures[0],
       initial_offer_timestamp: new Date(res.blockTime! * 1000),
       best_offer_amount: BigInt(decodedData.data.offer_price.toString()),
-      best_offer_token: auction.info?.bestOfferToken?.toBase58() || '',
+      best_offer_token: auction.info.bestOfferToken?.toBase58() || '',
       message_protocol,
       cctp_domain,
       local_program_id,
@@ -360,8 +370,8 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       fast_vaa_hash: fastVaaHash,
       payer: payer.toBase58(),
       is_initial_offer: true,
-      amount_in: auction.info?.amountIn ? BigInt(auction.info.amountIn.toString()) : 0n,
-      security_deposit: auction.info?.securityDeposit
+      amount_in: auction.info.amountIn ? BigInt(auction.info.amountIn.toString()) : 0n,
+      security_deposit: auction.info.securityDeposit
         ? BigInt(auction.info.securityDeposit.toString())
         : 0n,
       offer_price: BigInt(decodedData.data.offer_price.toString()),
@@ -401,12 +411,13 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     const accountKeyIndexes = instruction.accountKeyIndexes;
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[1]];
 
-    const auction = await this.matchingEngineProgram.fetchAuction({
-      address: auctionAccountPubkey,
-    });
+    const auction = await this.fetchAuction(auctionAccountPubkey.toBase58());
+    if (!auction) {
+      throw new Error('[parseImproveOffer] auction info is missing');
+    }
 
     const auction_offer: AuctionOffer = {
-      fast_vaa_hash: Buffer.from(auction.vaaHash).toString('hex'),
+      fast_vaa_hash: auction.vaaHash,
       payer: this.getSigner(res).toBase58(),
       is_initial_offer: false,
       amount_in: auction.info?.amountIn ? BigInt(auction.info.amountIn.toString()) : 0n,
@@ -449,13 +460,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     auctionAccountPubkey: PublicKey,
     fastVaaAccount: PublicKey
   ): Promise<{ id: FastTransferId; info: FastTransferExecutionInfo }> {
-    const auctionPubkey = await this.matchingEngineProgram.fetchAuction({
-      address: auctionAccountPubkey,
-    });
-    if (!auctionPubkey.info) {
-      throw new Error('[computeExecutionData] auction info is missing');
-    }
-
     const vaaAccount = await VaaAccount.fetch(
       this.matchingEngineProgram.program.provider.connection,
       fastVaaAccount
@@ -466,19 +470,25 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       throw new Error('[computeExecutionData] fast market order is missing');
     }
 
-    const info = auctionPubkey.info;
-    const { amountIn, offerPrice } = info;
+    const auction = await this.fetchAuction(auctionAccountPubkey.toBase58());
+    if (!auction || !auction.info) {
+      throw new Error('[computeExecutionData] auction info is missing');
+    }
+    const { amountIn, offerPrice } = auction.info;
     const { userReward, penalty } = await this.matchingEngineProgram.computeDepositPenalty(
-      info,
+      auction.info,
       BigInt(tx.slot),
-      info.configId
+      auction.info.configId
     );
     const userAmount =
       BigInt(amountIn.sub(offerPrice).toString()) - fastMarketOrder.initAuctionFee + userReward;
     const fast_vaa_hash = Buffer.from(vaaAccount.digest()).toString('hex');
+    const fast_vaa_id = `${vaaAccount.emitterInfo().chain}/${Buffer.from(
+      vaaAccount.emitterInfo().address
+    ).toString('hex')}/${vaaAccount.emitterInfo().sequence}`;
 
     return {
-      id: { fast_vaa_hash },
+      id: { fast_vaa_hash, fast_vaa_id },
       info: {
         fast_vaa_hash,
         user_amount: userAmount,
@@ -501,7 +511,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[4]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[5]];
 
-    const { info } = await this.computeExecutionData(
+    const { id, info } = await this.computeExecutionData(
       res,
       payerAccountPubkey,
       auctionAccountPubkey,
@@ -510,7 +520,8 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     await this.saveFastTransferInfo('fast_transfer_executions', info);
     await this.updateMarketOrder({
-      fast_vaa_hash: info.fast_vaa_hash,
+      fast_vaa_id: id.fast_vaa_id,
+      fast_vaa_hash: id.fast_vaa_hash,
       status: FastTransferStatus.EXECUTED,
     });
 
@@ -528,7 +539,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[2]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[3]];
 
-    const { info } = await this.computeExecutionData(
+    const { id, info } = await this.computeExecutionData(
       res,
       payerAccountPubkey,
       auctionAccountPubkey,
@@ -537,7 +548,8 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     await this.saveFastTransferInfo('fast_transfer_executions', info);
     await this.updateMarketOrder({
-      fast_vaa_hash: info.fast_vaa_hash,
+      fast_vaa_id: id.fast_vaa_id,
+      fast_vaa_hash: id.fast_vaa_hash,
       status: FastTransferStatus.EXECUTED,
     });
 
@@ -633,10 +645,10 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
   async parseSettleAuctionNoneLocal(
     res: VersionedTransactionResponse,
-    instruction: MessageCompiledInstruction
+    ix: MessageCompiledInstruction
   ) {
     // Slow relay is not done yet, will implement after
-    throw new Error('[parseSettleAuctionNoneLocal] not implemented');
+    throw new Error('[parseSettleAuctionNoneCctp] not implemented');
   }
 
   async parseSettleAuctionNoneCctp(
@@ -645,6 +657,178 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   ) {
     // Slow relay is not done yet, will implement after
     throw new Error('[parseSettleAuctionNoneCctp] not implemented');
+  }
+
+  /*
+   * `fetchAuction` fetches the auction from the chain first
+   * if the auction is closed, `matchingEngineProgram.fetchAuction` will throw an error
+   * we can catch this error and fetch the auction from the auction history
+   * it's more suitable to use try-catch here because it accounts for when the auction account
+   * is used to store other data.
+   */
+  async fetchAuction(pubkey: string): Promise<{
+    vaaHash: string;
+    info: AuctionInfo;
+  } | null> {
+    try {
+      const auction = await this.matchingEngineProgram.fetchAuction({
+        address: new PublicKey(pubkey),
+      });
+
+      if (!auction.info) {
+        throw new Error('Auction info not found');
+      }
+
+      return {
+        vaaHash: Buffer.from(auction.vaaHash).toString('hex'),
+        info: auction.info,
+      };
+    } catch (e) {
+      try {
+        const auction = await this.fetchAuctionFromHistory(pubkey);
+
+        if (!auction) {
+          throw new Error('Auction not found');
+        }
+
+        return {
+          vaaHash: Buffer.from(auction.vaaHash).toString('hex'),
+          info: auction.info,
+        };
+      } catch (e) {
+        this.logger.error('Failed to fetch auction from history:', e);
+      }
+    }
+
+    return null;
+  }
+
+  async fetchEventFromLogs(name: string, logs: string[]) {
+    const parsedLogs = this.eventParser.parseLogs(logs);
+    for (let event of parsedLogs) {
+      if (event.name === name) {
+        return event.data;
+      }
+    }
+
+    return null;
+  }
+
+  /*
+   * `fetchAuctionFromHistory` fetches the auction from the auction history
+   * if there is a mapping in the db, we fetch the auction from the auction history using the mapping
+   * otherwise, we index to the latest auction history index and fetch the auction from the auction history
+   */
+  async fetchAuctionFromHistory(pubkey: string): Promise<AuctionEntry | null> {
+    const auctionHistoryPubkey = await this.getAuctionHistoryMapping(pubkey);
+
+    if (auctionHistoryPubkey) {
+      const index = BigInt(auctionHistoryPubkey.index);
+      const auctionHistory = await this.matchingEngineProgram.fetchAuctionHistory(index);
+
+      return (
+        auctionHistory.data.find((entry) => {
+          const auctionPk = this.matchingEngineProgram.auctionAddress(entry.vaaHash);
+          return auctionPk.toBase58() === pubkey;
+        }) || null
+      );
+    }
+
+    return await this.indexAuctionHistory(pubkey);
+  }
+
+  /*
+   * `indexAuctionHistory` fetches all the auction history records from the matching engine
+   * starting from the latest index that has been indexed in the database
+   */
+  async indexAuctionHistory(pubkey: string): Promise<AuctionEntry | null> {
+    let latestAuctionHistoryIndex = await this.getDbLatestAuctionHistoryIndex();
+    const auctionHistories = [];
+
+    while (true) {
+      try {
+        const auctionHistory = await this.matchingEngineProgram.fetchAuctionHistory(
+          latestAuctionHistoryIndex
+        );
+        auctionHistories.push(auctionHistory);
+        latestAuctionHistoryIndex++;
+      } catch (error) {
+        // if no more auction history records to fetch or an error occurred, break the loop
+        this.logger.error('No more auction history records to fetch or an error occurred:', error);
+        break;
+      }
+    }
+
+    let auction: AuctionEntry | null = null;
+
+    const mapping = await auctionHistories.flatMap((auctionHistory) => {
+      return auctionHistory.data.map((entry) => {
+        const auctionPk = this.matchingEngineProgram.auctionAddress(entry.vaaHash);
+
+        if (auctionPk.toBase58() === pubkey) {
+          auction = entry;
+        }
+        return {
+          auction_pubkey: auctionPk.toBase58(),
+          index: BigInt(auctionHistory.header.id.toString()),
+        };
+      });
+    });
+
+    await this.saveAuctionHistoryMapping(mapping);
+
+    return auction;
+  }
+
+  // `getDbLatestAuctionHistoryIndex` fetches the latest auction history index that has been indexed
+  // in the database
+  async getDbLatestAuctionHistoryIndex(): Promise<bigint> {
+    // this is to allow ci to run without a db
+    if (!this.pg) {
+      return 0n;
+    }
+
+    try {
+      const result = await this.pg('auction_history_mapping').max('index as maxIndex').first();
+      console.log(result);
+      return result && result.maxIndex !== null ? BigInt(result.maxIndex) : 0n;
+    } catch (error) {
+      this.logger.error('Failed to fetch the largest index from auction_history_mapping:', error);
+      throw new Error('Database query failed');
+    }
+  }
+
+  async getAuctionHistoryMapping(auction: string): Promise<{
+    auction: string;
+    auction_pubkey: string;
+    index: bigint;
+  }> {
+    // this is to allow ci to run without a db
+    if (!this.pg) {
+      return {
+        auction,
+        auction_pubkey: '',
+        index: 0n,
+      };
+    }
+
+    const result = await this.pg('auction_history_mapping')
+      .where({ auction_pubkey: auction })
+      .first();
+    return result;
+  }
+
+  async saveAuctionHistoryMapping(
+    mappings: {
+      auction_pubkey: string;
+      index: bigint;
+    }[]
+  ): Promise<void> {
+    if (!this.pg) {
+      return;
+    }
+
+    await this.pg('auction_history_mapping').insert(mappings).onConflict('auction_pubkey').merge();
   }
 
   async saveFastTransfer(fastTransfer: MarketOrder): Promise<void> {

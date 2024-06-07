@@ -1,9 +1,4 @@
-import {
-  AnalyticsOutlined,
-  GitHub,
-  ReceiptLongOutlined,
-  SyncAltOutlined,
-} from '@mui/icons-material';
+import { GitHub, ReceiptLongOutlined, SyncAltOutlined } from '@mui/icons-material';
 import { AppBar, Box, Button, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
 import { contracts } from '@wormhole-foundation/sdk-base';
 import { NavLink, Route, Switch, useLocation } from 'react-router-dom';
@@ -15,7 +10,6 @@ import WormholeStatsIcon from '../icons/WormholeStatsIcon';
 import Alerts from './Alerts';
 import Contracts from './Contracts';
 import Home from './Home';
-import Metrics from './Metrics';
 import NTTMetrics from './NTTMetrics';
 import NetworkSelector from './NetworkSelector';
 import Settings from './Settings';
@@ -66,27 +60,6 @@ function NavLinks() {
         </Hidden>
         <Hidden mdDown>
           <Typography variant="h6">Contracts</Typography>
-        </Hidden>
-      </NavLink>
-      <NavLink
-        to={`/metrics${search}`}
-        exact
-        component={NavButton}
-        color="inherit"
-        activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
-        style={{
-          paddingRight: 8,
-          marginLeft: 8,
-          textTransform: 'none',
-          borderRadius: 0,
-          minWidth: 0,
-        }}
-      >
-        <Hidden mdUp>
-          <AnalyticsOutlined />
-        </Hidden>
-        <Hidden mdDown>
-          <Typography variant="h6">Metrics</Typography>
         </Hidden>
       </NavLink>
       <NavLink
@@ -151,9 +124,6 @@ function Main() {
       <Switch>
         <Route path="/ntt-metrics">
           <NTTMetrics />
-        </Route>
-        <Route path="/metrics">
-          <Metrics />
         </Route>
         <Route path="/contracts">
           <Contracts />

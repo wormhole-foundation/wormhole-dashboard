@@ -26,16 +26,15 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import numeral from 'numeral';
 import { useCallback, useMemo, useState } from 'react';
 import useGovernorInfo from '../hooks/useGovernorInfo';
 import { CHAIN_ICON_MAP, WORMHOLE_RPC_HOSTS } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
-import { ExplorerAssetURL } from './ExplorerAssetURL';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
-import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const calculatePercent = (notional: GovernorGetAvailableNotionalByChainResponse_Entry): number => {
   try {
@@ -146,9 +145,6 @@ const tokenColumns = [
   }),
   tokenColumnHelper.accessor('originAddress', {
     header: () => 'Token',
-    cell: (info) => (
-      <ExplorerAssetURL chain={info.row.original.originChainId} assetAddr={info.getValue()} />
-    ),
   }),
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,
@@ -329,7 +325,7 @@ function Governor() {
                 }}
                 placeholder="Search Address"
               />
-              <Table<GovernorGetTokenListResponse_Entry> table={tokenTable} />
+              <Table<GovernorGetTokenListResponse_Entry> table={tokenTable} paginated />
             </AccordionDetails>
           </Accordion>
         </Card>

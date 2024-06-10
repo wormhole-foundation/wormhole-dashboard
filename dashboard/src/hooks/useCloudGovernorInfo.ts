@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { getQuorumCount } from '../components/Alerts';
 import { GUARDIAN_SET_4 } from '@wormhole-foundation/wormhole-monitor-common';
+import { tryHexToNativeAssetString } from '../utils/nativeAsset';
 
 export interface AvailableNotionalByChain {
   guardianName?: string;
@@ -192,7 +193,16 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
     });
   }
 
-  const tokens = firstConfig?.tokens || [];
+  const tokens =
+    firstConfig?.tokens?.map((entry) => {
+      try {
+        return {
+          ...entry,
+          originAddress: tryHexToNativeAssetString(entry.originAddress, entry.originChainId),
+        };
+      } catch (e) {}
+      return entry;
+    }) || [];
 
   const vaaById: { [key: string]: EnqueuedVAA } = {};
   const totalEnqueuedVaas: TotalEnqueuedVaasByGuardianByChain = {};

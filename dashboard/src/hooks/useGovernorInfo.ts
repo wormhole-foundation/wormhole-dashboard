@@ -8,6 +8,7 @@ import { useNetworkContext } from '../contexts/NetworkContext';
 import { getGovernorAvailableNotionalByChain } from '../utils/getGovernorAvailableNotionalByChain';
 import { getGovernorEnqueuedVAAs } from '../utils/getGovernorEnqueuedVAAs';
 import { getGovernorTokenList } from '../utils/getGovernorTokenList';
+import { tryHexToNativeAssetString } from '../utils/nativeAsset';
 
 type GovernorInfo = {
   notionals: GovernorGetAvailableNotionalByChainResponse_Entry[];
@@ -51,7 +52,21 @@ function useGovernorInfo(): GovernorInfo {
       while (!cancelled && currentNetwork.type === 'guardian') {
         const response = await getGovernorTokenList(currentNetwork);
         if (!cancelled) {
-          setGovernorInfo((info) => ({ ...info, tokens: response.entries }));
+          setGovernorInfo((info) => ({
+            ...info,
+            tokens: response.entries.map((entry) => {
+              try {
+                return {
+                  ...entry,
+                  originAddress: tryHexToNativeAssetString(
+                    entry.originAddress,
+                    entry.originChainId
+                  ),
+                };
+              } catch (e) {}
+              return entry;
+            }),
+          }));
           await new Promise((resolve) => setTimeout(resolve, TIMEOUT));
         }
       }

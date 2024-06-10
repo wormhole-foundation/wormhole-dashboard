@@ -43,7 +43,6 @@ import { CHAIN_ICON_MAP, WORMHOLE_RPC_HOSTS } from '../utils/consts';
 import { getQuorumLossCount } from './Alerts';
 import CollapsibleSection from './CollapsibleSection';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
-import { ExplorerAssetURL } from './ExplorerAssetURL';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
 
@@ -272,9 +271,6 @@ const tokenColumns = [
   }),
   tokenColumnHelper.accessor('originAddress', {
     header: () => 'Token',
-    cell: (info) => (
-      <ExplorerAssetURL chain={info.row.original.originChainId} assetAddr={info.getValue()} />
-    ),
   }),
   tokenColumnHelper.accessor('price', {
     header: () => <Box order="1">Price</Box>,

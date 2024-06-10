@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/certusone/wormhole/node/pkg/common"
@@ -27,13 +28,11 @@ var (
 	rootCtxCancel context.CancelFunc
 	hbReceived    bool
 	// The following are from the .env file:
-	p2pNetworkID   string
-	p2pPort        uint
-	nodeKeyPath    string
-	ethRpcUrl      string
-	coreBridgeAddr string
-	logLevel       string
-	promRemoteURL  string
+	p2pNetworkID  string
+	p2pPort       uint
+	nodeKeyPath   string
+	logLevel      string
+	promRemoteURL string
 )
 
 var (
@@ -49,7 +48,6 @@ func loadEnvVars() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	p2pNetworkID = verifyEnvVar("P2P_NETWORK_ID")
 	port, err := strconv.ParseUint(verifyEnvVar("P2P_PORT"), 10, 32)
 	if err != nil {
 		log.Fatal("Error parsing P2P_PORT")
@@ -57,8 +55,6 @@ func loadEnvVars() {
 	p2pPort = uint(port)
 	nodeKeyPath = verifyEnvVar("NODE_KEY_PATH")
 	logLevel = verifyEnvVar("LOG_LEVEL")
-	ethRpcUrl = verifyEnvVar("ETH_RPC_URL")
-	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
 	promRemoteURL = verifyEnvVar("PROM_REMOTE_URL")
 }
 
@@ -95,11 +91,9 @@ func RunPrometheusScraper(ctx context.Context, logger *zap.Logger, info promremo
 
 func main() {
 	loadEnvVars()
-	p2pBootstraps := []string{"/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC",
-		"/dns4/wormhole.mcf.rocks/udp/8999/quic/p2p/12D3KooWDZVv7BhZ8yFLkarNdaSWaB43D6UbQwExJ8nnGAEmfHcU",
-		"/dns4/wormhole-v2-mainnet-bootstrap.staking.fund/udp/8999/quic/p2p/12D3KooWG8obDX9DNi1KUwZNu9xkGwfKqTp2GFwuuHpWZ3nQruS1"}
-
-	level, err := ipfslog.LevelFromString("info")
+	p2pNetworkID = p2p.MainnetNetworkId
+	p2pBootstraps := strings.Split(p2p.MainnetBootstrapPeers, `,`)
+	level, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
 		fmt.Println("Invalid log level")
 		os.Exit(1)
@@ -221,7 +215,7 @@ func main() {
 			}
 
 			if hbReceived {
-				logger.Info("Heartbeat received for", zap.String("bootstrap peer", bootstrapPeer))
+				logger.Info("***** Heartbeat received ***** for", zap.String("bootstrap peer", bootstrapPeer))
 				bootstrapPeerStatus.WithLabelValues(bootstrapPeer).Set(1)
 			} else {
 				logger.Warn("******** ALERT ********** No heartbeat received for", zap.String("bootstrap peer", bootstrapPeer))

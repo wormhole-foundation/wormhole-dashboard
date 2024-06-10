@@ -115,8 +115,6 @@ func loadEnvVars() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	p2pNetworkID = verifyEnvVar("P2P_NETWORK_ID")
-	p2pBootstrap = verifyEnvVar("P2P_BOOTSTRAP")
 	port, err := strconv.ParseUint(verifyEnvVar("P2P_PORT"), 10, 32)
 	if err != nil {
 		log.Fatal("Error parsing P2P_PORT")
@@ -142,6 +140,8 @@ func verifyEnvVar(key string) string {
 
 func main() {
 	loadEnvVars()
+	p2pNetworkID = p2p.MainnetNetworkId
+	p2pBootstrap = p2p.MainnetBootstrapPeers
 
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {

@@ -1,7 +1,7 @@
 import { Worker } from 'worker_threads';
 import { HB_INTERVAL, WorkerData } from '../consts';
 import { getLogger } from '../utils/logger';
-import { Mode, getMode, getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
+import { Mode, getMode, getNetwork, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
 
 interface WorkerInfo {
@@ -39,8 +39,8 @@ function spawnWorker(data: WorkerData) {
   logger.debug('Finished spawning worker:', workerName);
 }
 
-function monitorWorkers() {
-  setInterval(async () => {
+async function monitorWorkers(): Promise<void> {
+  while (true) {
     for (const [workerName, workerInfo] of Object.entries(workers)) {
       logger.debug(
         `Checking worker ${workerName} with lastHB of ${new Date(workerInfo.lastHB)}...`
@@ -52,7 +52,8 @@ function monitorWorkers() {
         spawnWorker(workerInfo.data);
       }
     }
-  }, HB_INTERVAL);
+    await sleep(HB_INTERVAL);
+  }
 }
 
 export function startSupervisor(supportedChains: Chain[]) {

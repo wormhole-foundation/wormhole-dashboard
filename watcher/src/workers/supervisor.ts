@@ -40,14 +40,15 @@ function spawnWorker(data: WorkerData) {
 }
 
 function monitorWorkers() {
-  setInterval(() => {
+  setInterval(async () => {
     for (const [workerName, workerInfo] of Object.entries(workers)) {
       logger.debug(
         `Checking worker ${workerName} with lastHB of ${new Date(workerInfo.lastHB)}...`
       );
       if (Date.now() - workerInfo.lastHB > HB_INTERVAL) {
         logger.error(`Worker ${workerName} missed HB, restarting...`);
-        workerInfo.worker.terminate();
+        const exitCode = await workerInfo.worker.terminate();
+        logger.error(`Worker ${workerName} forcibly terminated and received exit code ${exitCode}`);
         spawnWorker(workerInfo.data);
       }
     }

@@ -1038,8 +1038,8 @@ github.com/warpfork/go-wish v0.0.0-20220906213052-39a1cc7a02d0 h1:GDDkbFiaK8jsSD
 github.com/warpfork/go-wish v0.0.0-20220906213052-39a1cc7a02d0/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
 github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1 h1:EKhdznlJHPMoKr0XTrX+IlJs1LH3lyx2nfr1dOlZ79k=
 github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1/go.mod h1:8UvriyWtv5Q5EOgjHaSseUEdkQfvwFv1I/In/O2M9gc=
-github.com/wormholelabs-xyz/wormhole/node v0.0.0-20240610195914-fd94f239ddf2 h1:GMcYxjtKLiTLIWtY1i88AmcShIUuLmeJ/xLv62cjtbg=
-github.com/wormholelabs-xyz/wormhole/node v0.0.0-20240610195914-fd94f239ddf2/go.mod h1:nynfZl9OpSSvYpolu16jbLRrTia5MeArcBNDP7B3Twc=
+github.com/wormholelabs-xyz/wormhole/node v0.0.0-20240611200501-e1e93a8d4779 h1:7JbOQs54myogx5VNzKUoix8lbT4onTxqtwzQhqMravA=
+github.com/wormholelabs-xyz/wormhole/node v0.0.0-20240611200501-e1e93a8d4779/go.mod h1:nynfZl9OpSSvYpolu16jbLRrTia5MeArcBNDP7B3Twc=
 github.com/wormholelabs-xyz/wormhole/sdk v0.0.0-20240610195914-fd94f239ddf2 h1:gjplNeIAQ+ArZExDnbb8cPzeJ551Y3Zh3lOjAMF3Ff0=
 github.com/wormholelabs-xyz/wormhole/sdk v0.0.0-20240610195914-fd94f239ddf2/go.mod h1:pE/jYet19kY4P3V6mE2+01zvEfxdyBqv6L6HsnSa5uc=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=

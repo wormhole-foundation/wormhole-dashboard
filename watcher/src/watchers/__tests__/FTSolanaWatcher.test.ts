@@ -5,6 +5,7 @@ jest.setTimeout(60_000);
 
 // This test is working, but testing it is not very useful since the return value is just the lastBlockKey.
 // It is just an entrypoint to test the whole thing with a local postgres database.
+// Skipping because it requires db
 test.skip('getMessagesByBlock', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');
   await watcher.getMessagesByBlock(301864980, 302864980);
@@ -197,7 +198,7 @@ test.skip('should fetch closed Auction', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');
   const auction = await watcher.fetchAuction('FS4EAzWA2WuMKyGBy2C7EBvHL9W63NDX9JR4CPveAiDK');
 
-  if (!auction) {
+  if (!auction || !auction.info) {
     throw new Error('Auction not found');
   }
 
@@ -252,7 +253,7 @@ test('should fetch auction update from logs', async () => {
   if (!tx.meta?.logMessages) {
     throw new Error('No log messages');
   }
-  const auctionUpdate = await watcher.fetchEventFromLogs('AuctionUpdated', tx.meta.logMessages);
+  const auctionUpdate = await watcher.getAuctionUpdatedFromLogs(tx.meta.logMessages);
 
   if (!auctionUpdate) {
     throw new Error('Auction update not found');
@@ -261,7 +262,7 @@ test('should fetch auction update from logs', async () => {
   expect({
     config_id: 2,
     auction: auctionUpdate.auction.toString(),
-    vaa: auctionUpdate.vaa.toString(),
+    vaa: auctionUpdate.vaa?.toString(),
     source_chain: auctionUpdate.source_chain,
     target_protocol: {
       Local: {
@@ -295,6 +296,7 @@ test('should fetch auction update from logs', async () => {
   });
 });
 
+// Skipped because it requires database
 test.skip('should index all auction history', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');
   await watcher.indexAuctionHistory('77W4Votv6bK1tyq4xcvyo2V9gXYknXBwcZ53XErgcEs9');

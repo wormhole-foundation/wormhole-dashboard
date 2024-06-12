@@ -1,3 +1,4 @@
+import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js'; // Imported since FT codebase uses BN
 
 // Type definitions are snake_case to match the database schema
@@ -107,4 +108,37 @@ export type FastTransferId = {
   fast_vaa_hash?: string;
   fast_vaa_id?: string;
   auction_pubkey?: string;
+};
+
+// these can be found in the matchingEngineProgram, but we are making custom snake cased
+// types to match the events in the logs parsed. Somehow anchor does not automatically convert
+// the logs to the correct types
+export type AuctionUpdated = {
+  config_id: number;
+  auction: PublicKey;
+  vaa: PublicKey | null;
+  source_chain: number;
+  target_protocol: MessageProtocol;
+  redeemer_message_len: number;
+  end_slot: BN;
+  best_offer_token: PublicKey;
+  token_balance_before: BN;
+  amount_in: BN;
+  total_deposit: BN;
+  max_offer_price_allowed: BN;
+};
+
+export type MessageProtocol = {
+  Local?: {
+    program_id: PublicKey;
+  };
+  Cctp?: {
+    domain: number;
+  };
+  None?: {};
+};
+
+export type AuctionUpdatedEvent = {
+  name: 'AuctionUpdated';
+  data: AuctionUpdated;
 };

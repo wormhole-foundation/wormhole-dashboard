@@ -86,7 +86,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   pg: Knex;
 
   constructor(network: Network) {
-    super(network, true);
+    super(network, 'ntt');
     this.rpc = RPCS_BY_CHAIN[this.network].Solana!;
     this.programIds = NTT_MANAGER_CONTRACT_ARRAY[this.network].Solana!;
     this.connection = new Connection(this.rpc, COMMITMENT);

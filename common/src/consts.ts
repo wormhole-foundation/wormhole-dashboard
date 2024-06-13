@@ -7,7 +7,7 @@ import {
   toChainId,
 } from '@wormhole-foundation/sdk-base';
 
-export type Mode = 'vaa' | 'ntt';
+export type Mode = 'vaa' | 'ntt' | 'ft';
 
 // This is defined here in an effort to keep the number and text in sync.
 // The default value is not exported because the getMissThreshold() function should be used to get the value.
@@ -17,9 +17,9 @@ export const MISS_THRESHOLD_LABEL = '40 minutes';
 export const MAX_VAA_DECIMALS = 8;
 export const VAA_VERSION = 1;
 
-export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
-  [key in Network]: { [key in Chain]?: string };
-} = {
+type NetworkChainBlockMapping = { [key in Network]: { [key in Chain]?: string } };
+
+export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMapping = {
   ['Mainnet']: {
     Ethereum: '12959638',
     Terra: '4810000', // not sure exactly but this should be before the first known message
@@ -84,9 +84,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
   ['Devnet']: {},
 };
 
-export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
-  [key in Network]: { [key in Chain]?: string };
-} = {
+export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMapping = {
   ['Mainnet']: {
     Solana: '260508723',
     Ethereum: '19583505',
@@ -103,6 +101,23 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     OptimismSepolia: '9232548',
   },
   ['Devnet']: {},
+};
+
+export const INITIAL_FT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMapping = {
+  ['Mainnet']: {},
+  ['Testnet']: {
+    Solana: '302162456',
+    ArbitrumSepolia: '49505590',
+  },
+  ['Devnet']: {},
+};
+
+export const INITIAL_DEPLOYMENT_BLOCK_BY_MODE: {
+  [mode in Mode]: NetworkChainBlockMapping;
+} = {
+  vaa: INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  ntt: INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  ft: INITIAL_FT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
 };
 
 export function getMissThreshold(date: Date, chainish: number | string | Chain | ChainId): string {

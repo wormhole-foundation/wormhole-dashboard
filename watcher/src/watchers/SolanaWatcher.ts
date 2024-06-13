@@ -12,6 +12,7 @@ import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import {
+  Mode,
   isLegacyMessage,
   normalizeCompileInstruction,
   universalAddress_stripped,
@@ -37,8 +38,8 @@ export class SolanaWatcher extends Watcher {
 
   connection: Connection | undefined;
 
-  constructor(network: Network, isNTT: boolean = false) {
-    super(network, 'Solana', isNTT);
+  constructor(network: Network, mode: Mode = 'vaa') {
+    super(network, 'Solana', mode);
     this.rpc = RPCS_BY_CHAIN[this.network].Solana!;
     this.programId = contracts.coreBridge(this.network, 'Solana');
   }

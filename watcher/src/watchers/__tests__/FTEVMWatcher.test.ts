@@ -54,6 +54,6 @@ describe('FTWatcher', () => {
   it.skip('should save fast transfers in range', async () => {
     const watcher = new FTWatcher('Testnet', 'ArbitrumSepolia');
 
-    await watcher.getResultsForBlocks(49505590, 49505594);
+    await watcher.getFtMessagesForBlocks(49505590, 49505594);
   });
 });

@@ -58,7 +58,7 @@ export class NTTWatcher extends Watcher {
     chain: PlatformToChains<'Evm'>,
     finalizedBlockTag: BlockTag = 'latest'
   ) {
-    super(network, chain, true);
+    super(network, chain, 'ntt');
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;

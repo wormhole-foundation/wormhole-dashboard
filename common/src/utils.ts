@@ -36,7 +36,7 @@ export function getNetwork(): Network {
 
 export function getMode(): Mode {
   const mode: string = assertEnvironmentVariable('MODE').toLowerCase();
-  if (mode === 'vaa' || mode === 'ntt') {
+  if (mode === 'vaa' || mode === 'ntt' || mode === 'ft') {
     return mode;
   }
   throw new Error(`Unknown mode: ${mode}`);

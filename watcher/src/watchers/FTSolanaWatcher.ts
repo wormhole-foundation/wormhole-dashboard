@@ -52,7 +52,7 @@ import {
 } from '../fastTransfer/consts';
 import { FastMarketOrder } from '@wormhole-foundation/example-liquidity-layer-definitions';
 
-export class FastTransferSolanaWatcher extends SolanaWatcher {
+export class FTSolanaWatcher extends SolanaWatcher {
   readonly network: Network;
   readonly rpc: string;
   readonly matchingEngineBorshCoder: BorshCoder;
@@ -65,7 +65,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   readonly eventParser: EventParser;
 
   constructor(network: Network, isTest: boolean = false) {
-    super(network, false);
+    super(network, 'ft');
 
     this.getSignaturesLimit = 100;
     this.network = network;
@@ -108,7 +108,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   }
 
   // TODO: Modify this so watcher can actually call this function (Add enum for mode)
-  async getMessagesByBlock(fromSlot: number, toSlot: number): Promise<string> {
+  async getFtMessagesForBlocks(fromSlot: number, toSlot: number): Promise<string> {
     if (fromSlot > toSlot) throw new Error('solana: invalid block range');
 
     this.logger.info(`fetching info for blocks ${fromSlot} to ${toSlot}`);
@@ -982,7 +982,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     try {
       const result = await this.pg('market_orders')
         .insert(update)
-        .onConflict('fast_vaa_id')
+        .onConflict('fast_vaa_hash')
         .merge();
       this.logger.info(`Updated market order ${update.fast_vaa_id}. Result:`, result);
     } catch (error) {

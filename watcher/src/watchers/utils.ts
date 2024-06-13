@@ -17,6 +17,8 @@ import { NTTWatcher } from './NTTWatcher';
 import { NTTArbitrumWatcher } from './NTTArbitrumWatcher';
 import { NTTSolanaWatcher } from './NTTSolanaWatcher';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
+import { FTEVMWatcher } from './FTEVMWatcher';
+import { FTSolanaWatcher } from './FTSolanaWatcher';
 
 export function makeFinalizedWatcher(network: Network, chainName: Chain): Watcher {
   if (chainName === 'Solana') {
@@ -109,6 +111,25 @@ export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Wat
       return new NTTArbitrumWatcher(network);
     } else if (chainName === 'Solana') {
       return new NTTSolanaWatcher(network);
+    } else {
+      throw new Error(
+        `Attempted to create finalized NTT watcher for unsupported testnet chain ${chainName}`
+      );
+    }
+  } else {
+    throw new Error(
+      `Attempted to create finalized NTT watcher for unsupported network ${network}, ${chainName}`
+    );
+  }
+}
+
+export function makeFinalizedFTWatcher(network: Network, chainName: Chain): Watcher {
+  if ('Testnet') {
+    // These are testnet only chains
+    if (chainName === 'ArbitrumSepolia') {
+      return new FTEVMWatcher(network, chainName, 'finalized');
+    } else if (chainName === 'Solana') {
+      return new FTSolanaWatcher(network);
     } else {
       throw new Error(
         `Attempted to create finalized NTT watcher for unsupported testnet chain ${chainName}`

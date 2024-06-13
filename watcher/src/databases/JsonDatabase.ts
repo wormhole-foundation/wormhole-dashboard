@@ -3,6 +3,7 @@ import { DB_LAST_BLOCK_FILE, JSON_DB_FILE } from '../consts';
 import { Database } from './Database';
 import { DB, LastBlockByChain, VaasByBlock } from './types';
 import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
+import { Mode } from '@wormhole-foundation/wormhole-monitor-common';
 
 const ENCODING = 'utf8';
 export class JsonDatabase extends Database {
@@ -34,7 +35,7 @@ export class JsonDatabase extends Database {
     }
   }
 
-  async getLastBlockByChain(chain: Chain): Promise<string | null> {
+  async getLastBlockByChain(chain: Chain, mode: Mode): Promise<string | null> {
     const chainId = chainToChainId(chain);
     const blockInfo = this.lastBlockByChain[chainId];
     if (blockInfo) {

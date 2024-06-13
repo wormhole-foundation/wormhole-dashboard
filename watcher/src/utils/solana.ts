@@ -70,3 +70,20 @@ export const U64 = {
   },
   from: (amount: BN, unit: number) => amount.toNumber() / unit,
 };
+
+export interface CustomError {
+  Custom: number;
+}
+export interface TransactionError {
+  InstructionError: [number, CustomError];
+}
+
+export function isInstructionError(error: any): error is TransactionError {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    Array.isArray(error.InstructionError) &&
+    typeof error.InstructionError[1] === 'object' &&
+    'Custom' in error.InstructionError[1]
+  );
+}

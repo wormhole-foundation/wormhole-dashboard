@@ -11,10 +11,11 @@ import {
   MessageCompiledInstruction,
   ParsedMessageAccount,
   PublicKey,
+  TransactionError,
   TransactionInstruction,
   VersionedTransactionResponse,
 } from '@solana/web3.js';
-import { findFromSignatureAndToSignature } from '../utils/solana';
+import { findFromSignatureAndToSignature, isInstructionError } from '../utils/solana';
 import { makeBlockKey } from '../databases/utils';
 import { BorshCoder, Event, EventParser, Instruction } from '@coral-xyz/anchor';
 import { decodeTransferInstruction } from '@solana/spl-token';
@@ -39,6 +40,7 @@ import {
   isOfferArgs,
   AuctionUpdated,
   AuctionUpdatedEvent,
+  MatchingEngineError,
 } from '../fastTransfer/types';
 import knex, { Knex } from 'knex';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
@@ -49,6 +51,7 @@ import {
   MatchingEngineProgramId,
   TokenRouterProgramId,
   USDCMintAddress,
+  matchingEngineErrorMap,
 } from '../fastTransfer/consts';
 import { FastMarketOrder } from '@wormhole-foundation/example-liquidity-layer-definitions';
 
@@ -183,6 +186,42 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     }
   }
 
+  /*
+   * If there is an error, parse and check if there is a custom error code
+   * If there is, log the error message, txHash, and instruction in db
+   */
+  async parseAndPersistCustomError(
+    txHash: string,
+    err: TransactionError,
+    ixName: string,
+    timestamp: Date
+  ): Promise<{ errorMessage: string; txHash: string; ixName: string; timestamp: Date } | null> {
+    if (!isInstructionError(err)) {
+      return null;
+    }
+
+    const customErrorCode = err.InstructionError[1].Custom;
+    const errorMessage = matchingEngineErrorMap[customErrorCode];
+
+    if (!errorMessage) {
+      return null;
+    }
+
+    await this.saveMatchingEngineError({
+      tx_hash: txHash,
+      error_code: customErrorCode,
+      error_message: errorMessage,
+      ix_name: ixName,
+      timestamp,
+    });
+    return {
+      errorMessage,
+      txHash,
+      ixName,
+      timestamp,
+    };
+  }
+
   // same thing as NTT Solana Watcher
   async fetchAndProcessMessages(
     signatures: ConfirmedSignatureInfo[],
@@ -205,10 +244,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     }
 
     for (const res of results) {
-      if (res?.meta?.err) {
-        // skip errored txs
-        continue;
-      }
       if (!res || !res.blockTime) {
         throw new Error(
           `failed to fetch tx for signature ${res?.transaction.signatures[0] || 'unknown'}`
@@ -254,6 +289,16 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     if (!decodedData || !ixName) {
       this.logger.debug('decodedData is null');
+      return;
+    }
+
+    if (res.meta && res.meta.err) {
+      await this.parseAndPersistCustomError(
+        res.transaction.signatures[0],
+        res.meta.err,
+        ixName,
+        new Date(res.blockTime! * 1000)
+      );
       return;
     }
 
@@ -940,5 +985,13 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     );
 
     await this.pg('auction_logs').insert(auctionLogs);
+  }
+
+  async saveMatchingEngineError(err: MatchingEngineError): Promise<void> {
+    if (!this.pg) {
+      return;
+    }
+
+    await this.pg('matching_engine_errors').insert(err).onConflict('tx_hash').merge();
   }
 }

@@ -142,3 +142,11 @@ export type AuctionUpdatedEvent = {
   name: 'AuctionUpdated';
   data: AuctionUpdated;
 };
+
+export type MatchingEngineError = {
+  tx_hash: string;
+  error_code: number;
+  error_message: string;
+  ix_name: string;
+  timestamp: Date;
+};

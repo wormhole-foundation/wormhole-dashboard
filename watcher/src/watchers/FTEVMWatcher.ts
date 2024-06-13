@@ -7,11 +7,13 @@ import { ethers } from 'ethers';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey } from '../databases/utils';
 import TokenRouterParser from '../fastTransfer/tokenRouter/parser';
-import { MarketOrder } from '../fastTransfer/types';
+import SwapLayerParser from '../fastTransfer/swapLayer/parser';
+import { MarketOrder, RedeemSwap } from '../fastTransfer/types';
 import { Block } from './EVMWatcher';
 import { BigNumber } from 'ethers';
 import axios from 'axios';
 import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
+
 export type BlockTag = 'finalized' | 'safe' | 'latest';
 
 export class FTEVMWatcher extends Watcher {
@@ -19,9 +21,11 @@ export class FTEVMWatcher extends Watcher {
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
   tokenRouterAddress: string;
+  swapLayerAddress: string | undefined;
   rpc: string;
   provider: ethers.providers.JsonRpcProvider;
-  parser: TokenRouterParser;
+  tokenRouterParser: TokenRouterParser;
+  swapLayerParser: SwapLayerParser | null;
   pg: Knex | null = null;
 
   constructor(
@@ -35,9 +39,13 @@ export class FTEVMWatcher extends Watcher {
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
     this.tokenRouterAddress = FAST_TRANSFER_CONTRACTS[network]?.[chain]?.TokenRouter!;
+    this.swapLayerAddress = FAST_TRANSFER_CONTRACTS[network]?.[chain]?.SwapLayer;
     this.provider = new ethers.providers.JsonRpcProvider(RPCS_BY_CHAIN[network][chain]);
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain]!;
-    this.parser = new TokenRouterParser(this.network, chain, this.provider);
+    this.tokenRouterParser = new TokenRouterParser(this.network, chain, this.provider);
+    this.swapLayerParser = this.swapLayerAddress
+      ? new SwapLayerParser(this.provider, this.swapLayerAddress)
+      : null;
     this.logger.debug('FTWatcher', network, chain, finalizedBlockTag);
     // hacky way to not connect to the db in tests
     // this is to allow ci to run without a db
@@ -124,20 +132,41 @@ export class FTEVMWatcher extends Watcher {
   }
 
   async getFtMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
-    const { results, lastBlockTime } = await this.parser.getFTResultsInRange(fromBlock, toBlock);
+    const tokenRouterPromise = this.tokenRouterParser.getFTResultsInRange(fromBlock, toBlock);
+    const swapLayerPromise = this.swapLayerParser?.getFTSwapInRange(fromBlock, toBlock) || [];
 
-    if (results.length) {
-      await this.saveFastTransfers(results, fromBlock, toBlock);
+    const [tokenRouterResults, swapLayerResults] = await Promise.all([
+      tokenRouterPromise,
+      swapLayerPromise,
+    ]);
+
+    if (tokenRouterResults.results.length) {
+      await this.saveBatch(
+        tokenRouterResults.results,
+        'market_orders',
+        'fast_vaa_id',
+        fromBlock,
+        toBlock
+      );
     }
+
+    if (swapLayerResults.length) {
+      await this.saveBatch(swapLayerResults, 'redeem_swaps', 'fill_vaa_id', fromBlock, toBlock);
+    }
+
+    // we do not need to compare the lastBlockTime from tokenRouter and swapLayer as they both use toBlock
+    const lastBlockTime = tokenRouterResults.lastBlockTime;
     return makeBlockKey(toBlock.toString(), lastBlockTime.toString());
   }
 
-  // saves fast transfers in smaller batches to reduce the impact in any case anything fails
+  // saves items in smaller batches to reduce the impact in any case anything fails
   // retry with exponential backoff is used here
-  async saveFastTransfers(
-    fastTransfers: MarketOrder[],
-    fromBlock: number,
-    toBlock: number
+  private async saveBatch<T>(
+    items: T[],
+    tableName: string,
+    conflictColumn: string,
+    fromBlock?: number,
+    toBlock?: number
   ): Promise<void> {
     if (!this.pg) {
       return;
@@ -145,40 +174,42 @@ export class FTEVMWatcher extends Watcher {
 
     const batchSize = 50;
     const maxRetries = 3;
-    const totalBatches = Math.ceil(fastTransfers.length / batchSize);
+    const totalBatches = Math.ceil(items.length / batchSize);
 
-    this.logger.debug(
-      `Attempting to save ${fastTransfers.length} fast transfers in batches of ${batchSize}`
-    );
+    this.logger.debug(`Attempting to save ${items.length} ${tableName} in batches of ${batchSize}`);
 
-    for (let batchIndex = 0; batchIndex < fastTransfers.length; batchIndex += batchSize) {
-      const batch = fastTransfers.slice(batchIndex, batchIndex + batchSize);
+    for (let batchIndex = 0; batchIndex < items.length; batchIndex += batchSize) {
+      const batch = items.slice(batchIndex, batchIndex + batchSize);
       const batchNumber = Math.floor(batchIndex / batchSize) + 1;
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          await this.pg('market_orders').insert(batch).onConflict('fast_vaa_id').merge();
+          await this.pg(tableName).insert(batch).onConflict(conflictColumn).merge();
           this.logger.info(
-            `Successfully saved batch ${batchNumber}/${totalBatches} (${batch.length} transfers)`
+            `Successfully saved batch ${batchNumber}/${totalBatches} (${batch.length} ${tableName})`
           );
           break;
         } catch (e) {
           if (attempt === maxRetries) {
+            const errorMessage = `Failed to save batch ${batchNumber}/${totalBatches} of ${tableName} after ${maxRetries} attempts`;
             this.logger.error(
-              `Failed to save batch ${batchNumber}/${totalBatches} from block ${fromBlock} - ${toBlock} after ${maxRetries} attempts`,
+              fromBlock && toBlock
+                ? `${errorMessage} from block ${fromBlock} - ${toBlock}`
+                : errorMessage,
               e
             );
           } else {
-            // Wait before retrying (exponential backoff)
             this.logger.warn(
-              `Attempt ${attempt} failed for batch ${batchNumber}/${totalBatches}. Retrying...`
+              `Attempt ${attempt} failed for batch ${batchNumber}/${totalBatches} of ${tableName}. Retrying...`
             );
             await sleep(1000 * Math.pow(2, attempt - 1));
           }
         }
       }
     }
-    this.logger.info(`Completed saving fast transfers from block ${fromBlock} - ${toBlock}`);
+    this.logger.info(
+      `Completed saving ${items.length} ${tableName} from ${fromBlock} to ${toBlock}`
+    );
   }
 }
 

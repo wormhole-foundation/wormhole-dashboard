@@ -2,12 +2,20 @@ import { RPCS_BY_CHAIN } from '../../consts';
 import { ethers } from 'ethers';
 import TokenRouterParser from '../../fastTransfer/tokenRouter/parser';
 import FTWatcher from '../FTEVMWatcher';
+import SwapLayerParser from '../../fastTransfer/swapLayer/parser';
+import path from 'path';
+import { readFileSync } from 'fs';
 
 jest.setTimeout(60_000);
+class MockJsonRpcProvider extends ethers.providers.JsonRpcProvider {
+  getTransactionReceipt = jest.fn();
+  getTransaction = jest.fn();
+  getBlock = jest.fn();
+}
 
 const provider = new ethers.providers.JsonRpcProvider(RPCS_BY_CHAIN['Testnet']['ArbitrumSepolia']);
 
-describe('FTWatcher', () => {
+describe('TokenRouter', () => {
   it('should identify transaction function correctly', async () => {
     const txHash = '0x8fc2759366dedd8134f884d9bdf6a072834942bb4873216941a1bac17d53cfc6';
 
@@ -55,5 +63,68 @@ describe('FTWatcher', () => {
     const watcher = new FTWatcher('Testnet', 'ArbitrumSepolia');
 
     await watcher.getFtMessagesForBlocks(49505590, 49505594);
+  });
+});
+
+const swapLayerAddress = '0xdA11B3bc8705D84BEae4a796035bDcCc9b59d1ee';
+
+describe('SwapLayerParser', () => {
+  let parser: SwapLayerParser;
+  let mockProvider: MockJsonRpcProvider;
+
+  beforeEach(() => {
+    mockProvider = new MockJsonRpcProvider();
+    parser = new SwapLayerParser(mockProvider, swapLayerAddress);
+  });
+
+  it('should parse a swap layer transaction correctly', async () => {
+    // Mock the provider methods with real transaction and receipt data
+    // Mock getTransactionReceipt
+    mockProvider.getTransactionReceipt.mockImplementation(() => {
+      const mockDataPath = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'mock',
+        'rpc.ankr.com',
+        'arbitrum_sepolia',
+        `receipt_${txHash}.json`
+      );
+      return Promise.resolve(JSON.parse(readFileSync(mockDataPath, 'utf-8')));
+    });
+
+    // Mock getTransaction
+    mockProvider.getTransaction.mockImplementation(() => {
+      const mockDataPath = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'mock',
+        'rpc.ankr.com',
+        'arbitrum_sepolia',
+        `transaction_${txHash}.json`
+      );
+      return Promise.resolve(JSON.parse(readFileSync(mockDataPath, 'utf-8')));
+    });
+
+    const mockBlock = { timestamp: Math.floor(Date.now() / 1000) };
+    jest.spyOn(provider, 'getBlock').mockResolvedValue(mockBlock as any);
+
+    // Load the expected result from a mock file
+    const txHash = '0x8e61395ff443d67697fdafad62403dca90f2ffb0181e141b0c1ed52090873d13';
+
+    const result = await parser.parseSwapLayerTransaction(txHash, mockBlock.timestamp);
+    expect(result).not.toBeNull();
+    expect(result).toMatchObject({
+      tx_hash: '0x8e61395ff443d67697fdafad62403dca90f2ffb0181e141b0c1ed52090873d13',
+      recipient: '0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC',
+      output_token: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      output_amount: BigInt('20000000000'),
+      relaying_fee: BigInt('10447500'),
+      timestamp: new Date(mockBlock.timestamp * 1000),
+      fill_vaa_id: '1/cb0406e59555bf0371b7c4fff1812a11a8d92dad02ad422062971d61dcce2cd0/2',
+    });
   });
 });

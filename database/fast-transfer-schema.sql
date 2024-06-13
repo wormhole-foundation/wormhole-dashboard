@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS fast_transfer_executions;
 DROP TABLE IF EXISTS fast_transfer_settlements;
 DROP TABLE IF EXISTS auction_logs;
 DROP TABLE IF EXISTS auction_history_mapping;
+DROP TABLE IF EXISTS redeem_swaps;
 
 DROP TYPE IF EXISTS FastTransferStatus;
 DROP TYPE IF EXISTS FastTransferProtocol;
@@ -91,4 +92,15 @@ CREATE TABLE auction_logs (
 CREATE TABLE auction_history_mapping (
   auction_pubkey VARCHAR(255) PRIMARY KEY,
   index INT NOT NULL
+);
+
+-- Redeem Swaps table to track the final swap before funds reach the user's account
+CREATE TABLE redeem_swaps (
+  fill_vaa_id VARCHAR(255) PRIMARY KEY,
+  tx_hash VARCHAR(255) NOT NULL,
+  recipient VARCHAR(255) NOT NULL,
+  output_token VARCHAR(255) NOT NULL,
+  output_amount BIGINT NOT NULL,
+  relaying_fee BIGINT NOT NULL,
+  timestamp TIMESTAMP NOT NULL
 );

@@ -142,3 +142,13 @@ export type AuctionUpdatedEvent = {
   name: 'AuctionUpdated';
   data: AuctionUpdated;
 };
+
+export type RedeemSwap = {
+  tx_hash: string;
+  recipient: string;
+  output_token: string;
+  output_amount: bigint;
+  relaying_fee: bigint;
+  timestamp: Date;
+  fill_vaa_id: string;
+};

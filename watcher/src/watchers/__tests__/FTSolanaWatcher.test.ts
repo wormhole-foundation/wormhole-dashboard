@@ -8,7 +8,7 @@ jest.setTimeout(60_000);
 // Skipping because it requires db
 test.skip('getMessagesByBlock', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');
-  await watcher.getMessagesByBlock(301864980, 302864980);
+  await watcher.getMessagesByBlock(313236172, 314175735);
 });
 
 test('placeInitialOfferCctp', async () => {
@@ -175,21 +175,39 @@ test('should parse settleAuctionComplete', async () => {
 
   const info = await watcher.parseSettleAuctionComplete(tx, ix, 1);
   expect(info).toEqual({
-    id: {
-      // in production, we will get this from the based on the `auction_pubkey`
-      // in test we cant get it from the db since it is disabled for github CI
-      fast_vaa_hash: '',
-    },
-    info: {
-      fast_vaa_hash: '',
-      repayment: 1000000n,
-      settle_payer: '6H68dreG5qZHUVjBwf4kCGQYmW3hULedbezwzPasTr68',
-      settle_slot: 302130744n,
-      settle_time: new Date('2024-05-29T08:09:11.000Z'),
-      settle_tx_hash:
-        '5L2tBfpE35gHBTRmqet4UUGoUJrwYZe6LVCLomVkEDU1TBXNbWW2Xs8pPT5Zz2JQgX2vS8pE4bxmyDEZxL9fBVbs',
-      status: 'settled',
-    },
+    fast_vaa_hash: '',
+    repayment: 1000000n,
+    settle_payer: '6H68dreG5qZHUVjBwf4kCGQYmW3hULedbezwzPasTr68',
+    settle_slot: 302130744n,
+    settle_time: new Date('2024-05-29T08:09:11.000Z'),
+    settle_tx_hash:
+      '5L2tBfpE35gHBTRmqet4UUGoUJrwYZe6LVCLomVkEDU1TBXNbWW2Xs8pPT5Zz2JQgX2vS8pE4bxmyDEZxL9fBVbs',
+  });
+});
+
+test('should parse settleAuctionNoneLocal', async () => {
+  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const txHash =
+    '3fdXiWz25RxQacjDtG1cW5K4qhMFtXHipz8waGrpZee2Q321aCftdjfQDNuU1kGiqsiixq7nkK4apXyB7cHWWxhX';
+  const tx = await watcher.getConnection().getTransaction(txHash, {
+    maxSupportedTransactionVersion: 0,
+  });
+
+  if (!tx) {
+    throw new Error('Unable to get transaction');
+  }
+
+  const ix = tx.transaction.message.compiledInstructions[0];
+
+  const info = await watcher.parseSettleAuctionNoneLocal(tx, ix);
+  expect(info).toEqual({
+    fast_vaa_hash: '',
+    repayment: 0n,
+    settle_payer: 'BxNyqSkqwNWK6f11KkNWffGJGQ8VSo2LbSQXKobAGSsB',
+    settle_slot: 304808273n,
+    settle_time: new Date('2024-06-10T17:04:59.000Z'),
+    settle_tx_hash:
+      '3fdXiWz25RxQacjDtG1cW5K4qhMFtXHipz8waGrpZee2Q321aCftdjfQDNuU1kGiqsiixq7nkK4apXyB7cHWWxhX',
   });
 });
 
@@ -253,7 +271,7 @@ test('should fetch auction update from logs', async () => {
   if (!tx.meta?.logMessages) {
     throw new Error('No log messages');
   }
-  const auctionUpdate = await watcher.getAuctionUpdatedFromLogs(tx.meta.logMessages);
+  const auctionUpdate = watcher.getAuctionUpdatedFromLogs(tx.meta.logMessages);
 
   if (!auctionUpdate) {
     throw new Error('Auction update not found');

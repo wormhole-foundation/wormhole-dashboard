@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS fast_transfer_executions;
 DROP TABLE IF EXISTS fast_transfer_settlements;
 DROP TABLE IF EXISTS auction_logs;
 DROP TABLE IF EXISTS auction_history_mapping;
+DROP TABLE IF EXISTS  matching_engine_errors;
 
 DROP TYPE IF EXISTS FastTransferStatus;
 DROP TYPE IF EXISTS FastTransferProtocol;
@@ -88,4 +89,12 @@ CREATE TABLE auction_logs (
 CREATE TABLE auction_history_mapping (
   auction_pubkey VARCHAR(255) PRIMARY KEY,
   index INT NOT NULL
+);
+
+CREATE TABLE matching_engine_errors (
+  tx_hash VARCHAR(255) PRIMARY KEY,
+  error_code INT NOT NULL,
+  error_message VARCHAR(255) NOT NULL,
+  timestamp TIMESTAMP NOT NULL,
+  ix_name VARCHAR(255) NOT NULL
 );

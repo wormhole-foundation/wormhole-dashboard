@@ -8,7 +8,7 @@ jest.setTimeout(60_000);
 // Skipping because it requires db
 test.skip('getMessagesByBlock', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');
-  await watcher.getMessagesByBlock(301864980, 302864980);
+  await watcher.getMessagesByBlock(302162456, 303160995);
 });
 
 test('placeInitialOfferCctp', async () => {
@@ -300,4 +300,26 @@ test('should fetch auction update from logs', async () => {
 test.skip('should index all auction history', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');
   await watcher.indexAuctionHistory('77W4Votv6bK1tyq4xcvyo2V9gXYknXBwcZ53XErgcEs9');
+});
+
+test('should parse custom error', async () => {
+  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const txHash =
+    '5ENkbfzkCyU6RJUS2AyKnBFrpea1D7fC8cMqyD7kDp7ofdQSnQS7bGnPrbkevaAcGpGDPMQsSGUw1AcdzforooxY';
+  const tx = await watcher.getConnection().getTransaction(txHash, {
+    maxSupportedTransactionVersion: 0,
+  });
+
+  if (!tx || !tx.meta || !tx.meta.err) {
+    throw new Error('Unable to get transaction');
+  }
+
+  const error = await watcher.parseAndPersistCustomError(
+    txHash,
+    tx.meta.err,
+    'improve_offer',
+    new Date(tx.blockTime! * 1000)
+  );
+
+  expect(error?.errorMessage).toEqual('AuctionPeriodExpired');
 });

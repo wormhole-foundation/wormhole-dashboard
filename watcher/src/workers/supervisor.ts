@@ -29,10 +29,10 @@ function spawnWorker(data: WorkerData) {
 
   worker.on('exit', (code) => {
     logger.warn(`Worker ${workerName} exited with code ${code}`);
-    if (code !== 0) {
-      logger.error(`Restarting worker ${workerName}...`);
-      spawnWorker(data);
-    }
+    // Exit code 0 means the worker exited normally and we should not restart it.
+    // However, if the supervisor forcibly terminates the worker, the exit code may not be 0
+    // and we should not restart it because the supervisor will handle it.
+    // In either case, we should not restart the worker here.  Just let the supervisor handle it.
   });
 
   workers[workerName] = { worker, data, lastHB: Date.now() };

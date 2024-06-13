@@ -231,13 +231,27 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       return [];
     }
 
-    // We want to sort them by chronological order and process them from the oldest to the newest
-    const results = await this.getConnection().getTransactions(
-      signatures.map((s) => s.signature),
-      {
-        maxSupportedTransactionVersion: 0,
-      }
-    );
+    let results = [];
+
+    // Adding a try-catch block because ankr throws unsafeRes,
+    try {
+      // We want to sort them by chronological order and process them from the oldest to the newest
+      results = await this.getConnection().getTransactions(
+        signatures.map((s) => s.signature),
+        {
+          maxSupportedTransactionVersion: 0,
+        }
+      );
+    } catch (error) {
+      this.logger.error('error:', error);
+      return [];
+    }
+
+    // Early return
+    if (results.length === 0) {
+      this.logger.warn('No transactions found for the provided signatures.');
+      return [];
+    }
 
     if (results.length !== signatures.length) {
       throw new Error(`failed to fetch tx for signatures`);
@@ -286,7 +300,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     );
 
     const ixName = decodedData?.name;
-
     if (!decodedData || !ixName) {
       this.logger.debug('decodedData is null');
       return;
@@ -716,17 +729,65 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   async parseSettleAuctionNoneLocal(
     res: VersionedTransactionResponse,
     ix: MessageCompiledInstruction
-  ) {
-    // Slow relay is not done yet, will implement after
-    throw new Error('[parseSettleAuctionNoneLocal] not implemented');
+  ): Promise<{ id: FastTransferId; info: FastTransferSettledInfo }> {
+    const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
+    const accountKeyIndexes = ix.accountKeyIndexes;
+    const payer = accountKeys[accountKeyIndexes[0]];
+    const auction = accountKeys[accountKeyIndexes[6]];
+
+    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction.pubkey);
+
+    const info = {
+      fast_vaa_hash: fast_vaa_hash,
+      status: FastTransferStatus.SETTLED,
+      // No one executed anything so no repayment
+      repayment: 0n,
+      settle_payer: payer.pubkey.toBase58(),
+      settle_tx_hash: res.transaction.signatures[0],
+      settle_slot: BigInt(res.slot),
+      settle_time: new Date(res.blockTime! * 1000),
+    };
+
+    await this.saveFastTransferInfo('fast_transfer_settlements', info);
+
+    return {
+      id: {
+        fast_vaa_hash,
+      },
+      info,
+    };
   }
 
   async parseSettleAuctionNoneCctp(
     res: VersionedTransactionResponse,
-    instruction: MessageCompiledInstruction
+    ix: MessageCompiledInstruction
   ) {
-    // Slow relay is not done yet, will implement after
-    throw new Error('[parseSettleAuctionNoneCctp] not implemented');
+    const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
+    const accountKeyIndexes = ix.accountKeyIndexes;
+    const payer = accountKeys[accountKeyIndexes[0]];
+    const auction = accountKeys[accountKeyIndexes[8]];
+
+    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction.pubkey);
+
+    const info = {
+      fast_vaa_hash: fast_vaa_hash,
+      status: FastTransferStatus.SETTLED,
+      // No one executed anything so no repayment
+      repayment: 0n,
+      settle_payer: payer.pubkey.toBase58(),
+      settle_tx_hash: res.transaction.signatures[0],
+      settle_slot: BigInt(res.slot),
+      settle_time: new Date(res.blockTime! * 1000),
+    };
+
+    await this.saveFastTransferInfo('fast_transfer_settlements', info);
+
+    return {
+      id: {
+        fast_vaa_hash,
+      },
+      info,
+    };
   }
 
   /*
@@ -950,7 +1011,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       return '';
     }
 
-    const result = await this.pg('auctions')
+    const result = await this.pg('fast_transfer_auctions')
       .where({ auction_pubkey: auctionPubkey.toBase58() })
       .first();
     return result?.fast_vaa_hash || '';

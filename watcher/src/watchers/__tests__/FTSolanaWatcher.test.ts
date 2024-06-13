@@ -193,6 +193,40 @@ test('should parse settleAuctionComplete', async () => {
   });
 });
 
+test('should parse settleAuctionNoneLocal', async () => {
+  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const txHash =
+    '3fdXiWz25RxQacjDtG1cW5K4qhMFtXHipz8waGrpZee2Q321aCftdjfQDNuU1kGiqsiixq7nkK4apXyB7cHWWxhX';
+  const tx = await watcher.getConnection().getTransaction(txHash, {
+    maxSupportedTransactionVersion: 0,
+  });
+
+  if (!tx) {
+    throw new Error('Unable to get transaction');
+  }
+
+  const ix = tx.transaction.message.compiledInstructions[0];
+
+  const info = await watcher.parseSettleAuctionNoneLocal(tx, ix);
+  expect(info).toEqual({
+    id: {
+      // in production, we will get this from the based on the `auction_pubkey`
+      // in test we cant get it from the db since it is disabled for github CI
+      fast_vaa_hash: '',
+    },
+    info: {
+      fast_vaa_hash: '',
+      repayment: 0n,
+      settle_payer: 'BxNyqSkqwNWK6f11KkNWffGJGQ8VSo2LbSQXKobAGSsB',
+      settle_slot: 304808273n,
+      settle_time: new Date('2024-06-10T17:04:59.000Z'),
+      settle_tx_hash:
+        '3fdXiWz25RxQacjDtG1cW5K4qhMFtXHipz8waGrpZee2Q321aCftdjfQDNuU1kGiqsiixq7nkK4apXyB7cHWWxhX',
+      status: 'settled',
+    },
+  });
+});
+
 // Skipping this since it requires database
 test.skip('should fetch closed Auction', async () => {
   const watcher = new FastTransferSolanaWatcher('Testnet');

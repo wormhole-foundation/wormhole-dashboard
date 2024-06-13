@@ -1,4 +1,4 @@
-import { Chain, Network } from '@wormhole-foundation/sdk-base';
+import { Network } from '@wormhole-foundation/sdk-base';
 
 export type FastTransferContracts = 'MatchingEngine' | 'TokenRouter' | 'USDCMint';
 
@@ -16,6 +16,8 @@ export interface SolanaContractAddresses {
 export interface EthereumContractAddresses {
   TokenRouter: string;
   CircleBridge?: string;
+  // Devnet has no swap layer as they need the mainnet quotes from Uniswap
+  SwapLayer?: string;
 }
 
 export type ContractAddresses = SolanaContractAddresses | EthereumContractAddresses;
@@ -24,6 +26,7 @@ export type FastTransferContractAddresses = {
   [key in Network]?: {
     Solana?: SolanaContractAddresses;
     ArbitrumSepolia?: EthereumContractAddresses;
+    Ethereum?: EthereumContractAddresses;
   };
 };
 

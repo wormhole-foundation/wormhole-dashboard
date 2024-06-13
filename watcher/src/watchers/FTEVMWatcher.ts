@@ -4,14 +4,17 @@ import { Network } from '@wormhole-foundation/sdk-base';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import { FAST_TRANSFER_CONTRACTS, FTChains } from '../fastTransfer/consts';
 import { ethers } from 'ethers';
-import { RPCS_BY_CHAIN } from '../consts';
+import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey } from '../databases/utils';
 import TokenRouterParser from '../fastTransfer/tokenRouter/parser';
 import { MarketOrder } from '../fastTransfer/types';
+import { Block } from './EVMWatcher';
+import { BigNumber } from 'ethers';
+import axios from 'axios';
 
 export type BlockTag = 'finalized' | 'safe' | 'latest';
 
-export class FTWatcher extends Watcher {
+export class FTEVMWatcher extends Watcher {
   finalizedBlockTag: BlockTag;
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
@@ -27,7 +30,7 @@ export class FTWatcher extends Watcher {
     finalizedBlockTag: BlockTag = 'latest',
     isTest = false
   ) {
-    super(network, chain, true);
+    super(network, chain, 'ft');
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
@@ -56,10 +59,81 @@ export class FTWatcher extends Watcher {
     });
   }
 
-  async getResultsForBlocks(fromBlock: number, toBlock: number): Promise<string> {
+  async getBlock(blockNumberOrTag: number | BlockTag): Promise<Block> {
+    const rpc = RPCS_BY_CHAIN[this.network][this.chain];
+    if (!rpc) {
+      throw new Error(`${this.chain} RPC is not defined!`);
+    }
+    let result = (
+      await axios.post(
+        rpc,
+        [
+          {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'eth_getBlockByNumber',
+            params: [
+              typeof blockNumberOrTag === 'number'
+                ? `0x${blockNumberOrTag.toString(16)}`
+                : blockNumberOrTag,
+              false,
+            ],
+          },
+        ],
+        AXIOS_CONFIG_JSON
+      )
+    )?.data?.[0];
+    if (result && result.result === null) {
+      // Found null block
+      if (
+        typeof blockNumberOrTag === 'number' &&
+        blockNumberOrTag < this.latestFinalizedBlockNumber - 1000
+      ) {
+        return {
+          hash: '',
+          number: BigNumber.from(blockNumberOrTag).toNumber(),
+          timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
+        };
+      }
+    } else if (result && result.error && result.error.code === 6969) {
+      return {
+        hash: '',
+        number: BigNumber.from(blockNumberOrTag).toNumber(),
+        timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
+      };
+    }
+    result = result?.result;
+    if (result && result.hash && result.number && result.timestamp) {
+      // Convert to Ethers compatible type
+      this.lastTimestamp = result.timestamp;
+      return {
+        hash: result.hash,
+        number: BigNumber.from(result.number).toNumber(),
+        timestamp: BigNumber.from(result.timestamp).toNumber(),
+      };
+    }
+    throw new Error(
+      `Unable to parse result of eth_getBlockByNumber for ${blockNumberOrTag} on ${rpc}`
+    );
+  }
+
+  async getFinalizedBlockNumber(): Promise<number> {
+    this.logger.info(`fetching block ${this.finalizedBlockTag}`);
+    const block: Block = await this.getBlock(this.finalizedBlockTag);
+    this.latestFinalizedBlockNumber = block.number;
+    return block.number;
+  }
+
+  async getFtMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
     const { results, lastBlockTime } = await this.parser.getFTResultsInRange(fromBlock, toBlock);
 
-    await this.saveFastTransfers(results);
+    if (results.length) {
+      try {
+        await this.saveFastTransfers(results);
+      } catch (e) {
+        this.logger.error(e);
+      }
+    }
     return makeBlockKey(toBlock.toString(), lastBlockTime.toString());
   }
 
@@ -71,8 +145,12 @@ export class FTWatcher extends Watcher {
     this.logger.debug(`saving ${fastTransfers.length} fast transfers`);
 
     // Batch insert the fast transfers
-    await this.pg('market_orders').insert(fastTransfers).onConflict('fast_vaa_id').merge();
+    try {
+      await this.pg('market_orders').insert(fastTransfers).onConflict('fast_vaa_id').merge();
+    } catch (e) {
+      this.logger.error(`Error saving fast transfers ${e}`);
+    }
   }
 }
 
-export default FTWatcher;
+export default FTEVMWatcher;

@@ -1,3 +1,4 @@
+import { Mode } from '@wormhole-foundation/wormhole-monitor-common';
 import { getLogger, WormholeLogger } from '../utils/logger';
 import { VaasByBlock } from './types';
 import { Chain } from '@wormhole-foundation/sdk-base';
@@ -14,13 +15,13 @@ export class Database {
     }
     return filteredVaasByBlock;
   }
-  async getLastBlockByChain(chain: Chain, isNTT: boolean): Promise<string | null> {
+  async getLastBlockByChain(chain: Chain, mode: Mode): Promise<string | null> {
     throw new Error('Not Implemented');
   }
   async storeVaasByBlock(chain: Chain, vaasByBlock: VaasByBlock): Promise<void> {
     throw new Error('Not Implemented');
   }
-  async storeLatestBlock(chain: Chain, lastBlockKey: string, isNTT: boolean): Promise<void> {
+  async storeLatestBlock(chain: Chain, lastBlockKey: string, mode: Mode): Promise<void> {
     throw new Error('Not Implemented');
   }
 }

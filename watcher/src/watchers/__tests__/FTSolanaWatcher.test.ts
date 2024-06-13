@@ -1,5 +1,5 @@
 import { jest, test, expect } from '@jest/globals';
-import { FastTransferSolanaWatcher } from '../FTSolanaWatcher';
+import { FTSolanaWatcher } from '../FTSolanaWatcher';
 
 jest.setTimeout(60_000);
 
@@ -7,12 +7,12 @@ jest.setTimeout(60_000);
 // It is just an entrypoint to test the whole thing with a local postgres database.
 // Skipping because it requires db
 test.skip('getMessagesByBlock', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet');
-  await watcher.getMessagesByBlock(313236172, 314175735);
+  const watcher = new FTSolanaWatcher('Testnet');
+  await watcher.getFtMessagesForBlocks(313236172, 314175735);
 });
 
 test('placeInitialOfferCctp', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const watcher = new FTSolanaWatcher('Testnet', true);
 
   const txHash =
     '622s4otqmig2LB6AjnhvQv4gwBpUX9Ewnnh2XKa7YfsRhr4h1AU1GJRweii4C9rwqNzX1piMQ3jZQTMTv7aS4pyE';
@@ -66,7 +66,7 @@ test('placeInitialOfferCctp', async () => {
 });
 
 test('should parse improveOffer', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const watcher = new FTSolanaWatcher('Testnet', true);
 
   const txHash =
     '5jD1at1xF6KKj5BzCuNZEhfNpEU4ho19pkdccm9xvtxs2AhYN1F1WNMj7uGtkkr4SrzT3DPzdZbEKMP6u5FVLzLy';
@@ -106,7 +106,7 @@ test('should parse improveOffer', async () => {
 // TODO: solver is broken and not running after latest deployment,
 // will update tests when they are fixed and running
 test('should parse executeFastOrderLocal', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const watcher = new FTSolanaWatcher('Testnet', true);
   const txHash =
     '7AfmUeb6sM4HRLyw8ZmmaC5R2SFAzgQAH4YbD2fmnDmDPAcdxAk9Rhi3xktrGoE7bB2VHiBhs3JSvgiFzo6yUPr';
 
@@ -133,7 +133,7 @@ test('should parse executeFastOrderLocal', async () => {
 });
 
 test('should parse executeFastOrderCctp', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const watcher = new FTSolanaWatcher('Testnet', true);
   const txHash =
     '4XiWZGfB9KymYuNgJP7z7rMcKroN3VXYL1QWAevZ4HNTgB3tgj1EGPdaeSgFA8uhj4QUNTdtB7aSb7pxNM7Vd77p';
   const tx = await watcher.getConnection().getTransaction(txHash, {
@@ -160,7 +160,7 @@ test('should parse executeFastOrderCctp', async () => {
 });
 
 test('should parse settleAuctionComplete', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const watcher = new FTSolanaWatcher('Testnet', true);
   const txHash =
     '5L2tBfpE35gHBTRmqet4UUGoUJrwYZe6LVCLomVkEDU1TBXNbWW2Xs8pPT5Zz2JQgX2vS8pE4bxmyDEZxL9fBVbs';
   const tx = await watcher.getConnection().getTransaction(txHash, {
@@ -186,7 +186,7 @@ test('should parse settleAuctionComplete', async () => {
 });
 
 test('should parse settleAuctionNoneLocal', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const watcher = new FTSolanaWatcher('Testnet', true);
   const txHash =
     '3fdXiWz25RxQacjDtG1cW5K4qhMFtXHipz8waGrpZee2Q321aCftdjfQDNuU1kGiqsiixq7nkK4apXyB7cHWWxhX';
   const tx = await watcher.getConnection().getTransaction(txHash, {
@@ -213,7 +213,7 @@ test('should parse settleAuctionNoneLocal', async () => {
 
 // Skipping this since it requires database
 test.skip('should fetch closed Auction', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet');
+  const watcher = new FTSolanaWatcher('Testnet');
   const auction = await watcher.fetchAuction('FS4EAzWA2WuMKyGBy2C7EBvHL9W63NDX9JR4CPveAiDK');
 
   if (!auction || !auction.info) {
@@ -257,7 +257,7 @@ test.skip('should fetch closed Auction', async () => {
 });
 
 test('should fetch auction update from logs', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet', true);
+  const watcher = new FTSolanaWatcher('Testnet', true);
   const txHash =
     '2YJAG7smyau6GbuEQT9NHJmuj4BFQWc8XrF2CTsmh1m626ZEd681DJoRmzQQGhj51UATB84o8TqMMaehC8nsFrVa';
   const tx = await watcher.getConnection().getTransaction(txHash, {
@@ -316,6 +316,6 @@ test('should fetch auction update from logs', async () => {
 
 // Skipped because it requires database
 test.skip('should index all auction history', async () => {
-  const watcher = new FastTransferSolanaWatcher('Testnet');
+  const watcher = new FTSolanaWatcher('Testnet');
   await watcher.indexAuctionHistory('77W4Votv6bK1tyq4xcvyo2V9gXYknXBwcZ53XErgcEs9');
 });

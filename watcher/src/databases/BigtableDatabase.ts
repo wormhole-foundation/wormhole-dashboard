@@ -2,6 +2,7 @@ import { Bigtable } from '@google-cloud/bigtable';
 import { PubSub } from '@google-cloud/pubsub';
 import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
+  Mode,
   assertEnvironmentVariable,
   chunkArray,
   sleep,
@@ -38,7 +39,9 @@ export class BigtableDatabase extends Database {
   firestoreDb: FirebaseFirestore.Firestore;
   latestCollectionName: string;
   latestNTTCollectionName: string;
+  latestFTCollectionName: string;
   pubsubSignedVAATopic: string;
+  collectionNameByMode: { [key in Mode]: string };
   pubsub: PubSub;
   constructor() {
     super();
@@ -46,8 +49,15 @@ export class BigtableDatabase extends Database {
     this.signedVAAsTableId = assertEnvironmentVariable('BIGTABLE_SIGNED_VAAS_TABLE_ID');
     this.vaasByTxHashTableId = assertEnvironmentVariable('BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID');
     this.instanceId = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
+    // TODO: make these const?
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
     this.latestNTTCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_NTT_COLLECTION');
+    this.latestFTCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_FT_COLLECTION');
+    this.collectionNameByMode = {
+      vaa: this.latestCollectionName,
+      ntt: this.latestNTTCollectionName,
+      ft: this.latestFTCollectionName,
+    };
     this.pubsubSignedVAATopic = assertEnvironmentVariable('PUBSUB_SIGNED_VAA_TOPIC');
     try {
       this.bigtable = new Bigtable();
@@ -63,11 +73,15 @@ export class BigtableDatabase extends Database {
     }
   }
 
-  async getLastBlockByChain(chain: Chain, isNTT: boolean): Promise<string | null> {
+  async getLastBlockByChain(chain: Chain, mode: Mode): Promise<string | null> {
     const chainId = chainToChainId(chain);
-    const lastObservedBlock = isNTT
-      ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(chainId.toString())
-      : this.firestoreDb.collection(this.latestCollectionName).doc(chainId.toString());
+
+    const collectionName = this.collectionNameByMode[mode];
+    if (!collectionName) {
+      throw new Error(`Unknown mode: ${mode}`);
+    }
+
+    const lastObservedBlock = this.firestoreDb.collection(collectionName).doc(chainId.toString());
     const lastObservedBlockByChain = await lastObservedBlock.get();
     const blockKeyData = lastObservedBlockByChain.data();
     const lastBlockKey = blockKeyData?.lastBlockKey;
@@ -79,16 +93,19 @@ export class BigtableDatabase extends Database {
     return null;
   }
 
-  async storeLatestBlock(chain: Chain, lastBlockKey: string, isNTT: boolean): Promise<void> {
+  async storeLatestBlock(chain: Chain, lastBlockKey: string, mode: Mode): Promise<void> {
     if (this.firestoreDb === undefined) {
       this.logger.error('no firestore db set');
       return;
     }
     const chainId = chainToChainId(chain);
     this.logger.info(`storing last block=${lastBlockKey} for chain=${chainId}`);
-    const lastObservedBlock = isNTT
-      ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(`${chainId.toString()}`)
-      : this.firestoreDb.collection(this.latestCollectionName).doc(`${chainId.toString()}`);
+    const collectionName = this.collectionNameByMode[mode];
+    if (!collectionName) {
+      throw new Error(`Unknown mode: ${mode}`);
+    }
+
+    const lastObservedBlock = this.firestoreDb.collection(collectionName).doc(chainId.toString());
     await lastObservedBlock.set({ lastBlockKey });
   }
 
@@ -159,7 +176,7 @@ export class BigtableDatabase extends Database {
       if (blockKeys.length) {
         const lastBlockKey = blockKeys[blockKeys.length - 1];
         this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlockKey}`);
-        await this.storeLatestBlock(chain, lastBlockKey, false);
+        await this.storeLatestBlock(chain, lastBlockKey, 'vaa');
       }
     }
   }

@@ -10,11 +10,11 @@ test('getResumeBlockByChain', async () => {
   const blockKey = makeBlockKey(fauxBlock, new Date().toISOString());
   db.lastBlockByChain = { [chainToChainId('Solana')]: blockKey };
   // if a chain is in the database, that number should be returned
-  expect(await db.getLastBlockByChain('Solana')).toEqual(fauxBlock);
-  expect(await getResumeBlockByChain('Mainnet', 'Solana', false)).toEqual(Number(fauxBlock) + 1);
+  expect(await db.getLastBlockByChain('Solana', 'vaa')).toEqual(fauxBlock);
+  expect(await getResumeBlockByChain('Mainnet', 'Solana', 'vaa')).toEqual(Number(fauxBlock) + 1);
   // if a chain is not in the database, the initial deployment block should be returned
   expect(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Moonbeam).toBeDefined();
-  expect(await getResumeBlockByChain('Mainnet', 'Moonbeam', false)).toEqual(
+  expect(await getResumeBlockByChain('Mainnet', 'Moonbeam', 'vaa')).toEqual(
     Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Moonbeam)
   );
 });

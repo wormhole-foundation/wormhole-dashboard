@@ -30,7 +30,7 @@ import { ChainId, toChain } from '@wormhole-foundation/sdk-base';
   const lastBlockEntries = Object.entries(localDb.lastBlockByChain);
   for (const [chain, blockKey] of lastBlockEntries) {
     console.log('backfilling last block for', chain, blockKey);
-    await remoteDb.storeLatestBlock(toChain(Number(chain) as ChainId), blockKey, false);
+    await remoteDb.storeLatestBlock(toChain(Number(chain) as ChainId), blockKey, 'vaa');
     await sleep(500);
   }
 })();

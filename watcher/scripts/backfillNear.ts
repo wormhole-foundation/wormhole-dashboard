@@ -35,7 +35,7 @@ const BATCH_SIZE = 100;
   const chain: Chain = 'Near';
   const provider = await getNearProvider(network, NEAR_ARCHIVE_RPC);
   const fromBlock = Number(
-    (await db.getLastBlockByChain(chain, false)) ??
+    (await db.getLastBlockByChain(chain, 'vaa')) ??
       INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[network][chain] ??
       0
   );

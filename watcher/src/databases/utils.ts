@@ -1,8 +1,8 @@
 import { Chain, Network, chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
-  INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  INITIAL_DEPLOYMENT_BLOCK_BY_MODE,
   MAX_UINT_64,
+  Mode,
   padUint16,
   padUint64,
 } from '@wormhole-foundation/wormhole-monitor-common';
@@ -52,20 +52,18 @@ export const initDb = (startWatching: boolean = true): Database => {
 export const storeLatestBlock = async (
   chain: Chain,
   lastBlockKey: string,
-  isNTT: boolean
+  mode: Mode
 ): Promise<void> => {
-  return database.storeLatestBlock(chain, lastBlockKey, isNTT);
+  return database.storeLatestBlock(chain, lastBlockKey, mode);
 };
 
 export const getResumeBlockByChain = async (
   network: Network,
   chain: Chain,
-  isNTT: boolean
+  mode: Mode
 ): Promise<number | null> => {
-  const lastBlock = await database.getLastBlockByChain(chain, isNTT);
-  const initialBlock = isNTT
-    ? INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[network][chain]
-    : INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[network][chain];
+  const lastBlock = await database.getLastBlockByChain(chain, mode);
+  const initialBlock = INITIAL_DEPLOYMENT_BLOCK_BY_MODE[mode][network][chain];
   return lastBlock !== null
     ? Number(lastBlock) + 1
     : initialBlock !== undefined

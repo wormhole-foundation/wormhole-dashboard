@@ -60,7 +60,7 @@ CREATE TABLE fast_transfer_executions (
 -- Settlement is created when the settlement is created in the `settleFastTransfer`
 -- ix in the MatchingEngine contract.
 CREATE TABLE fast_transfer_settlements (
-  fast_transfer_id VARCHAR(255) PRIMARY KEY,
+  fast_vaa_hash VARCHAR(255) PRIMARY KEY,
   repayment BIGINT,
   settle_payer VARCHAR(255),
   settle_tx_hash VARCHAR(255),
@@ -89,3 +89,4 @@ CREATE TABLE auction_history_mapping (
   auction_pubkey VARCHAR(255) PRIMARY KEY,
   index INT NOT NULL
 );
+

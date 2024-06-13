@@ -67,6 +67,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   constructor(network: Network, isTest: boolean = false) {
     super(network, false);
 
+    this.getSignaturesLimit = 100;
     this.network = network;
     this.rpc = isTest ? 'https://api.devnet.solana.com' : RPCS_BY_CHAIN[network].Solana!;
     this.matchingEngineBorshCoder = new BorshCoder(MATCHING_ENGINE_IDL as any);
@@ -192,13 +193,27 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       return [];
     }
 
-    // We want to sort them by chronological order and process them from the oldest to the newest
-    const results = await this.getConnection().getTransactions(
-      signatures.map((s) => s.signature),
-      {
-        maxSupportedTransactionVersion: 0,
-      }
-    );
+    let results = [];
+
+    // Adding a try-catch block because ankr throws unsafeRes,
+    try {
+      // We want to sort them by chronological order and process them from the oldest to the newest
+      results = await this.getConnection().getTransactions(
+        signatures.map((s) => s.signature),
+        {
+          maxSupportedTransactionVersion: 0,
+        }
+      );
+    } catch (error) {
+      this.logger.error('error:', error);
+      return [];
+    }
+
+    // Early return
+    if (results.length === 0) {
+      this.logger.warn('No transactions found for the provided signatures.');
+      return [];
+    }
 
     if (results.length !== signatures.length) {
       throw new Error(`failed to fetch tx for signatures`);
@@ -209,6 +224,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
         // skip errored txs
         continue;
       }
+
       if (!res || !res.blockTime) {
         throw new Error(
           `failed to fetch tx for signature ${res?.transaction.signatures[0] || 'unknown'}`
@@ -251,7 +267,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     );
 
     const ixName = decodedData?.name;
-
     if (!decodedData || !ixName) {
       this.logger.debug('decodedData is null');
       return;
@@ -311,6 +326,9 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
+    if (accountKeyIndexes.length < 8) {
+      throw new Error('Insufficient account key indexes for parsePlaceInitialOfferCctp');
+    }
     const payer = accountKeys[accountKeyIndexes[0]];
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[4]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[7]];
@@ -434,6 +452,9 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
+    if (accountKeyIndexes.length < 2) {
+      throw new Error('Insufficient account key indexes for parseImproveOffer');
+    }
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[1]];
 
     const auction = await this.fetchAuction(auctionAccountPubkey.toBase58());
@@ -532,6 +553,9 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   ): Promise<FastTransferExecutionInfo> {
     const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
+    if (accountKeyIndexes.length < 6) {
+      throw new Error('Insufficient account key indexes for parseExecuteFastOrderCctp');
+    }
     const payerAccountPubkey = accountKeys[accountKeyIndexes[0]];
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[4]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[5]];
@@ -560,6 +584,9 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   ) {
     const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
+    if (accountKeyIndexes.length < 4) {
+      throw new Error('Insufficient account key indexes for parseExecuteFastOrderLocal');
+    }
     const payerAccountPubkey = accountKeys[accountKeyIndexes[0]];
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[2]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[3]];
@@ -595,7 +622,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     res: VersionedTransactionResponse,
     ix: MessageCompiledInstruction,
     seq: number
-  ): Promise<{ id: FastTransferId; info: FastTransferSettledInfo }> {
+  ): Promise<FastTransferSettledInfo> {
     if (!res.meta?.innerInstructions) {
       throw new Error(
         `[parseSettleAuctionComplete] ${res.transaction.signatures[0]} no inner instructions`
@@ -605,6 +632,9 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     // somehow the transactions we get cannot resolve the address lookup tables
     // this is a temp way to get the account keys for the transaction until that is fixed
     const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
+    if (accountKeys.length < 6) {
+      throw new Error('Insufficient account key indexes for parseSettleAuctionComplete');
+    }
     const executorTokenAccountPubkey = accountKeys[ix.accountKeyIndexes[1]];
     const bestOfferTokenAccountPubkey = accountKeys[ix.accountKeyIndexes[2]];
     const auctionAccountPubkey = accountKeys[ix.accountKeyIndexes[5]];
@@ -641,7 +671,6 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     const info = {
       fast_vaa_hash: fast_vaa_hash,
-      status: FastTransferStatus.SETTLED,
       repayment: BigInt(decodedData.data.amount.toString()),
       settle_payer: accountKeys[transferSplIx.accounts[0]].pubkey.toBase58(),
       settle_tx_hash: res.transaction.signatures[0],
@@ -650,11 +679,12 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     };
 
     await this.saveFastTransferInfo('fast_transfer_settlements', info);
+    await this.updateMarketOrder({
+      fast_vaa_hash,
+      status: FastTransferStatus.SETTLED,
+    });
 
-    return {
-      id: { fast_vaa_hash },
-      info,
-    };
+    return info;
   }
 
   async getAccountsByParsedTransaction(txHash: string): Promise<ParsedMessageAccount[]> {
@@ -671,17 +701,65 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   async parseSettleAuctionNoneLocal(
     res: VersionedTransactionResponse,
     ix: MessageCompiledInstruction
-  ) {
-    // Slow relay is not done yet, will implement after
-    throw new Error('[parseSettleAuctionNoneLocal] not implemented');
+  ): Promise<FastTransferSettledInfo> {
+    const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
+    const accountKeyIndexes = ix.accountKeyIndexes;
+    if (accountKeyIndexes.length < 7) {
+      throw new Error('Insufficient account key indexes for parseSettleAuctionNoneLocal');
+    }
+    const payer = accountKeys[accountKeyIndexes[0]];
+    const auction = accountKeys[accountKeyIndexes[6]];
+
+    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction.pubkey);
+
+    const info = {
+      fast_vaa_hash: fast_vaa_hash,
+      // No one executed anything so no repayment
+      repayment: 0n,
+      settle_payer: payer.pubkey.toBase58(),
+      settle_tx_hash: res.transaction.signatures[0],
+      settle_slot: BigInt(res.slot),
+      settle_time: new Date(res.blockTime! * 1000),
+    };
+
+    await this.saveFastTransferInfo('fast_transfer_settlements', info);
+    await this.updateMarketOrder({
+      fast_vaa_hash,
+      status: FastTransferStatus.SETTLED,
+    });
+
+    return info;
   }
 
   async parseSettleAuctionNoneCctp(
     res: VersionedTransactionResponse,
-    instruction: MessageCompiledInstruction
-  ) {
-    // Slow relay is not done yet, will implement after
-    throw new Error('[parseSettleAuctionNoneCctp] not implemented');
+    ix: MessageCompiledInstruction
+  ): Promise<FastTransferSettledInfo> {
+    const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
+    const accountKeyIndexes = ix.accountKeyIndexes;
+
+    if (accountKeyIndexes.length < 9) {
+      throw new Error('Insufficient account key indexes for parseSettleAuctionNoneCctp');
+    }
+
+    const payer = accountKeys[accountKeyIndexes[0]];
+    const auction = accountKeys[accountKeyIndexes[8]];
+
+    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction.pubkey);
+
+    const info = {
+      fast_vaa_hash: fast_vaa_hash,
+      // No one executed anything so no repayment
+      repayment: 0n,
+      settle_payer: payer.pubkey.toBase58(),
+      settle_tx_hash: res.transaction.signatures[0],
+      settle_slot: BigInt(res.slot),
+      settle_time: new Date(res.blockTime! * 1000),
+    };
+
+    await this.saveFastTransferInfo('fast_transfer_settlements', info);
+
+    return info;
   }
 
   /*
@@ -803,7 +881,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     let auction: AuctionEntry | null = null;
 
-    const mapping = await auctionHistories.flatMap((auctionHistory) => {
+    const mapping = auctionHistories.flatMap((auctionHistory) => {
       return auctionHistory.data.map((entry) => {
         const auctionPk = this.matchingEngineProgram.auctionAddress(entry.vaaHash);
 
@@ -821,18 +899,17 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
 
     return auction;
   }
-
-  // `getDbLatestAuctionHistoryIndex` fetches the latest auction history index that has been indexed
-  // in the database
   async getDbLatestAuctionHistoryIndex(): Promise<bigint> {
-    // this is to allow ci to run without a db
     if (!this.pg) {
+      this.logger.debug('No database connection, returning 0');
       return 0n;
     }
-
     try {
       const result = await this.pg('auction_history_mapping').max('index as maxIndex').first();
-      return result && result.maxIndex !== null ? BigInt(result.maxIndex) : 0n;
+      this.logger.debug('Latest auction history index query result:', result);
+      const maxIndex = result && result.maxIndex !== null ? BigInt(result.maxIndex) : 0n;
+      this.logger.info(`Latest auction history index: ${maxIndex}`);
+      return maxIndex;
     } catch (error) {
       this.logger.error('Failed to fetch the largest index from auction_history_mapping:', error);
       throw new Error('Database query failed');
@@ -844,74 +921,115 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
     auction_pubkey: string;
     index: bigint;
   }> {
-    // this is to allow ci to run without a db
     if (!this.pg) {
-      return {
-        auction,
-        auction_pubkey: '',
-        index: 0n,
-      };
+      this.logger.debug('No database connection, returning default mapping');
+      return { auction, auction_pubkey: '', index: 0n };
     }
-
-    const result = await this.pg('auction_history_mapping')
-      .where({ auction_pubkey: auction })
-      .first();
-    return result;
+    try {
+      const result = await this.pg('auction_history_mapping')
+        .where({ auction_pubkey: auction })
+        .first();
+      this.logger.debug(`Auction history mapping for ${auction}:`, result);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error fetching auction history mapping for ${auction}:`, error);
+      throw error;
+    }
   }
 
   async saveAuctionHistoryMapping(
-    mappings: {
-      auction_pubkey: string;
-      index: bigint;
-    }[]
+    mappings: { auction_pubkey: string; index: bigint }[]
   ): Promise<void> {
     if (!this.pg) {
+      this.logger.debug('No database connection, skipping saveAuctionHistoryMapping');
       return;
     }
-
-    await this.pg('auction_history_mapping').insert(mappings).onConflict('auction_pubkey').merge();
+    try {
+      const result = await this.pg('auction_history_mapping')
+        .insert(mappings)
+        .onConflict('auction_pubkey')
+        .merge();
+      this.logger.info(`Saved ${mappings.length} auction history mappings. Result:`, result);
+    } catch (error) {
+      this.logger.error('Error saving auction history mappings:', error);
+      throw error;
+    }
   }
 
   async saveFastTransfer(fastTransfer: MarketOrder): Promise<void> {
-    // this is to allow ci to run without a db
     if (!this.pg) {
+      this.logger.debug('No database connection, skipping saveFastTransfer');
       return;
     }
-    this.logger.debug(`saving fast transfer ${fastTransfer.fast_vaa_hash}`);
-
-    // Upsert the fast transfer
-    await this.pg('fast_transfers').insert(fastTransfer).onConflict('fast_vaa_id').merge();
+    this.logger.debug(`Saving fast transfer ${fastTransfer.fast_vaa_hash}`);
+    try {
+      const result = await this.pg('fast_transfers')
+        .insert(fastTransfer)
+        .onConflict('fast_vaa_id')
+        .merge();
+      this.logger.info(`Saved fast transfer ${fastTransfer.fast_vaa_hash}. Result:`, result);
+    } catch (error) {
+      this.logger.error(`Error saving fast transfer ${fastTransfer.fast_vaa_hash}:`, error);
+      throw error;
+    }
   }
 
   async updateMarketOrder(update: FastTransferUpdate): Promise<void> {
     if (!this.pg) {
+      this.logger.debug('No database connection, skipping updateMarketOrder');
       return;
     }
-
-    await this.pg('market_orders').insert(update).onConflict('fast_vaa_id').merge();
+    try {
+      const result = await this.pg('market_orders')
+        .insert(update)
+        .onConflict('fast_vaa_id')
+        .merge();
+      this.logger.info(`Updated market order ${update.fast_vaa_id}. Result:`, result);
+    } catch (error) {
+      this.logger.error('Update data that failed:', update);
+      throw error;
+    }
   }
 
   async updateAuction(id: FastTransferId, update: FastTransferAuctionUpdate): Promise<void> {
     if (!this.pg) {
+      this.logger.debug('No database connection, skipping updateAuction');
       return;
     }
-
-    await this.pg('fast_transfer_auctions').where(id).update(update);
+    try {
+      const result = await this.pg('fast_transfer_auctions').where(id).update(update);
+      this.logger.info(`Updated auction ${id.fast_vaa_hash}. Result:`, result);
+    } catch (error) {
+      this.logger.error(`Error updating auction ${id.fast_vaa_hash}:`, error);
+      throw error;
+    }
   }
 
   async getFastVaaHashFromAuctionPubkey(auctionPubkey: PublicKey): Promise<string> {
-    // this is to allow ci to run without a db
     if (!this.pg) {
+      this.logger.debug(
+        'No database connection, returning empty string for getFastVaaHashFromAuctionPubkey'
+      );
       return '';
     }
-
-    const result = await this.pg('auctions')
-      .where({ auction_pubkey: auctionPubkey.toBase58() })
-      .first();
-    return result?.fast_vaa_hash || '';
+    try {
+      const result = await this.pg('fast_transfer_auctions')
+        .where({ auction_pubkey: auctionPubkey.toBase58() })
+        .first();
+      this.logger.debug(
+        `Fast VAA hash for auction pubkey ${auctionPubkey.toBase58()}:`,
+        result?.fast_vaa_hash
+      );
+      return result?.fast_vaa_hash || '';
+    } catch (error) {
+      this.logger.error(
+        `Error fetching Fast VAA hash for auction pubkey ${auctionPubkey.toBase58()}:`,
+        error
+      );
+      throw error;
+    }
   }
 
-  // generic function to save any fast transfer info to the db
   async saveFastTransferInfo(
     table: string,
     info:
@@ -920,25 +1038,31 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
       | FastTransferExecutionInfo
       | FastTransferSettledInfo
   ): Promise<void> {
-    // this is to allow ci to run without a db
     if (!this.pg) {
+      this.logger.debug(`No database connection, skipping saveFastTransferInfo for table ${table}`);
       return;
     }
-
-    await this.pg(table).insert(info);
+    try {
+      const result = await this.pg(table).insert(info);
+      this.logger.info(`Saved fast transfer info to table ${table}. Result:`, result);
+    } catch (error) {
+      this.logger.error(`Error saving fast transfer info to table ${table}:`, error);
+      throw error;
+    }
   }
 
   async saveAuctionLogs(auctionLogs: AuctionOffer): Promise<void> {
-    // this is to allow ci to run without a db
     if (!this.pg) {
+      this.logger.debug('No database connection, skipping saveAuctionLogs');
       return;
     }
-
-    this.logger.debug(
-      `Attempting to save auction logs for ${auctionLogs.fast_vaa_hash} with data:`,
-      auctionLogs
-    );
-
-    await this.pg('auction_logs').insert(auctionLogs);
+    this.logger.debug(`Attempting to save auction logs for ${auctionLogs.fast_vaa_hash}`);
+    try {
+      const result = await this.pg('auction_logs').insert(auctionLogs);
+      this.logger.info(`Saved auction logs for ${auctionLogs.fast_vaa_hash}. Result:`, result);
+    } catch (error) {
+      this.logger.error(`Error saving auction logs for ${auctionLogs.fast_vaa_hash}:`, error);
+      throw error;
+    }
   }
 }

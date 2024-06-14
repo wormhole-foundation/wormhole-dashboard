@@ -7,7 +7,7 @@ import {
   toChainId,
 } from '@wormhole-foundation/sdk-base';
 
-export type Mode = 'vaa' | 'ntt';
+export type Mode = 'vaa' | 'ntt' | 'ft';
 
 // This is defined here in an effort to keep the number and text in sync.
 // The default value is not exported because the getMissThreshold() function should be used to get the value.
@@ -113,7 +113,7 @@ export const INITIAL_FT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlock
 };
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_MODE: {
-  [mode: string]: NetworkChainBlockMapping;
+  [mode in Mode]: NetworkChainBlockMapping;
 } = {
   vaa: INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   ntt: INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,

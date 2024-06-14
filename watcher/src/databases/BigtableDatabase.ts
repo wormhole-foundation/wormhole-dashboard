@@ -41,6 +41,7 @@ export class BigtableDatabase extends Database {
   latestNTTCollectionName: string;
   latestFTCollectionName: string;
   pubsubSignedVAATopic: string;
+  collectionNameByMode: { [key in Mode]: string };
   pubsub: PubSub;
   constructor() {
     super();
@@ -52,6 +53,11 @@ export class BigtableDatabase extends Database {
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
     this.latestNTTCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_NTT_COLLECTION');
     this.latestFTCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_FT_COLLECTION');
+    this.collectionNameByMode = {
+      vaa: this.latestCollectionName,
+      ntt: this.latestNTTCollectionName,
+      ft: this.latestFTCollectionName,
+    };
     this.pubsubSignedVAATopic = assertEnvironmentVariable('PUBSUB_SIGNED_VAA_TOPIC');
     try {
       this.bigtable = new Bigtable();
@@ -70,13 +76,10 @@ export class BigtableDatabase extends Database {
   async getLastBlockByChain(chain: Chain, mode: Mode): Promise<string | null> {
     const chainId = chainToChainId(chain);
 
-    const collectionNameByMode: { [key in Mode]: string } = {
-      vaa: this.latestCollectionName,
-      ntt: this.latestNTTCollectionName,
-      ft: this.latestFTCollectionName,
-    };
-
-    const collectionName = collectionNameByMode[mode];
+    const collectionName = this.collectionNameByMode[mode];
+    if (!collectionName) {
+      throw new Error(`Unknown mode: ${mode}`);
+    }
 
     const lastObservedBlock = this.firestoreDb.collection(collectionName).doc(chainId.toString());
     const lastObservedBlockByChain = await lastObservedBlock.get();
@@ -90,16 +93,19 @@ export class BigtableDatabase extends Database {
     return null;
   }
 
-  async storeLatestBlock(chain: Chain, lastBlockKey: string, isNTT: boolean): Promise<void> {
+  async storeLatestBlock(chain: Chain, lastBlockKey: string, mode: Mode): Promise<void> {
     if (this.firestoreDb === undefined) {
       this.logger.error('no firestore db set');
       return;
     }
     const chainId = chainToChainId(chain);
     this.logger.info(`storing last block=${lastBlockKey} for chain=${chainId}`);
-    const lastObservedBlock = isNTT
-      ? this.firestoreDb.collection(this.latestNTTCollectionName).doc(`${chainId.toString()}`)
-      : this.firestoreDb.collection(this.latestCollectionName).doc(`${chainId.toString()}`);
+    const collectionName = this.collectionNameByMode[mode];
+    if (!collectionName) {
+      throw new Error(`Unknown mode: ${mode}`);
+    }
+
+    const lastObservedBlock = this.firestoreDb.collection(collectionName).doc(chainId.toString());
     await lastObservedBlock.set({ lastBlockKey });
   }
 
@@ -170,7 +176,7 @@ export class BigtableDatabase extends Database {
       if (blockKeys.length) {
         const lastBlockKey = blockKeys[blockKeys.length - 1];
         this.logger.info(`for chain=${chain}, storing last bigtable block=${lastBlockKey}`);
-        await this.storeLatestBlock(chain, lastBlockKey, false);
+        await this.storeLatestBlock(chain, lastBlockKey, 'vaa');
       }
     }
   }

@@ -83,9 +83,9 @@ export const initDb = (startWatching: boolean = true): Database => {
 export const storeLatestBlock = async (
   chain: Chain,
   lastBlockKey: string,
-  isNTT: boolean
+  mode: Mode
 ): Promise<void> => {
-  return database.storeLatestBlock(chain, lastBlockKey, isNTT);
+  return database.storeLatestBlock(chain, lastBlockKey, mode);
 };
 
 export const getResumeBlockByChain = async (

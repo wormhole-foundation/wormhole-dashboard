@@ -21,7 +21,7 @@ export class Database {
   async storeVaasByBlock(chain: Chain, vaasByBlock: VaasByBlock): Promise<void> {
     throw new Error('Not Implemented');
   }
-  async storeLatestBlock(chain: Chain, lastBlockKey: string, isNTT: boolean): Promise<void> {
+  async storeLatestBlock(chain: Chain, lastBlockKey: string, mode: Mode): Promise<void> {
     throw new Error('Not Implemented');
   }
 }

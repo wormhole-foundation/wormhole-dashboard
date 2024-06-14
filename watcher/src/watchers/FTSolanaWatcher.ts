@@ -55,7 +55,7 @@ import {
 } from '../fastTransfer/consts';
 import { FastMarketOrder } from '@wormhole-foundation/example-liquidity-layer-definitions';
 
-export class FastTransferSolanaWatcher extends SolanaWatcher {
+export class FTSolanaWatcher extends SolanaWatcher {
   readonly network: Network;
   readonly rpc: string;
   readonly matchingEngineBorshCoder: BorshCoder;
@@ -68,7 +68,7 @@ export class FastTransferSolanaWatcher extends SolanaWatcher {
   readonly eventParser: EventParser;
 
   constructor(network: Network, isTest: boolean = false) {
-    super(network, false);
+    super(network, 'ft');
 
     this.network = network;
     this.rpc = isTest ? 'https://api.devnet.solana.com' : RPCS_BY_CHAIN[network].Solana!;

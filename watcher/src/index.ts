@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import { initDb } from './databases/utils';
-import { makeFinalizedNTTWatcher, makeFinalizedWatcher } from './watchers/utils';
 import { Mode, getNetwork, getMode } from '@wormhole-foundation/wormhole-monitor-common';
 import { startSupervisor } from './workers/supervisor';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
@@ -91,10 +90,14 @@ const supportedNTTChains: Chain[] =
     ? ['Solana', 'Sepolia', 'ArbitrumSepolia', 'BaseSepolia', 'OptimismSepolia']
     : ['Solana', 'Ethereum', 'Fantom', 'Arbitrum', 'Optimism', 'Base'];
 
+const supportedFTChains: Chain[] = network === 'Testnet' ? ['Solana', 'ArbitrumSepolia'] : [];
+
 if (mode === 'vaa') {
   startSupervisor(supportedChains);
 } else if (mode === 'ntt') {
   startSupervisor(supportedNTTChains);
+} else if (mode === 'ft') {
+  startSupervisor(supportedFTChains);
 } else {
   throw new Error(`Unknown mode: ${mode}`);
 }

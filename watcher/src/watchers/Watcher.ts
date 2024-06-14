@@ -1,5 +1,6 @@
 import {
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
+  Mode,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { z } from 'zod';
@@ -15,13 +16,18 @@ export class Watcher {
   network: Network;
   logger: WormholeLogger;
   maximumBatchSize: number = 100;
-  isNTT: boolean = false;
+  mode: Mode;
 
-  constructor(network: Network, chain: Chain, isNTT: boolean = false) {
+  constructor(network: Network, chain: Chain, mode: Mode = 'vaa') {
     this.network = network;
     this.chain = chain;
-    this.isNTT = isNTT;
-    this.logger = isNTT ? getLogger('NTT_' + chain) : getLogger(chain);
+    this.mode = mode;
+
+    // `vaa` -> ''
+    // `ntt` -> 'NTT_'
+    // `ft` -> 'FT_'
+    const loggerPrefix = mode === 'vaa' ? '' : mode.toUpperCase() + '_';
+    this.logger = getLogger(loggerPrefix + chain);
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -33,6 +39,10 @@ export class Watcher {
   }
 
   async getNttMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
+    throw new Error('Not Implemented');
+  }
+
+  async getFtMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
     throw new Error('Not Implemented');
   }
 
@@ -58,11 +68,7 @@ export class Watcher {
 
   async watch(): Promise<void> {
     let toBlock: number | null = null;
-    let fromBlock: number | null = await getResumeBlockByChain(
-      this.network,
-      this.chain,
-      this.isNTT
-    );
+    let fromBlock: number | null = await getResumeBlockByChain(this.network, this.chain, this.mode);
 
     let retry = 0;
     while (true) {
@@ -72,9 +78,12 @@ export class Watcher {
           // fetch logs for the block range, inclusive of toBlock
           toBlock = Math.min(fromBlock + this.maximumBatchSize - 1, toBlock);
           this.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
-          if (this.isNTT) {
+          if (this.mode === 'ntt') {
             const blockKey = await this.getNttMessagesForBlocks(fromBlock, toBlock);
-            await storeLatestBlock(this.chain, blockKey, true);
+            await storeLatestBlock(this.chain, blockKey, this.mode);
+          } else if (this.mode === 'ft') {
+            const blockKey = await this.getFtMessagesForBlocks(fromBlock, toBlock);
+            await storeLatestBlock(this.chain, blockKey, this.mode);
           } else {
             const vaasByBlock = await this.getMessagesForBlocks(fromBlock, toBlock);
             await storeVaasByBlock(this.chain, vaasByBlock);

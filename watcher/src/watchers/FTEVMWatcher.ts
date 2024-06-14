@@ -11,7 +11,7 @@ import { MarketOrder } from '../fastTransfer/types';
 
 export type BlockTag = 'finalized' | 'safe' | 'latest';
 
-export class FTWatcher extends Watcher {
+export class FTEVMWatcher extends Watcher {
   finalizedBlockTag: BlockTag;
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
@@ -27,7 +27,7 @@ export class FTWatcher extends Watcher {
     finalizedBlockTag: BlockTag = 'latest',
     isTest = false
   ) {
-    super(network, chain, true);
+    super(network, chain, 'ft');
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
@@ -75,4 +75,4 @@ export class FTWatcher extends Watcher {
   }
 }
 
-export default FTWatcher;
+export default FTEVMWatcher;

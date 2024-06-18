@@ -276,6 +276,6 @@ require (
 // https://github.com/cosmos/cosmos-sdk/issues/10925 for more details.
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240507160701-1c858d355869 => github.com/wormholelabs-xyz/wormhole/sdk v0.0.0-20240610195914-fd94f239ddf2
+replace github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240507160701-1c858d355869 => github.com/wormholelabs-xyz/wormhole/sdk v0.0.0-20240617202608-4ba86b8d2cfe
 
-replace github.com/certusone/wormhole/node v0.0.0-20240507160701-1c858d355869 => github.com/wormholelabs-xyz/wormhole/node v0.0.0-20240611200501-e1e93a8d4779
+replace github.com/certusone/wormhole/node v0.0.0-20240507160701-1c858d355869 => github.com/wormholelabs-xyz/wormhole/node v0.0.0-20240617202608-4ba86b8d2cfe

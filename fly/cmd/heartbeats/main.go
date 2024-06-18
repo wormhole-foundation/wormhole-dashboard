@@ -249,9 +249,6 @@ func main() {
 		GSM_maxTypeVal
 	)
 
-	// Outbound gossip message queue
-	sendC := make(chan []byte)
-
 	// Inbound observations
 	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 20000)
 
@@ -375,9 +372,11 @@ func main() {
 					guardianTable.Render()
 					prompt()
 				case "m":
+					gossipLock.Lock()
 					activeTable = 2
 					resetTerm(true)
 					gossipMsgTable.Render()
+					gossipLock.Unlock()
 					prompt()
 				case "o":
 					activeTable = 3
@@ -650,11 +649,14 @@ func main() {
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
-			p2p.Run(obsvC,
+			p2p.Run(
+				obsvC,
 				batchObsvC,
 				obsvReqC,
-				nil,
-				sendC,
+				nil, // Won't publish observation requests.
+				nil, // Won't be publishing control messages.
+				nil, // Won't be publishing observations.
+				nil, // Won't be publishing VAAs.
 				signedInC,
 				priv,
 				nil,

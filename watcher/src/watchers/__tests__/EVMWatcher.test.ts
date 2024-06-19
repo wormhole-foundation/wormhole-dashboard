@@ -2,6 +2,7 @@ import { expect, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { Block, EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 import { contracts } from '@wormhole-foundation/sdk-base';
+import { max } from 'bn.js';
 
 const initialAvalancheBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Avalanche
@@ -22,46 +23,46 @@ test('getBlock by tag', async () => {
 
 test('getBlock by number', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Avalanche');
-  const block = await watcher.getBlock(initialAvalancheBlock);
-  expect(block.number).toEqual(initialAvalancheBlock);
-  expect(block.hash).toEqual('0x33b358fe68a2a11b6a5a5969f29f9223001e36a5d719734ba542b238d397f14e');
-  expect(block.timestamp).toEqual(1639504758);
-  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2021-12-14T17:59:18.000Z');
+  const block = await watcher.getBlock(46997506);
+  expect(block.number).toEqual(46997506);
+  expect(block.hash).toEqual('0x2d40ae06ad17d62b8e500cc451bc296e1e20c91140ce3cd6f2504bd3377e602f');
+  expect(block.timestamp).toEqual(1718975498);
+  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2024-06-21T13:11:38.000Z');
 });
 
 test('getBlocks', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Avalanche');
-  const blocks = await watcher.getBlocks(
-    initialAvalancheBlock,
-    initialAvalancheBlock + watcher.maximumBatchSize - 1
-  );
-  expect(blocks.length).toEqual(watcher.maximumBatchSize);
-  expect(blocks[0].number).toEqual(initialAvalancheBlock);
+  const maxBatchSize = watcher.maximumBatchSize;
+  const maxSizeMinusOne = maxBatchSize - 1;
+  const avalancheBlock = 46997506;
+  const blocks = await watcher.getBlocks(avalancheBlock, avalancheBlock + maxSizeMinusOne);
+  expect(blocks.length).toEqual(maxBatchSize);
+  expect(blocks[0].number).toEqual(avalancheBlock);
   expect(blocks[0].hash).toEqual(
-    '0x33b358fe68a2a11b6a5a5969f29f9223001e36a5d719734ba542b238d397f14e'
+    '0x2d40ae06ad17d62b8e500cc451bc296e1e20c91140ce3cd6f2504bd3377e602f'
   );
-  expect(blocks[0].timestamp).toEqual(1639504758);
-  expect(new Date(blocks[0].timestamp * 1000).toISOString()).toEqual('2021-12-14T17:59:18.000Z');
-  expect(blocks[99].number).toEqual(initialAvalancheBlock + 99);
-  expect(blocks[99].hash).toEqual(
-    '0x598080458a28e1241528d0d8c745425147179b86e353d5b0e5cc29e4154d13f6'
+  expect(blocks[0].timestamp).toEqual(1718975498);
+  expect(new Date(blocks[0].timestamp * 1000).toISOString()).toEqual('2024-06-21T13:11:38.000Z');
+  expect(blocks[maxSizeMinusOne].number).toEqual(avalancheBlock + maxSizeMinusOne);
+  expect(blocks[maxSizeMinusOne].hash).toEqual(
+    '0x6308b1f713b1653d4959c9b43e586f1ff601fe5a453e411129d28b5c9208b2d5'
   );
-  expect(blocks[99].timestamp).toEqual(1639504940);
+  expect(blocks[maxSizeMinusOne].timestamp).toEqual(1718975702);
 });
 
 test('getLogs', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Avalanche');
   const logs = await watcher.getLogs(
-    9743300,
-    9743399,
+    46997506,
+    46997599,
     contracts.coreBridge('Mainnet', 'Avalanche'),
     [LOG_MESSAGE_PUBLISHED_TOPIC]
   );
-  expect(logs.length).toEqual(2);
+  expect(logs.length).toEqual(1);
   expect(logs[0].topics[0]).toEqual(LOG_MESSAGE_PUBLISHED_TOPIC);
-  expect(logs[0].blockNumber).toEqual(9743306);
+  expect(logs[0].blockNumber).toEqual(46997506);
   expect(logs[0].transactionHash).toEqual(
-    '0x0ca26f28b454591e600ff03fcff60e35bf74f12ebe0c3ba2165a6b6d5a5e4da8'
+    '0xe112f65bccc2fee1b8940eb6efecc2a4b1419ce62b7d2ac1a82f7d6c01937198'
   );
 });
 
@@ -73,16 +74,16 @@ test('getFinalizedBlockNumber', async () => {
 
 test('getMessagesForBlocks', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Avalanche');
-  const vaasByBlock = await watcher.getMessagesForBlocks(9743300, 9743399);
+  const vaasByBlock = await watcher.getMessagesForBlocks(46997500, 46997599);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(100);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(98);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(2);
+  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(99);
+  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['9743306/2022-01-18T17:59:33.000Z']).toBeDefined();
-  expect(vaasByBlock['9743306/2022-01-18T17:59:33.000Z'].length).toEqual(1);
-  expect(vaasByBlock['9743306/2022-01-18T17:59:33.000Z'][0]).toEqual(
-    '0x0ca26f28b454591e600ff03fcff60e35bf74f12ebe0c3ba2165a6b6d5a5e4da8:6/0000000000000000000000000e082f06ff657d94310cb8ce8b0d9a04541d8052/3683'
+  expect(vaasByBlock['46997506/2024-06-21T13:11:38.000Z']).toBeDefined();
+  expect(vaasByBlock['46997506/2024-06-21T13:11:38.000Z'].length).toEqual(1);
+  expect(vaasByBlock['46997506/2024-06-21T13:11:38.000Z'][0]).toEqual(
+    '0xe112f65bccc2fee1b8940eb6efecc2a4b1419ce62b7d2ac1a82f7d6c01937198:6/0000000000000000000000000e082f06ff657d94310cb8ce8b0d9a04541d8052/219960'
   );
 });
 

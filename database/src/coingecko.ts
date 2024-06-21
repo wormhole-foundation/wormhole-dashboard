@@ -62,6 +62,7 @@ const createConfig = (apiKey: string) => ({
 });
 
 export const fetchPrices = async (coinIds: string[], apiKey?: string): Promise<CoinGeckoPrices> => {
+  const FIVE_MINUTES_IN_MS = 5 * 60 * 1000;
   const [baseUrl, config] = apiKey
     ? [COIN_GECKO_PRO_API_BASE_URL, createConfig(apiKey)]
     : [COIN_GECKO_API_BASE_URL, undefined];
@@ -70,13 +71,34 @@ export const fetchPrices = async (coinIds: string[], apiKey?: string): Promise<C
   console.log(`fetching ${chunks.length} chunks of prices`);
   for (const chunk of chunks) {
     console.log(`fetching chunk of ${chunk.length} prices`);
+    let currentBackoff = COIN_GECKO_API_SLEEP_MS;
     const url = `${baseUrl}/simple/price?ids=${chunk.join(',')}&vs_currencies=usd`;
-    const response = await axios.get<CoinGeckoPrices>(url, config);
-    console.log(`fetched ${Object.keys(response.data).length} prices`);
-    prices = {
-      ...prices,
-      ...response.data,
-    };
+    let done: boolean = false;
+    while (!done) {
+      try {
+        const response = await axios.get<CoinGeckoPrices>(url, config);
+        console.log(`fetched ${Object.keys(response.data).length} prices`);
+        prices = {
+          ...prices,
+          ...response.data,
+        };
+        done = true;
+      } catch (e) {
+        console.error(`failed to fetch prices: ${e}`);
+        if (isAxiosError(e) && e.response?.status === 429) {
+          if (currentBackoff > FIVE_MINUTES_IN_MS) {
+            console.error('Exceeded max backoff time querying CoinGecko API, giving up.');
+            throw e;
+          }
+          console.log(`backing off for ${currentBackoff}ms`);
+          await sleep(currentBackoff);
+          currentBackoff *= 2;
+        } else {
+          // Only want to retry on 429s
+          throw e;
+        }
+      }
+    }
     await sleep(COIN_GECKO_API_SLEEP_MS);
   }
   return prices;

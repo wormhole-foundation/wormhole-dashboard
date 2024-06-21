@@ -39,21 +39,17 @@ export async function computeMessageCountHistory(req: any, res: any) {
           skipRow = false;
           continue;
         }
-        try {
-          const parsed = parseVaa(signedVAA.data.info.bytes[0].value);
-          if (parsed.timestamp === 0) {
-            // e.g. governance VAAs may have timestamp set to 0
-            continue;
-          }
-          const date = new Date(parsed.timestamp * 1000).toISOString().slice(0, 10);
-          messageCounts.DailyTotals[date] = {
-            ...messageCounts.DailyTotals[date],
-            [parsed.emitterChain]:
-              (messageCounts.DailyTotals[date]?.[parsed.emitterChain.toString()] || 0) + 1,
-          };
-        } catch (e) {
-          console.error('Skipping row due to: ' + e);
+        const parsed = parseVaa(signedVAA.data.info.bytes[0].value);
+        if (parsed.timestamp === 0) {
+          // e.g. governance VAAs may have timestamp set to 0
+          continue;
         }
+        const date = new Date(parsed.timestamp * 1000).toISOString().slice(0, 10);
+        messageCounts.DailyTotals[date] = {
+          ...messageCounts.DailyTotals[date],
+          [parsed.emitterChain]:
+            (messageCounts.DailyTotals[date]?.[parsed.emitterChain.toString()] || 0) + 1,
+        };
       }
       if (signedVAARows.length < readChunkSize) {
         break;

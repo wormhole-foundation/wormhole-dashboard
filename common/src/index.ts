@@ -7,3 +7,4 @@ export * from './utils';
 export * from './nttConsts';
 export * from './evm';
 export * from './types';
+export * from './wormhole';

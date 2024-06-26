@@ -247,9 +247,6 @@ func main() {
 		GSM_maxTypeVal
 	)
 
-	// Outbound gossip message queue
-	sendC := make(chan []byte)
-
 	// Inbound observations
 	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 20000)
 
@@ -616,36 +613,27 @@ func main() {
 	// Run supervisor.
 	components := p2p.DefaultComponents()
 	components.Port = *p2pPort
+
+	params, err := p2p.NewRunParams(
+		*p2pBootstrap,
+		*p2pNetworkID,
+		priv,
+		gst,
+		rootCtxCancel,
+		p2p.WithSignedObservationListener(obsvC),
+		p2p.WithSignedVAAListener(signedInC),
+		p2p.WithObservationRequestListener(obsvReqC),
+		p2p.WithChainGovernorConfigListener(govConfigC),
+		p2p.WithChainGovernorStatusListener(govStatusC),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create RunParams", zap.Error(err))
+	}
+
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
-			p2p.Run(obsvC,
-				obsvReqC,
-				nil,
-				sendC,
-				signedInC,
-				priv,
-				nil,
-				gst,
-				*p2pNetworkID,
-				*p2pBootstrap,
-				"",
-				false,
-				rootCtxCancel,
-				nil,
-				nil,
-				govConfigC,
-				govStatusC,
-				components,
-				nil,
-				false,
-				false,
-				nil,
-				nil,
-				"",
-				0,
-				"",
-			)); err != nil {
+			p2p.Run(params)); err != nil {
 			return err
 		}
 

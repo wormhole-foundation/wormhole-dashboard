@@ -187,11 +187,9 @@ func main() {
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
 	defer rootCtxCancel()
 
-	// Outbound gossip message queue
-	sendC := make(chan []byte)
-
 	// Inbound observations
 	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 20000)
+	batchObsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 20000)
 
 	// Inbound observation requests
 	obsvReqC := make(chan *gossipv1.ObservationRequest, 20000)
@@ -250,7 +248,7 @@ func main() {
 				afterCount := len(uniqueObs)
 				logger.Info("Cleaned up unique observations cache", zap.Int("beforeCount", beforeCount), zap.Int("afterCount", afterCount), zap.Int("cleanedUpCount", beforeCount-afterCount))
 				timer.Reset(delay)
-			case o := <-obsvC:
+			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
 				gossipByType.WithLabelValues("observation").Inc()
 				spl := strings.Split(o.Msg.MessageId, "/")
 				chain, err := parseChainID(spl[0])
@@ -269,10 +267,35 @@ func main() {
 					tbObservationsByGuardianPerChain.WithLabelValues(name, chain.String()).Inc()
 				}
 				hash := hex.EncodeToString(o.Msg.Hash)
-				if _, exists := uniqueObs[hash]; exists {
+				if _, exists := uniqueObs[hash]; !exists {
 					uniqueObservationsCounter.Inc()
 				}
 				uniqueObs[hash] = time.Now()
+			case batch := <-batchObsvC:
+				gossipByType.WithLabelValues("batch_observation").Inc()
+				addr := "0x" + string(hex.EncodeToString(batch.Msg.Addr))
+				name := addr
+				idx, found := guardianIndexMap[strings.ToLower(addr)]
+				if found {
+					name = guardianIndexToNameMap[idx]
+				}
+				for _, o := range batch.Msg.Observations {
+					spl := strings.Split(o.MessageId, "/")
+					chain, err := parseChainID(spl[0])
+					if err != nil {
+						chain = vaa.ChainIDUnset
+					}
+					emitter := strings.ToLower(spl[1])
+					observationsByGuardianPerChain.WithLabelValues(name, chain.String()).Inc()
+					if knownEmitters[emitter] {
+						tbObservationsByGuardianPerChain.WithLabelValues(name, chain.String()).Inc()
+					}
+					hash := hex.EncodeToString(o.Hash)
+					if _, exists := uniqueObs[hash]; !exists {
+						uniqueObservationsCounter.Inc()
+					}
+					uniqueObs[hash] = time.Now()
+				}
 			}
 		}
 	}()
@@ -400,36 +423,29 @@ func main() {
 	// Run supervisor.
 	components := p2p.DefaultComponents()
 	components.Port = *p2pPort
+
+	params, err := p2p.NewRunParams(
+		*p2pBootstrap,
+		*p2pNetworkID,
+		priv,
+		gst,
+		rootCtxCancel,
+		p2p.WithComponents(components),
+		p2p.WithSignedObservationListener(obsvC),
+		p2p.WithSignedObservationBatchListener(batchObsvC),
+		p2p.WithSignedVAAListener(signedInC),
+		p2p.WithObservationRequestListener(obsvReqC),
+		p2p.WithChainGovernorConfigListener(govConfigC),
+		p2p.WithChainGovernorStatusListener(govStatusC),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create RunParams", zap.Error(err))
+	}
+
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
-			p2p.Run(obsvC,
-				obsvReqC,
-				nil,
-				sendC,
-				signedInC,
-				priv,
-				nil,
-				gst,
-				*p2pNetworkID,
-				*p2pBootstrap,
-				"",
-				false,
-				rootCtxCancel,
-				nil,
-				nil,
-				govConfigC,
-				govStatusC,
-				components,
-				nil,
-				false,
-				false,
-				nil,
-				nil,
-				"",
-				0,
-				"",
-			)); err != nil {
+			p2p.Run(params)); err != nil {
 			return err
 		}
 

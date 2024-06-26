@@ -184,6 +184,8 @@ func main() {
 
 	const (
 		GSM_signedObservation GossipMsgType = iota
+		GSM_signedObservationInBatch
+		GSM_signedObservationBatch
 		GSM_tbObservation
 		GSM_signedHeartbeat
 		GSM_signedVaaWithQuorum
@@ -193,11 +195,9 @@ func main() {
 		GSM_maxTypeVal
 	)
 
-	// Outbound gossip message queue
-	sendC := make(chan []byte)
-
 	// Inbound observations
 	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 20000)
+	batchObsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 20000)
 
 	// Inbound observation requests
 	obsvReqC := make(chan *gossipv1.ObservationRequest, 20000)
@@ -266,7 +266,7 @@ func main() {
 
 	gossipMsgTable := table.NewWriter()
 	gossipMsgTable.SetOutputMirror(os.Stdout)
-	gossipMsgTable.AppendHeader(table.Row{"#", "Guardian", "Obsv", "TB_OBsv", "HB", "VAA", "Obsv_Req", "Chain_Gov_Cfg", "Chain_Gov_Status"})
+	gossipMsgTable.AppendHeader(table.Row{"#", "Guardian", "Obsv", "ObsvInB", "ObsvB", "TB_OBsv", "HB", "VAA", "Obsv_Req", "Chain_Gov_Cfg", "Chain_Gov_Status"})
 	gossipMsgTable.SetStyle(table.StyleColoredDark)
 
 	obsvRateTable := table.NewWriter()
@@ -316,9 +316,11 @@ func main() {
 					guardianTable.Render()
 					prompt()
 				case "m":
+					gossipLock.Lock()
 					activeTable = 2
 					resetTerm(true)
 					gossipMsgTable.Render()
+					gossipLock.Unlock()
 					prompt()
 				case "o":
 					activeTable = 3
@@ -337,11 +339,12 @@ func main() {
 	// Just count observations
 	go func() {
 		uniqueObs := map[string]struct{}{}
+		uniqueObsInBatch := map[string]struct{}{}
 		for {
 			select {
 			case <-rootCtx.Done():
 				return
-			case o := <-obsvC:
+			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
 				spl := strings.Split(o.Msg.MessageId, "/")
 				emitter := strings.ToLower(spl[1])
 				addr := "0x" + string(hex.EncodeToString(o.Msg.Addr))
@@ -367,9 +370,44 @@ func main() {
 				gossipLock.Lock()
 				gossipMsgTable.ResetRows()
 				for idx, r := range gossipCounter {
-					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6]})
+					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]})
 				}
 				gossipLock.Unlock()
+			case batch := <-batchObsvC:
+				for _, o := range batch.Msg.Observations {
+					spl := strings.Split(o.MessageId, "/")
+					emitter := strings.ToLower(spl[1])
+					addr := "0x" + string(hex.EncodeToString(batch.Msg.Addr))
+					idx := guardianIndexMap[strings.ToLower(addr)]
+					if knownEmitters[emitter] {
+						gossipCounter[idx][GSM_tbObservation]++
+						gossipCounter[totalsRow][GSM_tbObservation]++
+					}
+					if handleObsv(uint(idx)) {
+						obsvRateTable.ResetRows()
+						for i := 0; i < numGuardians; i++ {
+							obsvRateTable.AppendRow(table.Row{i, obsvRateRows[int(i)].guardianName, obsvRateRows[int(i)].obsvCount,
+								obsvRateRows[uint(i)].percents[0], obsvRateRows[uint(i)].percents[1], obsvRateRows[uint(i)].percents[2],
+								obsvRateRows[uint(i)].percents[3], obsvRateRows[uint(i)].percents[4], obsvRateRows[uint(i)].percents[5],
+								obsvRateRows[uint(i)].percents[6], obsvRateRows[uint(i)].percents[7], obsvRateRows[uint(i)].percents[8],
+								obsvRateRows[uint(i)].percents[9]})
+						}
+					}
+					gossipCounter[idx][GSM_signedObservationInBatch]++
+					gossipCounter[totalsRow][GSM_signedObservationInBatch]++
+
+					if *loadTesting {
+						uniqueObsInBatch[hex.EncodeToString(o.Hash)] = struct{}{}
+						gossipCounter[uniqueRow][GSM_signedObservationInBatch] = len(uniqueObsInBatch)
+					}
+
+					gossipLock.Lock()
+					gossipMsgTable.ResetRows()
+					for idx, r := range gossipCounter {
+						gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]})
+					}
+					gossipLock.Unlock()
+				}
 			}
 		}
 	}()
@@ -388,7 +426,7 @@ func main() {
 				gossipLock.Lock()
 				gossipMsgTable.ResetRows()
 				for idx, r := range gossipCounter {
-					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6]})
+					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]})
 				}
 				gossipLock.Unlock()
 			}
@@ -420,7 +458,7 @@ func main() {
 				gossipLock.Lock()
 				gossipMsgTable.ResetRows()
 				for idx, r := range gossipCounter {
-					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6]})
+					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]})
 				}
 				gossipLock.Unlock()
 			}
@@ -489,7 +527,7 @@ func main() {
 				gossipLock.Lock()
 				gossipMsgTable.ResetRows()
 				for idx, r := range gossipCounter {
-					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6]})
+					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]})
 				}
 				gossipLock.Unlock()
 				if activeTable == 0 {
@@ -524,7 +562,7 @@ func main() {
 				gossipLock.Lock()
 				gossipMsgTable.ResetRows()
 				for idx, r := range gossipCounter {
-					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6]})
+					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]})
 				}
 				gossipLock.Unlock()
 			}
@@ -545,7 +583,7 @@ func main() {
 				gossipLock.Lock()
 				gossipMsgTable.ResetRows()
 				for idx, r := range gossipCounter {
-					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6]})
+					gossipMsgTable.AppendRow(table.Row{idx, guardianIndexToNameMap[idx], r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]})
 				}
 				gossipLock.Unlock()
 			}
@@ -562,36 +600,29 @@ func main() {
 	// Run supervisor.
 	components := p2p.DefaultComponents()
 	components.Port = *p2pPort
+
+	params, err := p2p.NewRunParams(
+		*p2pBootstrap,
+		*p2pNetworkID,
+		priv,
+		gst,
+		rootCtxCancel,
+		p2p.WithComponents(components),
+		p2p.WithSignedObservationListener(obsvC),
+		p2p.WithSignedObservationBatchListener(batchObsvC),
+		p2p.WithSignedVAAListener(signedInC),
+		p2p.WithObservationRequestListener(obsvReqC),
+		p2p.WithChainGovernorConfigListener(govConfigC),
+		p2p.WithChainGovernorStatusListener(govStatusC),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create RunParams", zap.Error(err))
+	}
+
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
-			p2p.Run(obsvC,
-				obsvReqC,
-				nil,
-				sendC,
-				signedInC,
-				priv,
-				nil,
-				gst,
-				*p2pNetworkID,
-				*p2pBootstrap,
-				"",
-				false,
-				rootCtxCancel,
-				nil,
-				nil,
-				govConfigC,
-				govStatusC,
-				components,
-				nil,
-				false,
-				false,
-				nil,
-				nil,
-				"",
-				0,
-				"",
-			)); err != nil {
+			p2p.Run(params)); err != nil {
 			return err
 		}
 

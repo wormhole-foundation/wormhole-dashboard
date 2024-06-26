@@ -194,15 +194,6 @@ func main() {
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
 	defer rootCtxCancel()
 
-	// Outbound gossip message queue
-	sendC := make(chan []byte)
-
-	// Inbound observations
-	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
-
-	// Inbound observation requests
-	obsvReqC := make(chan *gossipv1.ObservationRequest, 50)
-
 	// Inbound signed VAAs
 	signedInC := make(chan *gossipv1.SignedVAAWithQuorum, 50)
 
@@ -240,29 +231,6 @@ func main() {
 
 	mu := sync.Mutex{}
 	pythNetSeqs := map[string]map[uint64]time.Time{}
-
-	// Ignore observations
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-obsvC:
-			}
-		}
-	}()
-
-	// Ignore observation requests
-	// Note: without this, the whole program hangs on observation requests
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-obsvReqC:
-			}
-		}
-	}()
 
 	// Write signed VAAs to bigtable periodically
 	go func() {
@@ -534,36 +502,26 @@ func main() {
 	components.GossipParams.Dlo = 1  // default: 5
 	components.GossipParams.Dhi = 2  // default: 12
 	components.GossipParams.Dout = 1 // default: 2
+
+	params, err := p2p.NewRunParams(
+		p2pBootstrap,
+		p2pNetworkID,
+		priv,
+		gst,
+		rootCtxCancel,
+		p2p.WithComponents(components),
+		p2p.WithSignedVAAListener(signedInC),
+		p2p.WithChainGovernorConfigListener(govConfigC),
+		p2p.WithChainGovernorStatusListener(govStatusC),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create RunParams", zap.Error(err))
+	}
+
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
-			p2p.Run(obsvC,
-				obsvReqC,
-				nil,
-				sendC,
-				signedInC,
-				priv,
-				nil,
-				gst,
-				p2pNetworkID,
-				p2pBootstrap,
-				"",
-				false,
-				rootCtxCancel,
-				nil,
-				nil,
-				govConfigC,
-				govStatusC,
-				components,
-				nil,
-				false,
-				false,
-				nil,
-				nil,
-				"",
-				0,
-				"",
-			)); err != nil {
+			p2p.Run(params)); err != nil {
 			return err
 		}
 

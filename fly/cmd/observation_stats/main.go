@@ -34,8 +34,8 @@ var (
 
 func main() {
 	// TODO: pass in config instead of hard-coding it
-	p2pNetworkID = "/wormhole/mainnet/2"
-	p2pBootstrap = "/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC,/dns4/wormhole.mcf.rocks/udp/8999/quic/p2p/12D3KooWDZVv7BhZ8yFLkarNdaSWaB43D6UbQwExJ8nnGAEmfHcU,/dns4/wormhole-v2-mainnet-bootstrap.staking.fund/udp/8999/quic/p2p/12D3KooWG8obDX9DNi1KUwZNu9xkGwfKqTp2GFwuuHpWZ3nQruS1"
+	p2pNetworkID = p2p.MainnetNetworkId
+	p2pBootstrap = p2p.MainnetBootstrapPeers
 	p2pPort = 8999
 	nodeKeyPath = "/tmp/node.key"
 	logLevel = "info"
@@ -66,29 +66,13 @@ func main() {
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
 	defer rootCtxCancel()
 
-	// Outbound gossip message queue
-	sendC := make(chan []byte)
-
 	// Inbound observations
 	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
-
-	// Inbound observation requests
-	obsvReqC := make(chan *gossipv1.ObservationRequest, 50)
-
-	// Inbound signed VAAs
-	signedInC := make(chan *gossipv1.SignedVAAWithQuorum, 50)
-
-	// Heartbeat updates
-	heartbeatC := make(chan *gossipv1.Heartbeat, 50)
+	batchObsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 1024)
 
 	// Guardian set state managed by processor
-	gst := common.NewGuardianSetState(heartbeatC)
+	gst := common.NewGuardianSetState(nil)
 
-	// Governor cfg
-	govConfigC := make(chan *gossipv1.SignedChainGovernorConfig, 50)
-
-	// Governor status
-	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
 	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
 	if err != nil {
@@ -103,16 +87,15 @@ func main() {
 
 	obsvByHash := map[string]map[string]time.Time{}
 
-	// Ignore observations
+	// Handle observations
 	go func() {
 		for {
 			select {
 			case <-rootCtx.Done():
 				return
-			case o := <-obsvC:
+			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
 				if o.Msg.MessageId[:3] != "26/" && o.Msg.MessageId[:2] != "7/" {
 					ga := eth_common.BytesToAddress(o.Msg.Addr).String()
-					// logger.Warn("observation", zap.String("id",o.MessageId), zap.String("addr",ga))
 					if _, ok := obsvByHash[o.Msg.MessageId]; !ok {
 						obsvByHash[o.Msg.MessageId] = map[string]time.Time{}
 					}
@@ -121,62 +104,19 @@ func main() {
 					}
 					logger.Warn("status", zap.String("id", o.Msg.MessageId), zap.Any("msg", obsvByHash[o.Msg.MessageId]))
 				}
-			}
-		}
-	}()
-
-	// Ignore observation requests
-	// Note: without this, the whole program hangs on observation requests
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-obsvReqC:
-			}
-		}
-	}()
-
-	// Ignore signed VAAs
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-signedInC:
-			}
-		}
-	}()
-
-	// Handle heartbeats
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-heartbeatC:
-			}
-		}
-	}()
-
-	// Handle govConfigs
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-govConfigC:
-			}
-		}
-	}()
-
-	// Handle govStatus
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-govStatusC:
+			case batch := <-batchObsvC:
+				for _, o := range batch.Msg.Observations {
+					if o.MessageId[:3] != "26/" && o.MessageId[:2] != "7/" {
+						ga := eth_common.BytesToAddress(batch.Msg.Addr).String()
+						if _, ok := obsvByHash[o.MessageId]; !ok {
+							obsvByHash[o.MessageId] = map[string]time.Time{}
+						}
+						if _, ok := obsvByHash[o.MessageId][ga]; !ok {
+							obsvByHash[o.MessageId][ga] = time.Now()
+						}
+						logger.Warn("status", zap.String("id", o.MessageId), zap.Any("msg", obsvByHash[o.MessageId]))
+					}
+				}
 			}
 		}
 	}()
@@ -191,36 +131,25 @@ func main() {
 	// Run supervisor.
 	components := p2p.DefaultComponents()
 	components.Port = p2pPort
+
+	params, err := p2p.NewRunParams(
+		p2pBootstrap,
+		p2pNetworkID,
+		priv,
+		gst,
+		rootCtxCancel,
+		p2p.WithComponents(components),
+		p2p.WithSignedObservationListener(obsvC),
+		p2p.WithSignedObservationBatchListener(batchObsvC),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create RunParams", zap.Error(err))
+	}
+
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
-			p2p.Run(obsvC,
-				obsvReqC,
-				nil,
-				sendC,
-				signedInC,
-				priv,
-				nil,
-				gst,
-				p2pNetworkID,
-				p2pBootstrap,
-				"",
-				false,
-				rootCtxCancel,
-				nil,
-				nil,
-				govConfigC,
-				govStatusC,
-				components,
-				nil,
-				false,
-				false,
-				nil,
-				nil,
-				"",
-				0,
-				"",
-			)); err != nil {
+			p2p.Run(params)); err != nil {
 			return err
 		}
 

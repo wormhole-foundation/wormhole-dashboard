@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"time"
 
-	node_common "github.com/certusone/wormhole/node/pkg/common"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	eth_common "github.com/ethereum/go-ethereum/common"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/common"
@@ -15,13 +15,13 @@ import (
 )
 
 // createNewObservation creates a new observation from the given observation
-func createNewObservation(o node_common.MsgWithTimeStamp[gossipv1.SignedObservation]) types.Observation {
-	ga := eth_common.BytesToAddress(o.Msg.Addr).String()
+func createNewObservation(timestamp time.Time, addr []byte, o *gossipv1.Observation) types.Observation {
+	ga := eth_common.BytesToAddress(addr).String()
 	return types.Observation{
-		MessageID:    types.MessageID(o.Msg.MessageId),
+		MessageID:    types.MessageID(o.MessageId),
 		GuardianAddr: ga,
-		Signature:    hex.EncodeToString(o.Msg.Signature),
-		ObservedAt:   o.Timestamp,
+		Signature:    hex.EncodeToString(o.Signature),
+		ObservedAt:   timestamp,
 		Status:       types.OnTime,
 	}
 }
@@ -39,10 +39,10 @@ func checkObservationTime(message *types.Message, newObservation types.Observati
 // If the message does not exist in the database, it will be created.
 // If the message exists, the observation will be appended to the message.
 // If the observation is late, observation status will be set to Late.
-func ProcessObservation(db bigtable.BigtableDB, logger *zap.Logger, o node_common.MsgWithTimeStamp[gossipv1.SignedObservation]) error {
-	newObservation := createNewObservation(o)
+func ProcessObservation(db bigtable.BigtableDB, logger *zap.Logger, timestamp time.Time, addr []byte, o *gossipv1.Observation) error {
+	newObservation := createNewObservation(timestamp, addr, o)
 
-	message, err := db.GetMessage(context.TODO(), types.MessageID(o.Msg.MessageId))
+	message, err := db.GetMessage(context.TODO(), types.MessageID(o.MessageId))
 	if err != nil {
 		fmt.Printf("failed to get message: %v", err)
 		return err

@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/pubsub v1.33.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/buger/goterm v1.0.4
-	github.com/certusone/wormhole/node v0.0.0-20240507160701-1c858d355869
+	github.com/certusone/wormhole/node v0.0.0-20240820223034-c60e755908cf
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/ipfs/go-log/v2 v2.5.1
@@ -276,6 +276,6 @@ require (
 // https://github.com/cosmos/cosmos-sdk/issues/10925 for more details.
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
-replace github.com/wormhole-foundation/wormhole/sdk v0.0.0-00010101000000-000000000000 => github.com/wormhole-foundation/wormhole/sdk v0.0.0-20221107132100-09459fcf9e67
+replace github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240507160701-1c858d355869 => github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240820223034-c60e755908cf
 
 replace github.com/wormhole-foundation/wormchain v0.0.0-00010101000000-000000000000 => github.com/wormhole-foundation/wormhole/wormchain v0.0.0-20221107132100-09459fcf9e67

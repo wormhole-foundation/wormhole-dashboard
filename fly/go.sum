@@ -163,8 +163,8 @@ github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA
 github.com/census-instrumentation/opencensus-proto v0.3.0/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/census-instrumentation/opencensus-proto v0.4.1 h1:iKLQ0xPNFxR/2hzXZMrBo8f1j86j5WHzznCCQxV/b8g=
 github.com/census-instrumentation/opencensus-proto v0.4.1/go.mod h1:4T9NM4+4Vw91VeyqjLS6ao50K5bOcLKN6Q42XnYaRYw=
-github.com/certusone/wormhole/node v0.0.0-20240507160701-1c858d355869 h1:EnR0orV2CAxiOp+Xws84MxQW+zesZle09tFcC7kowpA=
-github.com/certusone/wormhole/node v0.0.0-20240507160701-1c858d355869/go.mod h1:nynfZl9OpSSvYpolu16jbLRrTia5MeArcBNDP7B3Twc=
+github.com/certusone/wormhole/node v0.0.0-20240820223034-c60e755908cf h1:VTANDF76BwrGS9JfF/Pktdt3QuNM8O+7MnTBpzZOvuE=
+github.com/certusone/wormhole/node v0.0.0-20240820223034-c60e755908cf/go.mod h1:nynfZl9OpSSvYpolu16jbLRrTia5MeArcBNDP7B3Twc=
 github.com/cespare/cp v0.1.0 h1:SE+dxFebS7Iik5LK0tsi1k9ZCxEaFX4AjQmoyA+1dJk=
 github.com/cespare/cp v0.1.0/go.mod h1:SOGHArjBr4JWaSDEVpWpo/hNg6RoKrls6Oh40hiwW+s=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
@@ -1040,8 +1040,8 @@ github.com/warpfork/go-wish v0.0.0-20220906213052-39a1cc7a02d0 h1:GDDkbFiaK8jsSD
 github.com/warpfork/go-wish v0.0.0-20220906213052-39a1cc7a02d0/go.mod h1:x6AKhvSSexNrVSrViXSHUEbICjmGXhtgABaHIySUSGw=
 github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1 h1:EKhdznlJHPMoKr0XTrX+IlJs1LH3lyx2nfr1dOlZ79k=
 github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1/go.mod h1:8UvriyWtv5Q5EOgjHaSseUEdkQfvwFv1I/In/O2M9gc=
-github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240507160701-1c858d355869 h1:h8xJNIkQgzOLwptZcJgGynlHsJzJL5VDXMXcPQY3D6A=
-github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240507160701-1c858d355869/go.mod h1:pE/jYet19kY4P3V6mE2+01zvEfxdyBqv6L6HsnSa5uc=
+github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240820223034-c60e755908cf h1:QDnA8nGXraYb0jNlQez6cmu3CHHQsh66IbCB66QFGw8=
+github.com/wormhole-foundation/wormhole/sdk v0.0.0-20240820223034-c60e755908cf/go.mod h1:pE/jYet19kY4P3V6mE2+01zvEfxdyBqv6L6HsnSa5uc=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=
 github.com/xdg-go/scram v1.1.1/go.mod h1:RaEWvsqvNKKvBPvcKeFjrG2cJqOkHTiyTpzz23ni57g=
 github.com/xdg-go/stringprep v1.0.3/go.mod h1:W3f5j4i+9rC0kuIEJL0ky1VpHXQU3ocBgklLGvcBnW8=

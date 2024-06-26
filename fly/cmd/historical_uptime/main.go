@@ -261,17 +261,9 @@ func main() {
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
 	defer rootCtxCancel()
 
-	// Outbound gossip message queue
-	sendC := make(chan []byte)
-
 	// Inbound observations
 	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
-
-	// Inbound observation requests
-	obsvReqC := make(chan *gossipv1.ObservationRequest, 50)
-
-	// Inbound signed VAAs
-	signedInC := make(chan *gossipv1.SignedVAAWithQuorum, 50)
+	batchObsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 1024)
 
 	// Heartbeat updates
 	heartbeatC := make(chan *gossipv1.Heartbeat, 50)
@@ -279,11 +271,6 @@ func main() {
 	// Guardian set state managed by processor
 	gst := node_common.NewGuardianSetState(heartbeatC)
 
-	// Governor cfg
-	govConfigC := make(chan *gossipv1.SignedChainGovernorConfig, 50)
-
-	// Governor status
-	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
 	idx, sgs, err := utils.FetchCurrentGuardianSet(ethRpcUrl, coreBridgeAddr)
 	if err != nil {
@@ -322,31 +309,18 @@ func main() {
 			select {
 			case <-rootCtx.Done():
 				return
-			case o := <-obsvC:
-				historical_uptime.ProcessObservation(*db, logger, *o)
-			}
-		}
-	}()
-
-	// Ignore observation requests
-	// Note: without this, the whole program hangs on observation requests
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-obsvReqC:
-			}
-		}
-	}()
-
-	// Ignore signed VAAs
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-signedInC:
+			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
+				obs := &gossipv1.Observation{
+					Hash:      o.Msg.Hash,
+					Signature: o.Msg.Signature,
+					TxHash:    o.Msg.TxHash,
+					MessageId: o.Msg.MessageId,
+				}
+				historical_uptime.ProcessObservation(*db, logger, o.Timestamp, o.Msg.Addr, obs)
+			case batch := <-batchObsvC:
+				for _, o := range batch.Msg.Observations {
+					historical_uptime.ProcessObservation(*db, logger, batch.Timestamp, batch.Msg.Addr, o)
+				}
 			}
 		}
 	}()
@@ -388,28 +362,6 @@ func main() {
 		}
 	}()
 
-	// Handle govConfigs
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-govConfigC:
-			}
-		}
-	}()
-
-	// Handle govStatus
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-govStatusC:
-			}
-		}
-	}()
-
 	// Load p2p private key
 	var priv crypto.PrivKey
 	priv, err = node_common.GetOrCreateNodeKey(logger, nodeKeyPath)
@@ -420,36 +372,25 @@ func main() {
 	// Run supervisor.
 	components := p2p.DefaultComponents()
 	components.Port = p2pPort
+
+	params, err := p2p.NewRunParams(
+		p2pBootstrap,
+		p2pNetworkID,
+		priv,
+		gst,
+		rootCtxCancel,
+		p2p.WithComponents(components),
+		p2p.WithSignedObservationListener(obsvC),
+		p2p.WithSignedObservationBatchListener(batchObsvC),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create RunParams", zap.Error(err))
+	}
+
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
-			p2p.Run(obsvC,
-				obsvReqC,
-				nil,
-				sendC,
-				signedInC,
-				priv,
-				nil,
-				gst,
-				p2pNetworkID,
-				p2pBootstrap,
-				"",
-				false,
-				rootCtxCancel,
-				nil,
-				nil,
-				govConfigC,
-				govStatusC,
-				components,
-				nil,
-				false,
-				false,
-				nil,
-				nil,
-				"",
-				0,
-				"",
-			)); err != nil {
+			p2p.Run(params)); err != nil {
 			return err
 		}
 

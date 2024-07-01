@@ -82,8 +82,8 @@ const ourGuardianIndex = 0 // RockawayX
 func main() {
 	// TODO: pass in config instead of hard-coding it
 	// main
-	p2pNetworkID = "/wormhole/mainnet/2"
-	p2pBootstrap = "/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC,/dns4/wormhole.mcf.rocks/udp/8999/quic/p2p/12D3KooWDZVv7BhZ8yFLkarNdaSWaB43D6UbQwExJ8nnGAEmfHcU,/dns4/wormhole-v2-mainnet-bootstrap.staking.fund/udp/8999/quic/p2p/12D3KooWG8obDX9DNi1KUwZNu9xkGwfKqTp2GFwuuHpWZ3nQruS1"
+	p2pNetworkID = p2p.MainnetNetworkId
+	p2pBootstrap = p2p.MainnetBootstrapPeers
 	// devnet
 	// p2pNetworkID = "/wormhole/dev"
 	// p2pBootstrap = "/dns4/guardian-0.guardian/udp/8999/quic/p2p/12D3KooWL3XJ9EMCyZvmmGXL2LMiVBtrVa2BuESsJiXkSj7333Jw"
@@ -125,14 +125,8 @@ func main() {
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
 	defer rootCtxCancel()
 
-	// Outbound gossip message queue
-	sendC := make(chan []byte)
-
 	// Inbound observations
 	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
-
-	// Inbound observation requests
-	obsvReqC := make(chan *gossipv1.ObservationRequest, 50)
 
 	// Inbound signed VAAs
 	signedInC := make(chan *gossipv1.SignedVAAWithQuorum, 50)
@@ -143,11 +137,6 @@ func main() {
 	// Guardian set state managed by processor
 	gst := common.NewGuardianSetState(heartbeatC)
 
-	// Governor cfg
-	govConfigC := make(chan *gossipv1.SignedChainGovernorConfig, 50)
-
-	// Governor status
-	govStatusC := make(chan *gossipv1.SignedChainGovernorStatus, 50)
 	// Bootstrap guardian set, otherwise heartbeats would be skipped
 	idx, sgs, err := utils.FetchCurrentGuardianSet(*rpcUrl, *coreBridgeAddr)
 	if err != nil {
@@ -164,7 +153,7 @@ func main() {
 	signedVaaMap = make(signedVaaMapType)
 	ourGuardianAddr = gs.Keys[ourGuardianIndex].String()
 
-	// Ignore observations
+	// Handle observations
 	go func() {
 		for {
 			select {
@@ -176,19 +165,7 @@ func main() {
 		}
 	}()
 
-	// Ignore observation requests
-	// Note: without this, the whole program hangs on observation requests
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-obsvReqC:
-			}
-		}
-	}()
-
-	// Don't ignore signed VAAs
+	// Handle signed VAAs
 	go func() {
 		for {
 			select {
@@ -200,7 +177,7 @@ func main() {
 		}
 	}()
 
-	// Ignore heartbeats
+	// Handle heartbeats
 	go func() {
 		for {
 			select {
@@ -210,28 +187,6 @@ func main() {
 				if m.GetGuardianAddr() == ourGuardianAddr {
 					handleHeartbeat(logger, m)
 				}
-			}
-		}
-	}()
-
-	// Ignore govConfigs
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-govConfigC:
-			}
-		}
-	}()
-
-	// Ignore govStatus
-	go func() {
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-govStatusC:
 			}
 		}
 	}()
@@ -261,36 +216,24 @@ func main() {
 	// Run supervisor.
 	components := p2p.DefaultComponents()
 	components.Port = p2pPort
+
+	params, err := p2p.NewRunParams(
+		p2pBootstrap,
+		p2pNetworkID,
+		priv,
+		gst,
+		rootCtxCancel,
+		p2p.WithSignedObservationListener(obsvC),
+		p2p.WithSignedVAAListener(signedInC),
+	)
+	if err != nil {
+		logger.Fatal("Failed to create RunParams", zap.Error(err))
+	}
+
 	supervisor.New(rootCtx, logger, func(ctx context.Context) error {
 		if err := supervisor.Run(ctx,
 			"p2p",
-			p2p.Run(obsvC,
-				obsvReqC,
-				nil,
-				sendC,
-				signedInC,
-				priv,
-				nil,
-				gst,
-				p2pNetworkID,
-				p2pBootstrap,
-				"",
-				false,
-				rootCtxCancel,
-				nil,
-				nil,
-				govConfigC,
-				govStatusC,
-				components,
-				nil,
-				false,
-				false,
-				nil,
-				nil,
-				"",
-				0,
-				"",
-			)); err != nil {
+			p2p.Run(params)); err != nil {
 			return err
 		}
 

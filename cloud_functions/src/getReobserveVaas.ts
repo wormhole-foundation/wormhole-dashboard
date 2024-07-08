@@ -8,13 +8,18 @@ import {
 import { Firestore } from 'firebase-admin/firestore';
 import { ReobserveInfo } from './types';
 import { assertEnvironmentVariable, isVAASigned } from './utils';
+import { get } from 'axios';
 
 const MAX_VAAS_TO_REOBSERVE = 25;
 
 export async function convertSolanaTxToAccts(txHash: string): Promise<string[]> {
   const POST_MESSAGE_IX_ID = 0x01;
   let accounts: string[] = [];
-  const connection = new Connection('https://api.mainnet-beta.solana.com', 'finalized');
+  const endpoint: string =
+    getNetwork() === 'Mainnet'
+      ? 'https://api.mainnet-beta.solana.com'
+      : 'https://api.devnet.solana.com';
+  const connection = new Connection(endpoint, 'finalized');
   const txs = await connection.getTransactions([txHash], {
     maxSupportedTransactionVersion: 0,
   });

@@ -8,7 +8,6 @@ import {
 import { Firestore } from 'firebase-admin/firestore';
 import { ReobserveInfo } from './types';
 import { assertEnvironmentVariable, isVAASigned } from './utils';
-import { get } from 'axios';
 
 const MAX_VAAS_TO_REOBSERVE = 25;
 

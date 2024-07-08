@@ -14,7 +14,11 @@ export const padUint16 = (s: string): string => s.padStart(MAX_UINT_16.length, '
 const MAX_UINT_64 = '18446744073709551615';
 export const padUint64 = (s: string): string => s.padStart(MAX_UINT_64.length, '0');
 
-export const WormholescanRPC: string = 'https://api.wormholescan.io/';
+export const WormholescanRPC: { [key in Network]?: string } = {
+  ['Mainnet']: 'https://api.wormholescan.io/',
+  ['Testnet']: 'https://api.testnet.wormholescan.io/',
+  ['Devnet']: '',
+};
 
 export function parseMessageId(id: string): {
   chain: number;
@@ -89,7 +93,7 @@ export async function formatAndSendToSlack(info: SlackInfo): Promise<any> {
 
 export async function isVAASigned(network: Network, vaaKey: string): Promise<boolean> {
   const url: string =
-    WormholescanRPC + 'v1/signed_vaa/' + vaaKey + '?network=' + network.toUpperCase();
+    WormholescanRPC[network] + 'v1/signed_vaa/' + vaaKey + '?network=' + network.toUpperCase();
   try {
     const response = await axios.get(url);
     // curl -X 'GET' \

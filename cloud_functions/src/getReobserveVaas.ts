@@ -14,10 +14,9 @@ const MAX_VAAS_TO_REOBSERVE = 25;
 export async function convertSolanaTxToAccts(txHash: string): Promise<string[]> {
   const POST_MESSAGE_IX_ID = 0x01;
   let accounts: string[] = [];
+  const network = getNetwork();
   const endpoint: string =
-    getNetwork() === 'Mainnet'
-      ? 'https://api.mainnet-beta.solana.com'
-      : 'https://api.devnet.solana.com';
+    network === 'Mainnet' ? 'https://api.mainnet-beta.solana.com' : 'https://api.devnet.solana.com';
   const connection = new Connection(endpoint, 'finalized');
   const txs = await connection.getTransactions([txHash], {
     maxSupportedTransactionVersion: 0,
@@ -29,7 +28,7 @@ export async function convertSolanaTxToAccts(txHash: string): Promise<string[]> 
     const message = tx.transaction.message;
     const accountKeys = isLegacyMessage(message) ? message.accountKeys : message.staticAccountKeys;
     const programIdIndex = accountKeys.findIndex(
-      (i) => i.toBase58() === contracts.coreBridge('Mainnet', 'Solana')
+      (i) => i.toBase58() === contracts.coreBridge(network, 'Solana')
     );
     const instructions = message.compiledInstructions;
     const innerInstructions =

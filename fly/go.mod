@@ -280,4 +280,4 @@ replace github.com/wormhole-foundation/wormhole/sdk v0.0.0-00010101000000-000000
 
 replace github.com/wormhole-foundation/wormchain v0.0.0-00010101000000-000000000000 => github.com/wormhole-foundation/wormhole/wormchain v0.0.0-20221107132100-09459fcf9e67
 
-replace github.com/certusone/wormhole/node v0.0.0-20240507160701-1c858d355869 => github.com/wormholelabs-xyz/wormhole/node v0.0.0-20240625201000-d4618b3f8f75
+replace github.com/certusone/wormhole/node v0.0.0-20240507160701-1c858d355869 => github.com/wormholelabs-xyz/wormhole/node v0.0.0-20240709213605-5a3a3b2a97e6

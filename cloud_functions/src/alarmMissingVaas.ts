@@ -95,15 +95,7 @@ export async function alarmMissingVaas(req: any, res: any) {
           for (let i = 0; i < msgs.messages.length; i++) {
             // Check the timestamp and only send messages that are older than MISS_THRESHOLD_IN_MINS
             const msg: ObservedMessage = msgs.messages[i];
-            // If there is a reference time for this chain, use it.  Otherwise, use the current time.
-            let timeToCheck = getMissThreshold(now, chainId);
-            if (refTimes[chainId]) {
-              let refTime = refTimes[chainId]?.latestTime;
-              if (refTime) {
-                const refDateTime = new Date(refTime);
-                timeToCheck = getMissThreshold(refDateTime, chainId);
-              }
-            }
+            const timeToCheck = getMissThreshold(now, chainId);
             if (msg.timestamp < timeToCheck) {
               let vaaKey: string = `${msg.chain}/${msg.emitter}/${msg.seq}`;
               if (firestoreMap.has(vaaKey)) {

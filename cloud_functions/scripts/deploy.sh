@@ -93,6 +93,11 @@ if [ -z "$FIRESTORE_LATEST_TVLTVM_COLLECTION" ]; then
     exit 1
 fi
 
+if [ -z "$FIRESTORE_GUARDIAN_SET_INFO_COLLECTION" ]; then
+    echo "FIRESTORE_GUARDIAN_SET_INFO_COLLECTION must be specified"
+    exit 1
+fi
+
 if [ -z "$MISSING_VAA_SLACK_CHANNEL_ID" ]; then
     echo "MISSING_VAA_SLACK_CHANNEL_ID must be specified"
     exit 1
@@ -221,9 +226,11 @@ if [ -z "$SOLANA_RPC" ]; then
     exit 1
 fi
 
+gcloud functions --project "$GCP_PROJECT" deploy compute-guardian-set-info --entry-point computeGuardianSetInfo --gen2 --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FIRESTORE_GUARDIAN_SET_INFO_COLLECTION=$FIRESTORE_GUARDIAN_SET_INFO_COLLECTION
 gcloud functions --project "$GCP_PROJECT" deploy compute-tvl --entry-point computeTVL --gen2 --runtime nodejs18 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 1GB --region europe-west3 --set-env-vars PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_ATTEST_MESSAGE_TABLE=$PG_ATTEST_MESSAGE_TABLE,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE,PG_TOKEN_TRANSFER_TABLE=$PG_TOKEN_TRANSFER_TABLE,FIRESTORE_TVL_COLLECTION=$FIRESTORE_TVL_COLLECTION,NETWORK=$NETWORK
 gcloud functions --project "$GCP_PROJECT" deploy compute-tvl-history --entry-point computeTVLHistory --gen2 --runtime nodejs18 --trigger-http --no-allow-unauthenticated --timeout 540 --memory 1GB --region europe-west3 --set-env-vars PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_ATTEST_MESSAGE_TABLE=$PG_ATTEST_MESSAGE_TABLE,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE,PG_TOKEN_TRANSFER_TABLE=$PG_TOKEN_TRANSFER_TABLE,FIRESTORE_TVL_HISTORY_COLLECTION=$FIRESTORE_TVL_HISTORY_COLLECTION,PG_TOKEN_PRICE_HISTORY_TABLE=$PG_TOKEN_PRICE_HISTORY_TABLE,NETWORK=$NETWORK
 gcloud functions --project "$GCP_PROJECT" deploy compute-tvl-tvm --entry-point computeTvlTvm --gen2 --runtime nodejs18 --trigger-http --no-allow-unauthenticated --timeout 540 --memory 1GB --region europe-west3 --set-env-vars PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE,PG_TOKEN_PRICE_HISTORY_TABLE=$PG_TOKEN_PRICE_HISTORY_TABLE,FIRESTORE_LATEST_TVLTVM_COLLECTION=$FIRESTORE_LATEST_TVLTVM_COLLECTION,NETWORK=$NETWORK
+gcloud functions --project "$GCP_PROJECT" deploy get-guardian-set-info --entry-point getGuardianSetInfo --gen2 --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FIRESTORE_GUARDIAN_SET_INFO_COLLECTION=$FIRESTORE_GUARDIAN_SET_INFO_COLLECTION
 gcloud functions --project "$GCP_PROJECT" deploy get-solana-events --entry-point getSolanaEvents --gen2 --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars SOLANA_RPC=$SOLANA_RPC,NETWORK=$NETWORK
 gcloud functions --project "$GCP_PROJECT" deploy latest-tokendata --entry-point getLatestTokenData --gen2 --runtime nodejs18 --trigger-http --allow-unauthenticated --timeout 300 --memory 256MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE,PG_TOKEN_PRICE_HISTORY_TABLE=$PG_TOKEN_PRICE_HISTORY_TABLE,NETWORK=$NETWORK
 gcloud functions --project "$GCP_PROJECT" deploy process-vaa --entry-point processVaa --gen2 --runtime nodejs18 --timeout 300 --memory 256MB --region europe-west3 --trigger-topic $PUBSUB_SIGNED_VAA_TOPIC --set-env-vars BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,BIGTABLE_SIGNED_VAAS_TABLE_ID=$BIGTABLE_SIGNED_VAAS_TABLE_ID,BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID=$BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID,PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_TOKEN_TRANSFER_TABLE=$PG_TOKEN_TRANSFER_TABLE,PG_ATTEST_MESSAGE_TABLE=$PG_ATTEST_MESSAGE_TABLE,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE,NETWORK=$NETWORK

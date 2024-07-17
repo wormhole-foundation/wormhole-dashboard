@@ -29,6 +29,8 @@ export const { getNTTRateLimits } = require('./getNTTRateLimits');
 export const { computeNTTRateLimits } = require('./computeNTTRateLimits');
 export const { getTotalSupplyAndLocked } = require('./getTotalSupplyAndLocked');
 export const { computeTotalSupplyAndLocked } = require('./computeTotalSupplyAndLocked');
+export const { computeGuardianSetInfo } = require('./computeGuardianSetInfo');
+export const { getGuardianSetInfo } = require('./getGuardianSetInfo');
 
 // Register an HTTP function with the Functions Framework that will be executed
 // when you make an HTTP request to the deployed function's endpoint.
@@ -59,3 +61,5 @@ functions.http('getNTTRateLimits', getNTTRateLimits);
 functions.http('computeNTTRateLimits', computeNTTRateLimits);
 functions.http('getTotalSupplyAndLocked', getTotalSupplyAndLocked);
 functions.http('computeTotalSupplyAndLocked', computeTotalSupplyAndLocked);
+functions.http('computeGuardianSetInfo', computeGuardianSetInfo);
+functions.http('getGuardianSetInfo', getGuardianSetInfo);

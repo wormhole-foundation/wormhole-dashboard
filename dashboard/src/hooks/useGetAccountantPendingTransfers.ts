@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { TESTNET_WORMCHAIN_URL, WORMCHAIN_URL } from '../utils/consts';
-import { queryContractSmart } from '../utils/queryContractSmart';
+import { queryContractSmart } from '@wormhole-foundation/wormhole-monitor-common/src/queryContractSmart';
 
 const POLL_INTERVAL_MS = 10 * 1000;
 const PAGE_LIMIT = 2000; // throws a gas limit error over this

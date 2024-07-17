@@ -8,3 +8,4 @@ export * from './nttConsts';
 export * from './evm';
 export * from './types';
 export * from './wormhole';
+export * from './queryContractSmart';

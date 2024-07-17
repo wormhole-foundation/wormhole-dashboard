@@ -41,7 +41,7 @@ import useGetAccountantPendingTransfers, {
 } from '../hooks/useGetAccountantPendingTransfers';
 import { TokenDataByChainAddress, TokenDataEntry } from '../hooks/useTokenData';
 import { CHAIN_ICON_MAP, WORMCHAIN_URL } from '../utils/consts';
-import { queryContractSmart } from '../utils/queryContractSmart';
+import { queryContractSmart } from '@wormhole-foundation/wormhole-monitor-common/src/queryContractSmart';
 import CollapsibleSection from './CollapsibleSection';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';

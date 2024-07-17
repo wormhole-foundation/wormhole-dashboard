@@ -11,16 +11,22 @@ import {
 } from '@mui/material';
 import { Chain, chainToChainId, chains, contracts } from '@wormhole-foundation/sdk-base';
 import { useNetworkContext } from '../contexts/NetworkContext';
-import useGetGuardianSet from '../hooks/useGetGuardianSet';
 import CollapsibleSection from './CollapsibleSection';
+import useGetGuardianSetInfoByChain from '../hooks/useGetGuardianSetInfoByChain';
 
 const coreBridgeChains = chains.filter(
   (chain) => chain !== 'Aurora' && contracts.coreBridge.get('Mainnet', chain)
 );
 
-function CoreBridgeInfo({ chain, address }: { chain: Chain; address: string | undefined }) {
-  const guardianSet = useGetGuardianSet(chain, address);
-  const guardianSetIndex = guardianSet[0]?.toString();
+function CoreBridgeInfo({
+  chain,
+  address,
+  guardianSetIndex,
+}: {
+  chain: Chain;
+  address: string | undefined;
+  guardianSetIndex: string | undefined;
+}) {
   if (!address) return null;
   return (
     <TableRow>
@@ -34,6 +40,9 @@ function CoreBridgeInfo({ chain, address }: { chain: Chain; address: string | un
 
 function Contracts() {
   const { currentNetwork } = useNetworkContext();
+  // const [guardianSetInfoByChain, setGuardianSetInfoByChain] = useState<GuardianSetInfoByChain>({});
+  const guardianSetInfoByChain = useGetGuardianSetInfoByChain();
+
   return currentNetwork.name === 'Mainnet' ? (
     <CollapsibleSection header="Core">
       <Card>
@@ -53,6 +62,7 @@ function Contracts() {
                   key={chain}
                   chain={chain}
                   address={contracts.coreBridge.get('Mainnet', chain)}
+                  guardianSetIndex={guardianSetInfoByChain[chain]?.guardianSetIndex.toString()}
                 />
               ))}
             </TableBody>
@@ -66,4 +76,5 @@ function Contracts() {
     </Box>
   );
 }
+
 export default Contracts;

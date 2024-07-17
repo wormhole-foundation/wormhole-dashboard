@@ -293,3 +293,14 @@ export const GUARDIAN_SET_4 = [
     name: 'Staking Facilities',
   },
 ];
+
+export type GuardianSetInfo = {
+  timestamp: string;
+  contract: string;
+  guardianSetIndex: string;
+  guardianSet: string;
+};
+
+export type GuardianSetInfoByChain = {
+  [chain in Chain]?: GuardianSetInfo;
+};

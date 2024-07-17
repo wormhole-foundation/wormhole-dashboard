@@ -11,6 +11,11 @@
     "deploy": "bash scripts/deploy.sh",
     "gcp-build": "npm i ./dist/src/wormhole-foundation-wormhole-monitor-common-0.0.1.tgz ./dist/src/wormhole-foundation-wormhole-monitor-database-0.0.1.tgz"
   },
+  "//": [
+    "The @wormhole-foundation/sdk-base and @wormhole-foundation/sdk-definitions was required as the cloud_functions are currently deployed with packed",
+    "versions of their siblings and does not include the workspace package lock. In this circumstance, npm was choosing an older sdk as the",
+    "direct node_modules dependency when we wanted the version used by database and explicitly defined by the workspace."
+  ],
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
     "@cosmjs/cosmwasm-stargate": "^0.31.1",
@@ -19,6 +24,8 @@
     "@google-cloud/pubsub": "^3.4.1",
     "@google-cloud/storage": "^6.8.0",
     "@solana/web3.js": "^1.87.3",
+    "@wormhole-foundation/sdk-base": "^0.8.0",
+    "@wormhole-foundation/sdk-definitions": "^0.8.0",
     "@wormhole-foundation/sdk-evm-ntt": "^0.0.1-beta.4",
     "@wormhole-foundation/sdk-solana-ntt": "^0.0.1-beta.4",
     "borsh": "^1.0.0",

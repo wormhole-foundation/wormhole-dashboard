@@ -78,7 +78,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: {
     Blast: '0',
     Base: '0',
     Sei: '0',
-    Wormchain: '0',
+    Wormchain: '4495661',
     PolygonSepolia: '2379275',
   },
   ['Devnet']: {},

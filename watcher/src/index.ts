@@ -45,7 +45,7 @@ const supportedChains: Chain[] =
         'Sei',
         'Blast',
         'Scroll',
-        // 'Wormchain',
+        'Wormchain',
         'Sepolia',
         'ArbitrumSepolia',
         'BaseSepolia',

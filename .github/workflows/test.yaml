@@ -15,6 +15,7 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci
       - run: npm run build
+      - run: npm run build -w watcher
       - run: npm run build -w dashboard
       - name: Run tests
         env:

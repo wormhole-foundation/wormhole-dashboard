@@ -2,10 +2,15 @@
   "name": "@wormhole-foundation/wormhole-monitor",
   "version": "0.0.1",
   "private": true,
+  "main": "cloud_functions/dist/index.js",
   "scripts": {
     "build": "tsc -b -i",
+    "build:dashboard": "npm run build && npm run build -w dashboard",
+    "build:watcher": "npm run build && npm run build -w watcher",
     "clean": "tsc -b --clean",
-    "watch": "tsc -b -w -i"
+    "watch": "tsc -b -w -i",
+    "cf:dev": "npm run build && functions-framework --target=$FUNCTION",
+    "cf:deploy": "bash cloud_functions/scripts/deploy.sh"
   },
   "workspaces": [
     "common",
@@ -19,6 +24,7 @@
     "typescript": "^5.4.3"
   },
   "dependencies": {
+    "@google-cloud/functions-framework": "^3.4.0",
     "@wormhole-foundation/sdk-base": "^0.8.0",
     "@wormhole-foundation/sdk-definitions": "^0.8.0",
     "@wormhole-foundation/sdk-evm": "^0.8.0",

@@ -1,8 +1,10 @@
 import { Bigtable } from '@google-cloud/bigtable';
-import { assertEnvironmentVariable } from './utils';
 import { Firestore } from 'firebase-admin/firestore';
-import { MessageCountsHistory } from './types';
-import { parseVaa } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  assertEnvironmentVariable,
+  MessageCountsHistory,
+  parseVaa,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 export async function computeMessageCountHistory(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');

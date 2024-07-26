@@ -1,7 +1,7 @@
 import { Bigtable } from '@google-cloud/bigtable';
-import { padUint16, assertEnvironmentVariable } from './utils';
 import { Storage } from '@google-cloud/storage';
 import { ChainId, chainIds } from '@wormhole-foundation/sdk-base';
+import { assertEnvironmentVariable, padUint16 } from '@wormhole-foundation/wormhole-monitor-common';
 
 // Read/write with cloud storage
 const storage = new Storage();

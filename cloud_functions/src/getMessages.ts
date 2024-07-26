@@ -1,16 +1,19 @@
 import { Bigtable } from '@google-cloud/bigtable';
-import { padUint16, assertEnvironmentVariable, padUint64, parseMessageId } from './utils';
 import { pathToRegexp } from 'path-to-regexp';
+import { ChainId } from '@wormhole-foundation/sdk-base';
 import {
+  assertEnvironmentVariable,
+  makeCache,
+  makeCacheEntry,
+  MessagesByChain,
   ObservedEvent,
   ObservedMessage,
   ObservedMessageResponse,
-  MessagesByChain,
-  makeCache,
-  makeCacheEntry,
-} from './types';
-import { ChainId } from '@wormhole-foundation/sdk-base';
-import { stringToChainId } from '@wormhole-foundation/wormhole-monitor-common';
+  padUint16,
+  padUint64,
+  parseMessageId,
+  stringToChainId,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 let noVaaCache: MessagesByChain = makeCache();
 

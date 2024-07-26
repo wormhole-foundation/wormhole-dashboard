@@ -1,13 +1,14 @@
 import { Connection } from '@solana/web3.js';
 import { chainToChainId, contracts } from '@wormhole-foundation/sdk-base';
 import {
+  assertEnvironmentVariable,
   getNetwork,
   isLegacyMessage,
+  isVAASigned,
   normalizeCompileInstruction,
+  ReobserveInfo,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
-import { ReobserveInfo } from './types';
-import { assertEnvironmentVariable, isVAASigned } from './utils';
 
 const MAX_VAAS_TO_REOBSERVE = 25;
 

@@ -11,8 +11,7 @@ import {
 import * as ethers from 'ethers';
 import * as bs58 from 'bs58';
 import { deserialize } from 'borsh';
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
-import { EventData } from './types';
+import { assertEnvironmentVariable, EventData } from '@wormhole-foundation/wormhole-monitor-common';
 
 export async function getSolanaEvents(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');

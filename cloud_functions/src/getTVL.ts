@@ -1,6 +1,8 @@
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  assertEnvironmentVariable,
+  NotionalTVL,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
-import { NotionalTVL } from './types';
 
 let tvl: NotionalTVL | undefined;
 let lastUpdated: number | undefined;

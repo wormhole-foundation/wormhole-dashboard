@@ -1,6 +1,9 @@
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  assertEnvironmentVariable,
+  ChainsAssets,
+  TVLHistory,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
-import { ChainsAssets, NotionalByDate, TVLHistory } from './types';
 
 let tvlHistory: TVLHistory | undefined;
 let lastUpdated: number | undefined;

@@ -1,5 +1,5 @@
 import { Bigtable, Instance, Table } from '@google-cloud/bigtable';
-import { assertEnvironmentVariable } from './utils';
+import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 
 let initialized = false;
 let bigtable: Bigtable;

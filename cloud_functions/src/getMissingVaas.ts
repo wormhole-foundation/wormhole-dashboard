@@ -1,7 +1,6 @@
 import { Storage } from '@google-cloud/storage';
-import { ObservedMessage } from './types';
 import { ChainId } from '@wormhole-foundation/sdk-base';
-import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
+import { getNetwork, ObservedMessage } from '@wormhole-foundation/wormhole-monitor-common';
 
 // Read from cloud storage
 const storage = new Storage();

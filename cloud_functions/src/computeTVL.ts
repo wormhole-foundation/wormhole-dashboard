@@ -1,12 +1,12 @@
 import {
   MAX_VAA_DECIMALS,
+  NotionalTVL,
   assertEnvironmentVariable,
+  isTokenDenylisted,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
 import { Firestore } from 'firebase-admin/firestore';
 import { fetchPrices } from '@wormhole-foundation/wormhole-monitor-database';
-import { NotionalTVL } from './types';
-import { isTokenDenylisted } from './consts';
 
 export async function computeTVL(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');

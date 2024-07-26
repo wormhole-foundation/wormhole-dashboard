@@ -1,6 +1,6 @@
 import { Storage } from '@google-cloud/storage';
-import { assertEnvironmentVariable } from './utils';
 import { ChainId } from '@wormhole-foundation/sdk-base';
+import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 
 // Read from cloud storage
 const storage = new Storage();

@@ -38,7 +38,9 @@ async function getGuardianSetInfoByChain(): Promise<GuardianSetInfoByChain> {
         timestamp: doc.data().timestamp,
         contract: doc.data().contract,
         guardianSet: doc.data().guardianSet,
-        guardianSetIndex: doc.data().guardianSetIndex,
+        guardianSetIndex: doc.data().guardianSetIndex.startsWith('0x')
+          ? BigInt(doc.data().guardianSetIndex).toString()
+          : doc.data().guardianSetIndex,
       };
     });
   } catch (e) {

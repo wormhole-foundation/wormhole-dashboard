@@ -1,5 +1,6 @@
 import { Chain, chains, chainToPlatform, contracts, rpc } from '@wormhole-foundation/sdk-base';
 import {
+  assertEnvironmentVariable,
   callContractMethod,
   getMethodId,
   GuardianSetInfo,
@@ -8,7 +9,6 @@ import {
   queryContractSmart,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
-import { assertEnvironmentVariable } from './utils';
 import { utils } from '@wormhole-foundation/sdk-solana-core';
 import axios from 'axios';
 

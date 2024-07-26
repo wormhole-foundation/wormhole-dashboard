@@ -1,4 +1,4 @@
-import { assertEnvironmentVariable } from './utils';
+import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
 
 export type TokenData = {

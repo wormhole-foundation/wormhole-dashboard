@@ -1,6 +1,6 @@
 import { Firestore } from 'firebase-admin/firestore';
-import { assertEnvironmentVariable } from './utils';
 import { ChainId } from '@wormhole-foundation/sdk-base';
+import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 
 export type BlocksByChain = {
   [chain in ChainId]?: {

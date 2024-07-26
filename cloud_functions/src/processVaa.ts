@@ -3,6 +3,7 @@ import { PubsubMessage } from '@google-cloud/pubsub/build/src/publisher';
 import { Bigtable, Instance, Table } from '@google-cloud/bigtable';
 import knex, { Knex } from 'knex';
 import {
+  assertEnvironmentVariable,
   CIRCLE_DOMAIN_TO_CHAIN_ID,
   isCircleIntegrationEmitter,
   isTokenBridgeEmitter,
@@ -14,7 +15,6 @@ import {
   createTokenMetadata,
   createTokenTransfer,
 } from '@wormhole-foundation/wormhole-monitor-database';
-import { assertEnvironmentVariable } from './utils';
 import {
   CircleIntegrationPayload,
   parseCircleIntegrationDepositWithPayload,

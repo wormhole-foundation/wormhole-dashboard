@@ -1,10 +1,13 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
-import { AccountEntry, TokenMetaDatum } from './types';
 import knex from 'knex';
-import { assertEnvironmentVariable } from './utils';
 import { TokenPrice } from '@wormhole-foundation/wormhole-monitor-database';
 import { Firestore } from 'firebase-admin/firestore';
-import { ACCOUNTANT_CONTRACT_ADDRESS } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  ACCOUNTANT_CONTRACT_ADDRESS,
+  AccountEntry,
+  assertEnvironmentVariable,
+  TokenMetaDatum,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 const WORMCHAIN_URLS: string[] = [
   'https://gateway.mainnet.xlabs.xyz',

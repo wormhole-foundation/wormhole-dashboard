@@ -1,12 +1,12 @@
 import {
   MAX_VAA_DECIMALS,
+  TVLHistory,
   assertEnvironmentVariable,
+  isTokenDenylisted,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
 import { Firestore } from 'firebase-admin/firestore';
 import { TokenPrice } from '@wormhole-foundation/wormhole-monitor-database';
-import { TVLHistory } from './types';
-import { isTokenDenylisted } from './consts';
 import { ChainId } from '@wormhole-foundation/sdk-base';
 
 interface LockedToken {

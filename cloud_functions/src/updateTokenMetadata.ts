@@ -1,6 +1,7 @@
 import {
   assertEnvironmentVariable,
   chunkArray,
+  isTokenDenylisted,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
 import {
@@ -10,7 +11,6 @@ import {
   fetchCoins,
   getNativeAddress,
 } from '@wormhole-foundation/wormhole-monitor-database';
-import { isTokenDenylisted } from './consts';
 import { ChainId, assertChainId, toChain, toChainId } from '@wormhole-foundation/sdk-base';
 
 const coinGeckoCoinIdCache = new Map<string, string>();

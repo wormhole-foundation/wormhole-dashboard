@@ -1,9 +1,14 @@
 import axios from 'axios';
-import { assertEnvironmentVariable, formatAndSendToSlack, sendToPagerDuty } from './utils';
-import { PagerDutyInfo, SlackInfo } from './types';
 import { evmosRPCs } from './data/evmosRPCs.json';
 import { osmosisRPCs } from './data/osmosisRPCs.json';
 import { kujiraRPCs } from './data/kujiraRPCs.json';
+import {
+  assertEnvironmentVariable,
+  formatAndSendToSlack,
+  PagerDutyInfo,
+  sendToPagerDuty,
+  SlackInfo,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 type ClientRPC = {
   address: string;

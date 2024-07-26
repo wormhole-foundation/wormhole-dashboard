@@ -11,36 +11,7 @@ import { BigtableDatabase } from './BigtableDatabase';
 import { Database } from './Database';
 import { JsonDatabase } from './JsonDatabase';
 import { VaasByBlock } from './types';
-
-// Bigtable Message ID format
-// chain/MAX_UINT64-block/emitter/sequence
-// 00002/00000000000013140651/0000000000000000000000008ea8874192c8c715e620845f833f48f39b24e222/00000000000000000000
-
-export function makeMessageId(
-  chainId: number,
-  block: string,
-  emitter: string,
-  sequence: string
-): string {
-  return `${padUint16(chainId.toString())}/${padUint64(
-    (BigInt(MAX_UINT_64) - BigInt(block)).toString()
-  )}/${emitter}/${padUint64(sequence)}`;
-}
-
-export function parseMessageId(id: string): {
-  chain: number;
-  block: number;
-  emitter: string;
-  sequence: bigint;
-} {
-  const [chain, inverseBlock, emitter, sequence] = id.split('/');
-  return {
-    chain: parseInt(chain),
-    block: Number(BigInt(MAX_UINT_64) - BigInt(inverseBlock)),
-    emitter,
-    sequence: BigInt(sequence),
-  };
-}
+export { makeMessageId, parseMessageId } from '@wormhole-foundation/wormhole-monitor-common';
 
 // TODO: should this be a composite key or should the value become more complex
 export const makeBlockKey = (block: string, timestamp: string): string => `${block}/${timestamp}`;

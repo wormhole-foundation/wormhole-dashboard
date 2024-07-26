@@ -1,8 +1,10 @@
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  assertEnvironmentVariable,
+  MessageCountsHistory,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
-import { MessageCountsHistory as MessageCountHistory } from './types';
 
-let messageCountHistory: MessageCountHistory | undefined;
+let messageCountHistory: MessageCountsHistory | undefined;
 let lastUpdated: number | undefined;
 const updateIntervalMs = 60 * 60 * 1000; // 1 hour
 
@@ -23,7 +25,7 @@ export async function getMessageCountHistory(req: any, res: any) {
       const collection = await firestore
         .collection(assertEnvironmentVariable('FIRESTORE_MESSAGE_COUNT_HISTORY_COLLECTION'))
         .get();
-      const tmpMessageCountHistory: MessageCountHistory = { DailyTotals: {} };
+      const tmpMessageCountHistory: MessageCountsHistory = { DailyTotals: {} };
       for (const doc of collection.docs) {
         const date = doc.id;
         const countsByChain = doc.data() as { [chainId: string]: number };

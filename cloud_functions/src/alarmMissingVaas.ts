@@ -1,15 +1,19 @@
 import { ChainId, Network, toChainId } from '@wormhole-foundation/sdk-base';
 import {
+  assertEnvironmentVariable,
   explorerBlock,
   explorerTx,
+  formatAndSendToSlack,
   getMissThreshold,
   getNetwork,
+  isVAASigned,
+  ObservedMessage,
+  ReobserveInfo,
+  SlackInfo,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
 import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
-import { ObservedMessage, ReobserveInfo, SlackInfo } from './types';
-import { assertEnvironmentVariable, formatAndSendToSlack, isVAASigned } from './utils';
 
 interface EnqueuedVAAResponse {
   sequence: string;

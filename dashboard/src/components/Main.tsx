@@ -2,6 +2,7 @@ import { GitHub, ReceiptLongOutlined, SyncAltOutlined } from '@mui/icons-materia
 import { AppBar, Box, Button, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
 import { contracts } from '@wormhole-foundation/sdk-base';
 import { NavLink, Route, Switch, useLocation } from 'react-router-dom';
+import { useCurrentEnvironment } from '../contexts/NetworkContext';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';
 import useGetGuardianSet from '../hooks/useGetGuardianSet';
 import useHeartbeats from '../hooks/useHeartbeats';
@@ -88,9 +89,10 @@ function NavLinks() {
 }
 
 function Main() {
+  const env = useCurrentEnvironment();
   const [, currentGuardianSet] = useGetGuardianSet(
     'Ethereum',
-    contracts.coreBridge('Mainnet', 'Ethereum')
+    contracts.coreBridge(env, 'Ethereum')
   );
   const heartbeats = useHeartbeats(currentGuardianSet);
   const chainIdsToHeartbeats = useChainHeartbeats(heartbeats);

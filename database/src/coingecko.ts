@@ -32,6 +32,11 @@ export const COINGECKO_PLATFORM_BY_CHAIN: { [key in Chain]?: string } = {
   Injective: 'injective',
   Sui: 'sui',
   Base: 'base',
+  Sei: 'sei-network',
+  Scroll: 'scroll',
+  Mantle: 'mantle',
+  Blast: 'blast',
+  Xlayer: 'x-layer',
 };
 
 export interface CoinGeckoPrices {

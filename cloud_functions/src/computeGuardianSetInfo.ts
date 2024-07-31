@@ -31,14 +31,22 @@ export async function computeGuardianSetInfo(req: any, res: any) {
 
 async function getGuardianSetInfoByChain(): Promise<GuardianSetInfoByChain> {
   let infosByChain: GuardianSetInfoByChain = {};
-  for (const chain of chains) {
-    const contract = contracts.coreBridge.get('Mainnet', chain); // Only support Mainnet for now
-    if (!contract) {
-      console.log(`No contract found for ${chain}`);
-      continue;
+  const infos = await Promise.all(
+    chains.map((chain) => {
+      const contract = contracts.coreBridge.get('Mainnet', chain); // Only support Mainnet for now
+      if (!contract) {
+        console.log(`No contract found for ${chain}`);
+        return Promise.resolve(null);
+      }
+      return fetchGuardianSetInfo(chain, contract);
+    })
+  );
+  for (let idx = 0; idx < chains.length; idx++) {
+    const chain = chains[idx];
+    const info = infos[idx];
+    if (info) {
+      infosByChain[chain] = info;
     }
-    const info: GuardianSetInfo = await fetchGuardianSetInfo(chain, contract);
-    infosByChain[chain] = info;
   }
   console.log('Guardian set info:', infosByChain);
   return infosByChain;

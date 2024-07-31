@@ -107,7 +107,6 @@ export class FTSolanaWatcher extends SolanaWatcher {
     });
   }
 
-  // TODO: Modify this so watcher can actually call this function (Add enum for mode)
   async getFtMessagesForBlocks(fromSlot: number, toSlot: number): Promise<string> {
     if (fromSlot > toSlot) throw new Error('solana: invalid block range');
 

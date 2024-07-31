@@ -23,10 +23,10 @@ export class Watcher {
     this.chain = chain;
     this.mode = mode;
 
-    // `vaa` -> ''
+    // `vaa` -> 'VAA_'
     // `ntt` -> 'NTT_'
     // `ft` -> 'FT_'
-    const loggerPrefix = mode === 'vaa' ? '' : mode.toUpperCase() + '_';
+    const loggerPrefix = mode.toUpperCase() + '_';
     this.logger = getLogger(loggerPrefix + chain);
   }
 

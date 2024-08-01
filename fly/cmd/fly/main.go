@@ -49,6 +49,7 @@ var (
 	rpcUrl             string
 	coreBridgeAddr     string
 	credentialsFile    string
+	network            string
 )
 
 // Make a bigtable row key from a VAA
@@ -128,6 +129,7 @@ func loadEnvVars() {
 	rpcUrl = verifyEnvVar("RPC_URL")
 	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
 	credentialsFile = verifyEnvVar("CREDENTIALS_FILE")
+	network = verifyEnvVar("NETWORK")
 }
 
 func verifyEnvVar(key string) string {
@@ -140,8 +142,16 @@ func verifyEnvVar(key string) string {
 
 func main() {
 	loadEnvVars()
-	p2pNetworkID = p2p.MainnetNetworkId
-	p2pBootstrap = p2p.MainnetBootstrapPeers
+	if network == "mainnet" {
+		p2pNetworkID = p2p.MainnetNetworkId
+		p2pBootstrap = p2p.MainnetBootstrapPeers
+	} else if network == "testnet" {
+		p2pNetworkID = p2p.TestnetNetworkId
+		p2pBootstrap = p2p.TestnetBootstrapPeers
+	} else {
+		p2pNetworkID = p2p.DevnetNetworkId
+		p2pBootstrap = ""
+	}
 
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {

@@ -230,8 +230,8 @@ export class EVMWatcher extends Watcher {
       const blockNumber = log.blockNumber;
       const emitter = log.topics[1].slice(2);
       const retval = wormholeInterface.parseLog(log);
-      let sequence: number = 0;
-      if (retval && retval.args && retval.args.sequence) {
+      let sequence: bigint = 0n;
+      if (retval && retval.args && retval.args.sequence !== undefined) {
         sequence = retval.args.sequence;
       } else {
         this.logger.error(`failed to parse log ${log}`);

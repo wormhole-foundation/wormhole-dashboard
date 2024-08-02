@@ -1,15 +1,73 @@
 import { expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { EVMWatcher } from '../EVMWatcher';
+import { existsSync, readFileSync } from 'fs';
 
 jest.setTimeout(60000);
+jest.mock('axios', () => {
+  const originalAxios = jest.requireActual('axios') as any;
+  return {
+    get: jest.fn(async (url: string, config?: any) => {
+      const mockDataPath = `${__dirname}/mock/${url
+        .replace('http://', '')
+        .replace('https://', '')}`;
+      if (existsSync(mockDataPath)) {
+        return { data: JSON.parse(readFileSync(mockDataPath, 'utf8')) };
+      }
+      return originalAxios.get(url, config);
+    }),
+    post: jest.fn(async (url: string, config?: any) => {
+      let mockDataPath = `${__dirname}/mock/${url.replace('http://', '').replace('https://', '')}`;
+      // console.log('post config', stringify(config));
+      if (config) {
+        const configStr = JSON.stringify(config);
+        if (configStr.includes('eth_getLogs')) {
+          mockDataPath = `${mockDataPath}/eth_getLogs`;
+        } else if (configStr.includes('eth_getBlockByNumber')) {
+          mockDataPath = `${mockDataPath}/eth_getBlockByNumber`;
+        }
+        if (configStr.includes('0x178fef')) {
+          mockDataPath = `${mockDataPath}/0x178fef`;
+        } else if (configStr.includes('0x17c3ac')) {
+          mockDataPath = `${mockDataPath}/0x17c3ac`;
+        } else {
+          mockDataPath = `${mockDataPath}/default`;
+        }
+      }
+      // console.log('post mockDataPath', mockDataPath);
+      if (existsSync(mockDataPath)) {
+        return JSON.parse(readFileSync(mockDataPath, 'utf8'));
+      }
+      // console.log('axios.post', url);
+      const retval = await originalAxios.post(url, config);
+      // console.log('post retval', stringify(retval));
+      return retval;
+    }),
+  };
+});
+
+function stringify(obj: any) {
+  let cache: object[] = []; // Explicitly type cache as an array of objects
+  let str = JSON.stringify(obj, function (key, value) {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.indexOf(value) !== -1) {
+        // Circular reference found, discard key
+        return;
+      }
+      // Store value in our collection
+      cache.push(value);
+    }
+    return value;
+  });
+  cache = []; // reset the cache
+  return str;
+}
 
 const initialBaseBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Base);
 
 test('getFinalizedBlockNumber', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Base');
   const blockNumber = await watcher.getFinalizedBlockNumber();
-  console.log('blockNumber', blockNumber);
   expect(blockNumber).toBeGreaterThan(initialBaseBlock);
 });
 

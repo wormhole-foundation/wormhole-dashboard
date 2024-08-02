@@ -129,7 +129,6 @@ func loadEnvVars() {
 	rpcUrl = verifyEnvVar("RPC_URL")
 	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
 	credentialsFile = verifyEnvVar("CREDENTIALS_FILE")
-	network = verifyEnvVar("NETWORK")
 }
 
 func verifyEnvVar(key string) string {
@@ -142,16 +141,6 @@ func verifyEnvVar(key string) string {
 
 func main() {
 	loadEnvVars()
-	if network == "mainnet" {
-		p2pNetworkID = p2p.MainnetNetworkId
-		p2pBootstrap = p2p.MainnetBootstrapPeers
-	} else if network == "testnet" {
-		p2pNetworkID = p2p.TestnetNetworkId
-		p2pBootstrap = p2p.TestnetBootstrapPeers
-	} else {
-		p2pNetworkID = p2p.DevnetNetworkId
-		p2pBootstrap = ""
-	}
 
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
@@ -160,6 +149,16 @@ func main() {
 	}
 
 	logger := ipfslog.Logger("wormhole-fly").Desugar()
+
+	env, err := common.ParseEnvironment(network)
+	if err != nil || (env != common.TestNet && env != common.MainNet) {
+		logger.Fatal("Invalid value for NETWORK, should be testnet or mainnet", zap.String("val", network))
+	}
+	p2pNetworkID = p2p.GetNetworkId(env)
+	p2pBootstrap, err = p2p.GetBootstrapPeers(env)
+	if err != nil {
+		logger.Fatal("failed to determine the bootstrap peers from the environment", zap.String("env", string(env)), zap.Error(err))
+	}
 
 	ipfslog.SetAllLoggers(lvl)
 

@@ -6,24 +6,8 @@ import { SeiExplorerWatcher } from '../SeiExplorerWatcher';
 import { WormchainWatcher } from '../WormchainWatcher';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { isBase64Encoded } from '../../utils/isBase64Encoded';
-import { existsSync, readFileSync } from 'fs';
 
 jest.setTimeout(60000);
-jest.mock('axios', () => {
-  const originalAxios = jest.requireActual('axios') as any;
-  return {
-    get: jest.fn(async (url: string, config?: any) => {
-      const mockDataPath = `${__dirname}/mock/${url
-        .replace('http://', '')
-        .replace('https://', '')}`;
-      if (existsSync(mockDataPath)) {
-        return { data: JSON.parse(readFileSync(mockDataPath, 'utf8')) };
-      }
-      return originalAxios.get(url, config);
-    }),
-    post: jest.fn(originalAxios.post),
-  };
-});
 
 test('getFinalizedBlockNumber(terra2)', async () => {
   const watcher = new CosmwasmWatcher('Mainnet', 'Terra2');

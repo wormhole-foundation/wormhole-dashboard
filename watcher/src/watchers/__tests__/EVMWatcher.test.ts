@@ -144,7 +144,6 @@ test('getMessagesForBlocks (Karura compatibility)', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Karura');
   const vaasByBlock = await watcher.getMessagesForBlocks(4582511, 4582513);
   const entries = Object.entries(vaasByBlock);
-  console.log('entries', entries);
   expect(entries.length).toEqual(3);
   expect(entries[0][0]).toEqual('4582511/2023-06-19T15:54:48.000Z');
   // 4582512 was an error block. In that case, make sure it has the same timestamp as the previous block
@@ -158,7 +157,6 @@ test('getMessagesForBlocks (Karura compatibility 2)', async () => {
   await watcher.getFinalizedBlockNumber(); // This has the side effect of initializing the latestFinalizedBlockNumber
   const vaasByBlock = await watcher.getMessagesForBlocks(4595356, 4595358);
   const entries = Object.entries(vaasByBlock);
-  console.log('entries', entries);
   expect(entries.length).toEqual(3);
 });
 

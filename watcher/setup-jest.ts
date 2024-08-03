@@ -27,7 +27,7 @@ jest.mock('axios', () => {
         .replace('https://', '')}/${dataHash}`;
       // console.log('post mockDataPath', mockDataPath);
       if (existsSync(mockDataPath)) {
-        return JSON.parse(readFileSync(mockDataPath, 'utf8'));
+        return { data: JSON.parse(readFileSync(mockDataPath, 'utf8')) };
       }
       // console.log('axios.post', url);
       const retval = await originalAxios.post(url, data, config);

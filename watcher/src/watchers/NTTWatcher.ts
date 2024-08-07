@@ -7,7 +7,11 @@ import {
   chainToChainId,
   contracts,
 } from '@wormhole-foundation/sdk-base';
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  assertEnvironmentVariable,
+  NTTChain,
+  NTTEvmChain,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 import { BigNumber } from 'ethers';
 import knex, { Knex } from 'knex';
@@ -48,17 +52,15 @@ export type ErrorBlock = {
 };
 
 export class NTTWatcher extends Watcher {
+  chain: NTTChain;
   finalizedBlockTag: BlockTag;
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
   pg: Knex;
 
-  constructor(
-    network: Network,
-    chain: PlatformToChains<'Evm'>,
-    finalizedBlockTag: BlockTag = 'latest'
-  ) {
+  constructor(network: Network, chain: NTTEvmChain, finalizedBlockTag: BlockTag = 'latest') {
     super(network, chain, 'ntt');
+    this.chain = chain;
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;

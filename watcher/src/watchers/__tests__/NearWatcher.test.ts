@@ -42,10 +42,10 @@ describe('getNearProvider', () => {
 
   test('with archive RPC', async () => {
     const provider = await getNearProvider('Mainnet', NEAR_ARCHIVE_RPC);
-    // grab first block with activity from core contract
-    expect(
-      await provider.block({ blockId: 'Asie8hpJFKaipvw8jh1wPfBwwbjP6JUfsQdCuQvwr3Sz' })
-    ).toBeTruthy();
+    const retval = await provider.block({
+      blockId: '8NWwminTTAPwYzzqTeP8c3MEGXgTretBWpCSSvSqJXdv',
+    });
+    expect(retval).toBeTruthy();
   });
 });
 

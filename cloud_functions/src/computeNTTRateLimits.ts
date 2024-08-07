@@ -7,12 +7,15 @@ import {
   getSolanaTokenDecimals,
   NTTRateLimit,
   getNetwork,
+  NTTEvmChain,
+  NTTChain,
+  nttChains,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { EvmPlatform, EvmChains } from '@wormhole-foundation/sdk-evm';
+import { EvmPlatform } from '@wormhole-foundation/sdk-evm';
 import { SolanaPlatform } from '@wormhole-foundation/sdk-solana';
 import { EvmNtt } from '@wormhole-foundation/sdk-evm-ntt';
 import { SolanaNtt } from '@wormhole-foundation/sdk-solana-ntt';
-import { Network, Chain, contracts, rpc, chainToChainId } from '@wormhole-foundation/sdk-base';
+import { Network, contracts, rpc, chainToChainId } from '@wormhole-foundation/sdk-base';
 import { Storage } from '@google-cloud/storage';
 
 const storage = new Storage();
@@ -29,11 +32,11 @@ const cloudStorageCache = cacheBucket.file(cacheFileName);
 async function computeNTTRateLimits_(
   network: Network,
   token: string,
-  chain: Chain
+  chain: NTTChain
 ): Promise<NTTRateLimit> {
-  let ntt: EvmNtt<Network, EvmChains> | SolanaNtt<Network, 'Solana'>;
+  let ntt: EvmNtt<Network, NTTEvmChain> | SolanaNtt<Network, 'Solana'>;
   let tokenDecimals: number;
-  const rpcEndpoint = rpc.rpcAddress(network, chain as Chain);
+  const rpcEndpoint = rpc.rpcAddress(network, chain);
   const tokenAddress = NTT_TOKENS[network][token][chain]!;
   const managerContract = NTT_MANAGER_CONTRACT[network][token][chain]!;
   const transceiverContract = NTT_TRANSCEIVER_CONTRACT[network][token][chain]!;
@@ -52,7 +55,7 @@ async function computeNTTRateLimits_(
     });
     tokenDecimals = await getSolanaTokenDecimals(rpcEndpoint, tokenAddress);
   } else {
-    const evmChain = chain as EvmChains;
+    const evmChain = chain;
     const platform = new EvmPlatform(network);
     ntt = new EvmNtt(network, evmChain, platform.getRpc(evmChain), {
       ntt: {
@@ -120,10 +123,8 @@ export async function computeNTTRateLimits(req: any, res: any) {
 
     const rateLimits = await Promise.all(
       Object.entries(managerContracts).map(async ([token, manager]) => {
-        const inboundCapacityPromises = Object.entries(manager)
-          .map(([chain, contract]) =>
-            contract ? computeNTTRateLimits_(network, token, chain as Chain) : null
-          )
+        const inboundCapacityPromises = nttChains
+          .map((chain) => (manager[chain] ? computeNTTRateLimits_(network, token, chain) : null))
           .filter(Boolean);
 
         const inboundCapacity = await Promise.all(inboundCapacityPromises);

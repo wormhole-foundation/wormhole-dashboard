@@ -1,32 +1,47 @@
-import { Chain, Network, chains } from '@wormhole-foundation/sdk-base';
+import { Network, networks } from '@wormhole-foundation/sdk-base';
+import { EvmChains } from '@wormhole-foundation/sdk-evm';
 
 // This data structure is used in dashboard
 export type NTTContract = {
-  [key in Network]: { [tokenName: string]: { [key in Chain]?: string } };
+  [key in Network]: { [tokenName: string]: { [key in NTTChain]?: string } };
 };
 
 // This data structure is used in watchers
 export type NTTContractArray = {
-  [key in Network]: { [key in Chain]?: string[] };
+  [key in Network]: { [key in NTTChain]?: string[] };
 };
+
+export const nttChains = [
+  'Ethereum',
+  'Fantom',
+  'Solana',
+  'Arbitrum',
+  'Optimism',
+  'Base',
+  'Sepolia',
+  'ArbitrumSepolia',
+  'BaseSepolia',
+  'OptimismSepolia',
+  'Holesky',
+] as const;
 
 function convertNTTManagerContractToNTTContractArray(
   nttManagerContract: NTTContract
 ): NTTContractArray {
   const nttContract: NTTContractArray = {} as NTTContractArray;
 
-  for (const network in nttManagerContract) {
-    nttContract[network as Network] = {};
+  for (const network of networks) {
+    nttContract[network] = {};
 
-    for (const tokenName in nttManagerContract[network as Network]) {
-      for (const chain in nttManagerContract[network as Network][tokenName]) {
-        const tokenAddress = nttManagerContract[network as Network][tokenName][chain as Chain];
+    for (const tokenName in nttManagerContract[network]) {
+      for (const chain of nttChains) {
+        const tokenAddress = nttManagerContract[network][tokenName][chain];
 
         if (tokenAddress) {
-          if (!nttContract[network as Network][chain as Chain]) {
-            nttContract[network as Network][chain as Chain] = [];
+          if (!nttContract[network][chain]) {
+            nttContract[network][chain] = [];
           }
-          nttContract[network as Network][chain as Chain]!.push(tokenAddress);
+          nttContract[network][chain]!.push(tokenAddress);
         }
       }
     }
@@ -113,14 +128,18 @@ export const NTT_TOKENS: NTTContract = {
   Devnet: {},
 };
 
+export type NTTChain = (typeof nttChains)[number];
+
+export type NTTEvmChain = NTTChain & EvmChains;
+
 export const NTT_MANAGER_CONTRACT_ARRAY =
   convertNTTManagerContractToNTTContractArray(NTT_MANAGER_CONTRACT);
 
-export function NTT_SUPPORTED_CHAINS(network: Network, token: string): Chain[] {
+export function NTT_SUPPORTED_CHAINS(network: Network, token: string): NTTChain[] {
   const contractDetails = NTT_MANAGER_CONTRACT[network][token];
   if (!contractDetails) {
     return [];
   }
 
-  return chains.filter((chain) => chain in contractDetails);
+  return nttChains.filter((chain) => chain in contractDetails);
 }

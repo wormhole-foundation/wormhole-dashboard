@@ -9,9 +9,10 @@ import {
   getEvmTotalSupply,
   getNetwork,
   normalizeToDecimals,
+  nttChains,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { PublicKey } from '@solana/web3.js';
-import { Network, rpc, Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
+import { Network, rpc, chainToChainId } from '@wormhole-foundation/sdk-base';
 import { Storage } from '@google-cloud/storage';
 
 const storage = new Storage();
@@ -38,21 +39,24 @@ async function fetchTotalSupplyAndLocked(network: Network): Promise<NTTTotalSupp
 
     const evmTotalSupply: NTTTotalSupplyAndLockedData[] = [];
     let cumulativeEvmSupply = 0n;
-    for (const [supportedChain] of Object.entries(NTT_TOKENS[network][token])) {
+    for (const supportedChain of nttChains) {
+      const tokenContract = NTT_TOKENS[network][token][supportedChain];
+      const managerContract = NTT_MANAGER_CONTRACT[network][token][supportedChain];
+      if (!tokenContract || !managerContract) continue;
       if (supportedChain === 'Solana') continue;
       const tokenSupply = await getEvmTotalSupply(
-        rpc.rpcAddress(network, supportedChain as Chain),
-        NTT_TOKENS[network][token][supportedChain as Chain]!
+        rpc.rpcAddress(network, supportedChain),
+        tokenContract
       );
 
       const tokenDecimals = await getEvmTokenDecimals(
-        rpc.rpcAddress(network, supportedChain as Chain),
-        NTT_MANAGER_CONTRACT[network][token][supportedChain as Chain]!
+        rpc.rpcAddress(network, supportedChain),
+        managerContract
       );
 
       evmTotalSupply.push({
         tokenName: token,
-        chain: chainToChainId(supportedChain as Chain),
+        chain: chainToChainId(supportedChain),
         totalSupply: {
           amount: tokenSupply.toString(),
           decimals: tokenDecimals,

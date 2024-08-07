@@ -58,7 +58,9 @@ CREATE TABLE fast_transfer_executions (
   execution_payer VARCHAR(255),
   execution_tx_hash VARCHAR(255),
   execution_slot BIGINT,
-  execution_time TIMESTAMP
+  execution_time TIMESTAMP,
+  -- fill_id can be a vaa id (cctp) or solana account pubkey (local)
+  fill_id VARCHAR(255),
 );
 
 -- Settlement is created when the settlement is created in the `settleFastTransfer`
@@ -96,11 +98,12 @@ CREATE TABLE auction_history_mapping (
 
 -- Redeem Swaps table to track the final swap before funds reach the user's account
 CREATE TABLE redeem_swaps (
-  fill_vaa_id VARCHAR(255) PRIMARY KEY,
+  -- fill_id can be a vaa id (cctp) or solana account pubkey (local)
+  fill_id VARCHAR(255) PRIMARY KEY,
   tx_hash VARCHAR(255) NOT NULL,
   recipient VARCHAR(255) NOT NULL,
   output_token VARCHAR(255) NOT NULL,
   output_amount BIGINT NOT NULL,
   relaying_fee BIGINT NOT NULL,
-  timestamp TIMESTAMP NOT NULL
+  redeem_time TIMESTAMP NOT NULL
 );

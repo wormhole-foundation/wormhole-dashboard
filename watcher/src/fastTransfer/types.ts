@@ -55,6 +55,8 @@ export type FastTransferExecutionInfo = {
   execution_time: Date;
   execution_tx_hash: string;
   execution_slot: bigint;
+  // fill_id can be a vaa id (cctp) or a Solana public key
+  fill_id: string;
 };
 
 export type FastTransferSettledInfo = {
@@ -149,6 +151,6 @@ export type RedeemSwap = {
   output_token: string;
   output_amount: bigint;
   relaying_fee: bigint;
-  timestamp: Date;
-  fill_vaa_id: string;
+  redeem_time: Date;
+  fill_id: string;
 };

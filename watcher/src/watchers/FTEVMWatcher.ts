@@ -8,7 +8,6 @@ import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey } from '../databases/utils';
 import TokenRouterParser from '../fastTransfer/tokenRouter/parser';
 import SwapLayerParser from '../fastTransfer/swapLayer/parser';
-import { MarketOrder, RedeemSwap } from '../fastTransfer/types';
 import { Block } from './EVMWatcher';
 import { BigNumber } from 'ethers';
 import axios from 'axios';
@@ -151,7 +150,7 @@ export class FTEVMWatcher extends Watcher {
     }
 
     if (swapLayerResults.length) {
-      await this.saveBatch(swapLayerResults, 'redeem_swaps', 'fill_vaa_id', fromBlock, toBlock);
+      await this.saveBatch(swapLayerResults, 'redeem_swaps', 'fill_id', fromBlock, toBlock);
     }
 
     // we do not need to compare the lastBlockTime from tokenRouter and swapLayer as they both use toBlock

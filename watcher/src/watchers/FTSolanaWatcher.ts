@@ -41,7 +41,10 @@ import {
   AuctionUpdatedEvent,
 } from '../fastTransfer/types';
 import knex, { Knex } from 'knex';
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  assertEnvironmentVariable,
+  parseWormholeSequenceFromLogs,
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { getLogger } from '../utils/logger';
 import base58 from 'bs58';
 import {
@@ -503,7 +506,8 @@ export class FTSolanaWatcher extends SolanaWatcher {
     tx: VersionedTransactionResponse,
     payerAccount: PublicKey,
     auctionAccountPubkey: PublicKey,
-    fastVaaAccount: PublicKey
+    fastVaaAccount: PublicKey,
+    fillVaaId: string
   ): Promise<{ id: FastTransferId; info: FastTransferExecutionInfo }> {
     const vaaAccount = await VaaAccount.fetch(
       this.matchingEngineProgram.program.provider.connection,
@@ -542,6 +546,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
         execution_time: new Date(tx.blockTime! * 1000),
         execution_tx_hash: tx.transaction.signatures[0],
         execution_slot: BigInt(tx.slot),
+        fill_id: fillVaaId,
       },
     };
   }
@@ -556,14 +561,28 @@ export class FTSolanaWatcher extends SolanaWatcher {
       throw new Error('Insufficient account key indexes for parseExecuteFastOrderCctp');
     }
     const payerAccountPubkey = accountKeys[accountKeyIndexes[0]];
+    const custodianAccountPubkey = accountKeys[accountKeyIndexes[3]];
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[4]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[5]];
+    const seq = parseWormholeSequenceFromLogs(res.meta?.logMessages || []);
+
+    if (!seq) {
+      throw new Error('Cannot find fill sequnece');
+    }
+
+    // in `execute_fast_order_cctp` (see: https://github.com/wormhole-foundation/example-liquidity-layer/blob/63f2b423026ac1ad8b099bc3ecd44ba4fc64aae2/solana/programs/matching-engine/src/processor/auction/execute_fast_order/cctp.rs#L158)
+    // custodian is used as the emitter
+    const emitterInHex = custodianAccountPubkey.toBuffer().toString('hex');
+
+    // matching engine only exists in Solana. This only checks for Solana matching engine anyways. So we can be sure that emitter chain is always 1
+    const fillVaaId = `1/${emitterInHex}/${seq}`;
 
     const { id, info } = await this.computeExecutionData(
       res,
       payerAccountPubkey,
       auctionAccountPubkey,
-      fastVaaAccountPubkey
+      fastVaaAccountPubkey,
+      fillVaaId
     );
 
     await this.saveFastTransferInfo('fast_transfer_executions', info);
@@ -583,18 +602,20 @@ export class FTSolanaWatcher extends SolanaWatcher {
   ) {
     const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
-    if (accountKeyIndexes.length < 4) {
+    if (accountKeyIndexes.length < 5) {
       throw new Error('Insufficient account key indexes for parseExecuteFastOrderLocal');
     }
     const payerAccountPubkey = accountKeys[accountKeyIndexes[0]];
     const fastVaaAccountPubkey = accountKeys[accountKeyIndexes[2]];
     const auctionAccountPubkey = accountKeys[accountKeyIndexes[3]];
+    const fastFillAccountPubkey = accountKeys[accountKeyIndexes[4]];
 
     const { id, info } = await this.computeExecutionData(
       res,
       payerAccountPubkey,
       auctionAccountPubkey,
-      fastVaaAccountPubkey
+      fastVaaAccountPubkey,
+      fastFillAccountPubkey.toBase58()
     );
 
     await this.saveFastTransferInfo('fast_transfer_executions', info);

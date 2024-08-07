@@ -117,3 +117,13 @@ export async function makeRpcCall(
 export function decodeBase64Data(encodedData: string) {
   return new Uint8Array(Buffer.from(encodedData, 'base64'));
 }
+
+const SOLANA_SEQ_LOG = 'Program log: Sequence: ';
+export function parseWormholeSequenceFromLogs(logs: string[]): number | null {
+  for (const log of logs) {
+    if (log.startsWith(SOLANA_SEQ_LOG)) {
+      return parseInt(log.replace(SOLANA_SEQ_LOG, ''), 10);
+    }
+  }
+  return null;
+}

@@ -61,9 +61,9 @@ class SwapLayerParser {
       recipient: swapEvent.args.recipient,
       output_amount: BigInt(swapEvent.args.outputAmount.toString()),
       output_token: swapEvent.args.outputToken,
-      timestamp: new Date(blockTime * 1000),
+      redeem_time: new Date(blockTime * 1000),
       relaying_fee: BigInt(swapEvent.args.relayingFee.toString()),
-      fill_vaa_id: fillVaaId,
+      fill_id: fillVaaId,
     };
   }
 

@@ -129,6 +129,7 @@ test('should parse executeFastOrderLocal', async () => {
     execution_time: new Date('2024-05-23T15:58:23.000Z'),
     execution_tx_hash: txHash,
     fast_vaa_hash: 'fd99d2d20f7458cae97de7d7bcf94cbdc5ac734264fa495bf01f1748e28039da',
+    fill_id: 'B2qkDPs1gPh69uvKN5mbtHRAFtiMaZCe4vu6Wp3yaaJ1',
   });
 });
 
@@ -156,6 +157,7 @@ test('should parse executeFastOrderCctp', async () => {
     execution_slot: 301864332n,
     execution_time: new Date('2024-05-28T03:15:19.000Z'),
     fast_vaa_hash: '14a5187e40e4fd2b2950cd8332b4142259757f4cbf7cffcb7cc95249df8415b9',
+    fill_id: '1/3e374fcd3aaf2ed067f3c93d21416855ec7916cfd2c2127bcbc68b3b1fb73077/7970',
   });
 });
 

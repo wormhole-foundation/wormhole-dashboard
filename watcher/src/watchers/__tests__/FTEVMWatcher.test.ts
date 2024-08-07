@@ -123,8 +123,8 @@ describe('SwapLayerParser', () => {
       output_token: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
       output_amount: BigInt('20000000000'),
       relaying_fee: BigInt('10447500'),
-      timestamp: new Date(mockBlock.timestamp * 1000),
-      fill_vaa_id: '1/cb0406e59555bf0371b7c4fff1812a11a8d92dad02ad422062971d61dcce2cd0/2',
+      redeem_time: new Date(mockBlock.timestamp * 1000),
+      fill_id: '1/cb0406e59555bf0371b7c4fff1812a11a8d92dad02ad422062971d61dcce2cd0/2',
     });
   });
 });

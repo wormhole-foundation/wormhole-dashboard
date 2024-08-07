@@ -80,6 +80,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Sei: '0',
     Wormchain: '4495661',
     PolygonSepolia: '2379275',
+    Berachain: '1473347',
   },
   ['Devnet']: {},
 };

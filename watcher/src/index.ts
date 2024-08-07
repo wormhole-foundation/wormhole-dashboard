@@ -51,6 +51,8 @@ const supportedChains: Chain[] =
         'OptimismSepolia',
         'Holesky',
         'PolygonSepolia',
+        'Berachain',
+        'Snaxchain',
       ]
     : [
         // This is the list of chains supported in MAINNET.

@@ -40,7 +40,7 @@ export class EVMWatcher extends Watcher {
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
-    if (chain === 'Acala' || chain === 'Karura') {
+    if (chain === 'Acala' || chain === 'Karura' || chain === 'Berachain') {
       this.maximumBatchSize = 50;
     }
   }

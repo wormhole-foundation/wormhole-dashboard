@@ -127,7 +127,9 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     : chainId === chainToChainId('Linea')
     ? `https://sepolia.lineascan.build/block/${block}`
     : chainId === chainToChainId('Berachain')
-    ? `https://artio.beratrail.io/block/${block}`
+    ? `https://bartio.beratrail.io/block/${block}`
+    : chainId === chainToChainId('Snaxchain')
+    ? `https://explorer-snaxchain-s50q0kjngn.t.conduit.xyz/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -192,7 +194,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       : chainId === chainToChainId('Linea')
       ? `https://lineascan.build/tx/${tx}`
       : chainId === chainToChainId('Berachain')
-      ? `https://artio.beratrail.io/tx/${tx}`
+      ? `https://bartio.beratrail.io/tx/${tx}`
       : chainId === chainToChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/transactions/${tx}`
       : ''
@@ -250,7 +252,9 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     : chainId === chainToChainId('Linea')
     ? `https://sepolia.lineascan.build/tx/${tx}`
     : chainId === chainToChainId('Berachain')
-    ? `https://artio.beratrail.io/tx/${tx}`
+    ? `https://bartio.beratrail.io/tx/${tx}`
+    : chainId === chainToChainId('Snaxchain')
+    ? `https://explorer-snaxchain-s50q0kjngn.t.conduit.xyz/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

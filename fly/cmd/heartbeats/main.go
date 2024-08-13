@@ -178,7 +178,7 @@ func main() {
 		guardians = testnetGuardians
 		knownEmitter = sdk.KnownTestnetEmitters
 		rpcUrl = "https://rpc.ankr.com/eth_holesky"
-		coreBridgeAddr = "0x706abc4E45D419950511e474C7B9Ed348A4a716c"
+		coreBridgeAddr = "0xa10f2eF61dE1f19f586ab8B6F2EbA89bACE63F7a"
 	} else if env == common.UnsafeDevNet {
 		guardians = devnetGuardians
 		knownEmitter = sdk.KnownDevnetEmitters

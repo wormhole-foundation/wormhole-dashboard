@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { RedeemSwap } from '../types';
+import { TransferCompletion } from '../types';
 import { parseVaa } from '@wormhole-foundation/wormhole-monitor-common';
 
 class SwapLayerParser {
@@ -15,7 +15,10 @@ class SwapLayerParser {
     ]);
   }
 
-  async parseSwapLayerTransaction(txHash: string, blockTime: number): Promise<RedeemSwap | null> {
+  async parseSwapLayerTransaction(
+    txHash: string,
+    blockTime: number
+  ): Promise<TransferCompletion | null> {
     const receipt = await this.provider.getTransactionReceipt(txHash);
 
     const tx = await this.provider.getTransaction(txHash);
@@ -67,7 +70,7 @@ class SwapLayerParser {
     };
   }
 
-  async getFTSwapInRange(fromBlock: number, toBlock: number): Promise<RedeemSwap[]> {
+  async getFTSwapInRange(fromBlock: number, toBlock: number): Promise<TransferCompletion[]> {
     const filter = {
       address: this.swapLayerAddress,
       fromBlock,
@@ -87,7 +90,7 @@ class SwapLayerParser {
       })
     );
 
-    return results.filter((result): result is RedeemSwap => result !== null);
+    return results.filter((result): result is TransferCompletion => result !== null);
   }
 
   private async fetchBlockTime(

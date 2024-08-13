@@ -1,0 +1,2399 @@
+{
+  "address": "SwapLayer1111111111111111111111111111111111",
+  "metadata": {
+    "name": "swap_layer",
+    "version": "0.0.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "add_peer",
+      "docs": [
+        "Adds a peer to the swap layer. The peer is identified by the `chain` and",
+        "`address` fields. The `relay_params` field is used to configure the relay",
+        "parameters for the peer (i.e., the gas dropoff and relaying fee) as well",
+        "as the execution parameters for the peer (i.e., chain specific execution costs).",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for adding the peer.",
+        "* `args` - The arguments for adding the peer."
+      ],
+      "discriminator": [165, 134, 139, 216, 120, 149, 247, 255],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "peer",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "AddPeerArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel_ownership_transfer_request",
+      "docs": [
+        "Cancels an ownership transfer request.",
+        "",
+        "This instruction cancels an ownership transfer request by resetting the `pending_owner` field",
+        "in the `Custodian` account. This instruction can only be called by the `owner`.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for canceling the ownership transfer request."
+      ],
+      "discriminator": [167, 61, 9, 35, 192, 41, 64, 178],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_staged_outbound",
+      "docs": [
+        "Closes the `staged_outbound` account in the swap layer. This should be executed",
+        "when the user decides to cancel the staged outbound transfer. This could be the",
+        "result of a failed swap when initiating an outbound swap.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for closing the staged outbound."
+      ],
+      "discriminator": [67, 69, 31, 1, 231, 243, 10, 12],
+      "accounts": [
+        {
+          "name": "sender",
+          "docs": ["This signer must be the same one encoded in the prepared order."],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "target_peer",
+          "accounts": [
+            {
+              "name": "peer"
+            }
+          ]
+        },
+        {
+          "name": "prepared_by",
+          "writable": true
+        },
+        {
+          "name": "staged_outbound",
+          "docs": ["Staging for outbound transfer. This instruction closes this account."],
+          "writable": true
+        },
+        {
+          "name": "staged_custody_token",
+          "docs": ["This custody token account will be closed by the end of the instruction."],
+          "writable": true
+        },
+        {
+          "name": "sender_token",
+          "docs": ["already check that the sender is the same as the prepared_by account."],
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "complete_swap_direct",
+      "docs": [
+        "Completes a direct swap in the swap layer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for completing the swap.",
+        "* `instruction_data` - The instruction data for completing the swap."
+      ],
+      "discriminator": [40, 166, 72, 2, 172, 18, 32, 75],
+      "accounts": [
+        {
+          "name": "complete_swap",
+          "accounts": [
+            {
+              "name": "payer",
+              "writable": true,
+              "signer": true
+            },
+            {
+              "name": "consume_swap_layer_fill",
+              "accounts": [
+                {
+                  "name": "custodian",
+                  "accounts": [
+                    {
+                      "name": "custodian"
+                    }
+                  ]
+                },
+                {
+                  "name": "fill",
+                  "writable": true
+                },
+                {
+                  "name": "fill_custody_token",
+                  "docs": [
+                    "Custody token account. This account will be closed at the end of this instruction. It just",
+                    "acts as a conduit to allow this program to be the transfer initiator in the CCTP message.",
+                    ""
+                  ],
+                  "writable": true
+                },
+                {
+                  "name": "source_peer",
+                  "accounts": [
+                    {
+                      "name": "peer"
+                    }
+                  ]
+                },
+                {
+                  "name": "beneficiary",
+                  "writable": true
+                },
+                {
+                  "name": "token_router_program"
+                }
+              ]
+            },
+            {
+              "name": "authority"
+            },
+            {
+              "name": "src_swap_token",
+              "docs": [
+                "Temporary swap token account to receive USDC from the prepared fill. This account will be",
+                "closed at the end of this instruction."
+              ],
+              "writable": true
+            },
+            {
+              "name": "dst_swap_token",
+              "docs": [
+                "Temporary swap token account to receive destination mint after the swap. This account will",
+                "be closed at the end of this instruction."
+              ],
+              "writable": true
+            },
+            {
+              "name": "fee_recipient_token",
+              "docs": ["token account."],
+              "writable": true
+            },
+            {
+              "name": "usdc",
+              "accounts": [
+                {
+                  "name": "mint"
+                }
+              ]
+            },
+            {
+              "name": "dst_mint"
+            },
+            {
+              "name": "token_program"
+            },
+            {
+              "name": "dst_token_program"
+            },
+            {
+              "name": "associated_token_program"
+            },
+            {
+              "name": "system_program"
+            }
+          ]
+        },
+        {
+          "name": "recipient_token",
+          "docs": [
+            "Recipient associated token account. The recipient authority check is necessary to ensure",
+            "that the recipient is the intended recipient of the bridged tokens.",
+            "",
+            "If OutputToken::Other, this account will be deserialized to ensure that the recipient is",
+            "the owner of this token account.",
+            ""
+          ],
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "docs": ["account must be encoded in the prepared fill."],
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "instruction_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "complete_swap_payload",
+      "docs": [
+        "Completes a payload swap in the swap layer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for completing the swap.",
+        "* `instruction_data` - The instruction data for completing the swap."
+      ],
+      "discriminator": [82, 168, 4, 109, 220, 211, 26, 20],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "consume_swap_layer_fill",
+          "accounts": [
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            },
+            {
+              "name": "fill",
+              "writable": true
+            },
+            {
+              "name": "fill_custody_token",
+              "docs": [
+                "Custody token account. This account will be closed at the end of this instruction. It just",
+                "acts as a conduit to allow this program to be the transfer initiator in the CCTP message.",
+                ""
+              ],
+              "writable": true
+            },
+            {
+              "name": "source_peer",
+              "accounts": [
+                {
+                  "name": "peer"
+                }
+              ]
+            },
+            {
+              "name": "beneficiary",
+              "writable": true
+            },
+            {
+              "name": "token_router_program"
+            }
+          ]
+        },
+        {
+          "name": "staged_inbound",
+          "writable": true
+        },
+        {
+          "name": "src_swap_token",
+          "docs": [
+            "Temporary swap token account to receive USDC from the prepared fill. This account will be",
+            "closed at the end of this instruction."
+          ],
+          "writable": true
+        },
+        {
+          "name": "dst_swap_token",
+          "docs": [
+            "Temporary swap token account to receive destination mint after the swap. This account will",
+            "be closed at the end of this instruction."
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_recipient_token",
+          "docs": ["token account."],
+          "writable": true
+        },
+        {
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "dst_mint"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "dst_token_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "instruction_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "complete_swap_relay",
+      "docs": [
+        "Completes a relay swap in the swap layer. If gas dropoff is",
+        "specified, the program will transfer the requested number of lamports",
+        "from the payer to the relayer. In return, the program will transfer",
+        "the specified number of USDC to the `fee_recipient_token` account.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for completing the swap.",
+        "* `instruction_data` - The instruction data for completing the swap."
+      ],
+      "discriminator": [108, 241, 108, 248, 142, 211, 140, 252],
+      "accounts": [
+        {
+          "name": "complete_swap",
+          "accounts": [
+            {
+              "name": "payer",
+              "writable": true,
+              "signer": true
+            },
+            {
+              "name": "consume_swap_layer_fill",
+              "accounts": [
+                {
+                  "name": "custodian",
+                  "accounts": [
+                    {
+                      "name": "custodian"
+                    }
+                  ]
+                },
+                {
+                  "name": "fill",
+                  "writable": true
+                },
+                {
+                  "name": "fill_custody_token",
+                  "docs": [
+                    "Custody token account. This account will be closed at the end of this instruction. It just",
+                    "acts as a conduit to allow this program to be the transfer initiator in the CCTP message.",
+                    ""
+                  ],
+                  "writable": true
+                },
+                {
+                  "name": "source_peer",
+                  "accounts": [
+                    {
+                      "name": "peer"
+                    }
+                  ]
+                },
+                {
+                  "name": "beneficiary",
+                  "writable": true
+                },
+                {
+                  "name": "token_router_program"
+                }
+              ]
+            },
+            {
+              "name": "authority"
+            },
+            {
+              "name": "src_swap_token",
+              "docs": [
+                "Temporary swap token account to receive USDC from the prepared fill. This account will be",
+                "closed at the end of this instruction."
+              ],
+              "writable": true
+            },
+            {
+              "name": "dst_swap_token",
+              "docs": [
+                "Temporary swap token account to receive destination mint after the swap. This account will",
+                "be closed at the end of this instruction."
+              ],
+              "writable": true
+            },
+            {
+              "name": "fee_recipient_token",
+              "docs": ["token account."],
+              "writable": true
+            },
+            {
+              "name": "usdc",
+              "accounts": [
+                {
+                  "name": "mint"
+                }
+              ]
+            },
+            {
+              "name": "dst_mint"
+            },
+            {
+              "name": "token_program"
+            },
+            {
+              "name": "dst_token_program"
+            },
+            {
+              "name": "associated_token_program"
+            },
+            {
+              "name": "system_program"
+            }
+          ]
+        },
+        {
+          "name": "recipient_token",
+          "docs": [
+            "Recipient associated token account. The recipient authority check is necessary to ensure",
+            "that the recipient is the intended recipient of the bridged tokens.",
+            "",
+            "If OutputToken::Other, this account will be deserialized to ensure that the recipient is",
+            "the owner of this token account.",
+            ""
+          ],
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "docs": ["account must be encoded in the prepared fill."],
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "instruction_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "complete_transfer_direct",
+      "docs": [
+        "Completes a direct transfer in the swap layer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for completing the direct transfer."
+      ],
+      "discriminator": [233, 87, 221, 31, 40, 175, 108, 183],
+      "accounts": [
+        {
+          "name": "consume_swap_layer_fill",
+          "accounts": [
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            },
+            {
+              "name": "fill",
+              "writable": true
+            },
+            {
+              "name": "fill_custody_token",
+              "docs": [
+                "Custody token account. This account will be closed at the end of this instruction. It just",
+                "acts as a conduit to allow this program to be the transfer initiator in the CCTP message.",
+                ""
+              ],
+              "writable": true
+            },
+            {
+              "name": "source_peer",
+              "accounts": [
+                {
+                  "name": "peer"
+                }
+              ]
+            },
+            {
+              "name": "beneficiary",
+              "writable": true
+            },
+            {
+              "name": "token_router_program"
+            }
+          ]
+        },
+        {
+          "name": "recipient_token_account",
+          "docs": [
+            "Recipient associated token account. The recipient authority check",
+            "is necessary to ensure that the recipient is the intended recipient",
+            "of the bridged tokens. Mutable."
+          ],
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "recipient token account must be encoded in the prepared fill. This recipient",
+            "must also be encoded in the swap message."
+          ]
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "complete_transfer_payload",
+      "docs": [
+        "Completes a payload transfer in the swap layer. This instruction stages",
+        "the inbound transfer and creates a custody token account for the inbound",
+        "transfer. The arbitrary payload is stored in the `staged_inbound` account.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for completing the payload transfer."
+      ],
+      "discriminator": [14, 221, 53, 29, 211, 192, 38, 178],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "consume_swap_layer_fill",
+          "accounts": [
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            },
+            {
+              "name": "fill",
+              "writable": true
+            },
+            {
+              "name": "fill_custody_token",
+              "docs": [
+                "Custody token account. This account will be closed at the end of this instruction. It just",
+                "acts as a conduit to allow this program to be the transfer initiator in the CCTP message.",
+                ""
+              ],
+              "writable": true
+            },
+            {
+              "name": "source_peer",
+              "accounts": [
+                {
+                  "name": "peer"
+                }
+              ]
+            },
+            {
+              "name": "beneficiary",
+              "writable": true
+            },
+            {
+              "name": "token_router_program"
+            }
+          ]
+        },
+        {
+          "name": "staged_inbound",
+          "docs": [
+            "The staged inbound account that will be created to hold the arbitrary",
+            "payload that the recipient will receive. This account also warehouses",
+            "the seeds necessary to derive the staged custody token account."
+          ],
+          "writable": true
+        },
+        {
+          "name": "staged_custody_token",
+          "docs": [
+            "The staged custody token account that will be created to hold the USDC",
+            "that the recipient will receive. This account is derived from the staged",
+            "inbound account."
+          ],
+          "writable": true
+        },
+        {
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "complete_transfer_relay",
+      "docs": [
+        "Completes a transfer with relay in the swap layer. If gas dropoff is",
+        "specified, the program will transfer the requested number of lamports",
+        "from the payer to the relayer. In return, the program will transfer",
+        "the specified number of USDC to the `fee_recipient_token` account.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for completing the transfer relay."
+      ],
+      "discriminator": [201, 115, 7, 40, 86, 54, 76, 213],
+      "accounts": [
+        {
+          "name": "payer",
+          "docs": [
+            "The payer of the transaction. This could either be the recipient or a relayer."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "consume_swap_layer_fill",
+          "accounts": [
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            },
+            {
+              "name": "fill",
+              "writable": true
+            },
+            {
+              "name": "fill_custody_token",
+              "docs": [
+                "Custody token account. This account will be closed at the end of this instruction. It just",
+                "acts as a conduit to allow this program to be the transfer initiator in the CCTP message.",
+                ""
+              ],
+              "writable": true
+            },
+            {
+              "name": "source_peer",
+              "accounts": [
+                {
+                  "name": "peer"
+                }
+              ]
+            },
+            {
+              "name": "beneficiary",
+              "writable": true
+            },
+            {
+              "name": "token_router_program"
+            }
+          ]
+        },
+        {
+          "name": "complete_token_account",
+          "writable": true
+        },
+        {
+          "name": "recipient_token_account",
+          "docs": [
+            "Recipient associated token account. The recipient authority check",
+            "is necessary to ensure that the recipient is the intended recipient",
+            "of the bridged tokens."
+          ],
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "transaction. This instruction verifies that the recipient key",
+            "passed in this context matches the intended recipient in the fill."
+          ],
+          "writable": true
+        },
+        {
+          "name": "fee_recipient_token",
+          "writable": true
+        },
+        {
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "confirm_ownership_transfer_request",
+      "docs": [
+        "Confirms an ownership transfer request.",
+        "",
+        "This instruction confirms the ownership transfer request and sets the new `owner` in the",
+        "`Custodian` account. This instruction can only be called by the `pending_owner`. The",
+        "`pending_owner` must be the same as the `pending_owner` in the `Custodian` account.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for confirming the ownership transfer request."
+      ],
+      "discriminator": [118, 148, 109, 68, 201, 30, 139, 53],
+      "accounts": [
+        {
+          "name": "pending_owner",
+          "docs": ["Must be the pending owner of the program set in the [`Custodian`]", "account."],
+          "signer": true
+        },
+        {
+          "name": "custodian",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "Initializes the swap layer. This instruction must be called once after",
+        "the program is deployed. This instruction initializes the `Custodian`",
+        "account and sets the `owner`, `fee_recipient`, `owner_assistant`, and",
+        "`fee_updater` fields.",
+        "fields.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for the initialization."
+      ],
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+      "accounts": [
+        {
+          "name": "owner",
+          "docs": ["Owner of the program, who presumably deployed this program."],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "custodian",
+          "docs": [
+            "Sender Config account, which saves program data useful for other",
+            "instructions, specifically for outbound transfers. Also saves the payer",
+            "of the [`initialize`](crate::initialize) instruction as the program's",
+            "owner."
+          ],
+          "writable": true
+        },
+        {
+          "name": "owner_assistant"
+        },
+        {
+          "name": "fee_recipient"
+        },
+        {
+          "name": "fee_recipient_token"
+        },
+        {
+          "name": "fee_updater"
+        },
+        {
+          "name": "program_data",
+          "docs": [
+            "We use the program data to make sure this owner is the upgrade authority (the true owner,",
+            "who deployed this program)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initiate_swap_exact_in",
+      "docs": [
+        "Initiates a swap with exact input in the swap layer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for initiating the swap.",
+        "* `instruction_data` - The instruction data for initiating the swap."
+      ],
+      "discriminator": [92, 141, 83, 248, 20, 79, 30, 13],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "prepared_by",
+          "writable": true
+        },
+        {
+          "name": "staged_outbound",
+          "docs": [
+            "Staging for outbound transfer. This account has all of the instructions needed to initiate",
+            "the transfer.",
+            "",
+            "This account may be closed by the end of the instruction if there is no dust after the swap."
+          ],
+          "writable": true
+        },
+        {
+          "name": "staged_custody_token",
+          "docs": [
+            "This custody token account may be closed by the end of the instruction if there is no dust",
+            "after the swap."
+          ],
+          "writable": true
+        },
+        {
+          "name": "usdc_refund_token"
+        },
+        {
+          "name": "target_peer",
+          "accounts": [
+            {
+              "name": "peer"
+            }
+          ]
+        },
+        {
+          "name": "prepared_order",
+          "writable": true
+        },
+        {
+          "name": "swap_authority"
+        },
+        {
+          "name": "src_swap_token",
+          "docs": [
+            "Temporary swap token account to receive source mint from the staged custody token. This",
+            "account will be closed at the end of this instruction."
+          ],
+          "writable": true
+        },
+        {
+          "name": "dst_swap_token",
+          "docs": [
+            "Temporary swap token account to receive destination mint after the swap. This account will",
+            "be closed at the end of this instruction."
+          ],
+          "writable": true
+        },
+        {
+          "name": "src_mint",
+          "docs": ["This account must be verified as the source mint for the swap."]
+        },
+        {
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "token_router_custodian"
+        },
+        {
+          "name": "target_router_endpoint"
+        },
+        {
+          "name": "prepared_custody_token",
+          "writable": true
+        },
+        {
+          "name": "token_router_program"
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "src_token_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "instruction_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "initiate_transfer",
+      "docs": [
+        "Initiates a USDC transfer in the swap layer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for initiating the transfer."
+      ],
+      "discriminator": [128, 229, 77, 5, 65, 234, 228, 75],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "custodian",
+          "accounts": [
+            {
+              "name": "custodian"
+            }
+          ]
+        },
+        {
+          "name": "prepared_by",
+          "writable": true
+        },
+        {
+          "name": "staged_outbound",
+          "docs": [
+            "Staging for outbound transfer. This account has all of the instructions needed to initiate",
+            "the transfer.",
+            "",
+            "This account will be closed by the end of the instruction."
+          ],
+          "writable": true
+        },
+        {
+          "name": "staged_custody_token",
+          "docs": ["This custody token account will be closed by the end of the instruction."],
+          "writable": true
+        },
+        {
+          "name": "usdc_refund_token"
+        },
+        {
+          "name": "target_peer",
+          "accounts": [
+            {
+              "name": "peer"
+            }
+          ]
+        },
+        {
+          "name": "token_router_custodian"
+        },
+        {
+          "name": "target_router_endpoint"
+        },
+        {
+          "name": "prepared_order",
+          "writable": true
+        },
+        {
+          "name": "prepared_custody_token",
+          "writable": true
+        },
+        {
+          "name": "usdc",
+          "accounts": [
+            {
+              "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "token_router_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "release_inbound",
+      "docs": [
+        "Releases an inbound transfer in the swap layer. Only the encoded",
+        "recipient can release the inbound transfer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for releasing the inbound transfer."
+      ],
+      "discriminator": [116, 169, 86, 154, 87, 2, 36, 20],
+      "accounts": [
+        {
+          "name": "recipient",
+          "docs": ["This signer must be the same one encoded in the staged transfer."],
+          "signer": true
+        },
+        {
+          "name": "beneficiary",
+          "docs": [
+            "the payer). If someone were to stage a transfer via a stage transfer ix and he had no",
+            "intention of consuming it, he will be out of luck. We will reward the redeemer with the",
+            "closed account funds with a payer of his choosing."
+          ],
+          "writable": true
+        },
+        {
+          "name": "staged_inbound",
+          "writable": true
+        },
+        {
+          "name": "dst_token",
+          "docs": [
+            "Destination token account, which the redeemer may not own. But because the redeemer is a",
+            "signer and is the one encoded in the Deposit Fill message, he may have the tokens be sent",
+            "to any account he chooses (this one).",
+            ""
+          ],
+          "writable": true
+        },
+        {
+          "name": "staged_custody_token",
+          "docs": [
+            "Staged custody token account. This account will be closed at the end of this instruction."
+          ],
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "stage_outbound",
+      "docs": [
+        "Stages an outbound transfer or swap in the swap layer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for staging the outbound transfer.",
+        "* `args` - The arguments for staging the outbound transfer."
+      ],
+      "discriminator": [69, 205, 153, 23, 99, 248, 131, 98],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender",
+          "docs": [
+            "This signer is mutable in case the integrator wants to separate the payer of accounts from",
+            "the sender, who may be sending lamports ([StageOutboundArgs::is_native] is true)."
+          ],
+          "writable": true,
+          "signer": true,
+          "optional": true
+        },
+        {
+          "name": "program_transfer_authority",
+          "optional": true
+        },
+        {
+          "name": "sender_token",
+          "docs": [
+            "If provided, this token account's mint must be equal to the source mint.",
+            "",
+            "NOTE: This account may not be necessary because the sender may send lamports directly",
+            "([StageOutboundArgs::is_native] is true)."
+          ],
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "target_peer",
+          "accounts": [
+            {
+              "name": "peer"
+            }
+          ]
+        },
+        {
+          "name": "staged_outbound",
+          "docs": [
+            "Staged outbound account, which contains all of the instructions needed to initiate a",
+            "transfer on behalf of the sender."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "staged_custody_token",
+          "docs": [
+            "Custody token account for the staged outbound transfer. This account will be owned by the",
+            "registered peer."
+          ],
+          "writable": true
+        },
+        {
+          "name": "usdc_refund_token",
+          "writable": true
+        },
+        {
+          "name": "src_mint",
+          "docs": ["Mint can either be USDC or whichever mint is used to swap into USDC."]
+        },
+        {
+          "name": "src_token_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "StageOutboundArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "submit_ownership_transfer_request",
+      "docs": [
+        "Submits an ownership transfer request.",
+        "",
+        "This instruction sets the `pending_owner` field in the `Custodian` account. This instruction",
+        "can only be called by the `owner`. The `pending_owner` address must be valid, meaning it",
+        "cannot be the zero address or the current owner.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for submitting the ownership transfer request."
+      ],
+      "discriminator": [215, 13, 88, 199, 48, 195, 19, 225],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "new_owner",
+          "docs": ["New Owner.", ""]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_fee_recipient",
+      "docs": [
+        "Updates the `fee_recipient` field in the `Custodian` account.",
+        "",
+        "This instruction is used to update the `fee_recipient` field in the `Custodian` account. This",
+        "instruction can only be called by the `owner` and `owner_assistant`. The `fee_recipient` must",
+        "be a valid token account. The `fee_recipient` receives any relayer fees received by the swap layer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for updating the fee recipient."
+      ],
+      "discriminator": [249, 0, 198, 35, 183, 123, 57, 188],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "new_fee_recipient_token"
+        },
+        {
+          "name": "new_fee_recipient",
+          "docs": ["New Fee Recipient.", ""]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_fee_updater",
+      "docs": [
+        "Updates the `fee_updater` field in the `Custodian` account.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for updating the fee updater."
+      ],
+      "discriminator": [151, 53, 252, 33, 160, 246, 212, 86],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner_or_assistant",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "new_fee_updater",
+          "docs": ["New Fee Updater.", ""]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_owner_assistant",
+      "docs": [
+        "Updates the `owner_assistant` field in the `Custodian` account.",
+        "",
+        "This instruction is used to update the `owner_assistant` field in the `Custodian` account. This",
+        "instruction can only be called by the `owner`.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for updating the owner assistant."
+      ],
+      "discriminator": [153, 83, 175, 53, 168, 34, 131, 22],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "writable": true
+            }
+          ]
+        },
+        {
+          "name": "new_owner_assistant",
+          "docs": ["New Assistant.", ""]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_peer",
+      "docs": [
+        "Updates a peer in the swap layer. This allows the `owner` to update",
+        "the peer address and relay parameters.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for updating the peer.",
+        "* `args` - The arguments for updating the peer."
+      ],
+      "discriminator": [34, 240, 139, 39, 182, 104, 150, 232],
+      "accounts": [
+        {
+          "name": "admin",
+          "accounts": [
+            {
+              "name": "owner",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "peer",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "AddPeerArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_relay_parameters",
+      "docs": [
+        "Updates the relay parameters in the swap layer.",
+        "",
+        "# Arguments",
+        "",
+        "* `ctx` - The context for updating the relay parameters.",
+        "* `args` - The arguments for updating the relay parameters."
+      ],
+      "discriminator": [14, 75, 26, 86, 220, 131, 198, 205],
+      "accounts": [
+        {
+          "name": "fee_updater",
+          "accounts": [
+            {
+              "name": "fee_updater",
+              "signer": true
+            },
+            {
+              "name": "custodian",
+              "accounts": [
+                {
+                  "name": "custodian"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "peer",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "UpdateRelayParametersArgs"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Custodian",
+      "discriminator": [132, 228, 139, 184, 112, 228, 108, 240]
+    },
+    {
+      "name": "Peer",
+      "discriminator": [50, 8, 19, 55, 40, 253, 37, 58]
+    },
+    {
+      "name": "PreparedFill",
+      "discriminator": [202, 241, 65, 186, 110, 235, 238, 80]
+    },
+    {
+      "name": "StagedInbound",
+      "discriminator": [65, 230, 81, 119, 138, 87, 231, 76]
+    },
+    {
+      "name": "StagedOutbound",
+      "discriminator": [88, 31, 179, 29, 184, 53, 196, 180]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "DummyError"
+    },
+    {
+      "code": 6002,
+      "name": "ExceedsCpiAccountRealloc"
+    },
+    {
+      "code": 6004,
+      "name": "U64Overflow"
+    },
+    {
+      "code": 6032,
+      "name": "InvalidTargetChain"
+    },
+    {
+      "code": 6048,
+      "name": "RelayerFeeOverflow"
+    },
+    {
+      "code": 6256,
+      "name": "AssistantZeroPubkey"
+    },
+    {
+      "code": 6257,
+      "name": "FeeRecipientZeroPubkey"
+    },
+    {
+      "code": 6258,
+      "name": "FeeUpdaterZeroPubkey"
+    },
+    {
+      "code": 6259,
+      "name": "InvalidRedeemMode"
+    },
+    {
+      "code": 6260,
+      "name": "InvalidOutputToken"
+    },
+    {
+      "code": 6261,
+      "name": "InvalidRelayerFee"
+    },
+    {
+      "code": 6262,
+      "name": "InvalidSwapMessage"
+    },
+    {
+      "code": 6263,
+      "name": "InvalidRecipient"
+    },
+    {
+      "code": 6264,
+      "name": "InvalidFeeUpdater"
+    },
+    {
+      "code": 6265,
+      "name": "ChainNotAllowed"
+    },
+    {
+      "code": 6266,
+      "name": "InvalidPeer"
+    },
+    {
+      "code": 6267,
+      "name": "InvalidGasDropoff"
+    },
+    {
+      "code": 6268,
+      "name": "RelayingDisabled"
+    },
+    {
+      "code": 6269,
+      "name": "InvalidExecutionParams"
+    },
+    {
+      "code": 6270,
+      "name": "UnsupportedExecutionParams"
+    },
+    {
+      "code": 6271,
+      "name": "GasConversionOverflow"
+    },
+    {
+      "code": 6272,
+      "name": "GasDropoffCalculationFailed"
+    },
+    {
+      "code": 6273,
+      "name": "ExceedsMaxRelayingFee"
+    },
+    {
+      "code": 6274,
+      "name": "InvalidPreparedOrder"
+    },
+    {
+      "code": 6275,
+      "name": "InvalidFeeRecipient"
+    },
+    {
+      "code": 6276,
+      "name": "PayloadTooLarge"
+    },
+    {
+      "code": 6277,
+      "name": "UnsupportedFillType"
+    },
+    {
+      "code": 6278,
+      "name": "SwapTimeLimitNotExceeded"
+    },
+    {
+      "code": 6280,
+      "name": "ImmutableProgram"
+    },
+    {
+      "code": 6512,
+      "name": "InvalidBaseFee"
+    },
+    {
+      "code": 6513,
+      "name": "InvalidGasPrice"
+    },
+    {
+      "code": 6514,
+      "name": "InvalidGasTokenPrice"
+    },
+    {
+      "code": 6515,
+      "name": "InvalidUpdateThreshold"
+    },
+    {
+      "code": 6516,
+      "name": "InvalidNativeTokenPrice"
+    },
+    {
+      "code": 6517,
+      "name": "InvalidMargin"
+    },
+    {
+      "code": 6518,
+      "name": "EvmGasCalculationFailed"
+    },
+    {
+      "code": 6576,
+      "name": "EitherSenderOrProgramTransferAuthority"
+    },
+    {
+      "code": 6578,
+      "name": "SenderTokenRequired"
+    },
+    {
+      "code": 6580,
+      "name": "SenderRequired"
+    },
+    {
+      "code": 6608,
+      "name": "RelayingFeeExceedsMinAmountOut"
+    },
+    {
+      "code": 6610,
+      "name": "ZeroMinAmountOut"
+    },
+    {
+      "code": 6612,
+      "name": "DelegatedAmountMismatch"
+    },
+    {
+      "code": 6614,
+      "name": "ExactInRequired"
+    },
+    {
+      "code": 6616,
+      "name": "InsufficientAmountIn"
+    },
+    {
+      "code": 6768,
+      "name": "SwapPastDeadline"
+    },
+    {
+      "code": 6770,
+      "name": "InvalidLimitAmount"
+    },
+    {
+      "code": 6772,
+      "name": "InvalidSwapType"
+    },
+    {
+      "code": 6774,
+      "name": "InsufficientAmountOut"
+    },
+    {
+      "code": 6776,
+      "name": "MinAmountOutRequired"
+    },
+    {
+      "code": 6784,
+      "name": "InvalidSourceResidual"
+    },
+    {
+      "code": 6786,
+      "name": "SourceResidualMismatch"
+    },
+    {
+      "code": 6800,
+      "name": "InvalidJupiterV6AuthorityId",
+      "msg": "Jupiter V6 Authority ID must be >= 0 and < 8"
+    },
+    {
+      "code": 6802,
+      "name": "SameMint"
+    },
+    {
+      "code": 6816,
+      "name": "InvalidSwapAuthority"
+    },
+    {
+      "code": 6818,
+      "name": "InvalidSourceSwapToken"
+    },
+    {
+      "code": 6819,
+      "name": "InvalidDestinationSwapToken"
+    },
+    {
+      "code": 6820,
+      "name": "InvalidSourceMint"
+    },
+    {
+      "code": 6821,
+      "name": "InvalidDestinationMint"
+    },
+    {
+      "code": 6832,
+      "name": "NotJupiterV6DirectRoute"
+    },
+    {
+      "code": 6834,
+      "name": "JupiterV6DexProgramMismatch"
+    },
+    {
+      "code": 6836,
+      "name": "InvalidJupiterV6QuotedOutAmount"
+    },
+    {
+      "code": 6838,
+      "name": "SwapFailed"
+    },
+    {
+      "code": 6840,
+      "name": "InvalidSwapInAmount"
+    },
+    {
+      "code": 7024,
+      "name": "NoTransferOwnershipRequest"
+    },
+    {
+      "code": 7025,
+      "name": "NotPendingOwner"
+    },
+    {
+      "code": 7026,
+      "name": "InvalidNewOwner"
+    },
+    {
+      "code": 7027,
+      "name": "AlreadyOwner"
+    },
+    {
+      "code": 7028,
+      "name": "OwnerOnly"
+    },
+    {
+      "code": 7029,
+      "name": "OwnerOrAssistantOnly"
+    }
+  ],
+  "types": [
+    {
+      "name": "AddPeerArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "chain",
+            "type": "u16"
+          },
+          {
+            "name": "address",
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "relay_params",
+            "type": {
+              "defined": {
+                "name": "RelayParams"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Custodian",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "docs": ["Program's owner."],
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_owner",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "owner_assistant",
+            "docs": ["Program's assistant. Can be used to update the relayer fee and swap rate."],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_updater",
+            "docs": ["Program's fee updater. Can be used to update fee parameters and the like."],
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_recipient_token",
+            "docs": ["Program's fee recipient. Receives relayer fees in USDC."],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExecutionParams",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "None"
+          },
+          {
+            "name": "Evm",
+            "fields": [
+              {
+                "name": "gas_price",
+                "type": "u32"
+              },
+              {
+                "name": "gas_price_margin",
+                "type": "u32"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "FillType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Unset"
+          },
+          {
+            "name": "WormholeCctpDeposit"
+          },
+          {
+            "name": "FastFill"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Peer",
+      "docs": ["Foreign Peer account data."],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seeds",
+            "type": {
+              "defined": {
+                "name": "PeerSeeds"
+              }
+            }
+          },
+          {
+            "name": "address",
+            "docs": ["Peer address. Cannot be zero address."],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "relay_params",
+            "docs": ["Relay parameters."],
+            "type": {
+              "defined": {
+                "name": "RelayParams"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PeerSeeds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "chain",
+            "docs": ["Peer chain. Cannot equal `1` (Solana's Chain ID)."],
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PreparedFill",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seeds",
+            "type": {
+              "defined": {
+                "name": "PreparedFillSeeds"
+              }
+            }
+          },
+          {
+            "name": "info",
+            "type": {
+              "defined": {
+                "name": "PreparedFillInfo"
+              }
+            }
+          },
+          {
+            "name": "redeemer_message",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PreparedFillInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "prepared_custody_token_bump",
+            "docs": ["Bump seed for the custody token account associated with [PreparedFill]."],
+            "type": "u8"
+          },
+          {
+            "name": "prepared_by",
+            "docs": ["Who paid the lamports to create the [PreparedFill] account."],
+            "type": "pubkey"
+          },
+          {
+            "name": "fill_type",
+            "docs": ["NOTE: If [FillType::Unset], the [PreparedFill] account is invalid."],
+            "type": {
+              "defined": {
+                "name": "FillType"
+              }
+            }
+          },
+          {
+            "name": "source_chain",
+            "docs": ["Wormhole chain ID reflecting where the order was created."],
+            "type": "u16"
+          },
+          {
+            "name": "order_sender",
+            "docs": ["Universal address of the order sender."],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "redeemer",
+            "docs": ["Authority allowed to redeem [PreparedFill]."],
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "docs": [
+              "Timestamp at the time a fill was issued. This time will either be a VAA time for a direct",
+              "fill from another Token Router or timestamp from [matching_engine::state::FastFill] as a",
+              "result of a market order.",
+              "",
+              "NOTE: This timestamp is not used by the Token Router. It only provides more information for",
+              "an integrator so he can perform special handling based on when the fill happened."
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PreparedFillSeeds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fill_source",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RedeemOption",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Relay",
+            "fields": [
+              {
+                "name": "gas_dropoff",
+                "docs": ["Normalized amount of gas to drop off on destination network."],
+                "type": "u32"
+              },
+              {
+                "name": "max_relayer_fee",
+                "docs": ["Maximum fee that a relayer can charge for the transfer."],
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "Payload",
+            "fields": ["bytes"]
+          }
+        ]
+      }
+    },
+    {
+      "name": "RelayParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base_fee",
+            "type": "u32"
+          },
+          {
+            "name": "native_token_price",
+            "type": "u64"
+          },
+          {
+            "name": "max_gas_dropoff",
+            "type": "u32"
+          },
+          {
+            "name": "gas_dropoff_margin",
+            "type": "u32"
+          },
+          {
+            "name": "execution_params",
+            "type": {
+              "defined": {
+                "name": "ExecutionParams"
+              }
+            }
+          },
+          {
+            "name": "swap_time_limit",
+            "type": {
+              "defined": {
+                "name": "SwapTimeLimit"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StageOutboundArgs",
+      "docs": ["Arguments for [stage_outbound]."],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "min_amount_out",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "is_exact_in",
+            "docs": [
+              "This argument only applies to relays. If exact in is specified, the relaying fee will be",
+              "removed from the amount in. Otherwise it will be added to the amount in to guarantee the",
+              "USDC amount specified above.",
+              "",
+              "For swaps, this argument will determine whether which initiate swap instruction to use."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "target_chain",
+            "docs": ["The Wormhole chain ID of the network to transfer tokens to."],
+            "type": "u16"
+          },
+          {
+            "name": "recipient",
+            "docs": ["The recipient of the transfer."],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "redeem_option",
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "RedeemOption"
+                }
+              }
+            }
+          },
+          {
+            "name": "encoded_output_token",
+            "type": {
+              "option": "bytes"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StagedInbound",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "seeds",
+            "type": {
+              "defined": {
+                "name": "StagedInboundSeeds"
+              }
+            }
+          },
+          {
+            "name": "info",
+            "type": {
+              "defined": {
+                "name": "StagedInboundInfo"
+              }
+            }
+          },
+          {
+            "name": "recipient_payload",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StagedInboundInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "custody_token",
+            "type": "pubkey"
+          },
+          {
+            "name": "staged_by",
+            "docs": ["Payer that created this StagedInbound."],
+            "type": "pubkey"
+          },
+          {
+            "name": "source_chain",
+            "docs": ["Exposed out of convenience for the receiving program."],
+            "type": "u16"
+          },
+          {
+            "name": "sender",
+            "docs": ["The sender of the swap message."],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "recipient",
+            "docs": ["The encoded recipient must be the caller."],
+            "type": "pubkey"
+          },
+          {
+            "name": "is_native",
+            "docs": ["Indicates whether the output token type is Gas."],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StagedInboundSeeds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "prepared_fill",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StagedOutbound",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "info",
+            "type": {
+              "defined": {
+                "name": "StagedOutboundInfo"
+              }
+            }
+          },
+          {
+            "name": "staged_redeem",
+            "type": {
+              "defined": {
+                "name": "StagedRedeem"
+              }
+            }
+          },
+          {
+            "name": "encoded_output_token",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StagedOutboundInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "custody_token_bump",
+            "type": "u8"
+          },
+          {
+            "name": "prepared_by",
+            "docs": ["One who paid the lamports to create [StagedOutbound]."],
+            "type": "pubkey"
+          },
+          {
+            "name": "sender",
+            "docs": ["Sender of the swap message."],
+            "type": "pubkey"
+          },
+          {
+            "name": "target_chain",
+            "docs": ["Wormhole chain ID of the target network."],
+            "type": "u16"
+          },
+          {
+            "name": "recipient",
+            "docs": ["Intended recipient of the transfer."],
+            "type": {
+              "array": ["u8", 32]
+            }
+          },
+          {
+            "name": "is_exact_in",
+            "docs": ["This value is only checked for swaps."],
+            "type": "bool"
+          },
+          {
+            "name": "usdc_refund_token",
+            "docs": [
+              "The specified token account to refund USDC. This account is required by the Token Router",
+              "program in case a fast order is reverted at the Matching Engine after it has been placed."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "min_amount_out",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StagedRedeem",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Direct"
+          },
+          {
+            "name": "Relay",
+            "fields": [
+              {
+                "name": "gas_dropoff",
+                "type": "u32"
+              },
+              {
+                "name": "relaying_fee",
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "Payload",
+            "fields": ["bytes"]
+          }
+        ]
+      }
+    },
+    {
+      "name": "SwapTimeLimit",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fast_limit",
+            "type": "u16"
+          },
+          {
+            "name": "finalized_limit",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateRelayParametersArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "chain",
+            "type": "u16"
+          },
+          {
+            "name": "relay_params",
+            "type": {
+              "defined": {
+                "name": "RelayParams"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

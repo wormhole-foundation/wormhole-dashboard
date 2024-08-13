@@ -145,7 +145,7 @@ export type AuctionUpdatedEvent = {
   data: AuctionUpdated;
 };
 
-export type RedeemSwap = {
+export type TransferCompletion = {
   tx_hash: string;
   recipient: string;
   output_token: string;
@@ -153,4 +153,6 @@ export type RedeemSwap = {
   relaying_fee: bigint;
   redeem_time: Date;
   fill_id: string;
+  // on Solana Swap Layer, this acts as a link between complete_{transfer, swap}_payload and release_inbound
+  staged_inbound?: string;
 };

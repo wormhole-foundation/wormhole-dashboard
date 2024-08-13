@@ -6,11 +6,14 @@ export type FastTransferContracts = 'MatchingEngine' | 'TokenRouter' | 'USDCMint
 export type MatchingEngineProgramId = 'mPydpGUWxzERTNpyvTKdvS7v8kvw5sgwfiP8WQFrXVS';
 export type TokenRouterProgramId = 'tD8RmtdcV7bzBeuFgyrFc8wvayj988ChccEzRQzo6md';
 export type USDCMintAddress = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
+export type SwapLayerProgramId = 'SwapLayer1111111111111111111111111111111111';
 
 export interface SolanaContractAddresses {
   MatchingEngine: MatchingEngineProgramId;
   TokenRouter: TokenRouterProgramId;
   USDCMint: USDCMintAddress;
+  // Devnet has no swap layer as they need the mainnet quotes from Uniswap
+  SwapLayer?: SwapLayerProgramId;
 }
 
 export interface EthereumContractAddresses {

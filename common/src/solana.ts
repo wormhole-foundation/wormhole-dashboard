@@ -5,6 +5,7 @@ import {
   MessageV0,
   PublicKeyInitData,
   PublicKey,
+  VersionedTransactionResponse,
 } from '@solana/web3.js';
 import axios from 'axios';
 import { decode } from 'bs58';
@@ -127,4 +128,50 @@ export function parseWormholeSequenceFromLogs(logs: string[]): number | null {
     }
   }
   return null;
+}
+
+export function blockTimeToDate(blockTime: number) {
+  return new Date(blockTime * 1000);
+}
+
+/**
+ * Calculates the change in token balance for a specified token within an associated token account
+ * owned by a given owner. If the tokenBalance is not found, an amount of 0n is to be assumed
+ *
+ * @param transaction - The transaction object, which contains metadata and details about pre and post
+ * transaction states, including token balances.
+ * @param owner - The public key of the owner of the associated token account whose token balance
+ * change is to be calculated.
+ * @param mint - The mint address of the specific token for which the balance change is to be calculated.
+ *
+ * @returns The difference between the token balance after the transaction (`postTokenBalance`) and
+ * the token balance before the transaction (`preTokenBalance`). This value is returned as a `BigInt`
+ * and represents the change in token balance for the specified owner and token.
+ */
+export function getTokenBalanceChange(
+  transaction: VersionedTransactionResponse,
+  owner: string,
+  mint: string
+) {
+  const preTokenBalances = transaction.meta?.preTokenBalances || [];
+  const postTokenBalances = transaction.meta?.postTokenBalances || [];
+
+  const preTokenBalance = preTokenBalances.find((tb) => tb.mint === mint && tb.owner === owner) || {
+    uiTokenAmount: {
+      amount: 0n,
+    },
+  };
+
+  const postTokenBalance = postTokenBalances.find(
+    (tb) => tb.mint === mint && tb.owner === owner
+  ) || {
+    uiTokenAmount: {
+      amount: 0n,
+    },
+  };
+
+  const change =
+    BigInt(postTokenBalance.uiTokenAmount.amount) - BigInt(preTokenBalance.uiTokenAmount.amount);
+
+  return change;
 }

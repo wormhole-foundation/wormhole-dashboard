@@ -10,6 +10,7 @@ import {
   NTTEvmChain,
   NTTChain,
   nttChains,
+  retry,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { EvmPlatform } from '@wormhole-foundation/sdk-evm';
 import { SolanaPlatform } from '@wormhole-foundation/sdk-solana';
@@ -76,7 +77,7 @@ async function computeNTTRateLimits_(
   let totalInboundCapacity = 0n;
   const inboundRateLimits = await Promise.all(
     inboundChains.map(async (inboundChain): Promise<NTTRateLimit> => {
-      const inboundCapacity = await ntt.getCurrentInboundCapacity(inboundChain);
+      const inboundCapacity = await retry(() => ntt.getCurrentInboundCapacity(inboundChain));
       totalInboundCapacity += inboundCapacity;
 
       return {
@@ -91,7 +92,7 @@ async function computeNTTRateLimits_(
     })
   );
 
-  const outboundCapacity = await ntt.getCurrentOutboundCapacity();
+  const outboundCapacity = await retry(() => ntt.getCurrentOutboundCapacity());
 
   return {
     tokenName: token,

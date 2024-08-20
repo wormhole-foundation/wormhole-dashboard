@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { keccak256 } from '@wormhole-foundation/sdk-definitions';
+import { retry } from './utils';
 
 export async function callContractMethod(
   rpc: string,
@@ -23,7 +24,7 @@ export async function callContractMethod(
   };
 
   try {
-    const response = await axios.post(rpc, payload);
+    const response = await retry(() => axios.post(rpc, payload));
     if (response.data.error) {
       throw new Error(`Error calling contract method: ${response.data.error.message}`);
     }

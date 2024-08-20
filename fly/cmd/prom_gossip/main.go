@@ -137,12 +137,12 @@ func main() {
 	if env == node_common.MainNet {
 		guardians = common.MainnetGuardians
 		knownEmitter = sdk.KnownEmitters
-		rpcUrl = "https://rpc.ankr.com/eth"
+		rpcUrl = "https://ethereum-rpc.publicnode.com"
 		coreBridgeAddr = "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B"
 	} else if env == node_common.TestNet {
 		guardians = common.TestnetGuardians
 		knownEmitter = sdk.KnownTestnetEmitters
-		rpcUrl = "https://rpc.ankr.com/eth_holesky"
+		rpcUrl = "https://ethereum-holesky-rpc.publicnode.com"
 		coreBridgeAddr = "0xa10f2eF61dE1f19f586ab8B6F2EbA89bACE63F7a"
 	} else if env == node_common.UnsafeDevNet {
 		guardians = common.DevnetGuardians
@@ -259,8 +259,11 @@ func main() {
 				}
 				emitter := strings.ToLower(spl[1])
 				addr := "0x" + string(hex.EncodeToString(o.Msg.Addr))
-				idx := guardianIndexMap[strings.ToLower(addr)]
-				name := guardianIndexToNameMap[idx]
+				name := addr
+				idx, found := guardianIndexMap[strings.ToLower(addr)]
+				if found {
+					name = guardianIndexToNameMap[idx]
+				}
 				observationsByGuardianPerChain.WithLabelValues(name, chain.String()).Inc()
 				if knownEmitters[emitter] {
 					tbObservationsByGuardianPerChain.WithLabelValues(name, chain.String()).Inc()
@@ -352,8 +355,11 @@ func main() {
 			case g := <-govConfigC:
 				gossipByType.WithLabelValues("gov_config").Inc()
 				addr := "0x" + string(hex.EncodeToString(g.GuardianAddr))
-				idx := guardianIndexMap[strings.ToLower(addr)]
-				name := guardianIndexToNameMap[idx]
+				name := addr
+				idx, found := guardianIndexMap[strings.ToLower(addr)]
+				if found {
+					name = guardianIndexToNameMap[idx]
+				}
 				govConfigByGuardian.WithLabelValues(name).Inc()
 			}
 		}
@@ -368,8 +374,11 @@ func main() {
 			case g := <-govStatusC:
 				gossipByType.WithLabelValues("gov_status").Inc()
 				addr := "0x" + string(hex.EncodeToString(g.GuardianAddr))
-				idx := guardianIndexMap[strings.ToLower(addr)]
-				name := guardianIndexToNameMap[idx]
+				name := addr
+				idx, found := guardianIndexMap[strings.ToLower(addr)]
+				if found {
+					name = guardianIndexToNameMap[idx]
+				}
 				govStatusByGuardian.WithLabelValues(name).Inc()
 			}
 		}

@@ -10,6 +10,7 @@ import axios from 'axios';
 import { decode } from 'bs58';
 import { encoding } from '@wormhole-foundation/sdk-base';
 import { TokenAmount } from './types';
+import { retry } from './utils';
 
 export const isLegacyMessage = (message: Message | MessageV0): message is Message => {
   return message.version === 'legacy';
@@ -43,7 +44,7 @@ export const getSolanaTokenDecimals = async (rpc: string, mintAddress: string): 
   };
 
   try {
-    const response = await axios.post(rpc, payload);
+    const response = await retry(() => axios.post(rpc, payload));
     const result = response.data.result;
     if (result?.value?.data?.parsed?.info?.decimals !== undefined) {
       return result.value.data.parsed.info.decimals;
@@ -106,7 +107,7 @@ export async function makeRpcCall(
     ],
   };
 
-  const response = await axios.post(rpcUrl, payload);
+  const response = await retry(() => axios.post(rpcUrl, payload));
   if (response.data.error) {
     throw new Error(`Error fetching ${method} account: ${response.data.error.message}`);
   }

@@ -214,3 +214,24 @@ export async function sendToPagerDuty(info: PagerDutyInfo): Promise<any> {
   }
   return response.data.data;
 }
+
+// Retry utility function
+export async function retry<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delay = 1000,
+  retryCount = 0
+): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retryCount >= retries) {
+      console.error(`Failed after ${retries} retries:`, error);
+      throw error;
+    } else {
+      console.warn(`Retrying (${retryCount + 1}/${retries})...`, error);
+      await new Promise((resolve) => setTimeout(resolve, delay * (retryCount + 1)));
+      return retry(fn, retries, delay, retryCount + 1);
+    }
+  }
+}

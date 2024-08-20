@@ -19,6 +19,7 @@ import (
 	ipfslog "github.com/ipfs/go-log/v2"
 	"github.com/joho/godotenv"
 	"github.com/libp2p/go-libp2p/core/crypto"
+	fly_common "github.com/wormhole-foundation/wormhole-monitor/fly/common"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
 	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 
@@ -129,6 +130,7 @@ func loadEnvVars() {
 	rpcUrl = verifyEnvVar("RPC_URL")
 	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
 	credentialsFile = verifyEnvVar("CREDENTIALS_FILE")
+	network = verifyEnvVar("NETWORK")
 }
 
 func verifyEnvVar(key string) string {
@@ -219,6 +221,12 @@ func main() {
 	idx, sgs, err := utils.FetchCurrentGuardianSet(rpcUrl, coreBridgeAddr)
 	if err != nil {
 		logger.Fatal("Failed to fetch guardian set", zap.String("rpc", rpcUrl), zap.Error(err))
+	}
+	if env == common.MainNet {
+		// watch heartbeats for standby guardians
+		for _, ge := range fly_common.StandbyMainnetGuardians {
+			sgs.Keys = append(sgs.Keys, eth_common.HexToAddress(ge.Address))
+		}
 	}
 	logger.Info("guardian set", zap.Uint32("index", idx), zap.Any("gs", sgs))
 	gs := common.GuardianSet{

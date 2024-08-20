@@ -60,7 +60,7 @@ CREATE TABLE fast_transfer_executions (
   execution_slot BIGINT,
   execution_time TIMESTAMP,
   -- fill_id can be a vaa id (cctp) or solana account pubkey (local)
-  fill_id VARCHAR(255),
+  fill_id VARCHAR(255)
 );
 
 -- Settlement is created when the settlement is created in the `settleFastTransfer`

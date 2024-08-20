@@ -51,41 +51,45 @@ export class SwapLayerParser {
    */
   private async processTransaction(
     transaction: VersionedTransactionResponse
-  ): Promise<TransferCompletion | null> {
+  ): Promise<TransferCompletion[]> {
     const sig = transaction.transaction.signatures[0];
     const programInstructions = this.getProgramInstructions(transaction);
 
-    for (const { ix } of programInstructions) {
-      const decoded = this.swapLayerBorshCoder.instruction.decode(Buffer.from(ix.data));
-      if (!decoded) continue;
+    const results = await Promise.all(
+      programInstructions.map(async ({ ix }) => {
+        const decoded = this.swapLayerBorshCoder.instruction.decode(Buffer.from(ix.data));
+        if (!decoded) return null;
 
-      try {
-        switch (decoded.name) {
-          case 'complete_swap_direct':
-          case 'complete_swap_relay':
-          case 'complete_swap_payload':
-            return await this.parseSwapInstruction(transaction, ix, decoded.name);
+        try {
+          switch (decoded.name) {
+            case 'complete_swap_direct':
+            case 'complete_swap_relay':
+            case 'complete_swap_payload':
+              return await this.parseSwapInstruction(transaction, ix, decoded.name);
 
-          case 'complete_transfer_direct':
-          case 'complete_transfer_relay':
-          case 'complete_transfer_payload':
-            return await this.parseTransferInstruction(transaction, ix, decoded.name);
+            case 'complete_transfer_direct':
+            case 'complete_transfer_relay':
+            case 'complete_transfer_payload':
+              return await this.parseTransferInstruction(transaction, ix, decoded.name);
 
-          case 'release_inbound':
-            return await this.parseReleaseInbound(transaction, ix, decoded.name);
+            case 'release_inbound':
+              return await this.parseReleaseInbound(transaction, ix, decoded.name);
 
-          default:
-            // we will not log when there are unknown instructions to prevent log congestion
-            continue;
+            default:
+              // Skip unknown instructions
+              // we will not log when there are unknown instructions to prevent log congestion
+              return null;
+          }
+        } catch (error) {
+          console.error(`Error processing ${decoded.name} in transaction ${sig}:`, error);
+          // Continue to the next instruction if there's an error
+          return null;
         }
-      } catch (error) {
-        console.error(`Error processing ${decoded.name} in transaction ${sig}:`, error);
-        // Continue to the next instruction if there's an error
-        continue;
-      }
-    }
+      })
+    );
 
-    return null;
+    // Filter out any null results
+    return results.filter((result): result is TransferCompletion => result !== null);
   }
 
   /**
@@ -93,14 +97,14 @@ export class SwapLayerParser {
    *
    * @param signature - The signature of the transaction to fetch and process.
    *
-   * @returns A `TransferCompletion` object containing parsed details from the transaction,
-   *   or `null` if no relevant instructions were found.
+   * @returns An array of `TransferCompletion` objects containing parsed details from the transaction.
+   *   If no relevant instructions were found, an empty array is returned.
    */
-  async parseTransaction(signature: string): Promise<TransferCompletion | null> {
+  async parseTransaction(signature: string): Promise<TransferCompletion[]> {
     const transaction = await this.connection.getTransaction(signature, {
       maxSupportedTransactionVersion: 0,
     });
-    if (!transaction) return null;
+    if (!transaction) return [];
 
     return this.processTransaction(transaction);
   }
@@ -123,15 +127,14 @@ export class SwapLayerParser {
       (tx): tx is VersionedTransactionResponse => tx !== null
     );
 
-    // Process each transaction and filter out null results
+    // Process each transaction and gather the results
     const promises = nonNullTransactions.map(async (tx) => await this.processTransaction(tx));
 
     const results = await Promise.all(promises);
 
-    // Filter out null results from the processed transactions
-    return results.filter((res): res is TransferCompletion => res !== null);
+    // Flatten the array and filter out any null values
+    return results.flat().filter((res): res is TransferCompletion => res !== null);
   }
-
   // === parsing logic ===
 
   /**
@@ -223,9 +226,7 @@ export class SwapLayerParser {
       throw new Error(`Transaction block time not found: ${sig}`);
     }
 
-    const instructionConfig = this.getInstructionConfig(instructionName);
-
-    const { fillAccountIndex, recipientIndex } = instructionConfig;
+    const { fillAccountIndex, recipientIndex } = this.getInstructionConfig(instructionName);
 
     if (ix.accountKeyIndexes.length <= recipientIndex) {
       throw new Error(`${INSUFFICIENT_ACCOUNTS} for ${instructionName} in ${sig}`);

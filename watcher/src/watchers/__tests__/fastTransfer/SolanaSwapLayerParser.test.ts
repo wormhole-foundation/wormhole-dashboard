@@ -156,6 +156,7 @@ describe('SwapLayerParser', () => {
     const txHash =
       '32goGrEsPb6Kky65Z4wX6wswzjDbT9pBWs1HSZFsfWhxoA1fnSsoE9hJgtepPL8VyKQJUdRrfGWPrXCizDufArwR';
     const result = await parser.parseTransaction(txHash);
+    expect(result.length).toBe(1);
     const expected = {
       fill_id: 'BkWHY4H2kEVevdUeiRmFYNtg5zURRbTEtjt29KWdbjzV',
       output_token: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
@@ -168,7 +169,7 @@ describe('SwapLayerParser', () => {
       relaying_fee: '0',
     };
 
-    const serializedRes = seralizedRes(result);
+    const serializedRes = seralizedRes(result[0]);
     expect(serializedRes).toEqual(expected);
   });
 
@@ -177,6 +178,7 @@ describe('SwapLayerParser', () => {
       '4EWH6ZetTTjdYSbxqXddKNKLKDpBctELAhqChmkey2jwunZaj1Digj1fQxBMxtw6uhDeqkX3ev2vucu7jrexhWka';
 
     const result = await parser.parseTransaction(txHash);
+    expect(result.length).toBe(1);
 
     const expected = {
       recipient: 'FQ4PBuykgHqemPhqqktJL9y1L7oTbShYiwGkwgM1VceF',
@@ -190,7 +192,7 @@ describe('SwapLayerParser', () => {
       staged_inbound: undefined,
     };
 
-    const serializedRes = seralizedRes(result);
+    const serializedRes = seralizedRes(result[0]);
     expect(serializedRes).toEqual(expected);
   });
 
@@ -199,6 +201,7 @@ describe('SwapLayerParser', () => {
       '3Ufce773W4xgVsZiGBhSRPQssfaNdrEWeTBPLTnQSFZHsVx9ADaSN9yQBF6kcQMyDAoAnM3BVU88tQ2TbDZn1kUJ';
 
     const result = await parser.parseTransaction(txHash);
+    expect(result.length).toBe(1);
     const expected = {
       recipient: 'GcppBeM1UYGU4b7aX9uPAqL4ZEUThNHt5FpxPtzBE1xx',
       tx_hash:
@@ -210,7 +213,7 @@ describe('SwapLayerParser', () => {
       output_amount: '49564106',
       staged_inbound: undefined,
     };
-    const serializedRes = seralizedRes(result);
+    const serializedRes = seralizedRes(result[0]);
     expect(serializedRes).toEqual(expected);
   });
 
@@ -219,6 +222,7 @@ describe('SwapLayerParser', () => {
       '39K8aHVDmyAjne6J4PBFkvmKZH9CQR9QpbmTFafeiTLxeWg5n5RgcRdX5AYhebLR9shiUHrDeqg4YSD1EhRZNpS1';
 
     const result = await parser.parseTransaction(txHash);
+    expect(result.length).toBe(1);
     const expected = {
       fill_id: 'Hru6CBfyXtG18zF33DnXEjmECjgj1eMjNfPRaESBqpUr',
       output_token: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
@@ -230,7 +234,7 @@ describe('SwapLayerParser', () => {
         '39K8aHVDmyAjne6J4PBFkvmKZH9CQR9QpbmTFafeiTLxeWg5n5RgcRdX5AYhebLR9shiUHrDeqg4YSD1EhRZNpS1',
       relaying_fee: '0',
     };
-    const serializedRes = seralizedRes(result);
+    const serializedRes = seralizedRes(result[0]);
     expect(serializedRes).toEqual(expected);
   });
 
@@ -239,6 +243,7 @@ describe('SwapLayerParser', () => {
       'eo2CugBsJ9Efbtg9TAiYyBvvZZsbh93ZZcLDxxjbmbEpZojCF8BDphVVrCjXtMkSLaP2EGQE5zSrjU4r6fxsxRP';
 
     const result = await parser.parseTransaction(txHash);
+    expect(result.length).toBe(1);
     const expected = {
       recipient: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
       tx_hash:
@@ -250,7 +255,7 @@ describe('SwapLayerParser', () => {
       output_amount: '0',
       staged_inbound: 'ECiEWJndTfUJaEQ59gYgy6e4331mkrh1USQCmDcBwBvj',
     };
-    const serializedRes = seralizedRes(result);
+    const serializedRes = seralizedRes(result[0]);
     expect(serializedRes).toEqual(expected);
   });
 
@@ -259,6 +264,7 @@ describe('SwapLayerParser', () => {
       '4yCcw8MJ1BokhPJM2fQC3BMfoezteM4MkaHLfjPrLG25AEW4EeNxcNsrgU3ECkwQ1sy3AKFseafxM2mfjdwbzo8x';
 
     const result = await parser.parseTransaction(txHash);
+    expect(result.length).toBe(1);
     const expected = {
       fill_id: 'ESccxJbedTgsu7kwK6uNWnMrg3GiD7pgexXfWeyZNK3J',
       output_token: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
@@ -270,7 +276,7 @@ describe('SwapLayerParser', () => {
         '4yCcw8MJ1BokhPJM2fQC3BMfoezteM4MkaHLfjPrLG25AEW4EeNxcNsrgU3ECkwQ1sy3AKFseafxM2mfjdwbzo8x',
       relaying_fee: '0',
     };
-    const serializedRes = seralizedRes(result);
+    const serializedRes = seralizedRes(result[0]);
     expect(serializedRes).toEqual(expected);
   });
 
@@ -279,6 +285,7 @@ describe('SwapLayerParser', () => {
       '2EFLPdYpdJzeoe4HD4fNRWwphhy9HyEHFj3EQtY9agUPmQ5LjJkXFjEt5dnshS9sSTby9nN2QF9BaCbVyiBFGLxj';
 
     const result = await parser.parseTransaction(txHash);
+    expect(result.length).toBe(1);
     const expected = {
       tx_hash:
         '2EFLPdYpdJzeoe4HD4fNRWwphhy9HyEHFj3EQtY9agUPmQ5LjJkXFjEt5dnshS9sSTby9nN2QF9BaCbVyiBFGLxj',
@@ -290,7 +297,7 @@ describe('SwapLayerParser', () => {
       output_amount: '6900000000',
       staged_inbound: 'GFJ6699xu2BER8t98S4Vy6ZQam4mvr539AaqvHHBh9i3',
     };
-    const serializedRes = seralizedRes(result);
+    const serializedRes = seralizedRes(result[0]);
     expect(serializedRes).toEqual(expected);
   });
 });

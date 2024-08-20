@@ -84,6 +84,7 @@ const supportedChains: Chain[] =
         'Mantle',
         'Blast',
         'Xlayer',
+        'Snaxchain',
         'Wormchain',
       ];
 

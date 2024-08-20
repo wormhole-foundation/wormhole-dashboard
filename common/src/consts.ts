@@ -49,6 +49,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Blast: '2375628',
     Sei: '238594',
     Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A  },
+    Snaxchain: '306315',
   },
   ['Testnet']: {
     Ethereum: '0',

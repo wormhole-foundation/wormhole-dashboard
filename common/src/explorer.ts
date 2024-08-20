@@ -70,6 +70,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://lineascan.build/block/${block}`
       : chainId === chainToChainId('Berachain')
       ? `https://beratrail.io/block/${block}`
+      : chainId === chainToChainId('Snaxchain')
+      ? `https://snaxchain.io/${block}`
       : chainId === chainToChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/blocks/${block}`
       : ''
@@ -195,6 +197,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://lineascan.build/tx/${tx}`
       : chainId === chainToChainId('Berachain')
       ? `https://bartio.beratrail.io/tx/${tx}`
+      : chainId === chainToChainId('Snaxchain')
+      ? `https://snaxchain.io/tx/${tx}`
       : chainId === chainToChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/transactions/${tx}`
       : ''

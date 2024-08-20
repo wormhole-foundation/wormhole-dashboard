@@ -39,6 +39,10 @@ var MainnetGuardians = []GuardianEntry{
 	{18, "Staking Facilities", "0x6FbEBc898F403E4773E95feB15E80C9A99c8348d"},
 }
 
+var StandbyMainnetGuardians = []GuardianEntry{
+	{19, "Google Cloud", "0x68c16a92903c4c74ffddc730582ba53d967d3dac"},
+}
+
 // Although there are multiple testnet guardians running, they all use the same key, so it looks like one.
 var TestnetGuardians = []GuardianEntry{
 	{0, "Testnet", "0x13947Bd48b18E53fdAeEe77F3473391aC727C638"},

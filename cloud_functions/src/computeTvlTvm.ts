@@ -6,8 +6,10 @@ import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   AccountEntry,
   assertEnvironmentVariable,
+  isTokenDenylisted,
   TokenMetaDatum,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import { toChain, toChainId } from '@wormhole-foundation/sdk-base';
 
 const WORMCHAIN_URLS: string[] = [
   'https://gateway.mainnet.xlabs.xyz',
@@ -115,6 +117,11 @@ async function populateMaps() {
   const metaData: TokenMetaDatum[] = await getTokenMetadata();
   console.log(`Got ${metaData.length} token metadata entries`);
   for (const md of metaData) {
+    try {
+      if (isTokenDenylisted(toChainId(toChain(md.token_chain)), md.native_address)) continue;
+    } catch (e) {
+      // The metadata table has a chain that the SDK doesn't know about, yet.  Don't want to fail or skip the token.
+    }
     const key = `${md.token_chain}/${md.token_address}`;
     // wormhole supports a maximum of 8 decimals
     if (md.decimals > 8) {

@@ -18,7 +18,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import { Heartbeat } from '../utils/getLastHeartbeats';
-import { GUARDIAN_SET_4, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  GUARDIAN_SET_4,
+  STANDBY_GUARDIANS,
+  chainIdToName,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 export const BEHIND_DIFF = 1000;
 export const CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD = 2;
@@ -56,15 +60,23 @@ function chainDownAlerts(
   chainIdsToHeartbeats: ChainIdToHeartbeats,
   environment: Environment
 ): AlertEntry[] {
+  // don't count standby guardians in chain down alerts
+  const filteredHeartbeats = heartbeats.filter(
+    (hb) => !STANDBY_GUARDIANS.find((g) => g.pubkey.toLowerCase() === hb.guardianAddr.toLowerCase())
+  );
   const downChains: { [chainId: string]: string[] } = {};
   Object.entries(chainIdsToHeartbeats)
     // Aurora is known to be disabled, no need to alert on it
     .filter(([chainId]) => chainId !== chainToChainId('Aurora').toString())
     .forEach(([chainId, chainHeartbeats]) => {
+      // don't count standby guardians in chain down alerts
+      const filteredChainHeartbeats = chainHeartbeats.filter(
+        (hb) => !STANDBY_GUARDIANS.find((g) => g.pubkey.toLowerCase() === hb.guardian.toLowerCase())
+      );
       // Search for known guardians without heartbeats
-      const missingGuardians = heartbeats.filter(
+      const missingGuardians = filteredHeartbeats.filter(
         (guardianHeartbeat) =>
-          chainHeartbeats.findIndex(
+          filteredChainHeartbeats.findIndex(
             (chainHeartbeat) => chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
           ) === -1
       );
@@ -78,7 +90,7 @@ function chainDownAlerts(
       // Could be disconnected or erroring post initial checks
       // Track highest height to check for lagging guardians
       let highest = BigInt(0);
-      chainHeartbeats.forEach((chainHeartbeat) => {
+      filteredChainHeartbeats.forEach((chainHeartbeat) => {
         const height = BigInt(chainHeartbeat.network.height);
         if (height > highest) {
           highest = height;
@@ -91,7 +103,7 @@ function chainDownAlerts(
         }
       });
       // Search for guardians which are lagging significantly behind
-      chainHeartbeats.forEach((chainHeartbeat) => {
+      filteredChainHeartbeats.forEach((chainHeartbeat) => {
         if (chainHeartbeat.network.height !== '0') {
           const height = BigInt(chainHeartbeat.network.height);
           const diff = highest - height;

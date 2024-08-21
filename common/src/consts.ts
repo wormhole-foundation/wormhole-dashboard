@@ -311,6 +311,13 @@ export const GUARDIAN_SET_4 = [
   },
 ];
 
+export const STANDBY_GUARDIANS = [
+  {
+    pubkey: '0x68c16a92903c4c74ffddc730582ba53d967d3dac',
+    name: 'Google Cloud',
+  },
+];
+
 export type GuardianSetInfo = {
   timestamp: string;
   contract: string;

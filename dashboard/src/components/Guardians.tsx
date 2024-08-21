@@ -33,12 +33,13 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  SortingState,
   createColumnHelper,
   getCoreRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
+import { chainIdToName, STANDBY_GUARDIANS } from '@wormhole-foundation/wormhole-monitor-common';
 import { useCallback, useMemo, useState } from 'react';
 import TimeAgo from 'react-timeago';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
@@ -46,7 +47,6 @@ import { Heartbeat } from '../utils/getLastHeartbeats';
 import { isHeartbeatUnhealthy } from './Chains';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
-import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const columnHelper = createColumnHelper<Heartbeat>();
 
@@ -298,6 +298,21 @@ function Guardians({
   chainIdsToHeartbeats: ChainIdToHeartbeats;
   latestRelease: string | null;
 }) {
+  const [guardianHeartbeats, standbyHeartbeats] = useMemo(
+    () =>
+      heartbeats.reduce(
+        ([guardian, standby], hb) => {
+          if (
+            STANDBY_GUARDIANS.find((g) => g.pubkey.toLowerCase() === hb.guardianAddr.toLowerCase())
+          ) {
+            return [guardian, [...standby, hb]];
+          }
+          return [[...guardian, hb], standby];
+        },
+        [[] as Heartbeat[], [] as Heartbeat[]]
+      ),
+    [heartbeats]
+  );
   const highestByChain = useMemo(
     () =>
       Object.entries(chainIdsToHeartbeats).reduce((obj, [chainId, heartbeats]) => {
@@ -316,7 +331,18 @@ function Guardians({
   const [sorting, setSorting] = useState<SortingState>([]);
   const table = useReactTable({
     columns,
-    data: heartbeats,
+    data: guardianHeartbeats,
+    state: {
+      sorting,
+    },
+    getRowId: (heartbeat) => `${heartbeat.guardianAddr}-${heartbeat.nodeName}`,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+  });
+  const standbyTable = useReactTable({
+    columns,
+    data: standbyHeartbeats,
     state: {
       sorting,
     },
@@ -348,7 +374,7 @@ function Guardians({
     let numWarnings = 0;
     let numErrors = 0;
     const chainCount = Object.keys(highestByChain).length;
-    for (const heartbeat of heartbeats) {
+    for (const heartbeat of guardianHeartbeats) {
       const healthyCount = heartbeat.networks.reduce(
         (count, network) =>
           isHeartbeatUnhealthy(
@@ -373,7 +399,7 @@ function Guardians({
       numWarnings,
       numErrors,
     };
-  }, [heartbeats, highestByChain]);
+  }, [guardianHeartbeats, highestByChain]);
   return (
     <CollapsibleSection
       header={
@@ -464,20 +490,43 @@ function Guardians({
       }
     >
       {display === 'cards' ? (
-        <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
-          {heartbeats.map((hb) => (
-            <GuardianCard
-              key={`${hb.guardianAddr}-${hb.nodeName}`}
-              heartbeat={hb}
-              highestByChain={highestByChain}
-              latestRelease={latestRelease}
-            />
-          ))}
-        </Box>
+        <>
+          <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
+            {guardianHeartbeats.map((hb) => (
+              <GuardianCard
+                key={`${hb.guardianAddr}-${hb.nodeName}`}
+                heartbeat={hb}
+                highestByChain={highestByChain}
+                latestRelease={latestRelease}
+              />
+            ))}
+          </Box>
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+            Standby Guardians
+          </Typography>
+          <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
+            {standbyHeartbeats.map((hb) => (
+              <GuardianCard
+                key={`${hb.guardianAddr}-${hb.nodeName}`}
+                heartbeat={hb}
+                highestByChain={highestByChain}
+                latestRelease={latestRelease}
+              />
+            ))}
+          </Box>
+        </>
       ) : (
-        <Card>
-          <Table<Heartbeat> table={table} showRowCount />
-        </Card>
+        <>
+          <Card>
+            <Table<Heartbeat> table={table} showRowCount />
+          </Card>
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+            Standby Guardians
+          </Typography>
+          <Card>
+            <Table<Heartbeat> table={standbyTable} showRowCount />
+          </Card>
+        </>
       )}
     </CollapsibleSection>
   );

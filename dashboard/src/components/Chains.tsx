@@ -23,16 +23,19 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import {
-  SortingState,
   createColumnHelper,
   getCoreRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
+import { chainToChainId } from '@wormhole-foundation/sdk-base';
+import { chainIdToName, STANDBY_GUARDIANS } from '@wormhole-foundation/wormhole-monitor-common';
 import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
+import { CHAIN_ICON_MAP } from '../utils/consts';
 import {
   BEHIND_DIFF,
   CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD,
@@ -42,9 +45,6 @@ import {
 } from './Alerts';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
-import { CHAIN_ICON_MAP } from '../utils/consts';
-import { chainToChainId } from '@wormhole-foundation/sdk-base';
-import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 
 const columnHelper = createColumnHelper<HeartbeatInfo>();
 
@@ -111,6 +111,19 @@ function Chain({
   conditionalRowStyle?: ((a: HeartbeatInfo) => SxProps<Theme> | undefined) | undefined;
   environment: Environment;
 }) {
+  const [guardianHeartbeats, standbyHeartbeats] = useMemo(
+    () =>
+      heartbeats.reduce(
+        ([guardian, standby], hb) => {
+          if (STANDBY_GUARDIANS.find((g) => g.pubkey.toLowerCase() === hb.guardian.toLowerCase())) {
+            return [guardian, [...standby, hb]];
+          }
+          return [[...guardian, hb], standby];
+        },
+        [[] as HeartbeatInfo[], [] as HeartbeatInfo[]]
+      ),
+    [heartbeats]
+  );
   const smUp = useMediaQuery((theme: any) => theme.breakpoints.up('sm'));
   const {
     settings: { showChainName },
@@ -132,7 +145,7 @@ function Chain({
                 {chainIdToName(Number(chainId))} ({chainId})
               </Typography>
               <Typography>
-                {healthyCount} / {heartbeats.length}
+                {healthyCount} / {guardianHeartbeats.length}
               </Typography>
             </Box>
           }
@@ -150,7 +163,7 @@ function Chain({
             <Box sx={{ position: 'relative', display: 'inline-flex' }}>
               <CircularProgress
                 variant="determinate"
-                value={healthyCount === 0 ? 100 : (healthyCount / heartbeats.length) * 100}
+                value={healthyCount === 0 ? 100 : (healthyCount / guardianHeartbeats.length) * 100}
                 color={
                   healthyCount < getQuorumCount(environment)
                     ? 'error'
@@ -206,7 +219,11 @@ function Chain({
           {chainIdToName(Number(chainId))} ({chainId})
         </DialogTitle>
         <DialogContent>
-          <ChainDetails heartbeats={heartbeats} conditionalRowStyle={conditionalRowStyle} />
+          <ChainDetails heartbeats={guardianHeartbeats} conditionalRowStyle={conditionalRowStyle} />
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+            Standby Guardians
+          </Typography>
+          <ChainDetails heartbeats={standbyHeartbeats} conditionalRowStyle={conditionalRowStyle} />
         </DialogContent>
       </Dialog>
     </>
@@ -238,7 +255,10 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
     let numErrors = 0;
     const helpers = Object.entries(chainIdsToHeartbeats).reduce((obj, [chainId, heartbeats]) => {
       let highest = BigInt(0);
-      heartbeats.forEach((heartbeat) => {
+      const filteredHeartbeats = heartbeats.filter(
+        (hb) => !STANDBY_GUARDIANS.find((g) => g.pubkey.toLowerCase() === hb.guardian.toLowerCase())
+      );
+      filteredHeartbeats.forEach((heartbeat) => {
         const height = BigInt(heartbeat.network.height);
         if (height > highest) {
           highest = height;
@@ -246,7 +266,7 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
       });
       const conditionalRowStyle = (heartbeat: HeartbeatInfo) =>
         isHeartbeatUnhealthy(heartbeat, highest) ? { backgroundColor: 'rgba(100,0,0,.2)' } : {};
-      const healthyCount = heartbeats.reduce(
+      const healthyCount = filteredHeartbeats.reduce(
         (count, heartbeat) => count + (isHeartbeatUnhealthy(heartbeat, highest) ? 0 : 1),
         0
       );

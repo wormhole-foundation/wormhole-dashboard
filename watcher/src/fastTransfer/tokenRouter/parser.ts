@@ -10,7 +10,7 @@ import {
   contracts,
   toChainId,
 } from '@wormhole-foundation/sdk-base';
-import { FAST_TRANSFER_CONTRACTS, FTChains } from '../consts';
+import { FAST_TRANSFER_CONTRACTS, FTEVMChain } from '../consts';
 import isNotNull from '../../../src/utils/isNotNull';
 import { MarketOrder } from '../types';
 
@@ -19,17 +19,8 @@ class TokenRouterParser {
   private evmTokenRouter: EvmTokenRouter;
   private network: Network;
   private chain: Chain;
-  // the only 2 functions we care about
-  private functionSelectors = [
-    ethers.utils
-      .id('placeFastMarketOrder(uint64,uint64,uint16,bytes32,bytes,address,uint64,uint32)')
-      .substring(0, 10),
-    ethers.utils
-      .id('placeFastMarketOrder(uint64,uint16,bytes32,bytes,uint64,uint32)')
-      .substring(0, 10),
-  ];
-
-  constructor(network: Network, chain: FTChains, provider: ethers.providers.JsonRpcProvider) {
+  private functionSelectors: string[];
+  constructor(network: Network, chain: FTEVMChain, provider: ethers.providers.JsonRpcProvider) {
     this.provider = provider;
     this.evmTokenRouter = new EvmTokenRouter(
       this.provider,
@@ -38,6 +29,19 @@ class TokenRouterParser {
     );
     this.network = network;
     this.chain = chain;
+    // on Mainnet the TokenRouter is called via a SwapLayer proxy contract using the `initiate` method
+    // on Testnet there is no Swaplayer so we check using the primitive methods
+    this.functionSelectors =
+      this.network === 'Mainnet'
+        ? [ethers.utils.id('initiate(uint16,bytes32,bytes)').substring(0, 10)]
+        : [
+            ethers.utils
+              .id('placeFastMarketOrder(uint64,uint64,uint16,bytes32,bytes,address,uint64,uint32)')
+              .substring(0, 10),
+            ethers.utils
+              .id('placeFastMarketOrder(uint64,uint16,bytes32,bytes,uint64,uint32)')
+              .substring(0, 10),
+          ];
   }
 
   async parseFastMarketOrder(txHash: string): Promise<LiquidityLayerTransactionResult | null> {

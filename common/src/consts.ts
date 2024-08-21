@@ -107,7 +107,11 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBloc
 };
 
 export const INITIAL_FT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMapping = {
-  ['Mainnet']: {},
+  ['Mainnet']: {
+    Solana: '285350104',
+    Arbitrum: '245882390',
+    Base: '18956026',
+  },
   ['Testnet']: {
     Solana: '302162456',
     ArbitrumSepolia: '49505590',

@@ -2,7 +2,7 @@ import knex, { Knex } from 'knex';
 import { Watcher } from './Watcher';
 import { Network } from '@wormhole-foundation/sdk-base';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
-import { FAST_TRANSFER_CONTRACTS, FTChains } from '../fastTransfer/consts';
+import { FAST_TRANSFER_CONTRACTS, FTEVMChain } from '../fastTransfer/consts';
 import { ethers } from 'ethers';
 import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey } from '../databases/utils';
@@ -29,7 +29,7 @@ export class FTEVMWatcher extends Watcher {
 
   constructor(
     network: Network,
-    chain: FTChains,
+    chain: FTEVMChain,
     finalizedBlockTag: BlockTag = 'latest',
     isTest = false
   ) {
@@ -154,8 +154,8 @@ export class FTEVMWatcher extends Watcher {
     }
 
     // we do not need to compare the lastBlockTime from tokenRouter and swapLayer as they both use toBlock
-    const lastBlockTime = tokenRouterResults.lastBlockTime;
-    return makeBlockKey(toBlock.toString(), lastBlockTime.toString());
+    const lastBlockTime = new Date(tokenRouterResults.lastBlockTime * 1000);
+    return makeBlockKey(toBlock.toString(), lastBlockTime.toISOString());
   }
 
   // saves items in smaller batches to reduce the impact in any case anything fails

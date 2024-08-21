@@ -44,6 +44,7 @@ import knex, { Knex } from 'knex';
 import {
   assertEnvironmentVariable,
   parseWormholeSequenceFromLogs,
+  stringifyWithBigInt,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { getLogger } from '../utils/logger';
 import base58 from 'bs58';
@@ -53,7 +54,6 @@ import {
   TokenRouterProgramId,
   USDCMintAddress,
 } from '../fastTransfer/consts';
-import { FastMarketOrder } from '@wormhole-foundation/example-liquidity-layer-definitions';
 
 export class FTSolanaWatcher extends SolanaWatcher {
   readonly network: Network;
@@ -66,6 +66,9 @@ export class FTSolanaWatcher extends SolanaWatcher {
   readonly USDC_MINT: USDCMintAddress;
   readonly TOKEN_ROUTER_PROGRAM_ID: TokenRouterProgramId;
   readonly eventParser: EventParser;
+  // for `settleAuction*` tests, there wouldn't be a `fast_vaa_hash` since there is no db.
+  // but we still want to return to the unit test to check the remaining data
+  readonly isTest: boolean;
 
   constructor(network: Network, isTest: boolean = false) {
     super(network, 'ft');
@@ -91,6 +94,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
       new PublicKey(this.MATCHING_ENGINE_PROGRAM_ID),
       this.matchingEngineBorshCoder
     );
+    this.isTest = isTest;
 
     // hacky way to not connect to the db in tests
     // this is to allow ci to run without a db
@@ -642,7 +646,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
     res: VersionedTransactionResponse,
     ix: MessageCompiledInstruction,
     seq: number
-  ): Promise<FastTransferSettledInfo> {
+  ): Promise<FastTransferSettledInfo | null> {
     if (!res.meta?.innerInstructions) {
       throw new Error(
         `[parseSettleAuctionComplete] ${res.transaction.signatures[0]} no inner instructions`
@@ -688,7 +692,11 @@ export class FTSolanaWatcher extends SolanaWatcher {
     // if there is a auction to settle, the auction must exist. And the pubkey
     // will be in the db since we parse everything chronologically
     const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auctionAccountPubkey.pubkey);
-
+    // We want to return the info even without the vaa hash if it's a testing environment
+    if (!fast_vaa_hash && !this.isTest) {
+      this.handleMissingFastVaaHash(auctionAccountPubkey.pubkey, 'parseSettleAuctionComplete');
+      return null;
+    }
     const info = {
       fast_vaa_hash: fast_vaa_hash,
       repayment: BigInt(decodedData.data.amount.toString()),
@@ -721,7 +729,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
   async parseSettleAuctionNoneLocal(
     res: VersionedTransactionResponse,
     ix: MessageCompiledInstruction
-  ): Promise<FastTransferSettledInfo> {
+  ): Promise<FastTransferSettledInfo | null> {
     const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
     const accountKeyIndexes = ix.accountKeyIndexes;
     if (accountKeyIndexes.length < 7) {
@@ -731,7 +739,11 @@ export class FTSolanaWatcher extends SolanaWatcher {
     const auction = accountKeys[accountKeyIndexes[6]];
 
     const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction.pubkey);
-
+    // We want to return the info even without the vaa hash if its a testing environment
+    if (!fast_vaa_hash && !this.isTest) {
+      this.handleMissingFastVaaHash(auction.pubkey, 'parseSettleAuctionNoneLocal');
+      return null;
+    }
     const info = {
       fast_vaa_hash: fast_vaa_hash,
       // No one executed anything so no repayment
@@ -754,7 +766,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
   async parseSettleAuctionNoneCctp(
     res: VersionedTransactionResponse,
     ix: MessageCompiledInstruction
-  ): Promise<FastTransferSettledInfo> {
+  ): Promise<FastTransferSettledInfo | null> {
     const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
     const accountKeyIndexes = ix.accountKeyIndexes;
 
@@ -766,6 +778,11 @@ export class FTSolanaWatcher extends SolanaWatcher {
     const auction = accountKeys[accountKeyIndexes[8]];
 
     const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction.pubkey);
+    // We want to return the info even without the vaa hash if its a testing environment
+    if (!fast_vaa_hash && !this.isTest) {
+      this.handleMissingFastVaaHash(auction.pubkey, 'parseSettleAuctionNoneCctp');
+      return null;
+    }
 
     const info = {
       fast_vaa_hash: fast_vaa_hash,
@@ -778,6 +795,10 @@ export class FTSolanaWatcher extends SolanaWatcher {
     };
 
     await this.saveFastTransferInfo('fast_transfer_settlements', info);
+    await this.updateMarketOrder({
+      fast_vaa_hash,
+      status: FastTransferStatus.SETTLED,
+    });
 
     return info;
   }
@@ -919,6 +940,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
 
     return auction;
   }
+
   async getDbLatestAuctionHistoryIndex(): Promise<bigint> {
     if (!this.pg) {
       this.logger.debug('No database connection, returning 0');
@@ -926,12 +948,11 @@ export class FTSolanaWatcher extends SolanaWatcher {
     }
     try {
       const result = await this.pg('auction_history_mapping').max('index as maxIndex').first();
-      this.logger.debug('Latest auction history index query result:', result);
       const maxIndex = result && result.maxIndex !== null ? BigInt(result.maxIndex) : 0n;
       this.logger.info(`Latest auction history index: ${maxIndex}`);
       return maxIndex;
     } catch (error) {
-      this.logger.error('Failed to fetch the largest index from auction_history_mapping:', error);
+      this.logger.error(`Failed to fetch the largest index from auction_history_mapping: ${error}`);
       throw new Error('Database query failed');
     }
   }
@@ -949,10 +970,9 @@ export class FTSolanaWatcher extends SolanaWatcher {
       const result = await this.pg('auction_history_mapping')
         .where({ auction_pubkey: auction })
         .first();
-      this.logger.debug(`Auction history mapping for ${auction}:`, result);
       return result;
     } catch (error) {
-      this.logger.error(`Error fetching auction history mapping for ${auction}:`, error);
+      this.logger.error(`Error fetching auction history mapping for ${auction}: ${error}`);
       throw error;
     }
   }
@@ -965,13 +985,13 @@ export class FTSolanaWatcher extends SolanaWatcher {
       return;
     }
     try {
-      const result = await this.pg('auction_history_mapping')
+      await this.pg('auction_history_mapping')
         .insert(mappings)
         .onConflict('auction_pubkey')
         .merge();
-      this.logger.info(`Saved ${mappings.length} auction history mappings. Result:`, result);
+      this.logger.info(`Saved ${mappings.length} auction history mappings.`);
     } catch (error) {
-      this.logger.error('Error saving auction history mappings:', error);
+      this.logger.error(`Error saving auction history mappings: ${error}`);
       throw error;
     }
   }
@@ -981,15 +1001,11 @@ export class FTSolanaWatcher extends SolanaWatcher {
       this.logger.debug('No database connection, skipping saveFastTransfer');
       return;
     }
-    this.logger.debug(`Saving fast transfer ${fastTransfer.fast_vaa_hash}`);
     try {
-      const result = await this.pg('fast_transfers')
-        .insert(fastTransfer)
-        .onConflict('fast_vaa_id')
-        .merge();
-      this.logger.info(`Saved fast transfer ${fastTransfer.fast_vaa_hash}. Result:`, result);
+      await this.pg('fast_transfers').insert(fastTransfer).onConflict('fast_vaa_id').merge();
+      this.logger.info(`Saved fast transfer ${fastTransfer.fast_vaa_hash}.`);
     } catch (error) {
-      this.logger.error(`Error saving fast transfer ${fastTransfer.fast_vaa_hash}:`, error);
+      this.logger.error(`Error saving fast transfer ${fastTransfer.fast_vaa_hash}: ${error}`);
       throw error;
     }
   }
@@ -1000,13 +1016,12 @@ export class FTSolanaWatcher extends SolanaWatcher {
       return;
     }
     try {
-      const result = await this.pg('market_orders')
-        .insert(update)
-        .onConflict('fast_vaa_hash')
-        .merge();
-      this.logger.info(`Updated market order ${update.fast_vaa_id}. Result:`, result);
+      // some `FastTransferUpdate` have only `fast_vaa_id` or `fast_vaa_hash`. We want to merge base on this unique key
+      const conflictKey = update.fast_vaa_id ? 'fast_vaa_id' : 'fast_vaa_hash';
+      await this.pg('market_orders').insert(update).onConflict(conflictKey).merge();
+      this.logger.info(`Updated market order ${update.fast_vaa_id || update.fast_vaa_hash}.`);
     } catch (error) {
-      this.logger.error('Update data that failed:', update);
+      this.logger.error(`Update data that failed: ${stringifyWithBigInt(update)}`);
       throw error;
     }
   }
@@ -1017,10 +1032,10 @@ export class FTSolanaWatcher extends SolanaWatcher {
       return;
     }
     try {
-      const result = await this.pg('fast_transfer_auctions').where(id).update(update);
-      this.logger.info(`Updated auction ${id.fast_vaa_hash}. Result:`, result);
+      await this.pg('fast_transfer_auctions').where(id).update(update);
+      this.logger.info(`Updated auction for fast vaa hash: ${id.fast_vaa_hash}.`);
     } catch (error) {
-      this.logger.error(`Error updating auction ${id.fast_vaa_hash}:`, error);
+      this.logger.error(`Error updating auction ${id.fast_vaa_hash}: ${error}`);
       throw error;
     }
   }
@@ -1036,15 +1051,10 @@ export class FTSolanaWatcher extends SolanaWatcher {
       const result = await this.pg('fast_transfer_auctions')
         .where({ auction_pubkey: auctionPubkey.toBase58() })
         .first();
-      this.logger.debug(
-        `Fast VAA hash for auction pubkey ${auctionPubkey.toBase58()}:`,
-        result?.fast_vaa_hash
-      );
       return result?.fast_vaa_hash || '';
     } catch (error) {
       this.logger.error(
-        `Error fetching Fast VAA hash for auction pubkey ${auctionPubkey.toBase58()}:`,
-        error
+        `Error fetching Fast VAA hash for auction pubkey ${auctionPubkey.toBase58()}: ${error}`
       );
       throw error;
     }
@@ -1052,21 +1062,23 @@ export class FTSolanaWatcher extends SolanaWatcher {
 
   async saveFastTransferInfo(
     table: string,
-    info:
-      | FastMarketOrder
-      | FastTransferAuctionInfo
-      | FastTransferExecutionInfo
-      | FastTransferSettledInfo
+    info: FastTransferAuctionInfo | FastTransferExecutionInfo | FastTransferSettledInfo
   ): Promise<void> {
     if (!this.pg) {
       this.logger.debug(`No database connection, skipping saveFastTransferInfo for table ${table}`);
       return;
     }
     try {
-      const result = await this.pg(table).insert(info);
-      this.logger.info(`Saved fast transfer info to table ${table}. Result:`, result);
+      await this.pg(table).insert(info);
+      this.logger.info(
+        `Saved fast transfer info to table ${table}. fast transfer: ${info.fast_vaa_hash}`
+      );
     } catch (error) {
-      this.logger.error(`Error saving fast transfer info to table ${table}:`, error);
+      this.logger.error(
+        `Error saving fast transfer info to table ${table}: ${error}, info: ${stringifyWithBigInt(
+          info
+        )}`
+      );
       throw error;
     }
   }
@@ -1076,13 +1088,27 @@ export class FTSolanaWatcher extends SolanaWatcher {
       this.logger.debug('No database connection, skipping saveAuctionLogs');
       return;
     }
-    this.logger.debug(`Attempting to save auction logs for ${auctionLogs.fast_vaa_hash}`);
     try {
-      const result = await this.pg('auction_logs').insert(auctionLogs);
-      this.logger.info(`Saved auction logs for ${auctionLogs.fast_vaa_hash}. Result:`, result);
+      await this.pg('auction_logs').insert(auctionLogs);
+      this.logger.info(`Saved auction logs for ${auctionLogs.fast_vaa_hash}.`);
     } catch (error) {
-      this.logger.error(`Error saving auction logs for ${auctionLogs.fast_vaa_hash}:`, error);
+      this.logger.error(`Error saving auction logs for ${auctionLogs.fast_vaa_hash}: ${error}`);
       throw error;
+    }
+  }
+
+  // on Testnet, we might miss some auction <-> fast_vaa_hash mappings as the RPCs clean up old blocks. The only workaround is to skip parsing
+  // the settle instructions.
+  // on Mainnet, we parse from the first ever Fast Transfer, which means we will every info we need. If we don't it means we did something wrong.
+  private handleMissingFastVaaHash(auctionPubkey: PublicKey, context: string): void {
+    if (this.network === 'Mainnet') {
+      throw new Error(
+        `[${context}] No fast_vaa_hash found for auction ${auctionPubkey.toBase58()} in mainnet`
+      );
+    } else {
+      this.logger.warn(
+        `[${context}] No fast_vaa_hash found for auction ${auctionPubkey.toBase58()} in testnet. Skipping...`
+      );
     }
   }
 }

@@ -374,11 +374,13 @@ func main() {
 				}
 				gossipLock.Unlock()
 			case batch := <-batchObsvC:
+				addr := "0x" + string(hex.EncodeToString(batch.Msg.Addr))
+				idx := guardianIndexMap[strings.ToLower(addr)]
+				gossipCounter[idx][GSM_signedObservationBatch]++
+				gossipCounter[totalsRow][GSM_signedObservationBatch]++
 				for _, o := range batch.Msg.Observations {
 					spl := strings.Split(o.MessageId, "/")
 					emitter := strings.ToLower(spl[1])
-					addr := "0x" + string(hex.EncodeToString(batch.Msg.Addr))
-					idx := guardianIndexMap[strings.ToLower(addr)]
 					if knownEmitters[emitter] {
 						gossipCounter[idx][GSM_tbObservation]++
 						gossipCounter[totalsRow][GSM_tbObservation]++

@@ -42,7 +42,7 @@ export class EVMWatcher extends Watcher {
     this.finalizedBlockTag = finalizedBlockTag;
     if (chain === 'Acala' || chain === 'Karura' || chain === 'Berachain') {
       this.maximumBatchSize = 50;
-    } else if (chain === 'Snaxchain') {
+    } else if (chain === 'Snaxchain' || chain === 'Klaytn') {
       this.maximumBatchSize = 10;
     }
   }

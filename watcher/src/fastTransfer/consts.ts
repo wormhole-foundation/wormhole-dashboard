@@ -52,10 +52,12 @@ export const FAST_TRANSFER_CONTRACTS: FastTransferContractAddresses = {
     Arbitrum: {
       TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
       CircleBridge: '0x19330d10D9Cc8751218eaf51E8885D058642E08A',
+      SwapLayer: '0x4dE319b7492E791cDe47FDf12c922cF568441C43',
     },
     Base: {
       TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
       CircleBridge: '0x1682Ae6375C4E4A97e4B583BC394c861A46D8962',
+      SwapLayer: '0x2Ab7BeEF955826054d03419Ee2122445Ca677eb2',
     },
   },
   Testnet: {

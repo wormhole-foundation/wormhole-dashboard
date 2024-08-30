@@ -24,7 +24,8 @@
     "read-firestore": "ts-node scripts/readFirestore.ts",
     "reconstruct-vaa": "ts-node scripts/reconstructVAA.ts",
     "update-found-vaas": "ts-node scripts/updateFoundVAAs.ts",
-    "update-rows": "ts-node scripts/updateRows.ts"
+    "update-rows": "ts-node scripts/updateRows.ts",
+    "watch-ft": "ts-node scripts/watchFt.ts"
   },
   "dependencies": {
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",

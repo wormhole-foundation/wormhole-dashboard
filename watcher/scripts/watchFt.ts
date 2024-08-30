@@ -1,4 +1,4 @@
-// This file is for when I (@bingyuyap) needs to seed the database manually for testing
+// This script can be used to seed the database manually for testing
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -7,7 +7,7 @@ import { FTEVMWatcher } from '../src/watchers/FTEVMWatcher';
 import { Network } from '@wormhole-foundation/sdk-base';
 import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
 
-const network = getNetwork(); 
+const network = getNetwork();
 async function watchFtSolana(network: Network, fromSlot: number, toSlot: number) {
   const watcher = new FTSolanaWatcher(network);
   const batchSize = 1000;

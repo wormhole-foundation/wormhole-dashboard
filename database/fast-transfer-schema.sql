@@ -107,3 +107,9 @@ CREATE TABLE redeem_swaps (
   relaying_fee BIGINT NOT NULL,
   redeem_time TIMESTAMP NOT NULL
 );
+
+-- Normalized table for chain name reference
+CREATE TABLE chains (
+  id INTEGER PRIMARY KEY,
+  name VARCHAR(255) NOT NULL UNIQUE
+)

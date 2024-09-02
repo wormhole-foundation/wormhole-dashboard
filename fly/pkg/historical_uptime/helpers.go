@@ -44,6 +44,9 @@ func InitializeMissingObservationsCount(logger *zap.Logger, messages []*types.Me
 }
 
 func DecrementMissingObservationsCount(logger *zap.Logger, guardianMissingObservations map[string]map[string]int, messageObservations map[types.MessageID][]*types.Observation) {
+	// Keep track of processed observations to avoid duplicates
+	processed := make(map[string]map[string]bool)
+
 	for messageID, observations := range messageObservations {
 		chainID, err := messageID.ChainID()
 		if err != nil {
@@ -57,14 +60,42 @@ func DecrementMissingObservationsCount(logger *zap.Logger, guardianMissingObserv
 				logger.Error("Unknown guardian address", zap.String("guardianAddr", observation.GuardianAddr))
 				continue
 			}
-			guardianMissingObservations[guardianName][chainID]--
+
+			// Check if we've already processed this guardian for this message
+			if processed[string(messageID)] == nil {
+				processed[string(messageID)] = make(map[string]bool)
+			}
+			if processed[string(messageID)][guardianName] {
+				logger.Warn("Duplicate observation", zap.String("messageID", string(messageID)), zap.String("guardian", guardianName))
+				continue
+			}
+
+			// Mark as processed
+			processed[string(messageID)][guardianName] = true
+
+			// Safely decrement the count
+			if guardianMissingObservations[guardianName] == nil {
+				guardianMissingObservations[guardianName] = make(map[string]int)
+			}
+			if guardianMissingObservations[guardianName][chainID] > 0 {
+				guardianMissingObservations[guardianName][chainID]--
+			} else {
+				logger.Warn("Attempted to decrement below zero",
+					zap.String("guardian", guardianName),
+					zap.String("chainID", chainID),
+					zap.Int("currentCount", guardianMissingObservations[guardianName][chainID]))
+			}
 		}
 	}
 }
 
-func UpdateMetrics(guardianMissedObservations *prometheus.CounterVec, guardianMissingObservations map[string]map[string]int) {
+func UpdateMetrics(logger *zap.Logger, guardianMissedObservations *prometheus.CounterVec, guardianMissingObservations map[string]map[string]int) {
 	for guardianName, chains := range guardianMissingObservations {
 		for chainID, missingCount := range chains {
+			if missingCount < 0 {
+				logger.Warn("Skipping negative missing count", zap.String("chainID", chainID), zap.Int("missingCount", missingCount))
+				continue
+			}
 			guardianMissedObservations.WithLabelValues(guardianName, chainID).Add(float64(missingCount))
 		}
 	}

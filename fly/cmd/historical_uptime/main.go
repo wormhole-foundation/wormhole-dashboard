@@ -92,10 +92,8 @@ var (
 
 const PYTHNET_CHAIN_ID = int(vaa.ChainIDPythNet)
 
-var (
-	// guardianChainHeights indexes current chain height by chain id and guardian name
-	guardianChainHeights = make(common.GuardianChainHeights)
-)
+// guardianChainHeights indexes current chain height by chain id and guardian name
+var guardianChainHeights = make(common.GuardianChainHeights)
 
 func loadEnvVars() {
 	err := godotenv.Load() // By default loads .env
@@ -186,7 +184,6 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) 
 						}
 					}
 					err := promremotew.ScrapeAndSendLocalMetrics(ctx, info, promLogger)
-
 					if err != nil {
 						promLogger.Error("ScrapeAndSendLocalMetrics error", zap.Error(err))
 						continue
@@ -237,7 +234,7 @@ func initObservationScraper(db *bigtable.BigtableDB, logger *zap.Logger, errC ch
 				historical_uptime.DecrementMissingObservationsCount(logger, guardianMissingObservations, messageObservations)
 
 				// Update the metrics with the final count of missing observations
-				historical_uptime.UpdateMetrics(guardianMissedObservations, guardianMissingObservations)
+				historical_uptime.UpdateMetrics(logger, guardianMissedObservations, guardianMissingObservations)
 			}
 		}
 	})
@@ -262,8 +259,11 @@ func main() {
 	defer rootCtxCancel()
 
 	// Inbound observations
-	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
+	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 20000)
 	batchObsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 1024)
+
+	// Add channel capacity checks
+	go monitorChannelCapacity(rootCtx, logger, "obsvC", obsvC)
 
 	// Heartbeat updates
 	heartbeatC := make(chan *gossipv1.Heartbeat, 50)
@@ -406,5 +406,32 @@ func main() {
 	<-rootCtx.Done()
 	logger.Info("root context cancelled, exiting...")
 	// TODO: wait for things to shut down gracefully
+}
 
+func monitorChannelCapacity[T any](ctx context.Context, logger *zap.Logger, channelName string, ch <-chan T) {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			capacity := cap(ch)
+			length := len(ch)
+			utilization := float64(length) / float64(capacity) * 100
+
+			logger.Info("Channel capacity check",
+				zap.String("channel", channelName),
+				zap.Int("capacity", capacity),
+				zap.Int("length", length),
+				zap.Float64("utilization_percentage", utilization))
+
+			if utilization > 80 {
+				logger.Warn("Channel near capacity, potential for dropped messages",
+					zap.String("channel", channelName),
+					zap.Float64("utilization_percentage", utilization))
+			}
+		}
+	}
 }

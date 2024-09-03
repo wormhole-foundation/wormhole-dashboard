@@ -30,6 +30,7 @@ func NewBigtableDB(ctx context.Context, projectID, instanceID, credentialsFile, 
 		client, err = bigtable.NewClient(ctx, projectID, instanceID, option.WithCredentialsFile(credentialsFile))
 	} else if useBigtableEmulator && emulatorHost != "" {
 		client, err = bigtable.NewClient(ctx, projectID, instanceID, option.WithoutAuthentication(), option.WithEndpoint(emulatorHost))
+		SetupEmulator()
 	} else {
 		return nil, errors.New("invalid Bigtable configuration, if using emulator, set emulatorHost, else set credentialsFile")
 	}

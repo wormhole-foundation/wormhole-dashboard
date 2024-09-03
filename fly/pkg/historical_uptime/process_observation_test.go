@@ -33,7 +33,12 @@ func processObservation(t *testing.T, observations []node_common.MsgWithTimeStam
 
 	// Process each observation
 	for _, o := range observations {
-		err := ProcessObservation(*database, logger, o)
+		err := ProcessObservation(*database, logger, o.Timestamp, o.Msg.Addr, &gossipv1.Observation{
+			Hash:      o.Msg.Hash,
+			Signature: o.Msg.Signature,
+			TxHash:    o.Msg.TxHash,
+			MessageId: o.Msg.MessageId,
+		})
 		if err != nil {
 			t.Errorf("failed to process observation: %v", err)
 		}

@@ -25,6 +25,9 @@ func SetupEmulator() error {
 	}
 	defer adminClient.Close()
 
+	// Clear everything and then recreate the tables for a clean slate
+	CleanUp()
+
 	tables := []struct {
 		name           string
 		columnFamilies []string

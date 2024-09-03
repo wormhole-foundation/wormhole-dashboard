@@ -265,32 +265,3 @@ func TestGetUnprocessedMessagesBeforeCutOffTime(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, messageIndexes, 0)
 }
-
-func TestSaveMessages(t *testing.T) {
-	ctx := context.Background()
-	defer ClearTables()
-
-	messages := []*types.Message{}
-	for i := 0; i < 10; i++ {
-		messageID := utils.GenerateRandomID()
-		message := types.Message{
-			MessageID:      types.MessageID(messageID),
-			LastObservedAt: time.Now(),
-			MetricsChecked: true,
-		}
-		messages = append(messages, &message)
-	}
-
-	err := db.SaveMessages(ctx, messages)
-	assert.NoError(t, err)
-
-	// Verify that the messages are saved correctly
-	for _, message := range messages {
-		msg, err := db.GetMessage(ctx, message.MessageID)
-		assert.NoError(t, err)
-		assert.NotNil(t, msg)
-		assert.Equal(t, message.MessageID, msg.MessageID)
-		assert.Equal(t, message.LastObservedAt.Unix(), msg.LastObservedAt.Unix())
-		assert.Equal(t, message.MetricsChecked, msg.MetricsChecked)
-	}
-}

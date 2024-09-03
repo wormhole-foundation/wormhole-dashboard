@@ -45,7 +45,7 @@ func InitializeMissingObservationsCount(logger *zap.Logger, messages []*types.Me
 
 func DecrementMissingObservationsCount(logger *zap.Logger, guardianMissingObservations map[string]map[string]int, messageObservations map[types.MessageID][]*types.Observation) {
 	// Keep track of processed observations to avoid duplicates
-	processed := make(map[string]map[string]bool)
+	processed := make(map[string]map[string]struct{})
 
 	for messageID, observations := range messageObservations {
 		chainID, err := messageID.ChainID()
@@ -63,15 +63,16 @@ func DecrementMissingObservationsCount(logger *zap.Logger, guardianMissingObserv
 
 			// Check if we've already processed this guardian for this message
 			if processed[string(messageID)] == nil {
-				processed[string(messageID)] = make(map[string]bool)
+				processed[string(messageID)] = make(map[string]struct{})
 			}
-			if processed[string(messageID)][guardianName] {
+
+			if _, exists := processed[string(messageID)][guardianName]; exists {
 				logger.Warn("Duplicate observation", zap.String("messageID", string(messageID)), zap.String("guardian", guardianName))
 				continue
 			}
 
 			// Mark as processed
-			processed[string(messageID)][guardianName] = true
+			processed[string(messageID)][guardianName] = struct{}{}
 
 			// Safely decrement the count
 			if guardianMissingObservations[guardianName] == nil {

@@ -116,29 +116,6 @@ func (db *BigtableDB) bigtableRowToObservation(row bigtable.Row) (*types.Observa
 	return &observation, nil
 }
 
-func (db *BigtableDB) GetObservation(ctx context.Context, messageID, guardianAddr string) (*types.Observation, error) {
-	tableName := ObservationTableName
-	rowKey := messageID + "_" + guardianAddr
-
-	table := db.client.Open(tableName)
-	row, err := table.ReadRow(ctx, rowKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read observation: %v", err)
-	}
-
-	if len(row) == 0 {
-		return nil, fmt.Errorf("observation not found: %s", rowKey)
-	}
-
-	var observation *types.Observation
-	observation, err = db.bigtableRowToObservation(row)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert row to observation: %v", err)
-	}
-
-	return observation, nil
-}
-
 func (db *BigtableDB) GetObservationsByMessageID(ctx context.Context, messageID string) ([]*types.Observation, error) {
 	tableName := ObservationTableName
 	prefix := messageID + "_"

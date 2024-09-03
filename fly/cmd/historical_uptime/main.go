@@ -259,7 +259,7 @@ func main() {
 	defer rootCtxCancel()
 
 	// Inbound observations
-	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 20000)
+	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
 	batchObsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 1024)
 
 	// Add channel capacity checks
@@ -304,23 +304,39 @@ func main() {
 		}
 	}()
 
-	// WIP(bing): add metrics for guardian observations
+	batchSize := 100
+	observationBatch := make([]*types.Observation, 0, batchSize)
+
 	go func() {
+		ticker := time.NewTicker(5 * time.Second)
 		for {
 			select {
 			case <-rootCtx.Done():
 				return
-			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
-				obs := &gossipv1.Observation{
-					Hash:      o.Msg.Hash,
-					Signature: o.Msg.Signature,
-					TxHash:    o.Msg.TxHash,
-					MessageId: o.Msg.MessageId,
+			case o := <-obsvC:
+				obs := historical_uptime.CreateNewObservation(o.Msg.MessageId, o.Msg.Addr, o.Timestamp, o.Msg.Addr)
+
+				observationBatch = append(observationBatch, obs)
+
+				// if it reaches batchSize then process this batch
+				if len(observationBatch) >= batchSize {
+					historical_uptime.ProcessObservationBatch(*db, logger, observationBatch)
+					observationBatch = observationBatch[:0] // Clear the batch
 				}
-				historical_uptime.ProcessObservation(*db, logger, o.Timestamp, o.Msg.Addr, obs)
 			case batch := <-batchObsvC:
-				for _, o := range batch.Msg.Observations {
-					historical_uptime.ProcessObservation(*db, logger, batch.Timestamp, batch.Msg.Addr, o)
+				// process immediately since batches are in group
+				batchObservations := make([]*types.Observation, 0, len(batch.Msg.Observations))
+				for _, signedObs := range batch.Msg.Observations {
+					obs := historical_uptime.CreateNewObservation(signedObs.MessageId, signedObs.Signature, batch.Timestamp, signedObs.TxHash)
+					batchObservations = append(batchObservations, obs)
+				}
+				historical_uptime.ProcessObservationBatch(*db, logger, batchObservations)
+
+			case <-ticker.C:
+				// for every interval, process the batch
+				if len(observationBatch) > 0 {
+					historical_uptime.ProcessObservationBatch(*db, logger, observationBatch)
+					observationBatch = observationBatch[:0] // Clear the batch
 				}
 			}
 		}

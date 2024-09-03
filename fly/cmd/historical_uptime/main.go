@@ -264,6 +264,7 @@ func main() {
 
 	// Add channel capacity checks
 	go monitorChannelCapacity(rootCtx, logger, "obsvC", obsvC)
+	go monitorChannelCapacity(rootCtx, logger, "batchObsvC", batchObsvC)
 
 	// Heartbeat updates
 	heartbeatC := make(chan *gossipv1.Heartbeat, 50)

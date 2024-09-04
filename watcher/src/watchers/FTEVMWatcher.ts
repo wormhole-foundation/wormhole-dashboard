@@ -42,27 +42,25 @@ export class FTEVMWatcher extends Watcher {
     this.provider = new ethers.providers.JsonRpcProvider(RPCS_BY_CHAIN[network][chain]);
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain]!;
     this.tokenRouterParser = new TokenRouterParser(this.network, chain, this.provider);
-    this.swapLayerParser = this.swapLayerAddress
-      ? new SwapLayerParser(this.provider, this.swapLayerAddress)
-      : null;
-    this.logger.debug('FTWatcher', network, chain, finalizedBlockTag);
-    // hacky way to not connect to the db in tests
-    // this is to allow ci to run without a db
-    if (isTest) {
-      // Components needed for testing is complete
-      return;
+
+    // Initialize database connection before creating swap layer parser
+    if (!isTest) {
+      this.pg = knex({
+        client: 'pg',
+        connection: {
+          user: assertEnvironmentVariable('PG_FT_USER'),
+          password: assertEnvironmentVariable('PG_FT_PASSWORD'),
+          database: assertEnvironmentVariable('PG_FT_DATABASE'),
+          host: assertEnvironmentVariable('PG_FT_HOST'),
+          port: Number(assertEnvironmentVariable('PG_FT_PORT')),
+        },
+      });
     }
 
-    this.pg = knex({
-      client: 'pg',
-      connection: {
-        user: assertEnvironmentVariable('PG_FT_USER'),
-        password: assertEnvironmentVariable('PG_FT_PASSWORD'),
-        database: assertEnvironmentVariable('PG_FT_DATABASE'),
-        host: assertEnvironmentVariable('PG_FT_HOST'),
-        port: Number(assertEnvironmentVariable('PG_FT_PORT')),
-      },
-    });
+    this.swapLayerParser = this.swapLayerAddress
+      ? new SwapLayerParser(this.provider, this.swapLayerAddress, this.pg, chain)
+      : null;
+    this.logger.debug('FTWatcher', network, chain, finalizedBlockTag);
   }
 
   async getBlock(blockNumberOrTag: number | BlockTag): Promise<Block> {

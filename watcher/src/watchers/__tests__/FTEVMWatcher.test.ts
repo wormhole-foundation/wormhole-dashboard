@@ -74,7 +74,7 @@ describe('SwapLayerParser', () => {
 
   beforeEach(() => {
     mockProvider = new MockJsonRpcProvider();
-    parser = new SwapLayerParser(mockProvider, swapLayerAddress);
+    parser = new SwapLayerParser(mockProvider, swapLayerAddress, null, 'ArbitrumSepolia');
   });
 
   it('should parse a swap layer transaction correctly', async () => {

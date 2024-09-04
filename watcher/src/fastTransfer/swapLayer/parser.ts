@@ -1,18 +1,31 @@
 import { ethers } from 'ethers';
 import { TransferCompletion } from '../types';
 import { parseVaa } from '@wormhole-foundation/wormhole-monitor-common';
+import { Knex } from 'knex';
+import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
+import { TokenInfoManager } from '../../utils/TokenInfoManager';
 
 class SwapLayerParser {
   private provider: ethers.providers.JsonRpcProvider;
   private swapLayerAddress: string;
   private swapLayerInterface: ethers.utils.Interface;
+  private tokenInfoManager: TokenInfoManager | null = null;
 
-  constructor(provider: ethers.providers.JsonRpcProvider, swapLayerAddress: string) {
+  constructor(
+    provider: ethers.providers.JsonRpcProvider,
+    swapLayerAddress: string,
+    db: Knex | null,
+    chain: Chain
+  ) {
     this.provider = provider;
     this.swapLayerAddress = swapLayerAddress;
     this.swapLayerInterface = new ethers.utils.Interface([
       'event Redeemed(address indexed recipient, address outputToken, uint256 outputAmount, uint256 relayingFee)',
     ]);
+
+    if (db) {
+      this.tokenInfoManager = new TokenInfoManager(db, chainToChainId(chain), provider);
+    }
   }
 
   async parseSwapLayerTransaction(
@@ -58,6 +71,11 @@ class SwapLayerParser {
       .find((event) => event && event.name === 'Redeemed');
 
     if (!swapEvent) return null;
+
+    // if we have the tokenInfoManager inited, persist the token info
+    // this ensures we have the token decimal and name for analytics purposes
+    if (this.tokenInfoManager)
+      await this.tokenInfoManager.saveTokenInfoIfNotExist(swapEvent.args.outputToken);
 
     return {
       tx_hash: txHash,

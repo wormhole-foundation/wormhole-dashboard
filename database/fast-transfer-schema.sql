@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS fast_transfer_settlements;
 DROP TABLE IF EXISTS auction_logs;
 DROP TABLE IF EXISTS auction_history_mapping;
 DROP TABLE IF EXISTS redeem_swaps;
+DROP TABLE IF EXISTS chains;
+DROP TABLE IF EXISTS token_infos;
 
 DROP TYPE IF EXISTS FastTransferStatus;
 DROP TYPE IF EXISTS FastTransferProtocol;
@@ -113,3 +115,14 @@ CREATE TABLE chains (
   id INTEGER PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE
 )
+
+-- Token Infos table to store information about different tokens
+-- A normalized table for us to reference token info for analytics purposes
+CREATE TABLE token_infos (
+  name VARCHAR(255) NOT NULL,
+  chain_id INTEGER NOT NULL,
+  decimals INTEGER NOT NULL,
+  symbol VARCHAR(255) NOT NULL,
+  token_address VARCHAR(255) NOT NULL,
+  PRIMARY KEY (token_address, chain_id)
+);

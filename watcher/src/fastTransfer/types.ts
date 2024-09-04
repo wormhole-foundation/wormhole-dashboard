@@ -156,3 +156,11 @@ export type TransferCompletion = {
   // on Solana Swap Layer, this acts as a link between complete_{transfer, swap}_payload and release_inbound
   staged_inbound?: string;
 };
+
+export type TokenInfo = {
+  name: string;
+  chain_id: number;
+  decimals: number;
+  symbol: string;
+  token_address: string;
+};

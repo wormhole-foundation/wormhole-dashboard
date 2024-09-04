@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	node_common "github.com/certusone/wormhole/node/pkg/common"
@@ -287,6 +290,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("Failed to create bigtable db", zap.Error(err))
 	}
+
 	promErrC := make(chan error)
 	// Start Prometheus scraper
 	initPromScraper(promRemoteURL, logger, promErrC)
@@ -306,15 +310,35 @@ func main() {
 	batchSize := 100
 	observationBatch := make([]*types.Observation, 0, batchSize)
 
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	// to make sure that we wait til observation cleanup is done
+	var wg sync.WaitGroup
+
+	// rootCtx might not cancel if shutdown abruptly
 	go func() {
+		<-sigChan
+		logger.Info("Received signal, initiating shutdown")
+		rootCtxCancel()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
 		for {
 			select {
 			case <-rootCtx.Done():
+				if len(observationBatch) > 0 {
+					historical_uptime.ProcessObservationBatch(*db, logger, observationBatch)
+				}
+				logger.Info("Observation cleanup completed.")
 				return
-			case o := <-obsvC:
+			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
 				obs := historical_uptime.CreateNewObservation(o.Msg.MessageId, o.Msg.Addr, o.Timestamp, o.Msg.Addr)
-
 				observationBatch = append(observationBatch, obs)
 
 				// if it reaches batchSize then process this batch
@@ -323,13 +347,16 @@ func main() {
 					observationBatch = observationBatch[:0] // Clear the batch
 				}
 			case batch := <-batchObsvC:
-				// process immediately since batches are in group
-				batchObservations := make([]*types.Observation, 0, len(batch.Msg.Observations))
 				for _, signedObs := range batch.Msg.Observations {
 					obs := historical_uptime.CreateNewObservation(signedObs.MessageId, signedObs.Signature, batch.Timestamp, signedObs.TxHash)
-					batchObservations = append(batchObservations, obs)
+					observationBatch = append(observationBatch, obs)
+
+					// if it reaches batchSize then process this batch
+					if len(observationBatch) >= batchSize {
+						historical_uptime.ProcessObservationBatch(*db, logger, observationBatch)
+						observationBatch = observationBatch[:0] // Clear the batch
+					}
 				}
-				historical_uptime.ProcessObservationBatch(*db, logger, batchObservations)
 
 			case <-ticker.C:
 				// for every interval, process the batch
@@ -420,8 +447,12 @@ func main() {
 		supervisor.WithPropagatePanic)
 
 	<-rootCtx.Done()
-	logger.Info("root context cancelled, exiting...")
-	// TODO: wait for things to shut down gracefully
+	logger.Info("Root context cancelled, starting cleanup...")
+
+	// Wait for all goroutines to complete their cleanup
+	wg.Wait()
+
+	logger.Info("All cleanup completed. Exiting...")
 }
 
 func monitorChannelCapacity[T any](ctx context.Context, logger *zap.Logger, channelName string, ch <-chan T) {

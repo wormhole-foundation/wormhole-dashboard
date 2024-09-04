@@ -13,15 +13,15 @@ import (
 	"go.uber.org/zap"
 )
 
-var cache = &bigtable.ObservationCache{
-	Messages:     make(map[types.MessageID]*types.Message),
-	Observations: make(map[types.MessageID]map[string]*types.Observation),
-}
+var cache = bigtable.NewObservationCache()
 
 // ProcessObservationBatch processes a batch of observations and flushes the cache to the database.
 func ProcessObservationBatch(db bigtable.BigtableDB, logger *zap.Logger, batch []*types.Observation) error {
+	cache.Lock()
+	defer cache.Unlock()
+
 	for _, o := range batch {
-		ProcessObservation(db, logger, o)
+		ProcessObservationAlreadyLocked(db, logger, o)
 	}
 
 	return FlushCache(db, logger)
@@ -43,11 +43,9 @@ func FlushCache(db bigtable.BigtableDB, logger *zap.Logger) error {
 	return nil
 }
 
-// ProcessObservation processes a single observation, updating the cache and checking observation times.
-func ProcessObservation(db bigtable.BigtableDB, logger *zap.Logger, o *types.Observation) {
-	cache.Lock()
-	defer cache.Unlock()
-
+// ProcessObservationAlreadyLocked processes a single observation, updating the cache and checking observation times.
+// This function assumes that the cache lock has already been acquired.
+func ProcessObservationAlreadyLocked(db bigtable.BigtableDB, logger *zap.Logger, o *types.Observation) {
 	// Check if the message exists in the cache, if not, try to fetch from the database
 	message, exists := cache.Messages[o.MessageID]
 	if !exists {

@@ -34,6 +34,14 @@ func (c *ObservationCache) RUnlock() {
 	c.mu.RUnlock()
 }
 
+// NewObservationCache creates and returns a new ObservationCache instance.
+func NewObservationCache() *ObservationCache {
+	return &ObservationCache{
+		Messages:     make(map[types.MessageID]*types.Message),
+		Observations: make(map[types.MessageID]map[string]*types.Observation),
+	}
+}
+
 // GetMessage retrieves a message from the cache by its ID.
 // It returns the message and a boolean indicating whether the message was found.
 func (c *ObservationCache) GetMessage(messageID types.MessageID) (*types.Message, bool) {
@@ -48,18 +56,6 @@ func (c *ObservationCache) SetMessage(messageID types.MessageID, message *types.
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.Messages[messageID] = message
-}
-
-// GetObservation retrieves an observation from the cache by message ID and guardian address.
-// It returns the observation and a boolean indicating whether the observation was found.
-func (c *ObservationCache) GetObservation(messageID types.MessageID, guardianAddr string) (*types.Observation, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	if observations, exists := c.Observations[messageID]; exists {
-		observation, exists := observations[guardianAddr]
-		return observation, exists
-	}
-	return nil, false
 }
 
 // SetObservation adds or updates an observation in the cache.

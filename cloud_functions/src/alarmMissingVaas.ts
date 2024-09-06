@@ -88,6 +88,9 @@ export async function alarmMissingVaas(req: any, res: any) {
     // Alarm any watchers that are behind by more than 24 hours
     await alarmOldBlockTimes(refTimes);
 
+    // Alarm any guardians that have not sent a heartbeat in more than 1 hour
+    await alarmOldHeartbeats();
+
     // attempting to retrieve missing VAAs...
     const messages: MissingVaasByChain = await commonGetMissingVaas();
     if (messages) {
@@ -397,6 +400,40 @@ async function storeAlarmedChains(alarms: AlarmedChainTime[]): Promise<void> {
     .collection(assertEnvironmentVariable('FIRESTORE_ALARM_MISSING_VAAS_COLLECTION'))
     .doc('ChainTimes');
   await alarmedChains.set({ times: alarms });
+}
+
+async function alarmOldHeartbeats(): Promise<void> {
+  // Get Guardian Heartbeats from firestore
+  const now: Date = new Date();
+  const firestore = new Firestore();
+  const collectionRef = firestore.collection(
+    assertEnvironmentVariable('FIRESTORE_GUARDIAN_HEARTBEAT_COLLECTION')
+  );
+  const snapshot = await collectionRef.get();
+  // Walk all the documents in the collection
+  const documents = snapshot.docs;
+  for (const doc of documents) {
+    const data = doc.data();
+    if (data) {
+      // Only need to look at the timestamp field, which is in nanoseconds
+      const timestamp: string = data.timestamp;
+      // Convert the timestamp to a milliseconds
+      const timestampMs: number = Math.floor(Number(timestamp) / 1_000_000);
+      const heartbeatTime: Date = new Date(timestampMs);
+      const deltaTime: number = (now.getTime() - heartbeatTime.getTime()) / (1000 * 60 * 60); // hours
+      if (deltaTime >= 1) {
+        // Send a message to slack
+        const alarmSlackInfo: SlackInfo = {
+          channelId: assertEnvironmentVariable('MISSING_VAA_SLACK_CHANNEL_ID'),
+          postUrl: assertEnvironmentVariable('MISSING_VAA_SLACK_POST_URL'),
+          botToken: assertEnvironmentVariable('MISSING_VAA_SLACK_BOT_TOKEN'),
+          bannerTxt: 'Wormhole Missing VAA Alarm',
+          msg: `The guardian ${doc.id} has not sent a heartbeat in ${deltaTime} hours.`,
+        };
+        await formatAndSendToSlack(alarmSlackInfo);
+      }
+    }
+  }
 }
 
 type FirestoreVAA = {

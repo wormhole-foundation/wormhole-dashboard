@@ -1,6 +1,12 @@
 package common
 
-type GuardianHeight map[string]uint64 // map of guardian addr to chain height
+type HeightInfo struct {
+	Latest    uint64
+	Safe      uint64
+	Finalized uint64
+}
+
+type GuardianHeight map[string]HeightInfo // map of guardian addr to height info
 
 type GuardianChainHeights map[uint32]GuardianHeight // map of chainIds to guardian heights
 

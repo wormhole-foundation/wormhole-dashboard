@@ -68,6 +68,22 @@ var (
 		[]string{"guardian", "chain"},
 	)
 
+	guardianChainSafeHeight = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "guardian_chain_safe_height",
+			Help: "Safe height of each guardian on each chain over time",
+		},
+		[]string{"guardian", "chain"},
+	)
+
+	guardianChainFinalizedHeight = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "guardian_chain_finalized_height",
+			Help: "Finalized height of each guardian on each chain over time",
+		},
+		[]string{"guardian", "chain"},
+	)
+
 	guardianChainHeightDifferences = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "guardian_chain_height_differences",
@@ -143,7 +159,7 @@ func recordGuardianHeightDifferences() {
 		chainName := vaa.ChainID(chainId).String()
 
 		for guardian, heightDifference := range guardianHeightDifferences {
-			guardianChainHeightDifferences.WithLabelValues(guardian, chainName).Set(float64(heightDifference))
+			guardianChainHeightDifferences.WithLabelValues(guardian, chainName).Set(float64(heightDifference.Latest))
 		}
 	}
 }
@@ -166,9 +182,11 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) 
 			for {
 				select {
 				case <-ctx.Done():
+					logger.Info("Prometheus scraper context done")
 					return nil
 				case <-t.C:
 					recordGuardianHeightDifferences()
+
 					for i := 1; i < 36; i++ {
 						if i == PYTHNET_CHAIN_ID {
 							continue
@@ -186,6 +204,7 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) 
 							guardianMissedObservations.WithLabelValues(guardianName, chainName).Add(0)
 						}
 					}
+
 					err := promremotew.ScrapeAndSendLocalMetrics(ctx, info, promLogger)
 					if err != nil {
 						promLogger.Error("ScrapeAndSendLocalMetrics error", zap.Error(err))
@@ -194,6 +213,8 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) 
 				}
 			}
 		})
+	} else {
+		logger.Warn("Prometheus remote write URL not provided, metrics will not be sent")
 	}
 }
 
@@ -387,13 +408,34 @@ func main() {
 						guardianChainHeights[network.Id] = make(common.GuardianHeight)
 					}
 
-					guardianChainHeights[network.Id][guardianName] = uint64(network.Height)
+					guardianChainHeights[network.Id][guardianName] = common.HeightInfo{
+						Latest:    uint64(network.Height),
+						Safe:      uint64(network.SafeHeight),
+						Finalized: uint64(network.FinalizedHeight),
+					}
+
+					chain := vaa.ChainID(network.Id).String()
+
 					guardianChainHeight.With(
 						prometheus.Labels{
 							"guardian": guardianName,
-							"chain":    vaa.ChainID(network.Id).String(),
+							"chain":    chain,
 						},
 					).Set(float64(network.Height))
+
+					guardianChainSafeHeight.With(
+						prometheus.Labels{
+							"guardian": guardianName,
+							"chain":    chain,
+						},
+					).Set(float64(network.SafeHeight))
+
+					guardianChainFinalizedHeight.With(
+						prometheus.Labels{
+							"guardian": guardianName,
+							"chain":    chain,
+						},
+					).Set(float64(network.FinalizedHeight))
 				}
 
 				guardianHeartbeats.With(

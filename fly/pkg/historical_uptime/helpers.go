@@ -108,9 +108,9 @@ func computeMaxChainHeights(guardianChainHeights common.GuardianChainHeights) co
 	for chainId, guardianHeights := range guardianChainHeights {
 		highest := uint64(0)
 
-		for _, guardianHeight := range guardianHeights {
-			if highest < guardianHeight {
-				highest = guardianHeight
+		for _, heightInfo := range guardianHeights {
+			if highest < heightInfo.Latest {
+				highest = heightInfo.Latest
 			}
 		}
 
@@ -124,13 +124,16 @@ func computeGuardianChainHeightDifferences(guardianChainHeights common.GuardianC
 	heightDifferences := make(common.GuardianChainHeights)
 
 	for chainId, guardianHeights := range guardianChainHeights {
-		for guardian, height := range guardianHeights {
+		for guardian, heightInfo := range guardianHeights {
 			if heightDifferences[chainId] == nil {
 				heightDifferences[chainId] = make(common.GuardianHeight)
 			}
 
-			// maxChainHeights[chain] always guaranteed to be at least height since it's computed in `computeMaxChainHeights`
-			heightDifferences[chainId][guardian] = maxChainHeights[chainId] - height
+			heightDifferences[chainId][guardian] = common.HeightInfo{
+				Latest:    maxChainHeights[chainId] - heightInfo.Latest,
+				Safe:      0, // We're not calculating differences for Safe
+				Finalized: 0, // We're not calculating differences for Finalized
+			}
 		}
 	}
 

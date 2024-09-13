@@ -12,6 +12,19 @@ import * as ethers from 'ethers';
 import * as bs58 from 'bs58';
 import { deserialize } from 'borsh';
 import { assertEnvironmentVariable, EventData } from '@wormhole-foundation/wormhole-monitor-common';
+import { Chain, ChainId, chainToChainId, isChain } from '@wormhole-foundation/sdk-base';
+
+function convertDefiLlamaChainToChainId(chain: string): ChainId {
+  if (chain === 'avax') {
+    return chainToChainId('Avalanche');
+  }
+  // DefiLlama uses lowercase chain names
+  chain = chain.charAt(0).toUpperCase() + chain.slice(1);
+  if (!isChain(chain as Chain)) {
+    throw new Error('invalid chain');
+  }
+  return chainToChainId(chain as Chain);
+}
 
 export async function getSolanaEvents(req: any, res: any) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -31,12 +44,24 @@ export async function getSolanaEvents(req: any, res: any) {
     res.status(400).send('toSlot is required');
     return;
   }
+  let destChain: ChainId | undefined = undefined;
+  if (req.query.destChain) {
+    try {
+      destChain = convertDefiLlamaChainToChainId(req.query.destChain);
+    } catch (e) {
+      console.error(e);
+      res.status(400).send('invalid destChain');
+      return;
+    }
+  }
   try {
     const fromSlot = Number(req.query.fromSlot);
     const toSlot = Number(req.query.toSlot);
-    console.log(`fetching events from ${fromSlot} to ${toSlot}`);
+    console.log(
+      `fetching events from ${fromSlot} to ${toSlot}${destChain ? ` to chain ${destChain}` : ''}`
+    );
     // the RPC doesn't store blocks that are too old
-    const events = fromSlot < 232090284 ? [] : await _getSolanaEvents(fromSlot, toSlot);
+    const events = fromSlot < 232090284 ? [] : await _getSolanaEvents(fromSlot, toSlot, destChain);
     console.log(`fetched ${events.length} events`);
     res.json(events);
   } catch (e) {
@@ -82,7 +107,7 @@ const PostMessageDataSchema = {
  * @param toSlot The ending slot to retrieve events from.
  * @returns An array of EventData objects representing the events that occurred within the given slot range.
  */
-const _getSolanaEvents = async (fromSlot: number, toSlot: number) => {
+const _getSolanaEvents = async (fromSlot: number, toSlot: number, destChain?: ChainId) => {
   const txs = await getParsedTransactions(fromSlot, toSlot, tokenBridge);
   const events = txs.reduce((acc, tx) => {
     if (!tx || !tx.blockTime || tx.meta?.err) {
@@ -97,7 +122,7 @@ const _getSolanaEvents = async (fromSlot: number, toSlot: number) => {
       if (!innerIx || innerIx.instructions.length === 0) {
         return;
       }
-      const event = getEventData(tx, ix, innerIx.instructions);
+      const event = getEventData(tx, ix, innerIx.instructions, destChain);
       if (event) {
         acc.push(event);
       }
@@ -106,7 +131,7 @@ const _getSolanaEvents = async (fromSlot: number, toSlot: number) => {
     tx.meta?.innerInstructions?.forEach((innerIx: any) => {
       innerIx.instructions.forEach((ix: any, index: any) => {
         if (isTokenBridgeIx(ix)) {
-          const event = getEventData(tx, ix, innerIx.instructions.slice(index + 1));
+          const event = getEventData(tx, ix, innerIx.instructions.slice(index + 1), destChain);
           if (event) {
             acc.push(event);
           }
@@ -121,7 +146,8 @@ const _getSolanaEvents = async (fromSlot: number, toSlot: number) => {
 const getEventData = (
   tx: ParsedTransactionWithMeta,
   tokenBridgeIx: PartiallyDecodedInstruction,
-  innerIxs: (ParsedInstruction | PartiallyDecodedInstruction)[]
+  innerIxs: (ParsedInstruction | PartiallyDecodedInstruction)[],
+  destChain?: ChainId
 ): EventData | undefined => {
   const data = bs58.decode(tokenBridgeIx.data);
   if (data.length === 0) {
@@ -139,6 +165,31 @@ const getEventData = (
           isTransferIx(ix) && ix.parsed.info?.authority === transferAuthority
       );
       if (transferIx) {
+        if (destChain) {
+          const coreBridgeIx = innerIxs.find(
+            (ix): ix is PartiallyDecodedInstruction =>
+              ix.programId.equals(coreBridge) &&
+              (ix as PartiallyDecodedInstruction).data !== undefined
+          );
+          const coreBridgeIxData = coreBridgeIx?.data
+            ? Buffer.from(bs58.decode(coreBridgeIx.data))
+            : undefined;
+          if (
+            coreBridgeIxData &&
+            coreBridgeIxData.length > 0 &&
+            coreBridgeIxData[0] === CoreBridgeIxId.PostMessage
+          ) {
+            const postMessageData: any = deserialize(
+              PostMessageDataSchema,
+              coreBridgeIxData.subarray(1)
+            );
+            const payload = Buffer.from(postMessageData.payload);
+            const toChain = payload.readUInt16BE(99);
+            if (toChain !== destChain) {
+              return undefined;
+            }
+          }
+        }
         return {
           blockNumber,
           txHash,
@@ -177,6 +228,9 @@ const getEventData = (
         const payload = Buffer.from(postMessageData.payload);
         const originChain = payload.readUint16BE(65);
         const toChain = payload.readUInt16BE(99);
+        if (destChain && toChain !== destChain) {
+          return undefined;
+        }
         // if this is a wrapped token being burned and not being sent to its origin chain,
         // then it should be included in the volume by fixing the `to` address
         // https://docs.wormhole.com/wormhole/explore-wormhole/vaa#token-transfer

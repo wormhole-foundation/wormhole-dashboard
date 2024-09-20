@@ -44,6 +44,10 @@ func (db *BigtableDB) FlushCache(ctx context.Context, logger *zap.Logger, cache 
 	observationMuts := make([]*bigtable.Mutation, 0)
 	observationRows := make([]string, 0)
 
+	// Prepare bulk mutations for message indexes
+	indexMuts := make([]*bigtable.Mutation, 0, len(cache.Messages))
+	indexRows := make([]string, 0, len(cache.Messages))
+
 	for messageID, message := range cache.Messages {
 		// Prepare message mutation
 		messageMut, err := createMessageMutation(message)
@@ -64,19 +68,38 @@ func (db *BigtableDB) FlushCache(ctx context.Context, logger *zap.Logger, cache 
 			observationMuts = append(observationMuts, observationMut)
 			observationRows = append(observationRows, observationRow)
 		}
+
+		// Prepare message index mutation
+		indexMut := bigtable.NewMutation()
+		indexMut.Set("indexData", "placeholder", bigtable.Now(), nil)
+		indexMuts = append(indexMuts, indexMut)
+		indexRows = append(indexRows, string(messageID))
 	}
 
+	// Apply bulk mutations for messages
 	err := db.ApplyBulk(ctx, MessageTableName, messageRows, messageMuts)
 	if err != nil {
 		logger.Error("Failed to apply bulk mutations for messages", zap.Error(err))
 		return err
 	}
 
+	// Apply bulk mutations for observations
 	err = db.ApplyBulk(ctx, ObservationTableName, observationRows, observationMuts)
 	if err != nil {
 		logger.Error("Failed to apply bulk mutations for observations", zap.Error(err))
 		return err
 	}
+
+	// Apply bulk mutations for message indexes
+	err = db.ApplyBulk(ctx, MessageIndexTableName, indexRows, indexMuts)
+	if err != nil {
+		logger.Error("Failed to apply bulk mutations for message indexes", zap.Error(err))
+		return err
+	}
+
+	logger.Info("Successfully applied bulk mutations for messages", zap.Int("count", len(messageMuts)))
+	logger.Info("Successfully applied bulk mutations for observations", zap.Int("count", len(observationMuts)))
+	logger.Info("Successfully applied bulk mutations for message indexes", zap.Int("count", len(indexMuts)))
 
 	return nil
 }

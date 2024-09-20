@@ -109,7 +109,9 @@ var (
 	)
 )
 
-const PYTHNET_CHAIN_ID = int(vaa.ChainIDPythNet)
+// [0, MAX_CHAIN_ID] is the range of chain id that we will track for the uptime monitor
+// in this case it's snaxchain since it's the largest mainnet chain idj
+const MAX_CHAIN_ID = vaa.ChainIDSnaxchain
 
 // guardianChainHeights indexes current chain height by chain id and guardian name
 var guardianChainHeights = make(common.GuardianChainHeights)
@@ -187,10 +189,7 @@ func initPromScraper(promRemoteURL string, logger *zap.Logger, errC chan error) 
 				case <-t.C:
 					recordGuardianHeightDifferences()
 
-					for i := 1; i < 36; i++ {
-						if i == PYTHNET_CHAIN_ID {
-							continue
-						}
+					for i := 1; i <= int(MAX_CHAIN_ID); i++ {
 						chainName := vaa.ChainID(i).String()
 						if strings.HasPrefix(chainName, "unknown chain ID:") {
 							continue
@@ -230,6 +229,7 @@ func initObservationScraper(db *bigtable.BigtableDB, logger *zap.Logger, errC ch
 				messageObservations := make(map[types.MessageID][]*types.Observation)
 
 				messages, err := db.GetUnprocessedMessagesBeforeCutOffTime(ctx, time.Now().Add(-common.ExpiryDuration))
+				logger.Info("Number of unprocessed messages", zap.Int("count", len(messages)))
 				if err != nil {
 					logger.Error("QueryMessagesByIndex error", zap.Error(err))
 					continue

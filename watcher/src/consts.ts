@@ -179,6 +179,7 @@ export const GUARDIAN_RPC_HOSTS: { [key in Network]: string[] } = {
     'https://wormhole-v2-mainnet-api.mcf.rocks',
     'https://wormhole-v2-mainnet-api.chainlayer.network',
     'https://wormhole-v2-mainnet-api.staking.fund',
+    'https://guardian.mainnet.xlabs.xyz',
   ],
   ['Testnet']: ['https://api.testnet.wormholescan.io'],
   ['Devnet']: [],

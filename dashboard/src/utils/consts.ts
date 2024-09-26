@@ -12,6 +12,7 @@ export const WORMHOLE_RPC_HOSTS = [
   'https://wormhole-v2-mainnet-api.mcf.rocks',
   'https://wormhole-v2-mainnet-api.chainlayer.network',
   'https://wormhole-v2-mainnet-api.staking.fund',
+  'https://guardian.mainnet.xlabs.xyz',
 ];
 
 export const CHAIN_ICON_MAP: { [key: string]: string } = chainIds.reduce<{ [key: string]: string }>(

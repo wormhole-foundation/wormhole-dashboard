@@ -62,6 +62,13 @@ export const networkOptions: Network[] = [
     logo: '',
     type: 'guardian',
   },
+  {
+    env: 'Mainnet',
+    endpoint: 'https://guardian.mainnet.xlabs.xyz',
+    name: 'xLabs',
+    logo: '',
+    type: 'guardian',
+  },
   // not working as of 2023-11-07
   // {
   //   env: 'Mainnet',

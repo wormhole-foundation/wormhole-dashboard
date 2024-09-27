@@ -12,7 +12,7 @@ import * as ethers from 'ethers';
 import * as bs58 from 'bs58';
 import { deserialize } from 'borsh';
 import { assertEnvironmentVariable, EventData } from '@wormhole-foundation/wormhole-monitor-common';
-import { Chain, ChainId, chainToChainId, isChain } from '@wormhole-foundation/sdk-base';
+import { ChainId, chainToChainId, isChain } from '@wormhole-foundation/sdk-base';
 
 function convertDefiLlamaChainToChainId(chain: string): ChainId {
   if (chain === 'avax') {
@@ -20,10 +20,10 @@ function convertDefiLlamaChainToChainId(chain: string): ChainId {
   }
   // DefiLlama uses lowercase chain names
   chain = chain.charAt(0).toUpperCase() + chain.slice(1);
-  if (!isChain(chain as Chain)) {
+  if (!isChain(chain)) {
     throw new Error('invalid chain');
   }
-  return chainToChainId(chain as Chain);
+  return chainToChainId(chain);
 }
 
 export async function getSolanaEvents(req: any, res: any) {

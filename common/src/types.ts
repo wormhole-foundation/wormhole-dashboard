@@ -154,6 +154,7 @@ export interface EventData {
   token: string;
   amount: string;
   isDeposit: boolean;
+  timestamp?: number;
 }
 
 export type TokenAmount = {

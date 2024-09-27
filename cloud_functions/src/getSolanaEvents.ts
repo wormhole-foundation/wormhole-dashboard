@@ -198,6 +198,7 @@ const getEventData = (
           token: tokenBridgeIx.accounts[3]?.toString() || '', // mint account
           amount: transferIx.parsed.info?.amount,
           isDeposit: true,
+          timestamp: tx.blockTime || undefined,
         };
       }
       break;
@@ -243,6 +244,7 @@ const getEventData = (
           token: tokenBridgeIx.accounts[4]?.toString() || '', // mint account
           amount: burnIx.parsed.info?.amount,
           isDeposit: false,
+          timestamp: tx.blockTime || undefined,
         };
       }
       break;
@@ -268,6 +270,7 @@ const getEventData = (
           token: tokenBridgeIx.accounts[mintAccountIndex]?.toString() || '', // mint account
           amount: transferIx.parsed.info?.amount,
           isDeposit: false,
+          timestamp: tx.blockTime || undefined,
         };
       }
       break;
@@ -294,6 +297,7 @@ const getEventData = (
           token: mintToIx.parsed.info?.mint,
           amount: mintToIx.parsed.info?.amount,
           isDeposit: false,
+          timestamp: tx.blockTime || undefined,
         };
       }
       break;

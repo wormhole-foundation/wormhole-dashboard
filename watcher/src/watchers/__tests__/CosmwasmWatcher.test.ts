@@ -10,22 +10,22 @@ import { isBase64Encoded } from '../../utils/isBase64Encoded';
 jest.setTimeout(60000);
 
 test('getFinalizedBlockNumber(terra2)', async () => {
-  const watcher = new CosmwasmWatcher('Mainnet', 'Terra2');
+  const watcher = new TerraExplorerWatcher('Mainnet', 'Terra2');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(3181746);
 });
 
 test('getMessagesForBlocks(terra2)', async () => {
-  const watcher = new CosmwasmWatcher('Mainnet', 'Terra2');
+  const watcher = new TerraExplorerWatcher('Mainnet', 'Terra2');
   const vaasByBlock = await watcher.getMessagesForBlocks(10847656, 10847657);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['10847656/2024-06-20T08:02:18.898Z']).toBeDefined();
-  expect(vaasByBlock['10847656/2024-06-20T08:02:18.898Z'].length).toEqual(1);
-  expect(vaasByBlock['10847656/2024-06-20T08:02:18.898Z'][0]).toEqual(
+  expect(vaasByBlock['10847656/2024-06-20T08:02:18.000Z']).toBeDefined();
+  expect(vaasByBlock['10847656/2024-06-20T08:02:18.000Z'].length).toEqual(1);
+  expect(vaasByBlock['10847656/2024-06-20T08:02:18.000Z'][0]).toEqual(
     'F99C1EAE1969723592024DB7ABD247A62663452BA82003C64F0248B2B62A482A:18/a463ad028fb79679cfc8ce1efba35ac0e77b35080a1abe9bebe83461f176b0a3/3444'
   );
 });

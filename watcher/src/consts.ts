@@ -50,7 +50,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Aptos: process.env.APTOS_RPC || 'https://fullnode.mainnet.aptoslabs.com/',
     Near: process.env.NEAR_RPC || 'https://rpc.mainnet.near.org',
     Xpla: process.env.XPLA_RPC || 'https://dimension-lcd.xpla.dev',
-    Terra2: process.env.TERRA2_RPC || 'https://terra-lcd.publicnode.com',
+    Terra2: process.env.TERRA2_RPC || 'https://phoenix-fcd.terra.dev',
     Terra: process.env.TERRA_RPC || 'https://terra-classic-fcd.publicnode.com',
     Injective: process.env.INJECTIVE_RPC || 'https://sentry.exchange.grpc-web.injective.network',
     Solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',

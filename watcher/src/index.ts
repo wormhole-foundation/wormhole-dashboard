@@ -54,6 +54,7 @@ const supportedChains: Chain[] =
         'PolygonSepolia',
         'Berachain',
         'Snaxchain',
+        'Unichain',
       ]
     : [
         // This is the list of chains supported in MAINNET.

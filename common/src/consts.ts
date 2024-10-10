@@ -83,6 +83,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     PolygonSepolia: '2379275',
     Berachain: '1473347',
     Snaxchain: '482557',
+    Unichain: '254961', // Block of contract creation
   },
   ['Devnet']: {},
 };

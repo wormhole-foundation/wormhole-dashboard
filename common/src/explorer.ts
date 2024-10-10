@@ -132,6 +132,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://bartio.beratrail.io/block/${block}`
     : chainId === chainToChainId('Snaxchain')
     ? `https://explorer-snaxchain-s50q0kjngn.t.conduit.xyz/${block}`
+    : chainId === chainToChainId('Unichain')
+    ? `https://unichain-sepolia.blockscout.com/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -259,6 +261,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://bartio.beratrail.io/tx/${tx}`
     : chainId === chainToChainId('Snaxchain')
     ? `https://explorer-snaxchain-s50q0kjngn.t.conduit.xyz/tx/${tx}`
+    : chainId === chainToChainId('Unichain')
+    ? `https://unichain-sepolia.blockscout.com/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

@@ -102,6 +102,8 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Berachain: process.env.BERACHAIN_RPC || 'https://bartio.rpc.berachain.com',
     Snaxchain: process.env.SNAXCHAIN_RPC || 'https://rpc-snaxchain-s50q0kjngn.t.conduit.xyz',
     Unichain: process.env.UNICHAIN_RPC || 'https://sepolia.unichain.org',
+    Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-sepolia.g.alchemy.com/public',
+    MonadDevnet: process.env.MONAD_DEVNET_RPC, // TODO: There is no Monad Devnet public endpoint.
   },
   ['Devnet']: {},
 };

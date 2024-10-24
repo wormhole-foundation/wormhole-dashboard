@@ -134,6 +134,10 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://explorer-snaxchain-s50q0kjngn.t.conduit.xyz/${block}`
     : chainId === chainToChainId('Unichain')
     ? `https://unichain-sepolia.blockscout.com/block/${block}`
+    : chainId === chainToChainId('Worldchain')
+    ? `https://worldchain-sepolia.explorer.alchemy.com/block/${block}`
+    : chainId === chainToChainId('MonadDevnet')
+    ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -263,6 +267,10 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://explorer-snaxchain-s50q0kjngn.t.conduit.xyz/tx/${tx}`
     : chainId === chainToChainId('Unichain')
     ? `https://unichain-sepolia.blockscout.com/tx/${tx}`
+    : chainId === chainToChainId('Worldchain')
+    ? `https://worldchain-sepolia.explorer.alchemy.com/tx/${tx}`
+    : chainId === chainToChainId('MonadDevnet')
+    ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

@@ -25,13 +25,13 @@
   },
   "dependencies": {
     "@google-cloud/functions-framework": "^3.4.0",
-    "@wormhole-foundation/sdk-base": "^0.10.10",
-    "@wormhole-foundation/sdk-definitions": "^0.10.10",
-    "@wormhole-foundation/sdk-evm": "^0.10.10",
-    "@wormhole-foundation/sdk-evm-core": "^0.10.10",
-    "@wormhole-foundation/sdk-icons": "^0.10.10",
-    "@wormhole-foundation/sdk-solana": "^0.10.10",
-    "@wormhole-foundation/sdk-solana-core": "^0.10.10",
+    "@wormhole-foundation/sdk-base": "^0.14.0",
+    "@wormhole-foundation/sdk-definitions": "^0.14.0",
+    "@wormhole-foundation/sdk-evm": "^0.14.0",
+    "@wormhole-foundation/sdk-evm-core": "^0.14.0",
+    "@wormhole-foundation/sdk-icons": "^0.14.0",
+    "@wormhole-foundation/sdk-solana": "^0.14.0",
+    "@wormhole-foundation/sdk-solana-core": "^0.14.0",
     "axios": "^1.5.0"
   }
 }

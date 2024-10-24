@@ -48,6 +48,8 @@ export class EVMWatcher extends Watcher {
       chain === 'Scroll' ||
       chain === 'Snaxchain' ||
       chain === 'Unichain' ||
+      chain === 'Worldchain' ||
+      chain === 'MonadDevnet' ||
       chain === 'Xlayer'
     ) {
       this.maximumBatchSize = 10;

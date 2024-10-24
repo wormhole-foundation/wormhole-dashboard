@@ -55,6 +55,8 @@ const supportedChains: Chain[] =
         'Berachain',
         'Snaxchain',
         'Unichain',
+        'Worldchain',
+        'MonadDevnet',
       ]
     : [
         // This is the list of chains supported in MAINNET.

@@ -35,6 +35,7 @@ var (
 	rootCtx       context.Context
 	rootCtxCancel context.CancelFunc
 
+	network        string
 	p2pNetworkID   string
 	p2pPort        uint
 	p2pBootstrap   string
@@ -121,7 +122,18 @@ func loadEnvVars() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	p2pNetworkID = verifyEnvVar("P2P_NETWORK_ID")
+	network = verifyEnvVar("NETWORK")
+
+	env, err := node_common.ParseEnvironment(network)
+	if err != nil || (env != node_common.UnsafeDevNet && env != node_common.TestNet && env != node_common.MainNet) {
+		log.Fatal("Invalid environment configuration", zap.Error(err))
+	}
+
+	p2pNetworkID = p2p.GetNetworkId(env)
+	p2pBootstrap, err = p2p.GetBootstrapPeers(env)
+	if err != nil {
+		log.Fatal("failed to determine the bootstrap peers from the environment", zap.String("env", string(env)), zap.Error(err))
+	}
 	port, err := strconv.ParseUint(verifyEnvVar("P2P_PORT"), 10, 32)
 	if err != nil {
 		log.Fatal("Error parsing P2P_PORT")
@@ -266,7 +278,6 @@ func initObservationScraper(db *bigtable.BigtableDB, logger *zap.Logger, errC ch
 
 func main() {
 	loadEnvVars()
-	p2pBootstrap = "/dns4/wormhole-v2-mainnet-bootstrap.xlabs.xyz/udp/8999/quic/p2p/12D3KooWNQ9tVrcb64tw6bNs2CaNrUGPM7yRrKvBBheQ5yCyPHKC,/dns4/wormhole.mcf.rocks/udp/8999/quic/p2p/12D3KooWDZVv7BhZ8yFLkarNdaSWaB43D6UbQwExJ8nnGAEmfHcU,/dns4/wormhole-v2-mainnet-bootstrap.staking.fund/udp/8999/quic/p2p/12D3KooWG8obDX9DNi1KUwZNu9xkGwfKqTp2GFwuuHpWZ3nQruS1"
 
 	lvl, err := ipfslog.LevelFromString(logLevel)
 	if err != nil {
@@ -458,6 +469,7 @@ func main() {
 	// Run supervisor.
 	components := p2p.DefaultComponents()
 	components.Port = p2pPort
+	obsvReqC := make(chan *gossipv1.ObservationRequest, 1024)
 
 	params, err := p2p.NewRunParams(
 		p2pBootstrap,
@@ -468,6 +480,11 @@ func main() {
 		p2p.WithComponents(components),
 		p2p.WithSignedObservationListener(obsvC),
 		p2p.WithSignedObservationBatchListener(batchObsvC),
+		// This is not supposed to be here. It's a bug in `p2p`.
+		// It is not subscribing to the control channel unless you are subscribing to observation requests or governor messages.
+		// It also needs to subscribe if the gst you pass in is subscribed to heartbeats.
+		p2p.WithObservationRequestListener(obsvReqC),
+
 	)
 	if err != nil {
 		logger.Fatal("Failed to create RunParams", zap.Error(err))

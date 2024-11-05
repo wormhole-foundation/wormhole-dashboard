@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/pubsub v1.33.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/buger/goterm v1.0.4
-	github.com/certusone/wormhole/node v0.0.0-20241030181622-02f468f776f6
+	github.com/certusone/wormhole/node v0.0.0-20241105142137-7247a0fc0c96
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/ipfs/go-log/v2 v2.5.1
@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/client_golang v1.18.0
 	github.com/prometheus/client_model v0.6.0
 	github.com/stretchr/testify v1.8.4
-	github.com/wormhole-foundation/wormhole/sdk v0.0.0-20241030181622-02f468f776f6
+	github.com/wormhole-foundation/wormhole/sdk v0.0.0-20241105142137-7247a0fc0c96
 	go.uber.org/zap v1.27.0
 	google.golang.org/api v0.126.0
 	google.golang.org/protobuf v1.32.0

@@ -469,7 +469,6 @@ func main() {
 	// Run supervisor.
 	components := p2p.DefaultComponents()
 	components.Port = p2pPort
-	obsvReqC := make(chan *gossipv1.ObservationRequest, 1024)
 
 	params, err := p2p.NewRunParams(
 		p2pBootstrap,
@@ -480,11 +479,6 @@ func main() {
 		p2p.WithComponents(components),
 		p2p.WithSignedObservationListener(obsvC),
 		p2p.WithSignedObservationBatchListener(batchObsvC),
-		// This is not supposed to be here. It's a bug in `p2p`.
-		// It is not subscribing to the control channel unless you are subscribing to observation requests or governor messages.
-		// It also needs to subscribe if the gst you pass in is subscribed to heartbeats.
-		p2p.WithObservationRequestListener(obsvReqC),
-
 	)
 	if err != nil {
 		logger.Fatal("Failed to create RunParams", zap.Error(err))

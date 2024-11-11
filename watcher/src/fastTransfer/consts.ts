@@ -47,7 +47,7 @@ export const FAST_TRANSFER_CONTRACTS: FastTransferContractAddresses = {
       TokenRouter: '28topqjtJzMnPaGFmmZk68tzGmj9W9aMntaEK3QkgtRe',
       USDCMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
       // TODO: uncomment this when SwapLayer is deployed on Solana Mainnet
-      // SwapLayer: '9Zv8ajzFjacRoYCgCPus4hq3pYjpNa9KkTFQ1sHa1h3d',
+      SwapLayer: '9Zv8ajzFjacRoYCgCPus4hq3pYjpNa9KkTFQ1sHa1h3d',
     },
     Arbitrum: {
       TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',

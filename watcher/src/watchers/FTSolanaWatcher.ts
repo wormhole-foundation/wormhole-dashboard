@@ -39,11 +39,13 @@ import {
   isOfferArgs,
   AuctionUpdated,
   AuctionUpdatedEvent,
+  TransferCompletion,
 } from '../fastTransfer/types';
 import knex, { Knex } from 'knex';
 import {
   assertEnvironmentVariable,
   parseWormholeSequenceFromLogs,
+  sleep,
   stringifyWithBigInt,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { getLogger } from '../utils/logger';
@@ -54,6 +56,7 @@ import {
   TokenRouterProgramId,
   USDCMintAddress,
 } from '../fastTransfer/consts';
+import { SwapLayerParser } from '../fastTransfer/swapLayer/solParser';
 
 export class FTSolanaWatcher extends SolanaWatcher {
   readonly network: Network;
@@ -61,6 +64,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
   readonly matchingEngineBorshCoder: BorshCoder;
   readonly tokenRouterBorshCoder: BorshCoder;
   readonly matchingEngineProgram: MatchingEngineProgram;
+  readonly swapLayerParser: SwapLayerParser;
   readonly pg: Knex | null = null;
   readonly MATCHING_ENGINE_PROGRAM_ID: MatchingEngineProgramId;
   readonly USDC_MINT: USDCMintAddress;
@@ -88,6 +92,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
       this.MATCHING_ENGINE_PROGRAM_ID,
       new PublicKey(this.USDC_MINT)
     );
+    this.swapLayerParser = new SwapLayerParser(network, new Connection(this.rpc));
     this.connection = new Connection(this.rpc);
     this.logger = getLogger(`fast_transfer_solana_${network.toLowerCase()}`);
     this.eventParser = new EventParser(
@@ -129,6 +134,11 @@ export class FTSolanaWatcher extends SolanaWatcher {
       toSignature,
       new PublicKey(this.MATCHING_ENGINE_PROGRAM_ID)
     );
+
+    const swapLayerResults = await this.fetchAndProcessSwapMessagesByBatch(fromSignature, toSignature, new PublicKey(this.swapLayerParser.SWAP_LAYER_PROGRAM_ID))
+    if (swapLayerResults.length) {
+      await this.saveBatch(swapLayerResults, 'redeem_swaps', 'fill_id', fromSlot, toSlot);
+    }
 
     const lastBlockKey = makeBlockKey(
       toSlot.toString(),
@@ -188,6 +198,24 @@ export class FTSolanaWatcher extends SolanaWatcher {
       const batchSignatures = signatures.slice(i, i + this.getSignaturesLimit);
       await this.fetchAndProcessMessages(batchSignatures, programId);
     }
+  }
+
+  async fetchAndProcessSwapMessagesByBatch(
+    fromSignature: string,
+    toSignature: string,
+    programId: PublicKey
+  ): Promise<TransferCompletion[]> {
+    const results: TransferCompletion[] = [];
+    const signatures = await this.getTransactionSignatures(fromSignature, toSignature, programId);
+    const signatureStrings = signatures.map(sig => sig.signature);
+
+    for (let i = 0; i < signatureStrings.length; i += this.getSignaturesLimit) {
+      const batchSignatures = signatureStrings.slice(i, i + this.getSignaturesLimit);
+      const batchResults = await this.swapLayerParser.parseTransactions(batchSignatures);
+      results.push(...batchResults);
+    }
+
+    return results;
   }
 
   // same thing as NTT Solana Watcher
@@ -1110,5 +1138,60 @@ export class FTSolanaWatcher extends SolanaWatcher {
         `[${context}] No fast_vaa_hash found for auction ${auctionPubkey.toBase58()} in testnet. Skipping...`
       );
     }
+  }
+
+  // saves items in smaller batches to reduce the impact in any case anything fails
+  // retry with exponential backoff is used here
+  private async saveBatch<T>(
+    items: T[],
+    tableName: string,
+    conflictColumn: string,
+    fromBlock?: number,
+    toBlock?: number
+  ): Promise<void> {
+    if (!this.pg) {
+      return;
+    }
+
+    const batchSize = 50;
+    const maxRetries = 3;
+    const totalBatches = Math.ceil(items.length / batchSize);
+
+    this.logger.debug(`Attempting to save ${items.length} ${tableName} in batches of ${batchSize}`);
+
+    for (let batchIndex = 0; batchIndex < items.length; batchIndex += batchSize) {
+      const batch = items.slice(batchIndex, batchIndex + batchSize);
+      const batchNumber = Math.floor(batchIndex / batchSize) + 1;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          await this.pg(tableName).insert(batch).onConflict(conflictColumn).merge();
+          this.logger.info(
+            `Successfully saved batch ${batchNumber}/${totalBatches} (${batch.length} ${tableName})`
+          );
+          break;
+        } catch (e) {
+          if (attempt === maxRetries) {
+            const errorMessage = `Failed to save batch ${batchNumber}/${totalBatches} of ${tableName} after ${maxRetries} attempts`;
+            this.logger.error(
+              fromBlock && toBlock
+                ? `${errorMessage} from block ${fromBlock} - ${toBlock}`
+                : errorMessage,
+              e
+            );
+            this.logger.error(`Transaction details: ${batch}`);
+
+          } else {
+            this.logger.warn(
+              `Attempt ${attempt} failed for batch ${batchNumber}/${totalBatches} of ${tableName}. Retrying...`
+            );
+            await sleep(1000 * Math.pow(2, attempt - 1));
+          }
+        }
+      }
+    }
+    this.logger.info(
+      `Completed saving ${items.length} ${tableName} from ${fromBlock} to ${toBlock}`
+    );
   }
 }

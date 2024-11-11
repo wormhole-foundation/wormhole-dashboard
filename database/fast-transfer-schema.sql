@@ -19,7 +19,7 @@ CREATE TYPE FastTransferStatus AS ENUM ('pending', 'no_offer', 'executed', 'sett
 CREATE TABLE market_orders (
   -- These two cant be primary key because on different stages they might initially be null due to the inability to find them
   -- To accomodate this we put a unique constraint to allow nullable
-  -- It will eventually be filled up 
+  -- It will eventually be filled up
   fast_vaa_id VARCHAR(255) UNIQUE,
   fast_vaa_hash VARCHAR(255) UNIQUE,
   amount_in BIGINT,
@@ -107,14 +107,15 @@ CREATE TABLE redeem_swaps (
   output_token VARCHAR(255) NOT NULL,
   output_amount BIGINT NOT NULL,
   relaying_fee BIGINT NOT NULL,
-  redeem_time TIMESTAMP NOT NULL
+  redeem_time TIMESTAMP NOT NULL,
+  staged_inbound VARCHAR(255)
 );
 
 -- Normalized table for chain name reference
 CREATE TABLE chains (
   id INTEGER PRIMARY KEY,
   name VARCHAR(255) NOT NULL UNIQUE
-)
+);
 
 -- Token Infos table to store information about different tokens
 -- A normalized table for us to reference token info for analytics purposes

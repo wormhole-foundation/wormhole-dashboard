@@ -35,8 +35,8 @@ async function watchFt(
   }
 }
 
-const fromSlot = 321556219;
-const toSlot = 321807831;
+const fromSlot = 300257524;
+const toSlot = 300257525;
 
 const arbitrumFromBlock = 247028328;
 const arbitrumToBlock = 247037682;
@@ -44,12 +44,12 @@ const arbitrumToBlock = 247037682;
 const baseFromBlock = 18820795;
 const baseToBlock = 18958996;
 
-watchFt(network, 'Arbitrum', arbitrumFromBlock, arbitrumToBlock).then(() =>
-  console.log('Done watching ftArbitrum')
-);
+// watchFt(network, 'Arbitrum', arbitrumFromBlock, arbitrumToBlock).then(() =>
+//   console.log('Done watching ftArbitrum')
+// );
 
-watchFt(network, 'Base', baseFromBlock, baseToBlock).then(() =>
-  console.log('Done watching ftBase')
-);
+// watchFt(network, 'Base', baseFromBlock, baseToBlock).then(() =>
+//   console.log('Done watching ftBase')
+// );
 
 watchFtSolana(network, fromSlot, toSlot).then(() => console.log('Done watching ftSolana'));

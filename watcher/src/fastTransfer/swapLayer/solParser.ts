@@ -22,7 +22,7 @@ const INSUFFICIENT_ACCOUNTS = 'Account length insufficient';
 
 export class SwapLayerParser {
   private readonly swapLayerBorshCoder: BorshCoder;
-  private readonly SWAP_LAYER_PROGRAM_ID: PublicKey;
+  public readonly SWAP_LAYER_PROGRAM_ID: PublicKey;
   private readonly USDC_MINT: PublicKey;
   private readonly connection: Connection;
 
@@ -30,11 +30,11 @@ export class SwapLayerParser {
     this.connection = connection;
     this.SWAP_LAYER_PROGRAM_ID = new PublicKey(
       FAST_TRANSFER_CONTRACTS[network]?.Solana?.SwapLayer ||
-        'SwapLayer1111111111111111111111111111111111'
+      'SwapLayer1111111111111111111111111111111111'
     );
     this.USDC_MINT = new PublicKey(
       FAST_TRANSFER_CONTRACTS[network]?.Solana?.USDCMint ||
-        'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+      'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
     );
     this.swapLayerBorshCoder = new BorshCoder(SWAP_LAYER_IDL as any);
   }
@@ -124,7 +124,7 @@ export class SwapLayerParser {
 
     // Filter out null transactions
     const nonNullTransactions = transactions.filter(
-      (tx): tx is VersionedTransactionResponse => tx !== null
+      (tx): tx is VersionedTransactionResponse => tx !== null && !tx.meta?.err
     );
 
     // Process each transaction and gather the results
@@ -244,6 +244,13 @@ export class SwapLayerParser {
         ? getTokenBalanceChange(transaction, recipient.toBase58(), this.USDC_MINT.toBase58())
         : 0n;
 
+    console.log(`Instruction Name: ${instructionName}`);
+    console.log(`Recipient Account Key: ${recipient.toBase58()}`);
+
+    const relayingFee = instructionName === 'complete_transfer_relay'
+      ? 0n
+      : getTokenBalanceChange(transaction, this.getAccountKey(transaction, ix, 6)?.toBase58() || '', this.USDC_MINT.toBase58());
+
     const fillAccount = this.getAccountKey(transaction, ix, fillAccountIndex);
     if (!fillAccount) {
       throw new Error(`${ACCOUNT_NOT_FOUND}: fill for ${instructionName} in transaction ${sig}`);
@@ -252,7 +259,7 @@ export class SwapLayerParser {
     return {
       recipient: recipient.toBase58(),
       tx_hash: sig,
-      relaying_fee: 0n,
+      relaying_fee: relayingFee,
       fill_id: fillAccount.toBase58(),
       output_token: this.USDC_MINT.toBase58(),
       redeem_time: blockTimeToDate(transaction.blockTime),

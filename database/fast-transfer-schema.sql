@@ -107,7 +107,7 @@ CREATE TABLE redeem_swaps (
   output_token VARCHAR(255) NOT NULL,
   output_amount BIGINT NOT NULL,
   relaying_fee BIGINT NOT NULL,
-  redeem_time TIMESTAMP NOT NULL,
+  redeem_time TIMESTAMP,
   staged_inbound VARCHAR(255)
 );
 

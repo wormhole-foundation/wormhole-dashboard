@@ -153,6 +153,7 @@ export function getTokenBalanceChange(
   owner: string,
   mint: string
 ) {
+  console.log('Transaction Meta:', transaction.meta);
   const preTokenBalances = transaction.meta?.preTokenBalances || [];
   const postTokenBalances = transaction.meta?.postTokenBalances || [];
 
@@ -172,6 +173,8 @@ export function getTokenBalanceChange(
 
   const change =
     BigInt(postTokenBalance.uiTokenAmount.amount) - BigInt(preTokenBalance.uiTokenAmount.amount);
+
+  console.log(`Token balance change for owner ${owner} and mint ${mint}: ${change}`);
 
   return change;
 }

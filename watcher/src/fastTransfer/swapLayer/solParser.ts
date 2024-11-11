@@ -190,7 +190,7 @@ export class SwapLayerParser {
       fill_id: accounts[ix.accountKeyIndexes[fillAccountIndex]].pubkey.toBase58(),
       output_token: outputToken,
       recipient: recipient,
-      redeem_time: blockTimeToDate(blockTime),
+      redeem_time: instructionName === 'complete_swap_payload' ? null : blockTimeToDate(blockTime),
       output_amount: tokenBalance,
       staged_inbound: stagedInbound,
       tx_hash: sig,
@@ -246,10 +246,10 @@ export class SwapLayerParser {
 
     console.log(`Instruction Name: ${instructionName}`);
     console.log(`Recipient Account Key: ${recipient.toBase58()}`);
+    console.log(`Fee Recipient Account Key: ${this.getAccountKey(transaction, ix, 6)?.toBase58()}`);
 
     const relayingFee = instructionName === 'complete_transfer_relay'
-      ? 0n
-      : getTokenBalanceChange(transaction, this.getAccountKey(transaction, ix, 6)?.toBase58() || '', this.USDC_MINT.toBase58());
+      ? getTokenBalanceChange(transaction, this.getAccountKey(transaction, ix, 6)?.toBase58() || '', this.USDC_MINT.toBase58()) : 0n;
 
     const fillAccount = this.getAccountKey(transaction, ix, fillAccountIndex);
     if (!fillAccount) {
@@ -262,7 +262,7 @@ export class SwapLayerParser {
       relaying_fee: relayingFee,
       fill_id: fillAccount.toBase58(),
       output_token: this.USDC_MINT.toBase58(),
-      redeem_time: blockTimeToDate(transaction.blockTime),
+      redeem_time: instructionName === 'complete_transfer_payload' ? null : blockTimeToDate(transaction.blockTime),
       output_amount: tokenBalance,
       staged_inbound:
         instructionName === 'complete_transfer_payload'

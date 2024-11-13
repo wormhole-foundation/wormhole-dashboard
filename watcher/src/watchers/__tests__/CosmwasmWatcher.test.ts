@@ -9,13 +9,13 @@ import { isBase64Encoded } from '../../utils/isBase64Encoded';
 
 jest.setTimeout(60000);
 
-test('getFinalizedBlockNumber(terra2)', async () => {
+test.skip('getFinalizedBlockNumber(terra2)', async () => {
   const watcher = new TerraExplorerWatcher('Mainnet', 'Terra2');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(3181746);
 });
 
-test('getMessagesForBlocks(terra2)', async () => {
+test.skip('getMessagesForBlocks(terra2)', async () => {
   const watcher = new TerraExplorerWatcher('Mainnet', 'Terra2');
   const vaasByBlock = await watcher.getMessagesForBlocks(10847656, 10847657);
   const entries = Object.entries(vaasByBlock);

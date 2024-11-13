@@ -46,18 +46,17 @@ export const FAST_TRANSFER_CONTRACTS: FastTransferContractAddresses = {
       MatchingEngine: 'HtkeCDdYY4i9ncAxXKjYTx8Uu3WM8JbtiLRYjtHwaVXb',
       TokenRouter: '28topqjtJzMnPaGFmmZk68tzGmj9W9aMntaEK3QkgtRe',
       USDCMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-      // TODO: uncomment this when SwapLayer is deployed on Solana Mainnet
       SwapLayer: '9Zv8ajzFjacRoYCgCPus4hq3pYjpNa9KkTFQ1sHa1h3d',
     },
     Arbitrum: {
       TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
       CircleBridge: '0x19330d10D9Cc8751218eaf51E8885D058642E08A',
-      SwapLayer: '0x4dE319b7492E791cDe47FDf12c922cF568441C43',
+      SwapLayer: '0x201Ad7e4f00831A25b2eD9f85AcaEF4123D625ae',
     },
     Base: {
       TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
       CircleBridge: '0x1682Ae6375C4E4A97e4B583BC394c861A46D8962',
-      SwapLayer: '0x2Ab7BeEF955826054d03419Ee2122445Ca677eb2',
+      SwapLayer: '0xdacA614bE8e0C15Bf362b69d28ed65Ead710Cbfa',
     },
   },
   Testnet: {

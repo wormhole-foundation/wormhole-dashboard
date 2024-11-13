@@ -35,14 +35,14 @@ async function watchFt(
   }
 }
 
-const fromSlot = 300257524;
-const toSlot = 300257525;
+const fromSlot = 300839027;
+const toSlot = 301181384;
 
 const arbitrumFromBlock = 247028328;
 const arbitrumToBlock = 247037682;
 
-const baseFromBlock = 22069921;
-const baseToBlock = 22069922;
+const baseFromBlock = 22069582;
+const baseToBlock = 22329636;
 
 // watchFt(network, 'Arbitrum', arbitrumFromBlock, arbitrumToBlock).then(() =>
 //   console.log('Done watching ftArbitrum')

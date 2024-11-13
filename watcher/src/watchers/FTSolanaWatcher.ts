@@ -265,6 +265,8 @@ export class FTSolanaWatcher extends SolanaWatcher {
         );
       }
 
+      this.logger.info(`Processing transaction with signature: ${res.transaction.signatures[0]}`);
+
       const message = res.transaction.message;
       const instructions = message.compiledInstructions;
 

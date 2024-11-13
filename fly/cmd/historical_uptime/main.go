@@ -111,8 +111,8 @@ var (
 )
 
 // [0, MAX_CHAIN_ID] is the range of chain id that we will track for the uptime monitor
-// in this case it's snaxchain since it's the largest mainnet chain idj
-const MAX_CHAIN_ID = vaa.ChainIDSnaxchain
+// in this case it's worldchain since it's the largest mainnet chain idj
+const MAX_CHAIN_ID = vaa.ChainIDWorldchain
 
 // guardianChainHeights indexes current chain height by chain id and guardian name
 var guardianChainHeights = make(common.GuardianChainHeights)

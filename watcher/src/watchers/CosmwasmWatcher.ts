@@ -42,6 +42,7 @@ export class CosmwasmWatcher extends Watcher {
     return SHA256.hash(Base64.parse(data)).toString().toUpperCase();
   }
 
+  /* These two tests are failing for Terra2. Opened an issue to address it: https://github.com/wormhole-foundation/wormhole-dashboard/issues/386
   async getFinalizedBlockNumber(): Promise<number> {
     const result = (await axios.get(`${this.rpc}/${this.latestBlockTag}`, AXIOS_CONFIG_JSON)).data;
     if (result && result.block.header.height) {
@@ -155,6 +156,7 @@ export class CosmwasmWatcher extends Watcher {
     }
     return vaasByBlock;
   }
+  */
 }
 
 export type CosmwasmBlockResult = {

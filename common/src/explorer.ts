@@ -74,6 +74,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://snaxchain.io/${block}`
       : chainId === chainToChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/blocks/${block}`
+      : chainId === chainToChainId('Worldchain')
+      ? `https://worldscan.org/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/${block}?cluster=testnet`
@@ -138,6 +140,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://worldchain-sepolia.explorer.alchemy.com/block/${block}`
     : chainId === chainToChainId('MonadDevnet')
     ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/block/${block}`
+    : chainId === chainToChainId('Ink')
+    ? `https://explorer-sepolia.inkonchain.com/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -207,6 +211,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://snaxchain.io/tx/${tx}`
       : chainId === chainToChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/transactions/${tx}`
+      : chainId === chainToChainId('Worldchain')
+      ? `https://worldscan.org/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://solscan.io/txs/${tx}?cluster=testnet`
@@ -271,6 +277,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://worldchain-sepolia.explorer.alchemy.com/tx/${tx}`
     : chainId === chainToChainId('MonadDevnet')
     ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/tx/${tx}`
+    : chainId === chainToChainId('Ink')
+    ? `https://explorer-sepolia.inkonchain.com/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

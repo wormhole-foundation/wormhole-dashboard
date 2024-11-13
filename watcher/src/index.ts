@@ -57,6 +57,7 @@ const supportedChains: Chain[] =
         'Unichain',
         'Worldchain',
         'MonadDevnet',
+        'Ink',
       ]
     : [
         // This is the list of chains supported in MAINNET.
@@ -89,6 +90,7 @@ const supportedChains: Chain[] =
         'Blast',
         'Xlayer',
         'Snaxchain',
+        'Worldchain',
         'Wormchain',
       ];
 

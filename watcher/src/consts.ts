@@ -63,6 +63,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
     Xlayer: process.env.XLAYER_RPC || 'https://rpc.ankr.com/xlayer',
     Snaxchain: process.env.SNAXCHAIN_RPC || 'https://snaxchain.io',
+    Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-mainnet.g.alchemy.com/public',
   },
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,
@@ -104,6 +105,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Unichain: process.env.UNICHAIN_RPC || 'https://sepolia.unichain.org',
     Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-sepolia.g.alchemy.com/public',
     MonadDevnet: process.env.MONAD_DEVNET_RPC, // TODO: There is no Monad Devnet public endpoint.
+    Ink: process.env.INK_RPC || 'https://rpc-qnd-sepolia.inkonchain.com',
   },
   ['Devnet']: {},
 };

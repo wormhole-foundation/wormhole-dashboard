@@ -244,10 +244,6 @@ export class SwapLayerParser {
         ? getTokenBalanceChange(transaction, recipient.toBase58(), this.USDC_MINT.toBase58())
         : 0n;
 
-    console.log(`Instruction Name: ${instructionName}`);
-    console.log(`Recipient Account Key: ${recipient.toBase58()}`);
-    console.log(`Fee Recipient Account Key: ${this.getAccountKey(transaction, ix, 6)?.toBase58()}`);
-
     const relayingFee = instructionName === 'complete_transfer_relay'
       ? getTokenBalanceChange(transaction, this.getAccountKey(transaction, ix, 6)?.toBase58() || '', this.USDC_MINT.toBase58()) : 0n;
 

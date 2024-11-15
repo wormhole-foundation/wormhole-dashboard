@@ -1,6 +1,5 @@
 {
   "address": "MatchingEngine11111111111111111111111111111",
-  "name": "matching_engine",
   "metadata": {
     "name": "matching_engine",
     "version": "0.0.0",
@@ -56,11 +55,8 @@
         },
         {
           "name": "beneficiary",
-          "docs": ["was no auction) or the owner of the initial offer token account."],
+          "docs": ["[Auction::prepared_by]."],
           "writable": true
-        },
-        {
-          "name": "beneficiary_token"
         },
         {
           "name": "system_program"
@@ -372,6 +368,12 @@
         },
         {
           "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": []
@@ -572,6 +574,7 @@
             },
             {
               "name": "executor_token",
+              "docs": ["Must be a token account, whose mint is [common::USDC_MINT]."],
               "writable": true
             },
             {
@@ -580,7 +583,6 @@
             },
             {
               "name": "initial_participant",
-              "docs": ["does not exist anymore, we will attempt to perform this check."],
               "writable": true
             }
           ]
@@ -688,6 +690,12 @@
               ]
             }
           ]
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": []
@@ -751,6 +759,7 @@
             },
             {
               "name": "executor_token",
+              "docs": ["Must be a token account, whose mint is [common::USDC_MINT]."],
               "writable": true
             },
             {
@@ -759,7 +768,6 @@
             },
             {
               "name": "initial_participant",
-              "docs": ["does not exist anymore, we will attempt to perform this check."],
               "writable": true
             }
           ]
@@ -776,10 +784,11 @@
           "writable": true
         },
         {
-          "name": "best_offer_participant",
+          "name": "reserve_beneficiary",
           "docs": [
             "When the reserved sequence account was created, the beneficiary was set to the best offer",
-            "token's owner. This account will receive the lamports from the reserved sequence account.",
+            "token's owner if it existed (and if not, to whomever executed the reserve fast fill sequence",
+            "instruction). This account will receive the lamports from the reserved sequence account.",
             ""
           ],
           "writable": true
@@ -871,6 +880,12 @@
         },
         {
           "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": [
@@ -1098,6 +1113,12 @@
         },
         {
           "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": [
@@ -1184,6 +1205,15 @@
         {
           "name": "prepared_custody_token",
           "writable": true
+        },
+        {
+          "name": "base_fee_token",
+          "docs": [
+            "This token account will be the one that collects the base fee only if an auction's order",
+            "was executed late. Otherwise, the protocol's fee recipient token account will be used for",
+            "non-existent auctions and the best offer token account will be used for orders executed on",
+            "time."
+          ]
         },
         {
           "name": "usdc",
@@ -1320,6 +1350,12 @@
         },
         {
           "name": "epoch_schedule"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": [
@@ -1418,26 +1454,26 @@
               "writable": true
             },
             {
+              "name": "auction",
+              "docs": [
+                "must have been created by this point. Otherwise the auction account must reflect a completed",
+                "auction."
+              ],
+              "writable": true
+            },
+            {
               "name": "system_program"
             }
-          ]
-        },
-        {
-          "name": "auction",
-          "docs": [
-            "must have been created by this point. Otherwise the auction account must reflect a completed",
-            "auction."
           ]
         },
         {
           "name": "auction_config"
         },
         {
-          "name": "best_offer_token",
-          "docs": [
-            "Best offer token account, whose owner will be the beneficiary of the reserved fast fill",
-            "sequence account when it is closed."
-          ]
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": []
@@ -1454,6 +1490,15 @@
         "order response should call this instruction to reserve the fast fill's sequence number.",
         "This sequence number is warehoused in the `ReservedFastFillSequence` account and will be",
         "closed when the funds are finally settled.",
+        "",
+        "NOTE: This instruction is expected to be in the same transaction as the one that executes",
+        "the prepare order response instruction. If it is not, there is a risk that after preparing",
+        "the order response that someone starts an auction. This scenario risks the preparer's rent",
+        "that he paid because the winning auction participant can take his lamports when he calls",
+        "settle auction complete. Although this is an unlikely scenario, it is possible if there is",
+        "no deadline specified to start the auction and no participants use the fast VAA to start an",
+        "auction until the finalized VAA exists (which guarantees that the funds have finalized on",
+        "the source network).",
         "",
         "# Arguments",
         "",
@@ -1524,6 +1569,14 @@
               "writable": true
             },
             {
+              "name": "auction",
+              "docs": [
+                "must have been created by this point. Otherwise the auction account must reflect a completed",
+                "auction."
+              ],
+              "writable": true
+            },
+            {
               "name": "system_program"
             }
           ]
@@ -1537,11 +1590,10 @@
           ]
         },
         {
-          "name": "auction",
-          "docs": [
-            "must have been created by this point. Otherwise the auction account must reflect a completed",
-            "auction."
-          ]
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": []
@@ -1595,16 +1647,17 @@
       "discriminator": [84, 39, 0, 132, 21, 101, 222, 137],
       "accounts": [
         {
-          "name": "executor",
-          "docs": [
-            "we will always reward the owner of the executor token account with the lamports from the",
-            "prepared order response and its custody token account when we close these accounts. This",
-            "means we disregard the `prepared_by` field in the prepared order response."
-          ],
+          "name": "beneficiary",
+          "docs": ["finalized VAA."],
           "writable": true
         },
         {
-          "name": "executor_token",
+          "name": "base_fee_token",
+          "docs": [
+            "This token account will receive the base fee only if there was a penalty when executing the",
+            "order. If it does not exist when there is a penalty, this instruction handler will revert.",
+            ""
+          ],
           "writable": true
         },
         {
@@ -1613,7 +1666,8 @@
             "Destination token account, which the redeemer may not own. But because the redeemer is a",
             "signer and is the one encoded in the Deposit Fill message, he may have the tokens be sent",
             "to any account he chooses (this one).",
-            ""
+            "",
+            "of the tokens to the base fee token account."
           ],
           "writable": true
         },
@@ -1631,6 +1685,12 @@
         },
         {
           "name": "token_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": []
@@ -1797,6 +1857,12 @@
               ]
             }
           ]
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": []
@@ -1857,7 +1923,10 @@
         },
         {
           "name": "auction",
-          "docs": ["There should be no account data here because an auction was never created."],
+          "docs": [
+            "This account will have been created using the reserve fast fill sequence (no auction)",
+            "instruction. We need to make sure that this account has not been used in an auction."
+          ],
           "writable": true
         },
         {
@@ -1952,8 +2021,8 @@
       "name": "update_auction_parameters",
       "docs": [
         "This instruction is used to enact an existing auction update proposal. It can only be",
-        "executed after the `slot_enact_delay` has passed. This instruction can only be called by",
-        "the `owner` of the proposal.",
+        "executed after the `slot_enact_delay` has passed. This instruction can only be called by the",
+        "`owner`.",
         "",
         "# Arguments",
         "",
@@ -1989,6 +2058,12 @@
         },
         {
           "name": "system_program"
+        },
+        {
+          "name": "event_authority"
+        },
+        {
+          "name": "program"
         }
       ],
       "args": []
@@ -2480,7 +2555,7 @@
     },
     {
       "code": 7065,
-      "name": "AccountNotAuction"
+      "name": "NoAuction"
     },
     {
       "code": 7066,
@@ -2517,6 +2592,18 @@
     {
       "code": 7080,
       "name": "ReservedSequenceMismatch"
+    },
+    {
+      "code": 7082,
+      "name": "AuctionAlreadySettled"
+    },
+    {
+      "code": 7084,
+      "name": "InvalidBaseFeeToken"
+    },
+    {
+      "code": 7086,
+      "name": "BaseFeeTokenRequired"
     },
     {
       "code": 7280,
@@ -2600,6 +2687,11 @@
                 "name": "AuctionStatus"
               }
             }
+          },
+          {
+            "name": "prepared_by",
+            "docs": ["The fee payer when placing the initial offer."],
+            "type": "pubkey"
           },
           {
             "name": "info",
@@ -2894,26 +2986,40 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "auction",
+            "name": "fast_vaa_hash",
             "docs": ["The pubkey of the auction that was settled."],
-            "type": "pubkey"
+            "type": {
+              "array": ["u8", 32]
+            }
           },
           {
             "name": "best_offer_token",
             "docs": [
-              "If there was an active auction, this pubkey is the best offer token that was paid back."
+              "If there was an active auction, this field will have the pubkey of the best offer token that",
+              "was paid back and its balance after repayment."
             ],
             "type": {
-              "option": "pubkey"
+              "option": {
+                "defined": {
+                  "name": "SettledTokenAccountInfo"
+                }
+              }
             }
           },
           {
-            "name": "token_balance_after",
+            "name": "base_fee_token",
             "docs": [
-              "Token account's new balance. If there was no auction, this balance will be of the fee",
-              "recipient token account."
+              "Depending on whether there was an active auction, this field will have the pubkey of the",
+              "base fee token account (if there was an auction) or fee recipient token (if there was no",
+              "auction)."
             ],
-            "type": "u64"
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "SettledTokenAccountInfo"
+                }
+              }
+            }
           },
           {
             "name": "with_execute",
@@ -2983,8 +3089,10 @@
             "type": "u32"
           },
           {
-            "name": "auction",
-            "type": "pubkey"
+            "name": "fast_vaa_hash",
+            "type": {
+              "array": ["u8", 32]
+            }
           },
           {
             "name": "vaa",
@@ -3030,7 +3138,9 @@
           },
           {
             "name": "max_offer_price_allowed",
-            "type": "u64"
+            "type": {
+              "option": "u64"
+            }
           }
         ]
       }
@@ -3226,7 +3336,11 @@
           },
           {
             "name": "fast_fill",
-            "type": "pubkey"
+            "type": {
+              "defined": {
+                "name": "FastFillSeeds"
+              }
+            }
           }
         ]
       }
@@ -3276,7 +3390,7 @@
             }
           },
           {
-            "name": "fast_fill_seeds",
+            "name": "fast_fill",
             "type": {
               "defined": {
                 "name": "FastFillSeeds"
@@ -3411,8 +3525,10 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "auction",
-            "type": "pubkey"
+            "name": "fast_vaa_hash",
+            "type": {
+              "array": ["u8", 32]
+            }
           },
           {
             "name": "vaa",
@@ -3480,6 +3596,10 @@
         "fields": [
           {
             "name": "prepared_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_fee_token",
             "type": "pubkey"
           },
           {
@@ -3706,6 +3826,22 @@
                 "name": "EndpointInfo"
               }
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SettledTokenAccountInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "key",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance_after",
+            "type": "u64"
           }
         ]
       }

@@ -11,7 +11,7 @@ import {
   getTimestampByBlock,
 } from '../utils/near';
 import { Watcher } from './Watcher';
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import { assertEnvironmentVariable, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
 import axios from 'axios';
 import { AXIOS_CONFIG_JSON } from '../consts';
@@ -187,6 +187,7 @@ export class NearArchiveWatcher extends Watcher {
           break;
         }
       }
+      await sleep(10_000);
     }
     return txs.reverse();
   }

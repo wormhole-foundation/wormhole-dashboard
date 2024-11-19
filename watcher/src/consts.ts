@@ -56,9 +56,9 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
     Sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
     Base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
-    Scroll: process.env.SCROLL_RPC || 'https://rpc.ankr.com/scroll',
+    Scroll: process.env.SCROLL_RPC || 'https://scroll-rpc.publicnode.com',
     Mantle: process.env.MANTLE_RPC || 'https://mantle-rpc.publicnode.com',
-    Blast: process.env.BLAST_RPC || 'https://rpc.ankr.com/blast',
+    Blast: process.env.BLAST_RPC || 'https://blast-rpc.publicnode.com',
     Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
     Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
     Xlayer: process.env.XLAYER_RPC || 'https://rpc.ankr.com/xlayer',
@@ -68,8 +68,8 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,
     Bsc: process.env.BSC_RPC,
-    Polygon: process.env.POLYGON_RPC || 'https://rpc.ankr.com/polygon_mumbai',
-    Avalanche: process.env.AVALANCHE_RPC || 'https://rpc.ankr.com/avalanche_fuji',
+    Polygon: process.env.POLYGON_RPC || 'https://polygon-amoy-bor-rpc.publicnode.com',
+    Avalanche: process.env.AVALANCHE_RPC || 'https://avalanche-fuji-c-chain-rpc.publicnode.com',
     Oasis: process.env.OASIS_RPC || 'https://testnet.emerald.oasis.dev',
     Algorand: process.env.ALGORAND_RPC || 'https://testnet-api.algonode.cloud',
     Fantom: process.env.FANTOM_RPC,
@@ -89,11 +89,12 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Solana: process.env.SOLANA_RPC,
     Sui: process.env.SUI_RPC,
     Base: process.env.BASE_RPC,
-    Scroll: process.env.SCROLL_RPC || 'https://rpc.ankr.com/scroll_sepolia_testnet',
+    Scroll: process.env.SCROLL_RPC || 'https://scroll-sepolia-rpc.publicnode.com',
     Blast: process.env.BLAST_RPC || 'https://rpc.ankr.com/blast_testnet_sepolia',
     Sei: process.env.SEI_RPC,
     Wormchain: process.env.WORMCHAIN_RPC,
-    ArbitrumSepolia: process.env.ARBITRUM_SEPOLIA_RPC || 'https://rpc.ankr.com/arbitrum_sepolia',
+    ArbitrumSepolia:
+      process.env.ARBITRUM_SEPOLIA_RPC || 'https://arbitrum-sepolia-rpc.publicnode.com',
     BaseSepolia: process.env.BASE_SEPOLIA_RPC,
     OptimismSepolia:
       process.env.OPTIMISM_SEPOLIA_RPC || 'https://optimism-sepolia-rpc.publicnode.com',

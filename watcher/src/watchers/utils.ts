@@ -108,7 +108,7 @@ export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Wat
         `Attempted to create finalized NTT watcher for unsupported mainnet chain ${chainName}`
       );
     }
-  } else if ('Testnet') {
+  } else if (network === 'Testnet') {
     // These are testnet only chains
     if (chainName === 'Sepolia' || chainName === 'Holesky') {
       return new NTTWatcher(network, chainName, 'finalized');

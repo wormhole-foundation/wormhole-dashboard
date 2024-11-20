@@ -35,8 +35,8 @@ async function watchFt(
   }
 }
 
-const fromSlot = 301566320;
-const toSlot = 301573280;
+const fromSlot = 301569871;
+const toSlot = 301569872;
 
 const arbitrumFromBlock = 247028328;
 const arbitrumToBlock = 247037682;

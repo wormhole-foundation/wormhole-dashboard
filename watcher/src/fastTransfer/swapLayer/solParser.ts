@@ -15,6 +15,7 @@ import {
   blockTimeToDate,
   getTokenBalanceChange,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import { AccountLayout } from '@solana/spl-token';
 
 const ACCOUNT_NOT_FOUND = 'Account not found';
 const BLOCKTIME_NOT_FOUND = 'Blocktime not found';
@@ -170,9 +171,12 @@ export class SwapLayerParser {
 
     const fillAccountIndex = 2;
     const stagedInboundIndex = 7;
+    const feeRecipientToken = 10;
     const dstMintIndex = 12;
-    const recipientIndex = 18;
+    const recipientIndex = 17;
 
+    console.log('Recipient:', accounts[ix.accountKeyIndexes[recipientIndex]].pubkey.toBase58());
+    console.log('Output Token:', accounts[ix.accountKeyIndexes[dstMintIndex]].pubkey.toBase58());
     const recipient = accounts[ix.accountKeyIndexes[recipientIndex]].pubkey.toBase58();
     const outputToken = accounts[ix.accountKeyIndexes[dstMintIndex]].pubkey.toBase58();
 
@@ -180,6 +184,22 @@ export class SwapLayerParser {
       instructionName !== 'complete_swap_payload'
         ? getTokenBalanceChange(transaction, recipient, outputToken)
         : 0n;
+
+
+    let relayingFee = 0n;
+    // need to find out who the owner is because this is an associated token account
+    if (instructionName === 'complete_swap_relay') {
+      const accountInfo = await this.connection.getAccountInfo(accounts[ix.accountKeyIndexes[feeRecipientToken]].pubkey);
+
+      console.log('Pubkey:', accounts[ix.accountKeyIndexes[feeRecipientToken]].pubkey.toBase58());
+      if (accountInfo === null) {
+        throw new Error('Account not found');
+      }
+
+      const accountData = AccountLayout.decode(accountInfo.data);
+
+      relayingFee = getTokenBalanceChange(transaction, new PublicKey(accountData.owner).toBase58(), this.USDC_MINT.toBase58())
+    }
 
     const stagedInbound =
       instructionName === 'complete_swap_payload'
@@ -194,7 +214,7 @@ export class SwapLayerParser {
       output_amount: tokenBalance,
       staged_inbound: stagedInbound,
       tx_hash: sig,
-      relaying_fee: 0n,
+      relaying_fee: relayingFee,
     };
   }
 
@@ -244,6 +264,7 @@ export class SwapLayerParser {
         ? getTokenBalanceChange(transaction, recipient.toBase58(), this.USDC_MINT.toBase58())
         : 0n;
 
+        // TODO: check this against idlgs
     const relayingFee = instructionName === 'complete_transfer_relay'
       ? getTokenBalanceChange(transaction, this.getAccountKey(transaction, ix, 6)?.toBase58() || '', this.USDC_MINT.toBase58()) : 0n;
 

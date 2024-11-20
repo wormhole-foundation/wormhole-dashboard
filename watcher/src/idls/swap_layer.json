@@ -20,7 +20,16 @@
         "* `ctx` - The context for adding the peer.",
         "* `args` - The arguments for adding the peer."
       ],
-      "discriminator": [165, 134, 139, 216, 120, 149, 247, 255],
+      "discriminator": [
+        165,
+        134,
+        139,
+        216,
+        120,
+        149,
+        247,
+        255
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -75,7 +84,16 @@
         "",
         "* `ctx` - The context for canceling the ownership transfer request."
       ],
-      "discriminator": [167, 61, 9, 35, 192, 41, 64, 178],
+      "discriminator": [
+        167,
+        61,
+        9,
+        35,
+        192,
+        41,
+        64,
+        178
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -104,11 +122,22 @@
         "",
         "* `ctx` - The context for closing the staged outbound."
       ],
-      "discriminator": [67, 69, 31, 1, 231, 243, 10, 12],
+      "discriminator": [
+        67,
+        69,
+        31,
+        1,
+        231,
+        243,
+        10,
+        12
+      ],
       "accounts": [
         {
           "name": "sender",
-          "docs": ["This signer must be the same one encoded in the prepared order."],
+          "docs": [
+            "This signer must be the same one encoded in the prepared order."
+          ],
           "writable": true,
           "signer": true
         },
@@ -126,17 +155,23 @@
         },
         {
           "name": "staged_outbound",
-          "docs": ["Staging for outbound transfer. This instruction closes this account."],
+          "docs": [
+            "Staging for outbound transfer. This instruction closes this account."
+          ],
           "writable": true
         },
         {
           "name": "staged_custody_token",
-          "docs": ["This custody token account will be closed by the end of the instruction."],
+          "docs": [
+            "This custody token account will be closed by the end of the instruction."
+          ],
           "writable": true
         },
         {
           "name": "sender_token",
-          "docs": ["already check that the sender is the same as the prepared_by account."],
+          "docs": [
+            "already check that the sender is the same as the prepared_by account."
+          ],
           "writable": true,
           "optional": true
         },
@@ -159,7 +194,16 @@
         "* `ctx` - The context for completing the swap.",
         "* `instruction_data` - The instruction data for completing the swap."
       ],
-      "discriminator": [40, 166, 72, 2, 172, 18, 32, 75],
+      "discriminator": [
+        40,
+        166,
+        72,
+        2,
+        172,
+        18,
+        32,
+        75
+      ],
       "accounts": [
         {
           "name": "complete_swap",
@@ -217,7 +261,9 @@
               "name": "src_swap_token",
               "docs": [
                 "Temporary swap token account to receive USDC from the prepared fill. This account will be",
-                "closed at the end of this instruction."
+                "closed at the end of this instruction.",
+                "",
+                "NOTE: This ATA must already be created."
               ],
               "writable": true
             },
@@ -225,13 +271,17 @@
               "name": "dst_swap_token",
               "docs": [
                 "Temporary swap token account to receive destination mint after the swap. This account will",
-                "be closed at the end of this instruction."
+                "be closed at the end of this instruction.",
+                "",
+                "NOTE: This ATA must already be created."
               ],
               "writable": true
             },
             {
               "name": "fee_recipient_token",
-              "docs": ["token account."],
+              "docs": [
+                "token account."
+              ],
               "writable": true
             },
             {
@@ -252,9 +302,6 @@
               "name": "dst_token_program"
             },
             {
-              "name": "associated_token_program"
-            },
-            {
               "name": "system_program"
             }
           ]
@@ -273,7 +320,9 @@
         },
         {
           "name": "recipient",
-          "docs": ["account must be encoded in the prepared fill."],
+          "docs": [
+            "account must be encoded in the prepared fill."
+          ],
           "writable": true
         }
       ],
@@ -294,7 +343,16 @@
         "* `ctx` - The context for completing the swap.",
         "* `instruction_data` - The instruction data for completing the swap."
       ],
-      "discriminator": [82, 168, 4, 109, 220, 211, 26, 20],
+      "discriminator": [
+        82,
+        168,
+        4,
+        109,
+        220,
+        211,
+        26,
+        20
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -350,7 +408,9 @@
           "name": "src_swap_token",
           "docs": [
             "Temporary swap token account to receive USDC from the prepared fill. This account will be",
-            "closed at the end of this instruction."
+            "closed at the end of this instruction.",
+            "",
+            "NOTE: This ATA must already be created."
           ],
           "writable": true
         },
@@ -358,13 +418,17 @@
           "name": "dst_swap_token",
           "docs": [
             "Temporary swap token account to receive destination mint after the swap. This account will",
-            "be closed at the end of this instruction."
+            "be closed at the end of this instruction.",
+            "",
+            "NOTE: This ATA must already be created."
           ],
           "writable": true
         },
         {
           "name": "fee_recipient_token",
-          "docs": ["token account."],
+          "docs": [
+            "token account."
+          ],
           "writable": true
         },
         {
@@ -383,9 +447,6 @@
         },
         {
           "name": "dst_token_program"
-        },
-        {
-          "name": "associated_token_program"
         },
         {
           "name": "system_program"
@@ -411,7 +472,16 @@
         "* `ctx` - The context for completing the swap.",
         "* `instruction_data` - The instruction data for completing the swap."
       ],
-      "discriminator": [108, 241, 108, 248, 142, 211, 140, 252],
+      "discriminator": [
+        108,
+        241,
+        108,
+        248,
+        142,
+        211,
+        140,
+        252
+      ],
       "accounts": [
         {
           "name": "complete_swap",
@@ -469,7 +539,9 @@
               "name": "src_swap_token",
               "docs": [
                 "Temporary swap token account to receive USDC from the prepared fill. This account will be",
-                "closed at the end of this instruction."
+                "closed at the end of this instruction.",
+                "",
+                "NOTE: This ATA must already be created."
               ],
               "writable": true
             },
@@ -477,13 +549,17 @@
               "name": "dst_swap_token",
               "docs": [
                 "Temporary swap token account to receive destination mint after the swap. This account will",
-                "be closed at the end of this instruction."
+                "be closed at the end of this instruction.",
+                "",
+                "NOTE: This ATA must already be created."
               ],
               "writable": true
             },
             {
               "name": "fee_recipient_token",
-              "docs": ["token account."],
+              "docs": [
+                "token account."
+              ],
               "writable": true
             },
             {
@@ -504,9 +580,6 @@
               "name": "dst_token_program"
             },
             {
-              "name": "associated_token_program"
-            },
-            {
               "name": "system_program"
             }
           ]
@@ -525,7 +598,9 @@
         },
         {
           "name": "recipient",
-          "docs": ["account must be encoded in the prepared fill."],
+          "docs": [
+            "account must be encoded in the prepared fill."
+          ],
           "writable": true
         }
       ],
@@ -545,8 +620,26 @@
         "",
         "* `ctx` - The context for completing the direct transfer."
       ],
-      "discriminator": [233, 87, 221, 31, 40, 175, 108, 183],
+      "discriminator": [
+        233,
+        87,
+        221,
+        31,
+        40,
+        175,
+        108,
+        183
+      ],
       "accounts": [
+        {
+          "name": "redeemer",
+          "docs": [
+            "This redeemer is used to check against the recipient. If the redeemer is the same as the",
+            "recipient, he is free to redeem his tokens directly as USDC even if swap instructions are",
+            "encoded."
+          ],
+          "signer": true
+        },
         {
           "name": "consume_swap_layer_fill",
           "accounts": [
@@ -621,11 +714,29 @@
         "",
         "* `ctx` - The context for completing the payload transfer."
       ],
-      "discriminator": [14, 221, 53, 29, 211, 192, 38, 178],
+      "discriminator": [
+        14,
+        221,
+        53,
+        29,
+        211,
+        192,
+        38,
+        178
+      ],
       "accounts": [
         {
           "name": "payer",
           "writable": true,
+          "signer": true
+        },
+        {
+          "name": "redeemer",
+          "docs": [
+            "This redeemer is used to check against the recipient. If the redeemer is the same as the",
+            "recipient, he is free to redeem his tokens directly as USDC even if swap instructions are",
+            "encoded."
+          ],
           "signer": true
         },
         {
@@ -716,7 +827,16 @@
         "",
         "* `ctx` - The context for completing the transfer relay."
       ],
-      "discriminator": [201, 115, 7, 40, 86, 54, 76, 213],
+      "discriminator": [
+        201,
+        115,
+        7,
+        40,
+        86,
+        54,
+        76,
+        213
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -724,6 +844,15 @@
             "The payer of the transaction. This could either be the recipient or a relayer."
           ],
           "writable": true,
+          "signer": true
+        },
+        {
+          "name": "redeemer",
+          "docs": [
+            "This redeemer is used to check against the recipient. If the redeemer is the same as the",
+            "recipient, he is free to redeem his tokens directly as USDC even if swap instructions are",
+            "encoded."
+          ],
           "signer": true
         },
         {
@@ -822,11 +951,23 @@
         "",
         "* `ctx` - The context for confirming the ownership transfer request."
       ],
-      "discriminator": [118, 148, 109, 68, 201, 30, 139, 53],
+      "discriminator": [
+        118,
+        148,
+        109,
+        68,
+        201,
+        30,
+        139,
+        53
+      ],
       "accounts": [
         {
           "name": "pending_owner",
-          "docs": ["Must be the pending owner of the program set in the [`Custodian`]", "account."],
+          "docs": [
+            "Must be the pending owner of the program set in the [`Custodian`]",
+            "account."
+          ],
           "signer": true
         },
         {
@@ -849,11 +990,22 @@
         "",
         "* `ctx` - The context for the initialization."
       ],
-      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
       "accounts": [
         {
           "name": "owner",
-          "docs": ["Owner of the program, who presumably deployed this program."],
+          "docs": [
+            "Owner of the program, who presumably deployed this program."
+          ],
           "writable": true,
           "signer": true
         },
@@ -903,7 +1055,16 @@
         "* `ctx` - The context for initiating the swap.",
         "* `instruction_data` - The instruction data for initiating the swap."
       ],
-      "discriminator": [92, 141, 83, 248, 20, 79, 30, 13],
+      "discriminator": [
+        92,
+        141,
+        83,
+        248,
+        20,
+        79,
+        30,
+        13
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -962,7 +1123,9 @@
           "name": "src_swap_token",
           "docs": [
             "Temporary swap token account to receive source mint from the staged custody token. This",
-            "account will be closed at the end of this instruction."
+            "account will be closed at the end of this instruction.",
+            "",
+            "NOTE: This ATA must already be created."
           ],
           "writable": true
         },
@@ -970,13 +1133,17 @@
           "name": "dst_swap_token",
           "docs": [
             "Temporary swap token account to receive destination mint after the swap. This account will",
-            "be closed at the end of this instruction."
+            "be closed at the end of this instruction.",
+            "",
+            "NOTE: This ATA must already be created."
           ],
           "writable": true
         },
         {
           "name": "src_mint",
-          "docs": ["This account must be verified as the source mint for the swap."]
+          "docs": [
+            "This account must be verified as the source mint for the swap."
+          ]
         },
         {
           "name": "usdc",
@@ -998,9 +1165,6 @@
         },
         {
           "name": "token_router_program"
-        },
-        {
-          "name": "associated_token_program"
         },
         {
           "name": "src_token_program"
@@ -1028,7 +1192,16 @@
         "",
         "* `ctx` - The context for initiating the transfer."
       ],
-      "discriminator": [128, 229, 77, 5, 65, 234, 228, 75],
+      "discriminator": [
+        128,
+        229,
+        77,
+        5,
+        65,
+        234,
+        228,
+        75
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -1059,7 +1232,9 @@
         },
         {
           "name": "staged_custody_token",
-          "docs": ["This custody token account will be closed by the end of the instruction."],
+          "docs": [
+            "This custody token account will be closed by the end of the instruction."
+          ],
           "writable": true
         },
         {
@@ -1117,11 +1292,22 @@
         "",
         "* `ctx` - The context for releasing the inbound transfer."
       ],
-      "discriminator": [116, 169, 86, 154, 87, 2, 36, 20],
+      "discriminator": [
+        116,
+        169,
+        86,
+        154,
+        87,
+        2,
+        36,
+        20
+      ],
       "accounts": [
         {
           "name": "recipient",
-          "docs": ["This signer must be the same one encoded in the staged transfer."],
+          "docs": [
+            "This signer must be the same one encoded in the staged transfer."
+          ],
           "signer": true
         },
         {
@@ -1173,7 +1359,16 @@
         "* `ctx` - The context for staging the outbound transfer.",
         "* `args` - The arguments for staging the outbound transfer."
       ],
-      "discriminator": [69, 205, 153, 23, 99, 248, 131, 98],
+      "discriminator": [
+        69,
+        205,
+        153,
+        23,
+        99,
+        248,
+        131,
+        98
+      ],
       "accounts": [
         {
           "name": "payer",
@@ -1236,7 +1431,9 @@
         },
         {
           "name": "src_mint",
-          "docs": ["Mint can either be USDC or whichever mint is used to swap into USDC."]
+          "docs": [
+            "Mint can either be USDC or whichever mint is used to swap into USDC."
+          ]
         },
         {
           "name": "src_token_program"
@@ -1272,7 +1469,16 @@
         "",
         "* `ctx` - The context for submitting the ownership transfer request."
       ],
-      "discriminator": [215, 13, 88, 199, 48, 195, 19, 225],
+      "discriminator": [
+        215,
+        13,
+        88,
+        199,
+        48,
+        195,
+        19,
+        225
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -1289,7 +1495,10 @@
         },
         {
           "name": "new_owner",
-          "docs": ["New Owner.", ""]
+          "docs": [
+            "New Owner.",
+            ""
+          ]
         }
       ],
       "args": []
@@ -1307,7 +1516,16 @@
         "",
         "* `ctx` - The context for updating the fee recipient."
       ],
-      "discriminator": [249, 0, 198, 35, 183, 123, 57, 188],
+      "discriminator": [
+        249,
+        0,
+        198,
+        35,
+        183,
+        123,
+        57,
+        188
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -1327,7 +1545,10 @@
         },
         {
           "name": "new_fee_recipient",
-          "docs": ["New Fee Recipient.", ""]
+          "docs": [
+            "New Fee Recipient.",
+            ""
+          ]
         }
       ],
       "args": []
@@ -1341,7 +1562,16 @@
         "",
         "* `ctx` - The context for updating the fee updater."
       ],
-      "discriminator": [151, 53, 252, 33, 160, 246, 212, 86],
+      "discriminator": [
+        151,
+        53,
+        252,
+        33,
+        160,
+        246,
+        212,
+        86
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -1358,7 +1588,10 @@
         },
         {
           "name": "new_fee_updater",
-          "docs": ["New Fee Updater.", ""]
+          "docs": [
+            "New Fee Updater.",
+            ""
+          ]
         }
       ],
       "args": []
@@ -1375,7 +1608,16 @@
         "",
         "* `ctx` - The context for updating the owner assistant."
       ],
-      "discriminator": [153, 83, 175, 53, 168, 34, 131, 22],
+      "discriminator": [
+        153,
+        83,
+        175,
+        53,
+        168,
+        34,
+        131,
+        22
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -1392,7 +1634,10 @@
         },
         {
           "name": "new_owner_assistant",
-          "docs": ["New Assistant.", ""]
+          "docs": [
+            "New Assistant.",
+            ""
+          ]
         }
       ],
       "args": []
@@ -1408,7 +1653,16 @@
         "* `ctx` - The context for updating the peer.",
         "* `args` - The arguments for updating the peer."
       ],
-      "discriminator": [34, 240, 139, 39, 182, 104, 150, 232],
+      "discriminator": [
+        34,
+        240,
+        139,
+        39,
+        182,
+        104,
+        150,
+        232
+      ],
       "accounts": [
         {
           "name": "admin",
@@ -1453,7 +1707,16 @@
         "* `ctx` - The context for updating the relay parameters.",
         "* `args` - The arguments for updating the relay parameters."
       ],
-      "discriminator": [14, 75, 26, 86, 220, 131, 198, 205],
+      "discriminator": [
+        14,
+        75,
+        26,
+        86,
+        220,
+        131,
+        198,
+        205
+      ],
       "accounts": [
         {
           "name": "fee_updater",
@@ -1492,23 +1755,68 @@
   "accounts": [
     {
       "name": "Custodian",
-      "discriminator": [132, 228, 139, 184, 112, 228, 108, 240]
+      "discriminator": [
+        132,
+        228,
+        139,
+        184,
+        112,
+        228,
+        108,
+        240
+      ]
     },
     {
       "name": "Peer",
-      "discriminator": [50, 8, 19, 55, 40, 253, 37, 58]
+      "discriminator": [
+        50,
+        8,
+        19,
+        55,
+        40,
+        253,
+        37,
+        58
+      ]
     },
     {
       "name": "PreparedFill",
-      "discriminator": [202, 241, 65, 186, 110, 235, 238, 80]
+      "discriminator": [
+        202,
+        241,
+        65,
+        186,
+        110,
+        235,
+        238,
+        80
+      ]
     },
     {
       "name": "StagedInbound",
-      "discriminator": [65, 230, 81, 119, 138, 87, 231, 76]
+      "discriminator": [
+        65,
+        230,
+        81,
+        119,
+        138,
+        87,
+        231,
+        76
+      ]
     },
     {
       "name": "StagedOutbound",
-      "discriminator": [88, 31, 179, 29, 184, 53, 196, 180]
+      "discriminator": [
+        88,
+        31,
+        179,
+        29,
+        184,
+        53,
+        196,
+        180
+      ]
     }
   ],
   "errors": [
@@ -1629,6 +1937,10 @@
       "name": "ImmutableProgram"
     },
     {
+      "code": 6282,
+      "name": "InvalidRedeemer"
+    },
+    {
       "code": 6512,
       "name": "InvalidBaseFee"
     },
@@ -1673,12 +1985,20 @@
       "name": "RelayingFeeExceedsMinAmountOut"
     },
     {
+      "code": 6609,
+      "name": "ZeroAmountIn"
+    },
+    {
       "code": 6610,
       "name": "ZeroMinAmountOut"
     },
     {
       "code": 6612,
       "name": "DelegatedAmountMismatch"
+    },
+    {
+      "code": 6613,
+      "name": "NotProgramTransferAuthority"
     },
     {
       "code": 6614,
@@ -1803,7 +2123,10 @@
           {
             "name": "address",
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
@@ -1824,7 +2147,9 @@
         "fields": [
           {
             "name": "owner",
-            "docs": ["Program's owner."],
+            "docs": [
+              "Program's owner."
+            ],
             "type": "pubkey"
           },
           {
@@ -1835,17 +2160,23 @@
           },
           {
             "name": "owner_assistant",
-            "docs": ["Program's assistant. Can be used to update the relayer fee and swap rate."],
+            "docs": [
+              "Program's assistant. Can be used to update the relayer fee and swap rate."
+            ],
             "type": "pubkey"
           },
           {
             "name": "fee_updater",
-            "docs": ["Program's fee updater. Can be used to update fee parameters and the like."],
+            "docs": [
+              "Program's fee updater. Can be used to update fee parameters and the like."
+            ],
             "type": "pubkey"
           },
           {
             "name": "fee_recipient_token",
-            "docs": ["Program's fee recipient. Receives relayer fees in USDC."],
+            "docs": [
+              "Program's fee recipient. Receives relayer fees in USDC."
+            ],
             "type": "pubkey"
           }
         ]
@@ -1894,7 +2225,9 @@
     },
     {
       "name": "Peer",
-      "docs": ["Foreign Peer account data."],
+      "docs": [
+        "Foreign Peer account data."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -1908,14 +2241,21 @@
           },
           {
             "name": "address",
-            "docs": ["Peer address. Cannot be zero address."],
+            "docs": [
+              "Peer address. Cannot be zero address."
+            ],
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
             "name": "relay_params",
-            "docs": ["Relay parameters."],
+            "docs": [
+              "Relay parameters."
+            ],
             "type": {
               "defined": {
                 "name": "RelayParams"
@@ -1932,7 +2272,9 @@
         "fields": [
           {
             "name": "chain",
-            "docs": ["Peer chain. Cannot equal `1` (Solana's Chain ID)."],
+            "docs": [
+              "Peer chain. Cannot equal `1` (Solana's Chain ID)."
+            ],
             "type": "u16"
           },
           {
@@ -1977,17 +2319,23 @@
         "fields": [
           {
             "name": "prepared_custody_token_bump",
-            "docs": ["Bump seed for the custody token account associated with [PreparedFill]."],
+            "docs": [
+              "Bump seed for the custody token account associated with [PreparedFill]."
+            ],
             "type": "u8"
           },
           {
             "name": "prepared_by",
-            "docs": ["Who paid the lamports to create the [PreparedFill] account."],
+            "docs": [
+              "Who paid the lamports to create the [PreparedFill] account."
+            ],
             "type": "pubkey"
           },
           {
             "name": "fill_type",
-            "docs": ["NOTE: If [FillType::Unset], the [PreparedFill] account is invalid."],
+            "docs": [
+              "NOTE: If [FillType::Unset], the [PreparedFill] account is invalid."
+            ],
             "type": {
               "defined": {
                 "name": "FillType"
@@ -1996,19 +2344,28 @@
           },
           {
             "name": "source_chain",
-            "docs": ["Wormhole chain ID reflecting where the order was created."],
+            "docs": [
+              "Wormhole chain ID reflecting where the order was created."
+            ],
             "type": "u16"
           },
           {
             "name": "order_sender",
-            "docs": ["Universal address of the order sender."],
+            "docs": [
+              "Universal address of the order sender."
+            ],
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
             "name": "redeemer",
-            "docs": ["Authority allowed to redeem [PreparedFill]."],
+            "docs": [
+              "Authority allowed to redeem [PreparedFill]."
+            ],
             "type": "pubkey"
           },
           {
@@ -2052,19 +2409,25 @@
             "fields": [
               {
                 "name": "gas_dropoff",
-                "docs": ["Normalized amount of gas to drop off on destination network."],
+                "docs": [
+                  "Normalized amount of gas to drop off on destination network."
+                ],
                 "type": "u32"
               },
               {
                 "name": "max_relayer_fee",
-                "docs": ["Maximum fee that a relayer can charge for the transfer."],
+                "docs": [
+                  "Maximum fee that a relayer can charge for the transfer."
+                ],
                 "type": "u64"
               }
             ]
           },
           {
             "name": "Payload",
-            "fields": ["bytes"]
+            "fields": [
+              "bytes"
+            ]
           }
         ]
       }
@@ -2111,7 +2474,9 @@
     },
     {
       "name": "StageOutboundArgs",
-      "docs": ["Arguments for [stage_outbound]."],
+      "docs": [
+        "Arguments for [stage_outbound]."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
@@ -2138,14 +2503,21 @@
           },
           {
             "name": "target_chain",
-            "docs": ["The Wormhole chain ID of the network to transfer tokens to."],
+            "docs": [
+              "The Wormhole chain ID of the network to transfer tokens to."
+            ],
             "type": "u16"
           },
           {
             "name": "recipient",
-            "docs": ["The recipient of the transfer."],
+            "docs": [
+              "The recipient of the transfer."
+            ],
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
@@ -2206,29 +2578,42 @@
           },
           {
             "name": "staged_by",
-            "docs": ["Payer that created this StagedInbound."],
+            "docs": [
+              "Payer that created this StagedInbound."
+            ],
             "type": "pubkey"
           },
           {
             "name": "source_chain",
-            "docs": ["Exposed out of convenience for the receiving program."],
+            "docs": [
+              "Exposed out of convenience for the receiving program."
+            ],
             "type": "u16"
           },
           {
             "name": "sender",
-            "docs": ["The sender of the swap message."],
+            "docs": [
+              "The sender of the swap message."
+            ],
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
             "name": "recipient",
-            "docs": ["The encoded recipient must be the caller."],
+            "docs": [
+              "The encoded recipient must be the caller."
+            ],
             "type": "pubkey"
           },
           {
             "name": "is_native",
-            "docs": ["Indicates whether the output token type is Gas."],
+            "docs": [
+              "Indicates whether the output token type is Gas."
+            ],
             "type": "bool"
           }
         ]
@@ -2289,29 +2674,46 @@
           },
           {
             "name": "prepared_by",
-            "docs": ["One who paid the lamports to create [StagedOutbound]."],
+            "docs": [
+              "One who paid the lamports to create [StagedOutbound]."
+            ],
             "type": "pubkey"
           },
           {
             "name": "sender",
-            "docs": ["Sender of the swap message."],
+            "docs": [
+              "Sender of the swap message."
+            ],
             "type": "pubkey"
           },
           {
             "name": "target_chain",
-            "docs": ["Wormhole chain ID of the target network."],
+            "docs": [
+              "Wormhole chain ID of the target network."
+            ],
             "type": "u16"
           },
           {
             "name": "recipient",
-            "docs": ["Intended recipient of the transfer."],
+            "docs": [
+              "Intended recipient of the transfer.",
+              "",
+              "NOTE: This recipient will be set to the zero address after a swap is completed if there is",
+              "any dust remaining in the custody token account. Setting this to the zero address will",
+              "prevent replaying the same outbound swap."
+            ],
             "type": {
-              "array": ["u8", 32]
+              "array": [
+                "u8",
+                32
+              ]
             }
           },
           {
             "name": "is_exact_in",
-            "docs": ["This value is only checked for swaps."],
+            "docs": [
+              "This value is only checked for swaps."
+            ],
             "type": "bool"
           },
           {
@@ -2354,7 +2756,9 @@
           },
           {
             "name": "Payload",
-            "fields": ["bytes"]
+            "fields": [
+              "bytes"
+            ]
           }
         ]
       }

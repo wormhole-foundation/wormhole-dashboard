@@ -151,17 +151,19 @@ export function blockTimeToDate(blockTime: number) {
 export function getTokenBalanceChange(
   transaction: VersionedTransactionResponse,
   owner: string,
-  mint: string
+  mint: string,
 ) {
-  console.log('Transaction Meta:', transaction.meta);
   const preTokenBalances = transaction.meta?.preTokenBalances || [];
   const postTokenBalances = transaction.meta?.postTokenBalances || [];
+
+  console.log(`Owner: ${owner}, Mint: ${mint}`);
 
   const preTokenBalance = preTokenBalances.find((tb) => tb.mint === mint && tb.owner === owner) || {
     uiTokenAmount: {
       amount: 0n,
     },
   };
+  console.log(`Pre-transaction token balance: ${preTokenBalance.uiTokenAmount.amount}`);
 
   const postTokenBalance = postTokenBalances.find(
     (tb) => tb.mint === mint && tb.owner === owner
@@ -170,6 +172,7 @@ export function getTokenBalanceChange(
       amount: 0n,
     },
   };
+  console.log(`Post-transaction token balance: ${postTokenBalance.uiTokenAmount.amount}`);
 
   const change =
     BigInt(postTokenBalance.uiTokenAmount.amount) - BigInt(preTokenBalance.uiTokenAmount.amount);

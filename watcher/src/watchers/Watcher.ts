@@ -4,7 +4,7 @@ import {
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { z } from 'zod';
-import { TIMEOUT } from '../consts';
+import { HB_INTERVAL, TIMEOUT } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { getResumeBlockByChain, storeLatestBlock, storeVaasByBlock } from '../databases/utils';
 import { getLogger, WormholeLogger } from '../utils/logger';
@@ -17,6 +17,7 @@ export class Watcher {
   logger: WormholeLogger;
   maximumBatchSize: number = 100;
   mode: Mode;
+  watchLoopDelay: number = 0; // in milliseconds
 
   constructor(network: Network, chain: Chain, mode: Mode = 'vaa') {
     this.network = network;
@@ -34,7 +35,10 @@ export class Watcher {
     throw new Error('Not Implemented');
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     throw new Error('Not Implemented');
   }
 
@@ -71,6 +75,7 @@ export class Watcher {
     let fromBlock: number | null = await getResumeBlockByChain(this.network, this.chain, this.mode);
 
     let retry = 0;
+    let firstTime = true;
     while (true) {
       try {
         this.logger.debug(`fromBlock = ${fromBlock}, toBlock = ${toBlock}`);
@@ -85,8 +90,14 @@ export class Watcher {
             const blockKey = await this.getFtMessagesForBlocks(fromBlock, toBlock);
             await storeLatestBlock(this.chain, blockKey, this.mode);
           } else {
-            const vaasByBlock = await this.getMessagesForBlocks(fromBlock, toBlock);
+            const { vaasByBlock, optionalBlockHeight } = await this.getMessagesForBlocks(
+              fromBlock,
+              toBlock
+            );
             await storeVaasByBlock(this.chain, vaasByBlock);
+            if (optionalBlockHeight) {
+              toBlock = optionalBlockHeight;
+            }
           }
           fromBlock = toBlock + 1;
         }
@@ -109,7 +120,7 @@ export class Watcher {
         }
       } catch (e) {
         retry++;
-        this.logger.error(e);
+        this.logger.error(`error fetching messages: ${e}`);
         const expoBacko = TIMEOUT * 2 ** retry;
         this.logger.warn(`backing off for ${expoBacko}ms`);
         await sleep(expoBacko);
@@ -117,6 +128,28 @@ export class Watcher {
       if (parentPort) {
         parentPort.postMessage('heartbeat');
       }
+      if (this.watchLoopDelay > 0 && !firstTime) {
+        this.logger.info(`Using watchLoopDelay of ${this.watchLoopDelay}ms`);
+        const wakeupTime = Date.now() + this.watchLoopDelay;
+        let now = Date.now();
+        while (now < wakeupTime) {
+          if (parentPort) {
+            parentPort.postMessage('heartbeat');
+          }
+          const sleepInterval = Math.min(HB_INTERVAL / 2, wakeupTime - now);
+          await sleep(sleepInterval);
+          now = Date.now();
+        }
+        // After sleeping for the extra loop delay, need to get the latest finalized block
+        try {
+          toBlock = await this.getFinalizedBlockNumber();
+          this.logger.debug(`finalized block after the extra loop delay = ${toBlock}`);
+        } catch (e) {
+          this.logger.error(`error fetching finalized block after the extra loop delay: ${e}`);
+          // If this throws, the loop will continue and try again.
+        }
+      }
+      firstTime = false;
     }
   }
 }

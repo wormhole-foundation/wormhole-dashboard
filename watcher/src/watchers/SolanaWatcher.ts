@@ -81,7 +81,10 @@ export class SolanaWatcher extends Watcher {
     return block;
   }
 
-  async getMessagesForBlocks(fromSlot: number, toSlot: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromSlot: number,
+    toSlot: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     // in the rare case of maximumBatchSize skipped blocks in a row,
     // you might hit this error due to the recursion below
     if (fromSlot > toSlot) throw new Error('solana: invalid block range');
@@ -251,7 +254,7 @@ export class SolanaWatcher extends Watcher {
       toSlot.toString(),
       new Date(toBlock.blockTime! * 1000).toISOString()
     );
-    return { [lastBlockKey]: [], ...vaasByBlock };
+    return { vaasByBlock: { [lastBlockKey]: [], ...vaasByBlock } };
   }
 
   isValidVaaKey(key: string) {

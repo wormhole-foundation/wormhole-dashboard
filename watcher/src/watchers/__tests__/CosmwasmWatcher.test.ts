@@ -17,7 +17,7 @@ test.skip('getFinalizedBlockNumber(terra2)', async () => {
 
 test.skip('getMessagesForBlocks(terra2)', async () => {
   const watcher = new TerraExplorerWatcher('Mainnet', 'Terra2');
-  const vaasByBlock = await watcher.getMessagesForBlocks(10847656, 10847657);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(10847656, 10847657);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
@@ -38,7 +38,7 @@ test('getFinalizedBlockNumber(terra explorer)', async () => {
 
 test('getMessagesForBlocks(terra explorer)', async () => {
   const watcher = new TerraExplorerWatcher('Mainnet', 'Terra');
-  const vaasByBlock = await watcher.getMessagesForBlocks(14506733, 14506740);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(14506733, 14506740);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
@@ -54,7 +54,7 @@ test('getMessagesForBlocks(terra explorer)', async () => {
 // flaky rpc, skip
 test.skip('getMessagesForBlocks(terra explorer, no useful info)', async () => {
   const watcher = new TerraExplorerWatcher('Mainnet', 'Terra');
-  const vaasByBlock = await watcher.getMessagesForBlocks(10975000, 10975010);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(10975000, 10975010);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
@@ -70,7 +70,7 @@ test('getFinalizedBlockNumber(xpla)', async () => {
 
 test('getMessagesForBlocks(xpla)', async () => {
   const watcher = new CosmwasmWatcher('Mainnet', 'Xpla');
-  const vaasByBlock = await watcher.getMessagesForBlocks(1645812, 1645813);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(1645812, 1645813);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
@@ -91,7 +91,7 @@ test('getFinalizedBlockNumber(injective)', async () => {
 
 test.skip('getMessagesForBlocks(injective)', async () => {
   const watcher = new InjectiveExplorerWatcher('Mainnet');
-  const vaasByBlock = await watcher.getMessagesForBlocks(61720293, 61720294);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(61720293, 61720294);
   const entries = Object.entries(vaasByBlock);
   // console.log(entries); // Leave this in for future debugging
   expect(entries.length).toEqual(2);
@@ -115,7 +115,7 @@ test.skip('getFinalizedBlockNumber(sei)', async () => {
 // skipped because the SeiExplorerWatcher is used
 test.skip('getMessagesForBlocks(sei)', async () => {
   const watcher = new CosmwasmWatcher('Mainnet', 'Sei');
-  const vaasByBlock = await watcher.getMessagesForBlocks(18907686, 18907687);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(18907686, 18907687);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(2);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
@@ -138,7 +138,7 @@ test('getFinalizedBlockNumber(sei explorer)', async () => {
 // skipped because it takes more and more time to paginate back
 test.skip('getMessagesForBlocks(sei explorer)', async () => {
   const watcher = new SeiExplorerWatcher('Mainnet');
-  const vaasByBlock = await watcher.getMessagesForBlocks(19061244, 19061245);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(19061244, 19061245);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(0);
@@ -161,7 +161,7 @@ test('getFinalizedBlockNumber(wormchain)', async () => {
 
 test('getMessagesForBlocks(wormchain)', async () => {
   const watcher = new WormchainWatcher('Mainnet');
-  const vaasByBlock = await watcher.getMessagesForBlocks(8978585, 8978585);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(8978585, 8978585);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(1);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(0);

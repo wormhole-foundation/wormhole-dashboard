@@ -19,7 +19,7 @@ test('getFinalizedSequenceNumber', async () => {
 // works backwards.  This will cause a 429 until we clear that up.
 test.skip('getMessagesForBlocks', async () => {
   const watcher = new SuiWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(1581997, 1581997);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(1581997, 1581997);
   console.log(messages);
   const entries = Object.entries(messages);
   expect(entries.length).toEqual(46);

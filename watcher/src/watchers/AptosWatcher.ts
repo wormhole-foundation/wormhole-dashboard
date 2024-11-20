@@ -40,7 +40,10 @@ export class AptosWatcher extends Watcher {
     );
   }
 
-  async getMessagesForBlocks(fromSequence: number, toSequence: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromSequence: number,
+    toSequence: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     const limit = toSequence - fromSequence + 1;
     const events: AptosEvent[] = (await this.client.getEventsByEventHandle(
       this.coreBridgeAddress,
@@ -63,7 +66,7 @@ export class AptosWatcher extends Watcher {
         vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] ?? []), vaaKey];
       })
     );
-    return vaasByBlock;
+    return { vaasByBlock };
   }
 
   isValidBlockKey(key: string) {

@@ -115,7 +115,9 @@ import { ChainId, Network, toChain, toChainId } from '@wormhole-foundation/sdk-b
       while (fromBlock <= rangeEnd && !found) {
         const toBlock = Math.min(fromBlock + watcher.maximumBatchSize - 1, rangeEnd);
         const messages = await watcher.getMessagesForBlocks(fromBlock, toBlock);
-        for (const message of Object.entries(messages).filter(([key, value]) => value.length > 0)) {
+        for (const message of Object.entries(messages.vaasByBlock).filter(
+          ([key, value]) => value.length > 0
+        )) {
           const locatedMessages = message[1].filter((msgKey) => {
             const [_transaction, vaaKey] = msgKey.split(':');
             const [_chain, msgEmitter, msgSeq] = vaaKey.split('/');

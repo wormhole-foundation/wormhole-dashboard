@@ -47,7 +47,10 @@ export class InjectiveExplorerWatcher extends Watcher {
   // should be core, but the explorer doesn't support it yet
   // use "to": as the pagination key
   // compare block height ("block_number":) with what is passed in.
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     const coreAddress = contracts.coreBridge.get(this.network, this.chain);
     const address = contracts.tokenBridge.get(this.network, this.chain);
     if (!coreAddress || !address) {
@@ -169,7 +172,7 @@ export class InjectiveExplorerWatcher extends Watcher {
       );
       vaasByBlock[blockKey] = [];
     }
-    return vaasByBlock;
+    return { vaasByBlock };
   }
 }
 

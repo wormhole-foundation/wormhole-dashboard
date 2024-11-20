@@ -22,7 +22,10 @@ export class NearWatcher extends Watcher {
     return block.header.height;
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     // assume toBlock was retrieved from getFinalizedBlockNumber and is finalized
     this.logger.info(`fetching info for blocks ${fromBlock} to ${toBlock}`);
     const provider = await this.getProvider();
@@ -48,7 +51,9 @@ export class NearWatcher extends Watcher {
       }
     }
 
-    return getMessagesFromBlockResults(this.network, provider, blocks);
+    return {
+      vaasByBlock: await getMessagesFromBlockResults(this.network, provider, blocks),
+    };
   }
 
   async getProvider(): Promise<Provider> {

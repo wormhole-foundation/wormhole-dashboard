@@ -107,7 +107,10 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
 
   // retrieve blocks for core contract
   // compare block height with what is passed in
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
@@ -237,6 +240,6 @@ export class SeiExplorerWatcher extends CosmwasmWatcher {
     }
     // NOTE: this does not set an empty entry for the latest block since we don't know if the graphql response
     // is synced with the block height. Therefore, the latest block will only update when a new transaction appears.
-    return vaasByBlock;
+    return { vaasByBlock };
   }
 }

@@ -39,7 +39,10 @@ export class SuiWatcher extends Watcher {
   }
 
   // TODO: this might break using numbers, the whole service needs a refactor to use BigInt
-  async getMessagesForBlocks(fromCheckpoint: number, toCheckpoint: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromCheckpoint: number,
+    toCheckpoint: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     this.logger.info(`fetching info for checkpoints ${fromCheckpoint} to ${toCheckpoint}`);
     const vaasByBlock: VaasByBlock = {};
 
@@ -115,6 +118,6 @@ export class SuiWatcher extends Watcher {
         vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
       }
     } while (hasNextPage && lastCheckpoint && fromCheckpoint < lastCheckpoint);
-    return vaasByBlock;
+    return { vaasByBlock };
   }
 }

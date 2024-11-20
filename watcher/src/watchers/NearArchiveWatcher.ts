@@ -1,27 +1,29 @@
 import { decode } from 'bs58';
 import { Provider } from 'near-api-js/lib/providers';
-import { BlockResult } from 'near-api-js/lib/providers/provider';
+import { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
 import { z } from 'zod';
 import { VaasByBlock } from '../databases/types';
-import { makeBlockKey } from '../databases/utils';
+import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import {
   fetchBlockByBlockId,
-  getMessagesFromBlockResults,
   getNearProvider,
   getTimestampByBlock,
+  isWormholePublishEventLog,
 } from '../utils/near';
 import { Watcher } from './Watcher';
 import { assertEnvironmentVariable, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
 import axios from 'axios';
-import { AXIOS_CONFIG_JSON } from '../consts';
+import { AXIOS_CONFIG_JSON, HB_INTERVAL } from '../consts';
+import { EventLog } from 'src/types/near';
 
 export class NearArchiveWatcher extends Watcher {
   provider: Provider | null = null;
 
   constructor(network: Network) {
     super(network, 'Near');
-    this.maximumBatchSize = 1000;
+    this.maximumBatchSize = 1_000_000;
+    this.watchLoopDelay = 60 * 60 * 1000; // 1 hour
   }
 
   async getFinalizedBlockNumber(): Promise<number> {
@@ -37,7 +39,11 @@ export class NearArchiveWatcher extends Watcher {
     }
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
+    const quittingTimestamp = Date.now() + HB_INTERVAL * 0.75;
     const origFromBlock = fromBlock;
     const origToBlock = toBlock;
     this.logger.info(`fetching info for blocks ${origFromBlock} to ${origToBlock}`);
@@ -114,21 +120,26 @@ export class NearArchiveWatcher extends Watcher {
     }
 
     this.logger.info(`Fetched ${blocks.length} blocks`);
-    const vaasByBlock: VaasByBlock = await getMessagesFromBlockResults(
+    const response: ConstrainedResponse = await this.getMessagesFromBlockResultsConstrained(
       this.network,
       provider,
       blocks,
-      true
+      quittingTimestamp
     );
+    // This is the case where there are no transactions in the time window.
+    if (response.lastBlockHeight === 0) {
+      response.lastBlockHeight = toBlock;
+    }
+    const lastBlockInfo = await fetchBlockByBlockId(provider, response.lastBlockHeight);
     // Make a block for the to_block, if it isn't already there
     const blockKey = makeBlockKey(
-      toBlockInfo.header.height.toString(),
-      new Date(toBlockInfo.header.timestamp / 1_000_000).toISOString()
+      response.lastBlockHeight.toString(),
+      new Date(lastBlockInfo.header.timestamp / 1_000_000).toISOString()
     );
-    if (!vaasByBlock[blockKey]) {
-      vaasByBlock[blockKey] = [];
+    if (!response.vaasByBlock[blockKey]) {
+      response.vaasByBlock[blockKey] = [];
     }
-    return vaasByBlock;
+    return response;
   }
 
   async getProvider(): Promise<Provider> {
@@ -191,7 +202,90 @@ export class NearArchiveWatcher extends Watcher {
     }
     return txs.reverse();
   }
+
+  async getMessagesFromBlockResultsConstrained(
+    network: Network,
+    provider: Provider,
+    blocks: BlockResult[],
+    quittingTime: number
+  ): Promise<ConstrainedResponse> {
+    const vaasByBlock: VaasByBlock = {};
+    let lastBlockHeight = 0;
+    let prevLastBlockHeight = 0;
+    this.logger.debug(`Fetching messages from ${blocks.length} blocks...`);
+    try {
+      for (let i = 0; i < blocks.length; i++) {
+        this.logger.debug(`Fetching messages from block ${i + 1}/${blocks.length}...`);
+        const { height, timestamp } = blocks[i].header;
+        prevLastBlockHeight = lastBlockHeight;
+        lastBlockHeight = height;
+        const blockKey = makeBlockKey(
+          height.toString(),
+          new Date(timestamp / 1_000_000).toISOString()
+        );
+        let localVaasByBlock: VaasByBlock = {};
+        localVaasByBlock[blockKey] = [];
+
+        const chunks = [];
+        this.logger.debug('attempting to fetch chunks');
+        for (const chunk of blocks[i].chunks) {
+          chunks.push(await provider.chunk(chunk.chunk_hash));
+        }
+
+        const transactions = chunks.flatMap(({ transactions }) => transactions);
+        const coreBridge = contracts.coreBridge.get(network, 'Near');
+        if (!coreBridge) {
+          throw new Error('Unable to get contract address for Near');
+        }
+        this.logger.debug(`attempting to fetch ${transactions.length} transactions`);
+        const totTx = transactions.length;
+        let txCount = 1;
+        for (const tx of transactions) {
+          this.logger.debug(`fetching transaction ${txCount}/${totTx}`);
+          txCount++;
+          const outcome = await provider.txStatus(tx.hash, coreBridge);
+          const logs = outcome.receipts_outcome
+            .filter(
+              ({ outcome }) =>
+                (outcome as any).executor_id === coreBridge &&
+                (outcome.status as ExecutionStatus).SuccessValue
+            )
+            .flatMap(({ outcome }) => outcome.logs)
+            .filter((log) => log.startsWith('EVENT_JSON:')) // https://nomicon.io/Standards/EventsFormat
+            .map((log) => JSON.parse(log.slice(11)) as EventLog)
+            .filter(isWormholePublishEventLog);
+          for (const log of logs) {
+            const vaaKey = makeVaaKey(tx.hash, 'Near', log.emitter, log.seq.toString());
+            localVaasByBlock[blockKey] = [...localVaasByBlock[blockKey], vaaKey];
+          }
+        }
+        this.logger.debug(
+          `Fetched ${localVaasByBlock[blockKey].length} messages from block ${blockKey}`
+        );
+        vaasByBlock[blockKey] = localVaasByBlock[blockKey];
+        if (Date.now() >= quittingTime) {
+          this.logger.warn(`Quitting early due to time constraint.`);
+          break;
+        }
+      }
+    } catch (e) {
+      this.logger.error(`Near block getMessagesFromBlockResultsConstrained error: ${e}`);
+      this.logger.warn(`Quitting early due to error.`);
+      lastBlockHeight = prevLastBlockHeight;
+    }
+
+    const numMessages = Object.values(vaasByBlock).flat().length;
+    this.logger.debug(`Fetched ${numMessages} messages from ${blocks.length} blocks`);
+
+    return { vaasByBlock, lastBlockHeight };
+  }
 }
+
+type ConstrainedResponse = {
+  vaasByBlock: VaasByBlock;
+  lastBlockHeight: number;
+};
+
 type GetTransactionsByAccountIdResponse = {
   txns: NearTxn[];
 };

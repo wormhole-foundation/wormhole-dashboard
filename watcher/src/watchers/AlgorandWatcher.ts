@@ -98,7 +98,10 @@ export class AlgorandWatcher extends Watcher {
     return messages;
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     const txIds = await this.getApplicationLogTransactionIds(fromBlock, toBlock);
     const transactions = [];
     for (const txId of txIds) {
@@ -124,6 +127,6 @@ export class AlgorandWatcher extends Watcher {
     if (!vaasByBlock[toBlockKey]) {
       vaasByBlock[toBlockKey] = [];
     }
-    return vaasByBlock;
+    return { vaasByBlock };
   }
 }

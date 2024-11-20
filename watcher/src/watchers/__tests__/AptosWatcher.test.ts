@@ -16,7 +16,7 @@ test('getFinalizedSequenceNumber', async () => {
 
 test('getMessagesForSequenceNumbers', async () => {
   const watcher = new AptosWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(0, 1);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(0, 1);
   expect(messages).toMatchObject({
     '1095891/2022-10-19T00:55:54.676Z/0': [
       '0x27b5808a7cfdb688e02be192ed334da683975b7487e8be7a09670b3088b58908:22/0000000000000000000000000000000000000000000000000000000000000001/0',
@@ -32,12 +32,11 @@ test('getMessagesForSequenceNumbers', async () => {
 
   // test that block number, timestamp, and sequence number are all strictly increasing
   const latestSequenceNumber = await watcher.getFinalizedBlockNumber();
-  const messageKeys = Object.keys(
-    await watcher.getMessagesForBlocks(
-      latestSequenceNumber - watcher.maximumBatchSize + 1,
-      latestSequenceNumber
-    )
-  ).sort();
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(
+    latestSequenceNumber - watcher.maximumBatchSize + 1,
+    latestSequenceNumber
+  );
+  const messageKeys = Object.keys(vaasByBlock).sort();
   console.log(messageKeys);
   expect(messageKeys.length).toBe(watcher.maximumBatchSize);
   expect(Date.parse(messageKeys.at(-1)!.split('/')[1])).toBeLessThan(Date.now());

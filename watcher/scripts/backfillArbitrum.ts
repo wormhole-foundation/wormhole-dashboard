@@ -30,7 +30,7 @@ import { Chain, contracts } from '@wormhole-foundation/sdk-base';
   const watcher = new ArbitrumWatcher('Mainnet');
   for (const blockNumber of blockNumbers) {
     log.text = `Fetching block ${blockNumber}`;
-    const vaasByBlock = await watcher.getMessagesForBlocks(blockNumber, blockNumber);
+    const { vaasByBlock } = await watcher.getMessagesForBlocks(blockNumber, blockNumber);
     await db.storeVaasByBlock(chain, vaasByBlock);
   }
   log.succeed('Uploaded messages to db successfully');

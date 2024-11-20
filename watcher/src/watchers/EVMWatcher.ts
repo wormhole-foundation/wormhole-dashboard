@@ -40,6 +40,7 @@ export class EVMWatcher extends Watcher {
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
+    // Special cases for batch size
     if (chain === 'Acala' || chain === 'Karura' || chain === 'Berachain') {
       this.maximumBatchSize = 50;
     } else if (
@@ -54,6 +55,10 @@ export class EVMWatcher extends Watcher {
       chain === 'Xlayer'
     ) {
       this.maximumBatchSize = 10;
+    }
+    // Special cases for watch loop delay
+    if (chain === 'Berachain') {
+      this.watchLoopDelay = 1000;
     }
   }
 
@@ -221,7 +226,10 @@ export class EVMWatcher extends Watcher {
     return block.number;
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain} on ${this.network}!`);
@@ -252,6 +260,6 @@ export class EVMWatcher extends Watcher {
       const blockKey = makeBlockKey(blockNumber.toString(), timestampsByBlock[blockNumber]);
       vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
     }
-    return vaasByBlock;
+    return { vaasByBlock };
   }
 }

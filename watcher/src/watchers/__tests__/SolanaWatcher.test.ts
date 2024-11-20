@@ -16,7 +16,7 @@ test('getFinalizedBlockNumber', async () => {
 
 test('getMessagesForBlocks - single block', async () => {
   const watcher = new SolanaWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(170799004, 170799004);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(170799004, 170799004);
   expect(Object.keys(messages).length).toBe(1);
   expect(messages).toMatchObject({
     '170799004/2023-01-04T16:43:43.000Z': [
@@ -32,21 +32,21 @@ test('getMessagesForBlocks - single block', async () => {
 // temporary skip due to SolanaJSONRPCError: failed to get confirmed block: Block 171774030 cleaned up, does not exist on node. First available block: 176896202
 test('getMessagesForBlocks - fromSlot is skipped slot', async () => {
   const watcher = new SolanaWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(171774030, 171774032); // 171774024 - 171774031 are skipped
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(171774030, 171774032); // 171774024 - 171774031 are skipped
   expect(Object.keys(messages).length).toBe(1);
   expect(messages).toMatchObject({ '171774032/2023-01-10T13:36:39.000Z': [] });
 });
 
 test('getMessagesForBlocks - toSlot is skipped slot', async () => {
   const watcher = new SolanaWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(171774023, 171774025);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(171774023, 171774025);
   expect(messages).toMatchObject({ '171774025/2023-01-10T13:36:34.000Z': [] });
 });
 
 test('getMessagesForBlocks - empty block', async () => {
   // Even if there are no messages, last block should still be returned
   const watcher = new SolanaWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(170979766, 170979766);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(170979766, 170979766);
   expect(Object.keys(messages).length).toBe(1);
   expect(messages).toMatchObject({ '170979766/2023-01-05T18:40:25.000Z': [] });
 });
@@ -58,25 +58,25 @@ test('getMessagesForBlocks - block with no transactions', async () => {
     'solana: invalid block range'
   );
 
-  let messages = await watcher.getMessagesForBlocks(174108661, 174108861);
+  let { vaasByBlock: messages } = await watcher.getMessagesForBlocks(174108661, 174108861);
   expect(Object.keys(messages).length).toBe(1);
   expect(Object.values(messages).flat().length).toBe(0);
 
-  messages = await watcher.getMessagesForBlocks(174108863, 174109061);
+  ({ vaasByBlock: messages } = await watcher.getMessagesForBlocks(174108863, 174109061));
   expect(Object.keys(messages).length).toBe(1);
   expect(Object.values(messages).flat().length).toBe(0);
 });
 
 test('getMessagesForBlocks - multiple blocks', async () => {
   const watcher = new SolanaWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(171050470, 171050474);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(171050470, 171050474);
   expect(Object.keys(messages).length).toBe(2);
   expect(Object.values(messages).flat().length).toBe(2);
 });
 
 test('getMessagesForBlocks - multiple blocks, last block empty', async () => {
   const watcher = new SolanaWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(170823000, 170825000);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(170823000, 170825000);
   expect(Object.keys(messages).length).toBe(3);
   expect(Object.values(messages).flat().length).toBe(2); // 2 messages, last block has no message
 });
@@ -84,16 +84,16 @@ test('getMessagesForBlocks - multiple blocks, last block empty', async () => {
 test('getMessagesForBlocks - multiple blocks containing more than `getSignaturesLimit` WH transactions', async () => {
   const watcher = new SolanaWatcher('Mainnet');
   watcher.getSignaturesLimit = 10;
-  const messages = await watcher.getMessagesForBlocks(171582367, 171583452);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(171582367, 171583452);
   expect(Object.keys(messages).length).toBe(3);
   expect(Object.values(messages).flat().length).toBe(3);
 });
 
 test('getMessagesForBlocks - multiple calls', async () => {
   const watcher = new SolanaWatcher('Mainnet');
-  const messages1 = await watcher.getMessagesForBlocks(171773021, 171773211);
-  const messages2 = await watcher.getMessagesForBlocks(171773212, 171773250);
-  const messages3 = await watcher.getMessagesForBlocks(171773251, 171773500);
+  const { vaasByBlock: messages1 } = await watcher.getMessagesForBlocks(171773021, 171773211);
+  const { vaasByBlock: messages2 } = await watcher.getMessagesForBlocks(171773212, 171773250);
+  const { vaasByBlock: messages3 } = await watcher.getMessagesForBlocks(171773251, 171773500);
   const allMessageKeys = [
     ...Object.keys(messages1),
     ...Object.keys(messages2),
@@ -105,7 +105,7 @@ test('getMessagesForBlocks - multiple calls', async () => {
 
 test('getMessagesForBlocks - handle failed transactions', async () => {
   const watcher = new SolanaWatcher('Mainnet');
-  const messages = await watcher.getMessagesForBlocks(94401321, 94501321);
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(94401321, 94501321);
   expect(Object.keys(messages).length).toBe(6);
   expect(Object.values(messages).flat().length).toBe(5);
   expect(

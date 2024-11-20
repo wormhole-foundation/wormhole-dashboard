@@ -55,7 +55,10 @@ export class CosmwasmWatcher extends Watcher {
     throw new Error(`Unable to parse result of ${this.latestBlockTag} on ${this.rpc}`);
   }
 
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
@@ -153,7 +156,7 @@ export class CosmwasmWatcher extends Watcher {
         }
       }
     }
-    return vaasByBlock;
+    return { vaasByBlock };
   }
 }
 

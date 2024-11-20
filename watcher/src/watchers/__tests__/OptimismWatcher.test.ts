@@ -17,7 +17,7 @@ test('getFinalizedBlockNumber', async () => {
 
 test('getMessagesForBlocks', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Optimism');
-  const vaasByBlock = await watcher.getMessagesForBlocks(105235070, 105235080);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(105235070, 105235080);
   expect(vaasByBlock).toMatchObject({
     '105235070/2023-06-06T16:28:37.000Z': [],
     '105235071/2023-06-06T16:28:39.000Z': [],

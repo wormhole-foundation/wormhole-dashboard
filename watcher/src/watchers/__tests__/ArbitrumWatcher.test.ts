@@ -24,7 +24,7 @@ test('getFinalizedBlockNumber', async () => {
 
 test('getMessagesForBlocks', async () => {
   const watcher = new ArbitrumWatcher('Mainnet');
-  const vaasByBlock = await watcher.getMessagesForBlocks(114500582, 114500584);
+  const { vaasByBlock } = await watcher.getMessagesForBlocks(114500582, 114500584);
   const entries = Object.entries(vaasByBlock);
   expect(entries.length).toEqual(3);
   expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(2);

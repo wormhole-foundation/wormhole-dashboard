@@ -43,7 +43,10 @@ export class TerraExplorerWatcher extends Watcher {
   // retrieve blocks for core contract.
   // use "next": as the pagination key
   // compare block height ("height":) with what is passed in.
-  async getMessagesForBlocks(fromBlock: number, toBlock: number): Promise<VaasByBlock> {
+  async getMessagesForBlocks(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
     const address = contracts.coreBridge.get(this.network, this.chain);
     if (!address) {
       throw new Error(`Core contract not defined for ${this.chain}`);
@@ -159,7 +162,7 @@ export class TerraExplorerWatcher extends Watcher {
       );
       vaasByBlock[blockKey] = [];
     }
-    return vaasByBlock;
+    return { vaasByBlock };
   }
 }
 

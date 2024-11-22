@@ -37,8 +37,19 @@ async function watchFtSolana(network: Network, fromSlot: number, toSlot: number)
     "2V7g7NNPJqHDy2LKXSh3rkrvFMoSJU5Z3MUEMZ8AEjV7BTv8KALT78p42AoxufdhAkct5xQQY5zH9fKB8dBiqiBj"
   ];
 
-  await watcher.swapLayerParser.parseTransactions(sigs);
+  const txs = await watcher.connection?.getTransactions(sigs, {
+    maxSupportedTransactionVersion: 0
+  });
 
+  const slots = txs?.map(tx => tx?.slot)
+
+  if (slots) {
+    for (const slot of slots) {
+      if (!slot) continue;
+      await watcher.getFtMessagesForBlocks(slot, slot);
+      console.log(`Processed slot ${slot}`);
+    }
+  }
 }
 
 async function watchFt(

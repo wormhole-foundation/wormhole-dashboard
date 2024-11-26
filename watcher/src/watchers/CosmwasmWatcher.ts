@@ -30,6 +30,8 @@ export class CosmwasmWatcher extends Watcher {
     this.latestBlockHeight = 0;
     if (chain === 'Sei') {
       this.maximumBatchSize = 1;
+    } else if (chain === 'Terra2') {
+      this.maximumBatchSize = 10;
     }
   }
 

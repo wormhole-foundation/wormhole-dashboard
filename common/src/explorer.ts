@@ -142,6 +142,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/block/${block}`
     : chainId === chainToChainId('Ink')
     ? `https://explorer-sepolia.inkonchain.com/block/${block}`
+    : chainId === chainToChainId('HyperEVM')
+    ? `https://testnet.purrsec.com/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -279,6 +281,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/tx/${tx}`
     : chainId === chainToChainId('Ink')
     ? `https://explorer-sepolia.inkonchain.com/tx/${tx}`
+    : chainId === chainToChainId('HyperEVM')
+    ? `https://testnet.purrsec.com/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

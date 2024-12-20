@@ -46,6 +46,7 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
     chainName === 'Worldchain' ||
     chainName === 'MonadDevnet' ||
     chainName === 'Ink' ||
+    chainName === 'HyperEVM' ||
     chainName === 'Base'
   ) {
     return new EVMWatcher(network, chainName);

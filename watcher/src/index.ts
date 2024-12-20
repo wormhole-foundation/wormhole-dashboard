@@ -58,6 +58,7 @@ const supportedChains: Chain[] =
         'Worldchain',
         'MonadDevnet',
         'Ink',
+        'HyperEVM',
       ]
     : [
         // This is the list of chains supported in MAINNET.

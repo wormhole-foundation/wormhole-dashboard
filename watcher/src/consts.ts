@@ -107,6 +107,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-sepolia.g.alchemy.com/public',
     MonadDevnet: process.env.MONAD_DEVNET_RPC, // TODO: There is no Monad Devnet public endpoint.
     Ink: process.env.INK_RPC || 'https://rpc-qnd-sepolia.inkonchain.com',
+    HyperEVM: process.env.HYPER_EVM_RPC || 'https://api.hyperliquid-testnet.xyz/evm',
   },
   ['Devnet']: {},
 };

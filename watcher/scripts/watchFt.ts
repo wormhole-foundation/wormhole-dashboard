@@ -6,6 +6,7 @@ import { FTSolanaWatcher } from '../src/watchers/FTSolanaWatcher';
 import { FTEVMWatcher } from '../src/watchers/FTEVMWatcher';
 import { Network } from '@wormhole-foundation/sdk-base';
 import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
+import { PublicKey } from '@solana/web3.js';
 
 const network = getNetwork();
 async function watchFtSolana(network: Network, fromSlot: number, toSlot: number) {
@@ -35,21 +36,21 @@ async function watchFt(
   }
 }
 
-const fromSlot = 321556219;
-const toSlot = 321807831;
+const fromSlot = 301566320;
+const toSlot = 302610552;
 
 const arbitrumFromBlock = 247028328;
 const arbitrumToBlock = 247037682;
 
-const baseFromBlock = 18820795;
-const baseToBlock = 18958996;
+const baseFromBlock = 22069582;
+const baseToBlock = 22329636;
 
-watchFt(network, 'Arbitrum', arbitrumFromBlock, arbitrumToBlock).then(() =>
-  console.log('Done watching ftArbitrum')
-);
+// watchFt(network, 'Arbitrum', arbitrumFromBlock, arbitrumToBlock).then(() =>
+//   console.log('Done watching ftArbitrum')
+// );
 
-watchFt(network, 'Base', baseFromBlock, baseToBlock).then(() =>
-  console.log('Done watching ftBase')
-);
+// watchFt(network, 'Base', baseFromBlock, baseToBlock).then(() =>
+//   console.log('Done watching ftBase')
+// );
 
 watchFtSolana(network, fromSlot, toSlot).then(() => console.log('Done watching ftSolana'));

@@ -15,6 +15,7 @@ import {
   blockTimeToDate,
   getTokenBalanceChange,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import { AccountLayout } from '@solana/spl-token';
 
 const ACCOUNT_NOT_FOUND = 'Account not found';
 const BLOCKTIME_NOT_FOUND = 'Blocktime not found';
@@ -22,7 +23,7 @@ const INSUFFICIENT_ACCOUNTS = 'Account length insufficient';
 
 export class SwapLayerParser {
   private readonly swapLayerBorshCoder: BorshCoder;
-  private readonly SWAP_LAYER_PROGRAM_ID: PublicKey;
+  public readonly SWAP_LAYER_PROGRAM_ID: PublicKey;
   private readonly USDC_MINT: PublicKey;
   private readonly connection: Connection;
 
@@ -30,11 +31,11 @@ export class SwapLayerParser {
     this.connection = connection;
     this.SWAP_LAYER_PROGRAM_ID = new PublicKey(
       FAST_TRANSFER_CONTRACTS[network]?.Solana?.SwapLayer ||
-        'SwapLayer1111111111111111111111111111111111'
+      'SwapLayer1111111111111111111111111111111111'
     );
     this.USDC_MINT = new PublicKey(
       FAST_TRANSFER_CONTRACTS[network]?.Solana?.USDCMint ||
-        'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+      'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
     );
     this.swapLayerBorshCoder = new BorshCoder(SWAP_LAYER_IDL as any);
   }
@@ -124,7 +125,7 @@ export class SwapLayerParser {
 
     // Filter out null transactions
     const nonNullTransactions = transactions.filter(
-      (tx): tx is VersionedTransactionResponse => tx !== null
+      (tx): tx is VersionedTransactionResponse => tx !== null && !tx.meta?.err
     );
 
     // Process each transaction and gather the results
@@ -170,9 +171,12 @@ export class SwapLayerParser {
 
     const fillAccountIndex = 2;
     const stagedInboundIndex = 7;
+    const feeRecipientToken = 10;
     const dstMintIndex = 12;
-    const recipientIndex = 18;
+    const recipientIndex = 17;
 
+    console.log('Recipient:', accounts[ix.accountKeyIndexes[recipientIndex]].pubkey.toBase58());
+    console.log('Output Token:', accounts[ix.accountKeyIndexes[dstMintIndex]].pubkey.toBase58());
     const recipient = accounts[ix.accountKeyIndexes[recipientIndex]].pubkey.toBase58();
     const outputToken = accounts[ix.accountKeyIndexes[dstMintIndex]].pubkey.toBase58();
 
@@ -180,6 +184,22 @@ export class SwapLayerParser {
       instructionName !== 'complete_swap_payload'
         ? getTokenBalanceChange(transaction, recipient, outputToken)
         : 0n;
+
+
+    let relayingFee = 0n;
+    // need to find out who the owner is because this is an associated token account
+    if (instructionName === 'complete_swap_relay') {
+      const accountInfo = await this.connection.getAccountInfo(accounts[ix.accountKeyIndexes[feeRecipientToken]].pubkey);
+
+      console.log('Pubkey:', accounts[ix.accountKeyIndexes[feeRecipientToken]].pubkey.toBase58());
+      if (accountInfo === null) {
+        throw new Error('Account not found');
+      }
+
+      const accountData = AccountLayout.decode(accountInfo.data);
+
+      relayingFee = getTokenBalanceChange(transaction, new PublicKey(accountData.owner).toBase58(), this.USDC_MINT.toBase58())
+    }
 
     const stagedInbound =
       instructionName === 'complete_swap_payload'
@@ -190,11 +210,11 @@ export class SwapLayerParser {
       fill_id: accounts[ix.accountKeyIndexes[fillAccountIndex]].pubkey.toBase58(),
       output_token: outputToken,
       recipient: recipient,
-      redeem_time: blockTimeToDate(blockTime),
+      redeem_time: instructionName === 'complete_swap_payload' ? null : blockTimeToDate(blockTime),
       output_amount: tokenBalance,
       staged_inbound: stagedInbound,
       tx_hash: sig,
-      relaying_fee: 0n,
+      relaying_fee: relayingFee,
     };
   }
 
@@ -244,6 +264,10 @@ export class SwapLayerParser {
         ? getTokenBalanceChange(transaction, recipient.toBase58(), this.USDC_MINT.toBase58())
         : 0n;
 
+        // TODO: check this against idlgs
+    const relayingFee = instructionName === 'complete_transfer_relay'
+      ? getTokenBalanceChange(transaction, this.getAccountKey(transaction, ix, 6)?.toBase58() || '', this.USDC_MINT.toBase58()) : 0n;
+
     const fillAccount = this.getAccountKey(transaction, ix, fillAccountIndex);
     if (!fillAccount) {
       throw new Error(`${ACCOUNT_NOT_FOUND}: fill for ${instructionName} in transaction ${sig}`);
@@ -252,10 +276,10 @@ export class SwapLayerParser {
     return {
       recipient: recipient.toBase58(),
       tx_hash: sig,
-      relaying_fee: 0n,
+      relaying_fee: relayingFee,
       fill_id: fillAccount.toBase58(),
       output_token: this.USDC_MINT.toBase58(),
-      redeem_time: blockTimeToDate(transaction.blockTime),
+      redeem_time: instructionName === 'complete_transfer_payload' ? null : blockTimeToDate(transaction.blockTime),
       output_amount: tokenBalance,
       staged_inbound:
         instructionName === 'complete_transfer_payload'

@@ -53,6 +53,7 @@ const supportedChains: Chain[] =
         'Holesky',
         'PolygonSepolia',
         'Berachain',
+        'Seievm',
         'Snaxchain',
         'Unichain',
         'Worldchain',

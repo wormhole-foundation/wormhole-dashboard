@@ -53,6 +53,7 @@ export class EVMWatcher extends Watcher {
       chain === 'MonadDevnet' ||
       chain === 'Ink' ||
       chain === 'HyperEVM' ||
+      chain === 'Seievm' ||
       chain === 'Xlayer'
     ) {
       this.maximumBatchSize = 10;

@@ -37,7 +37,7 @@ export const findFromSignatureAndToSignature = async (
   connection: Connection,
   fromSlot: number,
   toSlot: number,
-  retries = 5
+  retries = 10 // 5 is too low, watcher gets stuck and throws error 
 ) => {
   let toBlock: VersionedBlockResponse;
   let fromBlock: VersionedBlockResponse;

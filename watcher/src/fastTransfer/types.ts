@@ -151,7 +151,7 @@ export type TransferCompletion = {
   output_token: string;
   output_amount: bigint;
   relaying_fee: bigint;
-  redeem_time: Date;
+  redeem_time: Date | null; // this needs to be null as `complete_{transfer, swap}_payload` should not mean that it is redeemed
   fill_id: string;
   // on Solana Swap Layer, this acts as a link between complete_{transfer, swap}_payload and release_inbound
   staged_inbound?: string;

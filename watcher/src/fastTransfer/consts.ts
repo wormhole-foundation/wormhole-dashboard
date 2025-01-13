@@ -70,16 +70,20 @@ export const FAST_TRANSFER_CONTRACTS: FastTransferContractAddresses = {
       TokenRouter: '0xe0418C44F06B0b0D7D1706E01706316DBB0B210E',
       CircleBridge: '0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5',
     },
+    OptimismSepolia: {
+      TokenRouter: '0x6BAa7397c18abe6221b4f6C3Ac91C88a9faE00D8',
+      CircleBridge: '0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5',
+    },
   },
 };
 
 // Separate testnet and mainnet chains
 export type FTEVMMainnetChain = 'Arbitrum' | 'Base';
-export type FTEVMTestnetChain = 'ArbitrumSepolia';
+export type FTEVMTestnetChain = 'ArbitrumSepolia' | 'OptimismSepolia';
 export type FTEVMChain = FTEVMMainnetChain | FTEVMTestnetChain;
 
 export const FTEVMMainnetChains: FTEVMMainnetChain[] = ['Arbitrum', 'Base'];
-export const FTEVMTestnetChains: FTEVMTestnetChain[] = ['ArbitrumSepolia'];
+export const FTEVMTestnetChains: FTEVMTestnetChain[] = ['ArbitrumSepolia', 'OptimismSepolia'];
 
 export const isFTEVMChain = (chain: Chain, network: Network): chain is FTEVMChain => {
   if (network === 'Mainnet') {

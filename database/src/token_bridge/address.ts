@@ -11,7 +11,7 @@ import {
   contracts,
   encoding,
 } from '@wormhole-foundation/sdk-base';
-import { AptosClient } from 'aptos';
+import { Aptos, AptosConfig, Network as AptosNetwork } from '@aptos-labs/ts-sdk';
 import { connect } from 'near-api-js';
 import { AptosTokenBridge } from '@wormhole-foundation/sdk-aptos-tokenbridge';
 import { wormhole } from '@wormhole-foundation/sdk';
@@ -60,7 +60,11 @@ export const getNativeAddress = async (
       );
     } else if (tokenChain === chainToChainId('Aptos')) {
       const wh = await wormhole('Mainnet', [aptos]);
-      const client = new AptosClient('https://fullnode.mainnet.aptoslabs.com');
+      const config = new AptosConfig({
+        fullnode: 'https://fullnode.mainnet.aptoslabs.com',
+        network: AptosNetwork.MAINNET,
+      });
+      const client = new Aptos();
       const contracts = wh.getContracts('Aptos');
       if (!contracts) {
         return null;

@@ -117,7 +117,7 @@ export type FastTransferId = {
 // the logs to the correct types
 export type AuctionUpdated = {
   config_id: number;
-  auction: PublicKey;
+  fast_vaa_hash: Uint8Array; // 32 bytes
   vaa: PublicKey | null;
   source_chain: number;
   target_protocol: MessageProtocol;

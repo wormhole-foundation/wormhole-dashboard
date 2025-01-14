@@ -332,13 +332,11 @@ export type TokenRouter = {
           writable: true;
         },
         {
-          name: 'routerEndpoint';
-          docs: [
-            'Registered router endpoint representing a foreign Token Router. This account may have a',
-            'CCTP domain encoded if this route is CCTP-enabled. For this instruction, it is required that',
-            '[RouterEndpoint::cctp_domain] is `Some(value)`.',
-            '',
-            'Seeds must be \\["registered_emitter", target_chain.to_be_bytes()\\].'
+          name: 'targetRouterEndpoint';
+          accounts: [
+            {
+              name: 'endpoint';
+            }
           ];
         },
         {
@@ -441,8 +439,27 @@ export type TokenRouter = {
           ];
         },
         {
-          name: 'transferAuthority';
-          docs: ['The auction participant needs to set approval to this PDA.', ''];
+          name: 'programTransferAuthority';
+          docs: [
+            'The auction participant needs to set approval to this PDA if the sender (signer) is not',
+            'provided. The delegated amount must equal the amount in or this instruction will revert.',
+            '',
+            "NOTE: If this account is provided, the sender token's owner will be encoded as the order",
+            'sender.',
+            ''
+          ];
+          optional: true;
+        },
+        {
+          name: 'sender';
+          docs: [
+            'Sender, who has the authority to transfer assets from the sender token account. If this',
+            'account is not provided, the program transfer authority account must be some account.',
+            '',
+            'NOTE: If this account is provided, this pubkey will be encoded as the order sender.'
+          ];
+          signer: true;
+          optional: true;
         },
         {
           name: 'preparedOrder';
@@ -483,6 +500,14 @@ export type TokenRouter = {
           ];
         },
         {
+          name: 'targetRouterEndpoint';
+          accounts: [
+            {
+              name: 'endpoint';
+            }
+          ];
+        },
+        {
           name: 'tokenProgram';
         },
         {
@@ -515,6 +540,11 @@ export type TokenRouter = {
       discriminator: [61, 85, 136, 127, 30, 118, 37, 126];
       accounts: [
         {
+          name: 'payer';
+          writable: true;
+          signer: true;
+        },
+        {
           name: 'custodian';
           accounts: [
             {
@@ -523,57 +553,41 @@ export type TokenRouter = {
           ];
         },
         {
-          name: 'preparedFill';
+          name: 'fillVaa';
           accounts: [
             {
-              name: 'payer';
-              writable: true;
-              signer: true;
-            },
-            {
-              name: 'fillVaa';
-              accounts: [
-                {
-                  name: 'vaa';
-                }
-              ];
-            },
-            {
-              name: 'preparedFill';
-              writable: true;
-            },
-            {
-              name: 'custodyToken';
-              docs: [
-                'Mint recipient token account, which is encoded as the mint recipient in the CCTP message.',
-                'The CCTP Token Messenger Minter program will transfer the amount encoded in the CCTP message',
-                'from its custody account to this account.',
-                ''
-              ];
-              writable: true;
-            },
-            {
-              name: 'usdc';
-              accounts: [
-                {
-                  name: 'mint';
-                }
-              ];
-            },
-            {
-              name: 'tokenProgram';
-            },
-            {
-              name: 'systemProgram';
+              name: 'vaa';
             }
           ];
         },
         {
-          name: 'routerEndpoint';
+          name: 'preparedFill';
+          writable: true;
+        },
+        {
+          name: 'preparedCustodyToken';
           docs: [
-            'Registered emitter account representing a Circle Integration on another network.',
-            '',
-            'Seeds must be \\["registered_emitter", target_chain.to_be_bytes()\\].'
+            'Mint recipient token account, which is encoded as the mint recipient in the CCTP message.',
+            'The CCTP Token Messenger Minter program will transfer the amount encoded in the CCTP message',
+            'from its custody account to this account.',
+            ''
+          ];
+          writable: true;
+        },
+        {
+          name: 'usdc';
+          accounts: [
+            {
+              name: 'mint';
+            }
+          ];
+        },
+        {
+          name: 'sourceRouterEndpoint';
+          accounts: [
+            {
+              name: 'endpoint';
+            }
           ];
         },
         {
@@ -672,6 +686,11 @@ export type TokenRouter = {
       discriminator: [11, 52, 181, 5, 101, 194, 200, 15];
       accounts: [
         {
+          name: 'payer';
+          writable: true;
+          signer: true;
+        },
+        {
           name: 'custodian';
           accounts: [
             {
@@ -680,58 +699,33 @@ export type TokenRouter = {
           ];
         },
         {
+          name: 'fastFill';
+          writable: true;
+        },
+        {
           name: 'preparedFill';
+          writable: true;
+        },
+        {
+          name: 'preparedCustodyToken';
+          docs: [
+            'Mint recipient token account, which is encoded as the mint recipient in the CCTP message.',
+            'The CCTP Token Messenger Minter program will transfer the amount encoded in the CCTP message',
+            'from its custody account to this account.',
+            ''
+          ];
+          writable: true;
+        },
+        {
+          name: 'usdc';
           accounts: [
             {
-              name: 'payer';
-              writable: true;
-              signer: true;
-            },
-            {
-              name: 'fillVaa';
-              accounts: [
-                {
-                  name: 'vaa';
-                }
-              ];
-            },
-            {
-              name: 'preparedFill';
-              writable: true;
-            },
-            {
-              name: 'custodyToken';
-              docs: [
-                'Mint recipient token account, which is encoded as the mint recipient in the CCTP message.',
-                'The CCTP Token Messenger Minter program will transfer the amount encoded in the CCTP message',
-                'from its custody account to this account.',
-                ''
-              ];
-              writable: true;
-            },
-            {
-              name: 'usdc';
-              accounts: [
-                {
-                  name: 'mint';
-                }
-              ];
-            },
-            {
-              name: 'tokenProgram';
-            },
-            {
-              name: 'systemProgram';
+              name: 'mint';
             }
           ];
         },
         {
           name: 'matchingEngineCustodian';
-          writable: true;
-        },
-        {
-          name: 'matchingEngineRedeemedFastFill';
-          writable: true;
         },
         {
           name: 'matchingEngineFromEndpoint';
@@ -743,6 +737,9 @@ export type TokenRouter = {
           name: 'matchingEngineLocalCustodyToken';
           docs: ['(Matching Engine program).'];
           writable: true;
+        },
+        {
+          name: 'matchingEngineEventAuthority';
         },
         {
           name: 'matchingEngineProgram';
@@ -859,6 +856,10 @@ export type TokenRouter = {
       discriminator: [132, 228, 139, 184, 112, 228, 108, 240];
     },
     {
+      name: 'fastFill';
+      discriminator: [89, 120, 166, 41, 106, 227, 218, 121];
+    },
+    {
       name: 'preparedFill';
       discriminator: [202, 241, 65, 186, 110, 235, 238, 80];
     },
@@ -895,6 +896,10 @@ export type TokenRouter = {
     {
       code: 6070;
       name: 'invalidPayloadId';
+    },
+    {
+      code: 6072;
+      name: 'invalidDepositPayloadId';
     },
     {
       code: 6078;
@@ -945,6 +950,14 @@ export type TokenRouter = {
       name: 'notPendingOwner';
     },
     {
+      code: 6522;
+      name: 'eitherSenderOrProgramTransferAuthority';
+    },
+    {
+      code: 6524;
+      name: 'delegatedAmountMismatch';
+    },
+    {
       code: 7024;
       name: 'insufficientAmount';
     },
@@ -955,6 +968,10 @@ export type TokenRouter = {
     {
       code: 7028;
       name: 'invalidRedeemer';
+    },
+    {
+      code: 7030;
+      name: 'preparedFillTooLarge';
     }
   ];
   types: [
@@ -1049,6 +1066,103 @@ export type TokenRouter = {
                 name: 'messageProtocol';
               };
             };
+          }
+        ];
+      };
+    },
+    {
+      name: 'fastFill';
+      type: {
+        kind: 'struct';
+        fields: [
+          {
+            name: 'seeds';
+            type: {
+              defined: {
+                name: 'fastFillSeeds';
+              };
+            };
+          },
+          {
+            name: 'redeemed';
+            docs: ['Whether the [FastFill] has been redeemed via the local Token Router.'];
+            type: 'bool';
+          },
+          {
+            name: 'info';
+            type: {
+              defined: {
+                name: 'fastFillInfo';
+              };
+            };
+          },
+          {
+            name: 'redeemerMessage';
+            type: 'bytes';
+          }
+        ];
+      };
+    },
+    {
+      name: 'fastFillInfo';
+      type: {
+        kind: 'struct';
+        fields: [
+          {
+            name: 'preparedBy';
+            docs: ['Who paid the lamports to create the [FastFill] account.'];
+            type: 'pubkey';
+          },
+          {
+            name: 'amount';
+            docs: ['Fill amount.'];
+            type: 'u64';
+          },
+          {
+            name: 'redeemer';
+            docs: ['Authority allowed to redeem [FastFill].'];
+            type: 'pubkey';
+          },
+          {
+            name: 'timestamp';
+            docs: [
+              'Timestamp at the time a fill was issued. When the fast fill is created, it is set using the',
+              'current [Clock] unix timestamp.'
+            ];
+            type: 'i64';
+          }
+        ];
+      };
+    },
+    {
+      name: 'fastFillSeeds';
+      type: {
+        kind: 'struct';
+        fields: [
+          {
+            name: 'sourceChain';
+            docs: ['Wormhole chain ID reflecting where the order was created.'];
+            type: 'u16';
+          },
+          {
+            name: 'orderSender';
+            docs: ['Universal address of the order sender.'];
+            type: {
+              array: ['u8', 32];
+            };
+          },
+          {
+            name: 'sequence';
+            docs: [
+              'Sequence generated by the [FastFillSequencer](crate::state::FastFillSequencer) when it',
+              'reserved a sequence number for this fill.'
+            ];
+            type: 'u64';
+          },
+          {
+            name: 'bump';
+            docs: ['Bump seed for the [FastFill] account.'];
+            type: 'u8';
           }
         ];
       };
@@ -1170,6 +1284,14 @@ export type TokenRouter = {
         kind: 'struct';
         fields: [
           {
+            name: 'seeds';
+            type: {
+              defined: {
+                name: 'preparedFillSeeds';
+              };
+            };
+          },
+          {
             name: 'info';
             type: {
               defined: {
@@ -1190,25 +1312,18 @@ export type TokenRouter = {
         kind: 'struct';
         fields: [
           {
-            name: 'vaaHash';
-            type: {
-              array: ['u8', 32];
-            };
-          },
-          {
-            name: 'bump';
-            type: 'u8';
-          },
-          {
             name: 'preparedCustodyTokenBump';
+            docs: ['Bump seed for the custody token account associated with [PreparedFill].'];
             type: 'u8';
           },
           {
             name: 'preparedBy';
+            docs: ['Who paid the lamports to create the [PreparedFill] account.'];
             type: 'pubkey';
           },
           {
             name: 'fillType';
+            docs: ['NOTE: If [FillType::Unset], the [PreparedFill] account is invalid.'];
             type: {
               defined: {
                 name: 'fillType';
@@ -1217,17 +1332,48 @@ export type TokenRouter = {
           },
           {
             name: 'sourceChain';
+            docs: ['Wormhole chain ID reflecting where the order was created.'];
             type: 'u16';
           },
           {
             name: 'orderSender';
+            docs: ['Universal address of the order sender.'];
             type: {
               array: ['u8', 32];
             };
           },
           {
             name: 'redeemer';
+            docs: ['Authority allowed to redeem [PreparedFill].'];
             type: 'pubkey';
+          },
+          {
+            name: 'timestamp';
+            docs: [
+              'Timestamp at the time a fill was issued. This time will either be a VAA time for a direct',
+              'fill from another Token Router or timestamp from [matching_engine::state::FastFill] as a',
+              'result of a market order.',
+              '',
+              'NOTE: This timestamp is not used by the Token Router. It only provides more information for',
+              'an integrator so he can perform special handling based on when the fill happened.'
+            ];
+            type: 'i64';
+          }
+        ];
+      };
+    },
+    {
+      name: 'preparedFillSeeds';
+      type: {
+        kind: 'struct';
+        fields: [
+          {
+            name: 'fillSource';
+            type: 'pubkey';
+          },
+          {
+            name: 'bump';
+            type: 'u8';
           }
         ];
       };

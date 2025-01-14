@@ -9,12 +9,11 @@ import {
   ConfirmedSignatureInfo,
   Connection,
   MessageCompiledInstruction,
-  ParsedMessageAccount,
   PublicKey,
   TransactionInstruction,
   VersionedTransactionResponse,
 } from '@solana/web3.js';
-import { findFromSignatureAndToSignature } from '../utils/solana';
+import { findFromSignatureAndToSignature, getAllKeys } from '../utils/solana';
 import { makeBlockKey } from '../databases/utils';
 import { BorshCoder, Event, EventParser, Instruction } from '@coral-xyz/anchor';
 import { decodeTransferInstruction } from '@solana/spl-token';
@@ -89,7 +88,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
       new PublicKey(this.USDC_MINT)
     );
     this.connection = new Connection(this.rpc);
-    this.logger = getLogger(`fast_transfer_solana_${network.toLowerCase()}`);
+    this.logger = getLogger(`FT_Solana_${network.toLowerCase()}`);
     this.eventParser = new EventParser(
       new PublicKey(this.MATCHING_ENGINE_PROGRAM_ID),
       this.matchingEngineBorshCoder
@@ -211,7 +210,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
         }
       );
     } catch (error) {
-      this.logger.error('error:', error);
+      this.logger.error('getTransactions error:', error);
       return [];
     }
 
@@ -255,7 +254,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
         try {
           await this.parseInstruction(res, ix.ix, ix.seq);
         } catch (error) {
-          this.logger.error('error:', error);
+          this.logger.error('parseInstruction error:', error);
         }
       }
     }
@@ -267,6 +266,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
     instruction: MessageCompiledInstruction,
     seq: number
   ): Promise<void> {
+    const allKeys = await getAllKeys(this.getConnection(), res);
     const decodedData = this.matchingEngineBorshCoder.instruction.decode(
       Buffer.from(instruction.data),
       'base58'
@@ -285,25 +285,25 @@ export class FTSolanaWatcher extends SolanaWatcher {
           throw new Error('no data');
         }
 
-        await this.parsePlaceInitialOfferCctp(res, instruction, decodedData);
+        await this.parsePlaceInitialOfferCctp(res, instruction, decodedData, allKeys);
         break;
       case 'improve_offer':
-        await this.parseImproveOffer(res, instruction, decodedData);
+        await this.parseImproveOffer(res, instruction, decodedData, allKeys);
         break;
       case 'execute_fast_order_cctp':
-        await this.parseExecuteFastOrderCctp(res, instruction);
+        await this.parseExecuteFastOrderCctp(res, instruction, allKeys);
         break;
       case 'execute_fast_order_local':
-        await this.parseExecuteFastOrderLocal(res, instruction);
+        await this.parseExecuteFastOrderLocal(res, instruction, allKeys);
         break;
       case 'settle_auction_complete':
-        await this.parseSettleAuctionComplete(res, instruction, seq);
+        await this.parseSettleAuctionComplete(res, instruction, seq, allKeys);
         break;
       case 'settle_auction_none_local':
-        await this.parseSettleAuctionNoneLocal(res, instruction);
+        await this.parseSettleAuctionNoneLocal(res, instruction, allKeys);
         break;
       case 'settle_auction_none_cctp':
-        await this.parseSettleAuctionNoneCctp(res, instruction);
+        await this.parseSettleAuctionNoneCctp(res, instruction, allKeys);
         break;
     }
   }
@@ -322,15 +322,16 @@ export class FTSolanaWatcher extends SolanaWatcher {
   async parsePlaceInitialOfferCctp(
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction,
-    decodedData: Instruction
+    decodedData: Instruction,
+    accountKeys: PublicKey[]
   ): Promise<ParsedLogs> {
+    this.logger.debug(`Parsing placeInitialOfferCctp for ${res.transaction.signatures[0]}`);
     if (decodedData.data === undefined || !isOfferArgs(decodedData.data)) {
       throw new Error(
         `[parsePlaceInitialOfferCctp] invalid data: ${JSON.stringify(decodedData.data)}`
       );
     }
 
-    const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
     if (accountKeyIndexes.length < 8) {
       throw new Error('Insufficient account key indexes for parsePlaceInitialOfferCctp');
@@ -450,13 +451,14 @@ export class FTSolanaWatcher extends SolanaWatcher {
   async parseImproveOffer(
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction,
-    decodedData: Instruction
+    decodedData: Instruction,
+    accountKeys: PublicKey[]
   ): Promise<AuctionOffer> {
+    this.logger.debug(`Parsing improveOffer for ${res.transaction.signatures[0]}`);
     if (decodedData.data === undefined || !isOfferArgs(decodedData.data)) {
       throw new Error(`[parseImproveOffer] invalid data for ${res.transaction.signatures[0]}`);
     }
 
-    const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
     const accountKeyIndexes = instruction.accountKeyIndexes;
     if (accountKeyIndexes.length < 2) {
       throw new Error('Insufficient account key indexes for parseImproveOffer');
@@ -557,9 +559,11 @@ export class FTSolanaWatcher extends SolanaWatcher {
 
   async parseExecuteFastOrderCctp(
     res: VersionedTransactionResponse,
-    instruction: MessageCompiledInstruction
+    instruction: MessageCompiledInstruction,
+    accountKeys: PublicKey[]
   ): Promise<FastTransferExecutionInfo> {
-    const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
+    this.logger.debug(`Parsing executeFastOrderCctp for ${res.transaction.signatures[0]}`);
+
     const accountKeyIndexes = instruction.accountKeyIndexes;
     if (accountKeyIndexes.length < 6) {
       throw new Error('Insufficient account key indexes for parseExecuteFastOrderCctp');
@@ -571,7 +575,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
     const seq = parseWormholeSequenceFromLogs(res.meta?.logMessages || []);
 
     if (!seq) {
-      throw new Error('Cannot find fill sequnece');
+      throw new Error('Cannot find fill sequence');
     }
 
     // in `execute_fast_order_cctp` (see: https://github.com/wormhole-foundation/example-liquidity-layer/blob/63f2b423026ac1ad8b099bc3ecd44ba4fc64aae2/solana/programs/matching-engine/src/processor/auction/execute_fast_order/cctp.rs#L158)
@@ -602,9 +606,10 @@ export class FTSolanaWatcher extends SolanaWatcher {
 
   async parseExecuteFastOrderLocal(
     res: VersionedTransactionResponse,
-    instruction: MessageCompiledInstruction
+    instruction: MessageCompiledInstruction,
+    accountKeys: PublicKey[]
   ) {
-    const accountKeys = res.transaction.message.getAccountKeys().staticAccountKeys;
+    this.logger.debug(`Parsing executeFastOrderLocal for ${res.transaction.signatures[0]}`);
     const accountKeyIndexes = instruction.accountKeyIndexes;
     if (accountKeyIndexes.length < 5) {
       throw new Error('Insufficient account key indexes for parseExecuteFastOrderLocal');
@@ -644,24 +649,24 @@ export class FTSolanaWatcher extends SolanaWatcher {
    */
   async parseSettleAuctionComplete(
     res: VersionedTransactionResponse,
-    ix: MessageCompiledInstruction,
-    seq: number
+    instruction: MessageCompiledInstruction,
+    seq: number,
+    accountKeys: PublicKey[]
   ): Promise<FastTransferSettledInfo | null> {
+    this.logger.debug(`Parsing settleAuctionComplete for ${res.transaction.signatures[0]}`);
     if (!res.meta?.innerInstructions) {
       throw new Error(
         `[parseSettleAuctionComplete] ${res.transaction.signatures[0]} no inner instructions`
       );
     }
 
-    // somehow the transactions we get cannot resolve the address lookup tables
-    // this is a temp way to get the account keys for the transaction until that is fixed
-    const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
-    if (accountKeys.length < 6) {
-      throw new Error('Insufficient account key indexes for parseSettleAuctionComplete');
+    const accountKeyIndexes = instruction.accountKeyIndexes;
+    if (accountKeyIndexes.length < 6) {
+      throw new Error('Insufficient account key indexes for parsePlaceInitialOfferCctp');
     }
-    const executorTokenAccountPubkey = accountKeys[ix.accountKeyIndexes[1]];
-    const bestOfferTokenAccountPubkey = accountKeys[ix.accountKeyIndexes[2]];
-    const auctionAccountPubkey = accountKeys[ix.accountKeyIndexes[5]];
+    const executorTokenAccountPubkey = accountKeys[instruction.accountKeyIndexes[1]];
+    const bestOfferTokenAccountPubkey = accountKeys[instruction.accountKeyIndexes[2]];
+    const auctionAccountPubkey = accountKeys[instruction.accountKeyIndexes[5]];
 
     // if the executor token account is not the same as the best offer token account
     // the first transfer is to repay the executor the base fee
@@ -678,12 +683,12 @@ export class FTSolanaWatcher extends SolanaWatcher {
       new TransactionInstruction({
         keys: transferSplIx.accounts.map((i) => {
           return {
-            pubkey: accountKeys[i].pubkey,
+            pubkey: accountKeys[i],
             isSigner: res.transaction.message.isAccountSigner(i),
             isWritable: res.transaction.message.isAccountWritable(i),
           };
         }),
-        programId: accountKeys[transferSplIx.programIdIndex].pubkey,
+        programId: accountKeys[transferSplIx.programIdIndex],
         data: Buffer.from(base58.decode(transferSplIx.data)),
       })
     );
@@ -691,16 +696,16 @@ export class FTSolanaWatcher extends SolanaWatcher {
     // we can use `auction_pubkey` to know which fast_transfer this is for.
     // if there is a auction to settle, the auction must exist. And the pubkey
     // will be in the db since we parse everything chronologically
-    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auctionAccountPubkey.pubkey);
+    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auctionAccountPubkey);
     // We want to return the info even without the vaa hash if it's a testing environment
     if (!fast_vaa_hash && !this.isTest) {
-      this.handleMissingFastVaaHash(auctionAccountPubkey.pubkey, 'parseSettleAuctionComplete');
+      this.handleMissingFastVaaHash(auctionAccountPubkey, 'parseSettleAuctionComplete');
       return null;
     }
     const info = {
       fast_vaa_hash: fast_vaa_hash,
       repayment: BigInt(decodedData.data.amount.toString()),
-      settle_payer: accountKeys[transferSplIx.accounts[0]].pubkey.toBase58(),
+      settle_payer: accountKeys[transferSplIx.accounts[0]].toBase58(),
       settle_tx_hash: res.transaction.signatures[0],
       settle_slot: BigInt(res.slot),
       settle_time: new Date(res.blockTime! * 1000),
@@ -715,40 +720,31 @@ export class FTSolanaWatcher extends SolanaWatcher {
     return info;
   }
 
-  async getAccountsByParsedTransaction(txHash: string): Promise<ParsedMessageAccount[]> {
-    const tx = await this.getConnection().getParsedTransaction(txHash, {
-      maxSupportedTransactionVersion: 0,
-    });
-    if (!tx) {
-      throw new Error(`[getAccountsByParsedTransaction] unable to get transaction ${txHash}`);
-    }
-
-    return tx.transaction.message.accountKeys;
-  }
-
   async parseSettleAuctionNoneLocal(
     res: VersionedTransactionResponse,
-    ix: MessageCompiledInstruction
+    instruction: MessageCompiledInstruction,
+    accountKeys: PublicKey[]
   ): Promise<FastTransferSettledInfo | null> {
-    const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
-    const accountKeyIndexes = ix.accountKeyIndexes;
+    this.logger.debug(`Parsing settleAuctionNoneLocal for ${res.transaction.signatures[0]}`);
+
+    const accountKeyIndexes = instruction.accountKeyIndexes;
     if (accountKeyIndexes.length < 7) {
       throw new Error('Insufficient account key indexes for parseSettleAuctionNoneLocal');
     }
     const payer = accountKeys[accountKeyIndexes[0]];
     const auction = accountKeys[accountKeyIndexes[6]];
 
-    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction.pubkey);
+    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction);
     // We want to return the info even without the vaa hash if its a testing environment
     if (!fast_vaa_hash && !this.isTest) {
-      this.handleMissingFastVaaHash(auction.pubkey, 'parseSettleAuctionNoneLocal');
+      this.handleMissingFastVaaHash(auction, 'parseSettleAuctionNoneLocal');
       return null;
     }
     const info = {
       fast_vaa_hash: fast_vaa_hash,
       // No one executed anything so no repayment
       repayment: 0n,
-      settle_payer: payer.pubkey.toBase58(),
+      settle_payer: payer.toBase58(),
       settle_tx_hash: res.transaction.signatures[0],
       settle_slot: BigInt(res.slot),
       settle_time: new Date(res.blockTime! * 1000),
@@ -765,22 +761,22 @@ export class FTSolanaWatcher extends SolanaWatcher {
 
   async parseSettleAuctionNoneCctp(
     res: VersionedTransactionResponse,
-    ix: MessageCompiledInstruction
+    instruction: MessageCompiledInstruction,
+    accountKeys: PublicKey[]
   ): Promise<FastTransferSettledInfo | null> {
-    const accountKeys = await this.getAccountsByParsedTransaction(res.transaction.signatures[0]);
-    const accountKeyIndexes = ix.accountKeyIndexes;
+    this.logger.debug(`Parsing settleAuctionNoneCctp for ${res.transaction.signatures[0]}`);
 
+    const accountKeyIndexes = instruction.accountKeyIndexes;
     if (accountKeyIndexes.length < 9) {
       throw new Error('Insufficient account key indexes for parseSettleAuctionNoneCctp');
     }
-
     const payer = accountKeys[accountKeyIndexes[0]];
     const auction = accountKeys[accountKeyIndexes[8]];
 
-    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction.pubkey);
+    const fast_vaa_hash = await this.getFastVaaHashFromAuctionPubkey(auction);
     // We want to return the info even without the vaa hash if its a testing environment
     if (!fast_vaa_hash && !this.isTest) {
-      this.handleMissingFastVaaHash(auction.pubkey, 'parseSettleAuctionNoneCctp');
+      this.handleMissingFastVaaHash(auction, 'parseSettleAuctionNoneCctp');
       return null;
     }
 
@@ -788,7 +784,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
       fast_vaa_hash: fast_vaa_hash,
       // No one executed anything so no repayment
       repayment: 0n,
-      settle_payer: payer.pubkey.toBase58(),
+      settle_payer: payer.toBase58(),
       settle_tx_hash: res.transaction.signatures[0],
       settle_slot: BigInt(res.slot),
       settle_time: new Date(res.blockTime! * 1000),
@@ -815,11 +811,14 @@ export class FTSolanaWatcher extends SolanaWatcher {
   } | null> {
     const auctionAccount = await this.connection?.getAccountInfo(new PublicKey(pubkey));
 
-    if (auctionAccount) {
-      const auctionInfo = this.matchingEngineBorshCoder.accounts.decode(
-        'Auction',
-        auctionAccount.data
-      );
+    if (auctionAccount && auctionAccount.data) {
+      let auctionInfo;
+      try {
+        auctionInfo = this.matchingEngineBorshCoder.accounts.decode('Auction', auctionAccount.data);
+      } catch (error) {
+        this.logger.error('Error decoding auction account:', error);
+        throw new Error(`Error decoding auction account: ${error}`);
+      }
       // We need to do this manually because the account info given is in snake_case
       return {
         vaaHash: Buffer.from(auctionInfo.vaa_hash).toString('hex'),
@@ -1015,6 +1014,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
       this.logger.debug('No database connection, skipping updateMarketOrder');
       return;
     }
+    this.logger.debug(`Updating market order: ${JSON.stringify(update)}`);
     try {
       // some `FastTransferUpdate` have only `fast_vaa_id` or `fast_vaa_hash`. We want to merge base on this unique key
       const conflictKey = update.fast_vaa_id ? 'fast_vaa_id' : 'fast_vaa_hash';

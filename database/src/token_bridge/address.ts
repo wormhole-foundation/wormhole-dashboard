@@ -64,7 +64,7 @@ export const getNativeAddress = async (
         fullnode: 'https://fullnode.mainnet.aptoslabs.com',
         network: AptosNetwork.MAINNET,
       });
-      const client = new Aptos();
+      const client = new Aptos(config);
       const contracts = wh.getContracts('Aptos');
       if (!contracts) {
         return null;

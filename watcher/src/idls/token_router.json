@@ -329,13 +329,11 @@
           "writable": true
         },
         {
-          "name": "router_endpoint",
-          "docs": [
-            "Registered router endpoint representing a foreign Token Router. This account may have a",
-            "CCTP domain encoded if this route is CCTP-enabled. For this instruction, it is required that",
-            "[RouterEndpoint::cctp_domain] is `Some(value)`.",
-            "",
-            "Seeds must be \\[\"registered_emitter\", target_chain.to_be_bytes()\\]."
+          "name": "target_router_endpoint",
+          "accounts": [
+            {
+              "name": "endpoint"
+            }
           ]
         },
         {
@@ -443,7 +441,10 @@
           "name": "program_transfer_authority",
           "docs": [
             "The auction participant needs to set approval to this PDA if the sender (signer) is not",
-            "provided.",
+            "provided. The delegated amount must equal the amount in or this instruction will revert.",
+            "",
+            "NOTE: If this account is provided, the sender token's owner will be encoded as the order",
+            "sender.",
             ""
           ],
           "optional": true
@@ -452,7 +453,9 @@
           "name": "sender",
           "docs": [
             "Sender, who has the authority to transfer assets from the sender token account. If this",
-            "account is not provided, the program transfer authority account must be some account."
+            "account is not provided, the program transfer authority account must be some account.",
+            "",
+            "NOTE: If this account is provided, this pubkey will be encoded as the order sender."
           ],
           "signer": true,
           "optional": true
@@ -492,6 +495,14 @@
           "accounts": [
             {
               "name": "mint"
+            }
+          ]
+        },
+        {
+          "name": "target_router_endpoint",
+          "accounts": [
+            {
+              "name": "endpoint"
             }
           ]
         },
@@ -571,11 +582,11 @@
           ]
         },
         {
-          "name": "router_endpoint",
-          "docs": [
-            "Registered emitter account representing a Circle Integration on another network.",
-            "",
-            "Seeds must be \\[\"registered_emitter\", target_chain.to_be_bytes()\\]."
+          "name": "source_router_endpoint",
+          "accounts": [
+            {
+              "name": "endpoint"
+            }
           ]
         },
         {
@@ -725,6 +736,9 @@
           "name": "matching_engine_local_custody_token",
           "docs": ["(Matching Engine program)."],
           "writable": true
+        },
+        {
+          "name": "matching_engine_event_authority"
         },
         {
           "name": "matching_engine_program"
@@ -936,11 +950,11 @@
     },
     {
       "code": 6522,
-      "name": "MissingAuthority"
+      "name": "EitherSenderOrProgramTransferAuthority"
     },
     {
-      "code": 6523,
-      "name": "TooManyAuthorities"
+      "code": 6524,
+      "name": "DelegatedAmountMismatch"
     },
     {
       "code": 7024,

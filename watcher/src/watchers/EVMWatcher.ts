@@ -50,6 +50,7 @@ export class EVMWatcher extends Watcher {
       chain === 'Snaxchain' ||
       chain === 'Unichain' ||
       chain === 'Worldchain' ||
+      chain === 'Monad' ||
       chain === 'MonadDevnet' ||
       chain === 'Ink' ||
       chain === 'HyperEVM' ||

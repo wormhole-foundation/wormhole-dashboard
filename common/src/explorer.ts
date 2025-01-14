@@ -140,6 +140,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://unichain-sepolia.blockscout.com/block/${block}`
     : chainId === chainToChainId('Worldchain')
     ? `https://worldchain-sepolia.explorer.alchemy.com/block/${block}`
+    : chainId === chainToChainId('Monad')
+    ? `${process.env.MONAD_EXPLORER_URL}/block/${block}`
     : chainId === chainToChainId('MonadDevnet')
     ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/block/${block}`
     : chainId === chainToChainId('Ink')
@@ -281,6 +283,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://unichain-sepolia.blockscout.com/tx/${tx}`
     : chainId === chainToChainId('Worldchain')
     ? `https://worldchain-sepolia.explorer.alchemy.com/tx/${tx}`
+    : chainId === chainToChainId('Monad')
+    ? `${process.env.MONAD_EXPLORER_URL}/tx/${tx}`
     : chainId === chainToChainId('MonadDevnet')
     ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/tx/${tx}`
     : chainId === chainToChainId('Ink')

@@ -45,6 +45,7 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
     chainName === 'Snaxchain' ||
     chainName === 'Unichain' ||
     chainName === 'Worldchain' ||
+    chainName === 'Monad' ||
     chainName === 'MonadDevnet' ||
     chainName === 'Ink' ||
     chainName === 'HyperEVM' ||

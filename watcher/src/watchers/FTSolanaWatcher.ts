@@ -236,13 +236,13 @@ export class FTSolanaWatcher extends SolanaWatcher {
         );
       }
 
-      const message = res.transaction.message;
-      const instructions = message.compiledInstructions;
+      const allKeys = await getAllKeys(this.getConnection(), res);
 
       // filter out instructions that are not for the program we are interested in
-      const programIdIndex = res.transaction.message.staticAccountKeys.findIndex((i) =>
-        i.equals(programId)
-      );
+      const programIdIndex = allKeys.findIndex((i) => i.equals(programId));
+
+      const message = res.transaction.message;
+      const instructions = message.compiledInstructions;
 
       const programInstructions = instructions
         .map((ix, seq) => {
@@ -252,7 +252,7 @@ export class FTSolanaWatcher extends SolanaWatcher {
 
       for (const ix of programInstructions) {
         try {
-          await this.parseInstruction(res, ix.ix, ix.seq);
+          await this.parseInstruction(res, ix.ix, ix.seq, allKeys);
         } catch (error) {
           this.logger.error('parseInstruction error:', error);
         }
@@ -264,9 +264,9 @@ export class FTSolanaWatcher extends SolanaWatcher {
   async parseInstruction(
     res: VersionedTransactionResponse,
     instruction: MessageCompiledInstruction,
-    seq: number
+    seq: number,
+    allKeys: PublicKey[]
   ): Promise<void> {
-    const allKeys = await getAllKeys(this.getConnection(), res);
     const decodedData = this.matchingEngineBorshCoder.instruction.decode(
       Buffer.from(instruction.data),
       'base58'

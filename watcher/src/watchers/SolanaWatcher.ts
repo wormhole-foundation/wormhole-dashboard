@@ -5,6 +5,7 @@ import {
   PublicKey,
   SolanaJSONRPCError,
   VersionedBlockResponse,
+  VersionedMessage,
 } from '@solana/web3.js';
 import { decode } from 'bs58';
 import { z } from 'zod';
@@ -13,13 +14,13 @@ import { VaasByBlock } from '../databases/types';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import {
   Mode,
-  isLegacyMessage,
   normalizeCompileInstruction,
   universalAddress_stripped,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Watcher } from './Watcher';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
 import { deserializePostMessage } from '@wormhole-foundation/sdk-solana-core';
+import { getAllKeys } from '../utils/solana';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
@@ -159,50 +160,9 @@ export class SolanaWatcher extends Watcher {
           );
         }
 
-        const message = res.transaction.message;
-        let accountKeys = isLegacyMessage(message)
-          ? message.accountKeys
-          : message.staticAccountKeys;
-
-        // If the message contains an address table lookup, we need to resolve the addresses
-        // before looking for the programIdIndex
-        if (message.addressTableLookups.length > 0) {
-          const lookupPromises = message.addressTableLookups.map(async (atl) => {
-            const lookupTableAccount = await this.getConnection()
-              .getAddressLookupTable(atl.accountKey)
-              .then((res) => res.value);
-
-            if (!lookupTableAccount)
-              throw new Error('lookupTableAccount is null, cant resolve addresses');
-
-            // Important to return the addresses in the order they're specified in the
-            // address table lookup object. Note writable comes first, then readable.
-            return [
-              atl.accountKey,
-              atl.writableIndexes.map((i) => lookupTableAccount.state.addresses[i]),
-              atl.readonlyIndexes.map((i) => lookupTableAccount.state.addresses[i]),
-            ] as [PublicKey, PublicKey[], PublicKey[]];
-          });
-
-          // Lookup all addresses in parallel
-          const lookups = await Promise.all(lookupPromises);
-
-          // Ensure the order is maintained for lookups
-          // Static, Writable, Readable
-          // ref: https://github.com/gagliardetto/solana-go/blob/main/message.go#L414-L464
-          const writable: PublicKey[] = [];
-          const readable: PublicKey[] = [];
-          for (const atl of message.addressTableLookups) {
-            const table = lookups.find((l) => l[0].equals(atl.accountKey));
-            if (!table) throw new Error('Could not find address table lookup');
-            writable.push(...table[1]);
-            readable.push(...table[2]);
-          }
-
-          accountKeys.push(...writable.concat(readable));
-        }
-
+        const accountKeys = await getAllKeys(this.getConnection(), res);
         const programIdIndex = accountKeys.findIndex((i) => i.toBase58() === this.programId);
+        const message: VersionedMessage = res.transaction.message;
         const instructions = message.compiledInstructions;
         const innerInstructions =
           res.meta?.innerInstructions?.flatMap((i) =>

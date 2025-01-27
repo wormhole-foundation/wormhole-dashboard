@@ -8,7 +8,6 @@ import (
 	"time"
 
 	node_common "github.com/certusone/wormhole/node/pkg/common"
-	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
 	eth_common "github.com/ethereum/go-ethereum/common"
 	ipfslog "github.com/ipfs/go-log/v2"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/pkg/bigtable"
@@ -23,7 +22,14 @@ const (
 	EmulatorHost = "localhost:8086"
 )
 
-func processObservation(t *testing.T, observationBatches [][]node_common.MsgWithTimeStamp[gossipv1.SignedObservation], expectedObservations expectedObservation, expectedLastObservedAt time.Time) {
+type Obs struct {
+	Addr      []byte
+	Signature []byte
+	TxHash    []byte
+	MessageId string
+}
+
+func processObservation(t *testing.T, observationBatches [][]node_common.MsgWithTimeStamp[Obs], expectedObservations expectedObservation, expectedLastObservedAt time.Time) {
 	database, err := bigtable.NewBigtableDB(context.TODO(), ProjectID, InstanceID, "", EmulatorHost, true)
 	if err != nil {
 		t.Errorf("failed to create Bigtable client: %v", err)
@@ -104,29 +110,30 @@ func TestMain(m *testing.M) {
 
 // go test -v pkg/historical_uptime/process_observation_test.go pkg/historical_uptime/process_observation.go
 func TestProcessObservation(t *testing.T) {
-	expectedLastObservedAt := time.Now()
+	now := time.Now()
+	expectedLastObservedAt := now
 	fmt.Printf("expectedLastObservedAt: %s\n", expectedLastObservedAt)
 
 	testCases := []struct {
 		name string
 		// Batches of observation batches
-		input                  [][]node_common.MsgWithTimeStamp[gossipv1.SignedObservation]
+		input                  [][]node_common.MsgWithTimeStamp[Obs]
 		expectedObservations   expectedObservation
 		expectedLastObservedAt time.Time
 	}{
 		{
 			name: "normal test case",
-			input: [][]node_common.MsgWithTimeStamp[gossipv1.SignedObservation]{{
+			input: [][]node_common.MsgWithTimeStamp[Obs]{{
 				{
-					Msg: &gossipv1.SignedObservation{
+					Msg: &Obs{
 						MessageId: "1/chain1/1",
 						Addr:      eth_common.HexToAddress("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").Bytes(),
 						Signature: []byte("signature1"),
 					},
-					Timestamp: time.Now().Add(-time.Hour), // 1 hour ago
+					Timestamp: now.Add(-time.Hour), // 1 hour ago
 				},
 				{
-					Msg: &gossipv1.SignedObservation{
+					Msg: &Obs{
 						MessageId: "1/chain1/1",
 						Addr:      eth_common.HexToAddress("0x114De8460193bdf3A2fCf81f86a09765F4762fD1").Bytes(),
 						Signature: []byte("signature2"),
@@ -143,17 +150,17 @@ func TestProcessObservation(t *testing.T) {
 		},
 		{
 			name: "duplicated observations",
-			input: [][]node_common.MsgWithTimeStamp[gossipv1.SignedObservation]{{
+			input: [][]node_common.MsgWithTimeStamp[Obs]{{
 				{
-					Msg: &gossipv1.SignedObservation{
+					Msg: &Obs{
 						MessageId: "1/chain1/1",
 						Addr:      eth_common.HexToAddress("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").Bytes(),
 						Signature: []byte("signature1"),
 					},
-					Timestamp: time.Now().Add(-time.Hour), // 1 hour ago
+					Timestamp: now.Add(-time.Hour), // 1 hour ago
 				},
 				{
-					Msg: &gossipv1.SignedObservation{
+					Msg: &Obs{
 						MessageId: "1/chain1/1",
 						Addr:      eth_common.HexToAddress("0x114De8460193bdf3A2fCf81f86a09765F4762fD1").Bytes(),
 						Signature: []byte("signature2"),
@@ -161,12 +168,12 @@ func TestProcessObservation(t *testing.T) {
 					Timestamp: expectedLastObservedAt, // 1 hour ago
 				},
 				{
-					Msg: &gossipv1.SignedObservation{
+					Msg: &Obs{
 						MessageId: "1/chain1/1",
 						Addr:      eth_common.HexToAddress("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").Bytes(),
 						Signature: []byte("signature1"),
 					},
-					Timestamp: time.Now().Add(time.Hour * 1), // 1 hour later
+					Timestamp: now.Add(time.Hour * 1), // 1 hour later
 				},
 			}},
 			expectedObservations: expectedObservation{
@@ -177,17 +184,17 @@ func TestProcessObservation(t *testing.T) {
 		},
 		{
 			name: "late observations",
-			input: [][]node_common.MsgWithTimeStamp[gossipv1.SignedObservation]{{
+			input: [][]node_common.MsgWithTimeStamp[Obs]{{
 				{
-					Msg: &gossipv1.SignedObservation{
+					Msg: &Obs{
 						MessageId: "1/chain1/1",
 						Addr:      eth_common.HexToAddress("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").Bytes(),
 						Signature: []byte("signature1"),
 					},
-					Timestamp: time.Now().Add(-time.Hour), // 1 hour ago
+					Timestamp: now.Add(-time.Hour), // 1 hour ago
 				},
 				{
-					Msg: &gossipv1.SignedObservation{
+					Msg: &Obs{
 						MessageId: "1/chain1/1",
 						Addr:      eth_common.HexToAddress("0x114De8460193bdf3A2fCf81f86a09765F4762fD1").Bytes(),
 						Signature: []byte("signature2"),
@@ -195,12 +202,12 @@ func TestProcessObservation(t *testing.T) {
 					Timestamp: expectedLastObservedAt,
 				},
 				{
-					Msg: &gossipv1.SignedObservation{
+					Msg: &Obs{
 						MessageId: "1/chain1/1",
 						Addr:      eth_common.HexToAddress("0x107A0086b32d7A0977926A205131d8731D39cbEB").Bytes(),
 						Signature: []byte("signature3"),
 					},
-					Timestamp: time.Now().Add(time.Hour * 31), // 31 hours after
+					Timestamp: now.Add(time.Hour * 31), // 31 hours after
 				},
 			}},
 			expectedObservations: expectedObservation{
@@ -213,33 +220,33 @@ func TestProcessObservation(t *testing.T) {
 		// To test if flushing and processing post flushing works correctly
 		{
 			name: "flush and continue",
-			input: [][]node_common.MsgWithTimeStamp[gossipv1.SignedObservation]{
+			input: [][]node_common.MsgWithTimeStamp[Obs]{
 				{
 					{
-						Msg: &gossipv1.SignedObservation{
+						Msg: &Obs{
 							MessageId: "1/chain1/1",
 							Addr:      eth_common.HexToAddress("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").Bytes(),
 							Signature: []byte("signature1"),
 						},
-						Timestamp: time.Now().Add(-6 * time.Second),
+						Timestamp: now.Add(-6 * time.Second),
 					},
 					{
-						Msg: &gossipv1.SignedObservation{
+						Msg: &Obs{
 							MessageId: "1/chain1/1",
 							Addr:      eth_common.HexToAddress("0x114De8460193bdf3A2fCf81f86a09765F4762fD1").Bytes(),
 							Signature: []byte("signature2"),
 						},
-						Timestamp: time.Now().Add(-5 * time.Second),
+						Timestamp: now.Add(-5 * time.Second),
 					},
 				},
 				{
 					{
-						Msg: &gossipv1.SignedObservation{
+						Msg: &Obs{
 							MessageId: "1/chain1/1",
 							Addr:      eth_common.HexToAddress("0x107A0086b32d7A0977926A205131d8731D39cbEB").Bytes(),
 							Signature: []byte("signature3"),
 						},
-						Timestamp: time.Now(),
+						Timestamp: now,
 					},
 				},
 			},
@@ -248,15 +255,15 @@ func TestProcessObservation(t *testing.T) {
 				"0x114De8460193bdf3A2fCf81f86a09765F4762fD1": types.OnTime,
 				"0x107A0086b32d7A0977926A205131d8731D39cbEB": types.OnTime,
 			},
-			expectedLastObservedAt: time.Now(),
+			expectedLastObservedAt: now,
 		},
 		// To test if processing post flushing works correctly and observations are deduped
 		{
 			name: "flush and continue - duplicated observations",
-			input: [][]node_common.MsgWithTimeStamp[gossipv1.SignedObservation]{
+			input: [][]node_common.MsgWithTimeStamp[Obs]{
 				{
 					{
-						Msg: &gossipv1.SignedObservation{
+						Msg: &Obs{
 							MessageId: "1/chain1/1",
 							Addr:      eth_common.HexToAddress("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").Bytes(),
 							Signature: []byte("signature1"),
@@ -264,7 +271,7 @@ func TestProcessObservation(t *testing.T) {
 						Timestamp: expectedLastObservedAt.Add(-6 * time.Second),
 					},
 					{
-						Msg: &gossipv1.SignedObservation{
+						Msg: &Obs{
 							MessageId: "1/chain1/1",
 							Addr:      eth_common.HexToAddress("0x114De8460193bdf3A2fCf81f86a09765F4762fD1").Bytes(),
 							Signature: []byte("signature2"),
@@ -274,7 +281,7 @@ func TestProcessObservation(t *testing.T) {
 				},
 				{
 					{
-						Msg: &gossipv1.SignedObservation{
+						Msg: &Obs{
 							MessageId: "1/chain1/1",
 							Addr:      eth_common.HexToAddress("0xfF6CB952589BDE862c25Ef4392132fb9D4A42157").Bytes(),
 							Signature: []byte("signature1"),

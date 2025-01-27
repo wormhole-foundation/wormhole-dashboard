@@ -67,7 +67,6 @@ func main() {
 	defer rootCtxCancel()
 
 	// Inbound observations
-	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
 	batchObsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 1024)
 
 	// Guardian set state managed by processor
@@ -93,17 +92,6 @@ func main() {
 			select {
 			case <-rootCtx.Done():
 				return
-			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
-				if o.Msg.MessageId[:3] != "26/" && o.Msg.MessageId[:2] != "7/" {
-					ga := eth_common.BytesToAddress(o.Msg.Addr).String()
-					if _, ok := obsvByHash[o.Msg.MessageId]; !ok {
-						obsvByHash[o.Msg.MessageId] = map[string]time.Time{}
-					}
-					if _, ok := obsvByHash[o.Msg.MessageId][ga]; !ok {
-						obsvByHash[o.Msg.MessageId][ga] = time.Now()
-					}
-					logger.Warn("status", zap.String("id", o.Msg.MessageId), zap.Any("msg", obsvByHash[o.Msg.MessageId]))
-				}
 			case batch := <-batchObsvC:
 				for _, o := range batch.Msg.Observations {
 					if o.MessageId[:3] != "26/" && o.MessageId[:2] != "7/" {
@@ -139,7 +127,6 @@ func main() {
 		gst,
 		rootCtxCancel,
 		p2p.WithComponents(components),
-		p2p.WithSignedObservationListener(obsvC),
 		p2p.WithSignedObservationBatchListener(batchObsvC),
 	)
 	if err != nil {

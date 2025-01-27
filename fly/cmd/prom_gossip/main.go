@@ -188,7 +188,6 @@ func main() {
 	defer rootCtxCancel()
 
 	// Inbound observations
-	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 20000)
 	batchObsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 20000)
 
 	// Inbound observation requests
@@ -248,29 +247,6 @@ func main() {
 				afterCount := len(uniqueObs)
 				logger.Info("Cleaned up unique observations cache", zap.Int("beforeCount", beforeCount), zap.Int("afterCount", afterCount), zap.Int("cleanedUpCount", beforeCount-afterCount))
 				timer.Reset(delay)
-			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
-				gossipByType.WithLabelValues("observation").Inc()
-				spl := strings.Split(o.Msg.MessageId, "/")
-				chain, err := parseChainID(spl[0])
-				if err != nil {
-					chain = vaa.ChainIDUnset
-				}
-				emitter := strings.ToLower(spl[1])
-				addr := "0x" + string(hex.EncodeToString(o.Msg.Addr))
-				name := addr
-				idx, found := guardianIndexMap[strings.ToLower(addr)]
-				if found {
-					name = guardianIndexToNameMap[idx]
-				}
-				observationsByGuardianPerChain.WithLabelValues(name, chain.String()).Inc()
-				if knownEmitters[emitter] {
-					tbObservationsByGuardianPerChain.WithLabelValues(name, chain.String()).Inc()
-				}
-				hash := hex.EncodeToString(o.Msg.Hash)
-				if _, exists := uniqueObs[hash]; !exists {
-					uniqueObservationsCounter.Inc()
-				}
-				uniqueObs[hash] = time.Now()
 			case batch := <-batchObsvC:
 				gossipByType.WithLabelValues("batch_observation").Inc()
 				addr := "0x" + string(hex.EncodeToString(batch.Msg.Addr))
@@ -431,7 +407,6 @@ func main() {
 		gst,
 		rootCtxCancel,
 		p2p.WithComponents(components),
-		p2p.WithSignedObservationListener(obsvC),
 		p2p.WithSignedObservationBatchListener(batchObsvC),
 		p2p.WithSignedVAAListener(signedInC),
 		p2p.WithObservationRequestListener(obsvReqC),

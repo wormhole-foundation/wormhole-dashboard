@@ -70,7 +70,7 @@ func main() {
 		defer localCancel()
 		hbReceived := false
 		var addrInfo peer.AddrInfo
-		observationsReceived := 0
+		observationBatchesReceived := 0
 		components := p2p.DefaultComponents()
 		components.Port = p2pPort
 		host, err := p2p.NewHost(logger, localContext, p2pNetworkID, p2pBootstrap, components, priv)
@@ -116,10 +116,10 @@ func main() {
 							hbReceived = true
 						}
 					}
-				case *gossipv1.GossipMessage_SignedObservation:
-					logger.Debug("received observation")
-					if bytes.Equal(m.SignedObservation.Addr, guardianPubKey) {
-						observationsReceived++
+				case *gossipv1.GossipMessage_SignedObservationBatch:
+					logger.Debug("received observation batch")
+					if bytes.Equal(m.SignedObservationBatch.Addr, guardianPubKey) {
+						observationBatchesReceived++
 					}
 				}
 			}
@@ -144,8 +144,8 @@ func main() {
 		} else {
 			fmt.Println("❌ NO HEARTBEAT RECEIVED")
 		}
-		if observationsReceived > 0 {
-			fmt.Printf("✅ %d observations received\n", observationsReceived)
+		if observationBatchesReceived > 0 {
+			fmt.Printf("✅ %d observationBatches received\n", observationBatchesReceived)
 		} else {
 			fmt.Println("❌ NO OBSERVATIONS RECEIVED")
 		}

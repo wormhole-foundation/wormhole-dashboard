@@ -84,7 +84,6 @@ func main() {
 	defer rootCtxCancel()
 
 	// Inbound observations
-	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
 	batchObsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 1024)
 
 	// Inbound observation requests
@@ -128,8 +127,6 @@ func main() {
 			select {
 			case <-rootCtx.Done():
 				return
-			case <-obsvC: // TODO: Rip out this code once we cut over to batching.
-				numObs++
 			case batch := <-batchObsvC:
 				numObs += len(batch.Msg.Observations)
 			case <-signedInC:
@@ -193,7 +190,6 @@ func main() {
 		gst,
 		rootCtxCancel,
 		p2p.WithComponents(components),
-		p2p.WithSignedObservationListener(obsvC),
 		p2p.WithSignedObservationBatchListener(batchObsvC),
 		p2p.WithSignedVAAListener(signedInC),
 		p2p.WithObservationRequestListener(obsvReqC),

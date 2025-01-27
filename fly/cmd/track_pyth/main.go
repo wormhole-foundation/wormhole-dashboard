@@ -126,7 +126,6 @@ func main() {
 	defer rootCtxCancel()
 
 	// Inbound observations
-	obsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
 	batchObsvC := make(chan *common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 1024)
 
 	// Inbound signed VAAs
@@ -160,14 +159,6 @@ func main() {
 			select {
 			case <-rootCtx.Done():
 				return
-			case m := <-obsvC: // TODO: Rip out this code once we cut over to batching.
-				obs := &gossipv1.Observation{
-					Hash:      m.Msg.Hash,
-					Signature: m.Msg.Signature,
-					TxHash:    m.Msg.TxHash,
-					MessageId: m.Msg.MessageId,
-				}
-				handleObservation(logger, gs, m.Msg.Addr, obs)
 			case batch := <-batchObsvC:
 				for _, o := range batch.Msg.Observations {
 					handleObservation(logger, gs, batch.Msg.Addr, o)
@@ -235,7 +226,6 @@ func main() {
 		gst,
 		rootCtxCancel,
 		p2p.WithComponents(components),
-		p2p.WithSignedObservationListener(obsvC),
 		p2p.WithSignedObservationBatchListener(batchObsvC),
 		p2p.WithSignedVAAListener(signedInC),
 	)
@@ -403,7 +393,7 @@ func handleObservation(logger *zap.Logger, gs common.GuardianSet, addr []byte, m
 		return
 	}
 
-	// Hooray! Now, we have verified all fields on SignedObservation and know that it includes
+	// Hooray! Now, we have verified all fields on observation and know that it includes
 	// a valid signature by an active guardian. We still don't fully trust them, as they may be
 	// byzantine, but now we know who we're dealing with.
 

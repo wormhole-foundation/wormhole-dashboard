@@ -294,11 +294,9 @@ func main() {
 	defer rootCtxCancel()
 
 	// Inbound observations
-	obsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservation], 1024)
 	batchObsvC := make(chan *node_common.MsgWithTimeStamp[gossipv1.SignedObservationBatch], 1024)
 
 	// Add channel capacity checks
-	go monitorChannelCapacity(rootCtx, logger, "obsvC", obsvC)
 	go monitorChannelCapacity(rootCtx, logger, "batchObsvC", batchObsvC)
 
 	// Heartbeat updates
@@ -370,15 +368,6 @@ func main() {
 				}
 				logger.Info("Observation cleanup completed.")
 				return
-			case o := <-obsvC: // TODO: Rip out this code once we cut over to batching.
-				obs := historical_uptime.CreateNewObservation(o.Msg.MessageId, o.Msg.Addr, o.Timestamp, o.Msg.Addr)
-				observationBatch = append(observationBatch, obs)
-
-				// if it reaches batchSize then process this batch
-				if len(observationBatch) >= batchSize {
-					historical_uptime.ProcessObservationBatch(*db, logger, observationBatch)
-					observationBatch = observationBatch[:0] // Clear the batch
-				}
 			case batch := <-batchObsvC:
 				for _, signedObs := range batch.Msg.Observations {
 					obs := historical_uptime.CreateNewObservation(signedObs.MessageId, signedObs.Signature, batch.Timestamp, signedObs.TxHash)
@@ -477,7 +466,6 @@ func main() {
 		gst,
 		rootCtxCancel,
 		p2p.WithComponents(components),
-		p2p.WithSignedObservationListener(obsvC),
 		p2p.WithSignedObservationBatchListener(batchObsvC),
 	)
 	if err != nil {

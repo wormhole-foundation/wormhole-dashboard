@@ -8,6 +8,7 @@ export enum FastTransferProtocol {
   NONE = 'none',
 }
 
+// These are strings to match the database schema and to be human readable
 export enum FastTransferStatus {
   PENDING = 'pending', // market order is placed but no auction started
   AUCTION = 'auction', // auction started and ongoing

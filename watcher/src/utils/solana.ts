@@ -45,7 +45,7 @@ export const findFromSignatureAndToSignature = async (
   connection: Connection,
   fromSlot: number,
   toSlot: number,
-  retries = 5
+  retries = 25
 ) => {
   let toBlock: VersionedBlockResponse;
   let fromBlock: VersionedBlockResponse;

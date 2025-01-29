@@ -2,6 +2,32 @@ name: Test
 on:
   pull_request:
 jobs:
+  verify-checksums:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y make
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Run Makefile to generate files
+        run: make init-submodule && make build-ft-sdk
+
+      - name: Copy select generated files
+        run: |
+          cp watcher/sdk/example-liquidity-layer/*.tgz watcher/sdk
+
+      - name: Compare checksums
+        run: git diff --name-only --exit-code && echo "✅ Checksums match. All generated files are consistent with committed versions." || (echo "❌ Checksum mismatch! Generated files do not match committed ones." >&2 && exit 1)
+
   test-and-build:
     runs-on: ubuntu-latest
     steps:

@@ -17,8 +17,8 @@ CREATE TYPE FastTransferStatus AS ENUM ('pending', 'no_offer', 'executed', 'sett
 -- Market Order tracks events of when fast market orders are
 -- placed in the token router
 CREATE TABLE market_orders (
-  -- These two cant be primary key because on different stages they might initially be null due to the inability to find them
-  -- To accomodate this we put a unique constraint to allow nullable
+  -- These two can't be primary key because on different stages they might initially be null due to the inability to find them
+  -- To accommodate this we put a unique constraint to allow nullable
   -- It will eventually be filled up 
   fast_vaa_id VARCHAR(255) UNIQUE,
   fast_vaa_hash VARCHAR(255) UNIQUE,

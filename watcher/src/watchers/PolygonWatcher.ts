@@ -6,7 +6,7 @@ import { Network } from '@wormhole-foundation/sdk-base';
 
 export class PolygonWatcher extends EVMWatcher {
   constructor(network: Network) {
-    super(network, 'Polygon');
+    super(network, 'Polygon', 'latest', 'vaa');
   }
   async getFinalizedBlockNumber(): Promise<number> {
     this.logger.info('fetching last child block from Ethereum');

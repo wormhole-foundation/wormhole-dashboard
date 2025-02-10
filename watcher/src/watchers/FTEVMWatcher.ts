@@ -1,21 +1,18 @@
 import knex, { Knex } from 'knex';
-import { Watcher } from './Watcher';
 import { Network } from '@wormhole-foundation/sdk-base';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import { FAST_TRANSFER_CONTRACTS, FTEVMChain } from '../fastTransfer/consts';
 import { ethers } from 'ethers';
-import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
+import { RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey } from '../databases/utils';
 import TokenRouterParser from '../fastTransfer/tokenRouter/parser';
 import SwapLayerParser from '../fastTransfer/swapLayer/parser';
-import { Block } from './EVMWatcher';
-import { BigNumber } from 'ethers';
-import axios from 'axios';
+import { EVMWatcher } from './EVMWatcher';
 import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 
 export type BlockTag = 'finalized' | 'safe' | 'latest';
 
-export class FTEVMWatcher extends Watcher {
+export class FTEVMWatcher extends EVMWatcher {
   finalizedBlockTag: BlockTag;
   lastTimestamp: number;
   latestFinalizedBlockNumber: number;
@@ -33,7 +30,7 @@ export class FTEVMWatcher extends Watcher {
     finalizedBlockTag: BlockTag = 'latest',
     isTest = false
   ) {
-    super(network, chain, 'ft');
+    super(network, chain, finalizedBlockTag, 'ft');
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
@@ -61,71 +58,6 @@ export class FTEVMWatcher extends Watcher {
       ? new SwapLayerParser(this.provider, this.swapLayerAddress, this.pg, chain)
       : null;
     this.logger.debug('FTWatcher', network, chain, finalizedBlockTag);
-  }
-
-  async getBlock(blockNumberOrTag: number | BlockTag): Promise<Block> {
-    const rpc = RPCS_BY_CHAIN[this.network][this.chain];
-    if (!rpc) {
-      throw new Error(`${this.chain} RPC is not defined!`);
-    }
-    let result = (
-      await axios.post(
-        rpc,
-        [
-          {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'eth_getBlockByNumber',
-            params: [
-              typeof blockNumberOrTag === 'number'
-                ? `0x${blockNumberOrTag.toString(16)}`
-                : blockNumberOrTag,
-              false,
-            ],
-          },
-        ],
-        AXIOS_CONFIG_JSON
-      )
-    )?.data?.[0];
-    if (result && result.result === null) {
-      // Found null block
-      if (
-        typeof blockNumberOrTag === 'number' &&
-        blockNumberOrTag < this.latestFinalizedBlockNumber - 1000
-      ) {
-        return {
-          hash: '',
-          number: BigNumber.from(blockNumberOrTag).toNumber(),
-          timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
-        };
-      }
-    } else if (result && result.error && result.error.code === 6969) {
-      return {
-        hash: '',
-        number: BigNumber.from(blockNumberOrTag).toNumber(),
-        timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
-      };
-    }
-    result = result?.result;
-    if (result && result.hash && result.number && result.timestamp) {
-      // Convert to Ethers compatible type
-      this.lastTimestamp = result.timestamp;
-      return {
-        hash: result.hash,
-        number: BigNumber.from(result.number).toNumber(),
-        timestamp: BigNumber.from(result.timestamp).toNumber(),
-      };
-    }
-    throw new Error(
-      `Unable to parse result of eth_getBlockByNumber for ${blockNumberOrTag} on ${rpc}`
-    );
-  }
-
-  async getFinalizedBlockNumber(): Promise<number> {
-    this.logger.info(`fetching block ${this.finalizedBlockTag}`);
-    const block: Block = await this.getBlock(this.finalizedBlockTag);
-    this.latestFinalizedBlockNumber = block.number;
-    return block.number;
   }
 
   async getFtMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {

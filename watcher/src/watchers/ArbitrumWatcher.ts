@@ -12,9 +12,9 @@ export class ArbitrumWatcher extends EVMWatcher {
 
   constructor(network: Network) {
     if (network === 'Mainnet') {
-      super(network, 'Arbitrum');
+      super(network, 'Arbitrum', 'latest', 'vaa');
     } else {
-      super(network, 'ArbitrumSepolia');
+      super(network, 'ArbitrumSepolia', 'latest', 'vaa');
     }
 
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
@@ -23,8 +23,8 @@ export class ArbitrumWatcher extends EVMWatcher {
     }
     this.evmWatcher =
       network === 'Mainnet'
-        ? new EVMWatcher(network, 'Ethereum', 'finalized')
-        : new EVMWatcher(network, 'Sepolia', 'finalized');
+        ? new EVMWatcher(network, 'Ethereum', 'finalized', 'vaa')
+        : new EVMWatcher(network, 'Sepolia', 'finalized', 'vaa');
     this.latestL2Finalized = 0;
     this.l1L2Map = new Map<number, number>();
     this.lastEthTime = 0;

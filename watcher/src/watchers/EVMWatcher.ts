@@ -7,6 +7,7 @@ import { makeBlockKey, makeVaaKey } from '../databases/utils';
 import { Watcher } from './Watcher';
 import { Network, PlatformToChains, contracts } from '@wormhole-foundation/sdk-base';
 import { ethers_contracts } from '@wormhole-foundation/sdk-evm-core';
+import { Mode } from '@wormhole-foundation/wormhole-monitor-common';
 
 // This is the hash for topic[0] of the core contract event LogMessagePublished
 // https://github.com/wormhole-foundation/wormhole/blob/main/ethereum/contracts/Implementation.sol#L12
@@ -34,35 +35,13 @@ export class EVMWatcher extends Watcher {
   constructor(
     network: Network,
     chain: PlatformToChains<'Evm'>,
-    finalizedBlockTag: BlockTag = 'latest'
+    finalizedBlockTag: BlockTag,
+    mode: Mode
   ) {
-    super(network, chain);
+    super(network, chain, mode);
     this.lastTimestamp = 0;
     this.latestFinalizedBlockNumber = 0;
     this.finalizedBlockTag = finalizedBlockTag;
-    // Special cases for batch size
-    if (chain === 'Acala' || chain === 'Karura' || chain === 'Berachain') {
-      this.maximumBatchSize = 50;
-    } else if (
-      chain === 'Blast' ||
-      chain === 'Klaytn' ||
-      chain === 'Scroll' ||
-      chain === 'Snaxchain' ||
-      chain === 'Unichain' ||
-      chain === 'Worldchain' ||
-      chain === 'Monad' ||
-      chain === 'MonadDevnet' ||
-      chain === 'Ink' ||
-      chain === 'HyperEVM' ||
-      chain === 'Seievm' ||
-      chain === 'Xlayer'
-    ) {
-      this.maximumBatchSize = 10;
-    }
-    // Special cases for watch loop delay
-    if (chain === 'Berachain') {
-      this.watchLoopDelay = 1000;
-    }
   }
 
   async getBlock(blockNumberOrTag: number | BlockTag): Promise<Block> {

@@ -19,7 +19,7 @@ export class Watcher {
   mode: Mode;
   watchLoopDelay: number = 0; // in milliseconds
 
-  constructor(network: Network, chain: Chain, mode: Mode = 'vaa') {
+  constructor(network: Network, chain: Chain, mode: Mode) {
     this.network = network;
     this.chain = chain;
     this.mode = mode;

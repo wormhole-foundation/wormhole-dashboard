@@ -6,7 +6,7 @@ import { Network } from '@wormhole-foundation/sdk-base';
 
 export class MoonbeamWatcher extends EVMWatcher {
   constructor(network: Network) {
-    super(network, 'Moonbeam');
+    super(network, 'Moonbeam', 'latest', 'vaa');
   }
   async getFinalizedBlockNumber(): Promise<number> {
     const latestBlock = await super.getFinalizedBlockNumber();

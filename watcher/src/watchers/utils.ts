@@ -21,11 +21,11 @@ import { FTEVMWatcher } from './FTEVMWatcher';
 import { FTSolanaWatcher } from './FTSolanaWatcher';
 import { isFTEVMChain } from '../fastTransfer/consts';
 
-export function makeFinalizedWatcher(network: Network, chainName: Chain): Watcher {
+export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Watcher {
   if (chainName === 'Solana') {
     return new SolanaWatcher(network);
   } else if (chainName === 'Ethereum' || chainName === 'Karura' || chainName === 'Acala') {
-    return new EVMWatcher(network, chainName, 'finalized');
+    return new EVMWatcher(network, chainName, 'finalized', 'vaa');
   } else if (chainName === 'Bsc') {
     return new BSCWatcher(network);
   } else if (
@@ -51,7 +51,7 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
     chainName === 'HyperEVM' ||
     chainName === 'Base'
   ) {
-    return new EVMWatcher(network, chainName);
+    return new EVMWatcher(network, chainName, 'finalized', 'vaa');
   } else if (chainName === 'Algorand') {
     return new AlgorandWatcher(network);
   } else if (chainName === 'Moonbeam') {
@@ -79,7 +79,7 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
   } else if (network === 'Testnet') {
     // These are testnet only chains
     if (chainName === 'Sepolia' || chainName === 'Holesky') {
-      return new EVMWatcher(network, chainName, 'finalized');
+      return new EVMWatcher(network, chainName, 'finalized', 'vaa');
     } else if (chainName === 'ArbitrumSepolia') {
       return new ArbitrumWatcher(network);
     } else if (
@@ -87,7 +87,7 @@ export function makeFinalizedWatcher(network: Network, chainName: Chain): Watche
       chainName === 'BaseSepolia' ||
       chainName === 'PolygonSepolia'
     ) {
-      return new EVMWatcher(network, chainName);
+      return new EVMWatcher(network, chainName, 'finalized', 'vaa');
     } else {
       throw new Error(
         `Attempted to create finalized watcher for unsupported testnet chain ${chainName}`

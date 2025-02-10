@@ -58,7 +58,6 @@ const supportedChains: Chain[] =
         'Unichain',
         'Worldchain',
         'Monad',
-        'MonadDevnet',
         'Ink',
         'HyperEVM',
       ]
@@ -93,6 +92,7 @@ const supportedChains: Chain[] =
         'Blast',
         'Xlayer',
         'Snaxchain',
+        'Unichain',
         'Worldchain',
         'Wormchain',
       ];

@@ -72,6 +72,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://beratrail.io/block/${block}`
       : chainId === chainToChainId('Snaxchain')
       ? `https://snaxchain.io/${block}`
+      : chainId === chainToChainId('Unichain')
+      ? `https://unichain.blockscout.com/block/${block}`
       : chainId === chainToChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/blocks/${block}`
       : chainId === chainToChainId('Worldchain')
@@ -142,8 +144,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://worldchain-sepolia.explorer.alchemy.com/block/${block}`
     : chainId === chainToChainId('Monad')
     ? `${process.env.MONAD_EXPLORER_URL}/block/${block}`
-    : chainId === chainToChainId('MonadDevnet')
-    ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/block/${block}`
     : chainId === chainToChainId('Ink')
     ? `https://explorer-sepolia.inkonchain.com/block/${block}`
     : chainId === chainToChainId('HyperEVM')
@@ -215,6 +215,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://bartio.beratrail.io/tx/${tx}`
       : chainId === chainToChainId('Snaxchain')
       ? `https://snaxchain.io/tx/${tx}`
+      : chainId === chainToChainId('Unichain')
+      ? `https://unichain.blockscout.com/tx/${tx}`
       : chainId === chainToChainId('Wormchain')
       ? `https://bigdipper.live/wormhole/transactions/${tx}`
       : chainId === chainToChainId('Worldchain')
@@ -285,8 +287,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://worldchain-sepolia.explorer.alchemy.com/tx/${tx}`
     : chainId === chainToChainId('Monad')
     ? `${process.env.MONAD_EXPLORER_URL}/tx/${tx}`
-    : chainId === chainToChainId('MonadDevnet')
-    ? `${process.env.MONAD_DEVNET_EXPLORER_URL}/tx/${tx}`
     : chainId === chainToChainId('Ink')
     ? `https://explorer-sepolia.inkonchain.com/tx/${tx}`
     : chainId === chainToChainId('HyperEVM')

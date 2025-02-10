@@ -51,7 +51,6 @@ export class EVMWatcher extends Watcher {
       chain === 'Unichain' ||
       chain === 'Worldchain' ||
       chain === 'Monad' ||
-      chain === 'MonadDevnet' ||
       chain === 'Ink' ||
       chain === 'HyperEVM' ||
       chain === 'Seievm' ||

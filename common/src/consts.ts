@@ -50,6 +50,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Sei: '238594',
     Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A  },
     Snaxchain: '306315',
+    Unichain: '8115676', // https://unichain.blockscout.com/tx/0x4d65e33abc388c2d92c71ea01374af935a6615d0e555a7abbdef6c44e04613ba
     Worldchain: '5805110', // https://worldscan.org/tx/0x568eb14596296bda3022527cf0e915bfec073613b27c495e695fb9e08652f6fc
   },
   ['Testnet']: {
@@ -88,7 +89,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Unichain: '254961', // Block of contract creation
     Worldchain: '4487948', // Block of contract creation
     Monad: '520060', // Block of contract creation
-    MonadDevnet: '3670467', // Block of contract creation
     Ink: '1907965', // Block of contract creation
     HyperEVM: '13743181', // Block of contract creation
   },

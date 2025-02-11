@@ -91,6 +91,7 @@ const supportedChains: Chain[] =
         'Mantle',
         'Blast',
         'Xlayer',
+        'Berachain',
         'Snaxchain',
         'Unichain',
         'Worldchain',

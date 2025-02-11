@@ -69,7 +69,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       : chainId === chainToChainId('Linea')
       ? `https://lineascan.build/block/${block}`
       : chainId === chainToChainId('Berachain')
-      ? `https://beratrail.io/block/${block}`
+      ? `https://berascan.com/block/${block}`
       : chainId === chainToChainId('Snaxchain')
       ? `https://snaxchain.io/${block}`
       : chainId === chainToChainId('Unichain')
@@ -212,7 +212,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       : chainId === chainToChainId('Linea')
       ? `https://lineascan.build/tx/${tx}`
       : chainId === chainToChainId('Berachain')
-      ? `https://bartio.beratrail.io/tx/${tx}`
+      ? `https://berascan.com/tx/${tx}`
       : chainId === chainToChainId('Snaxchain')
       ? `https://snaxchain.io/tx/${tx}`
       : chainId === chainToChainId('Unichain')

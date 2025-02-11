@@ -48,7 +48,8 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Mantle: '64176265',
     Blast: '2375628',
     Sei: '238594',
-    Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A  },
+    Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A
+    Berachain: '968947', //https://berascan.com/tx/0x5a425c6fee87ccc44ef87c1d9cb9c7d1deda4b8596b67c003726e68a2f06e0a4
     Snaxchain: '306315',
     Unichain: '8115676', // https://unichain.blockscout.com/tx/0x4d65e33abc388c2d92c71ea01374af935a6615d0e555a7abbdef6c44e04613ba
     Worldchain: '5805110', // https://worldscan.org/tx/0x568eb14596296bda3022527cf0e915bfec073613b27c495e695fb9e08652f6fc

@@ -62,8 +62,9 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
     Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
     Xlayer: process.env.XLAYER_RPC || 'https://rpc.ankr.com/xlayer',
+    Berachain: process.env.BERACHAIN_RPC || 'https://rpc.berachain.com',
     Snaxchain: process.env.SNAXCHAIN_RPC || 'https://snaxchain.io',
-    Unichain: process.env.UNICHAIN_RPC, // TODO: There is no Unichain public endpoint yet.
+    Unichain: process.env.UNICHAIN_RPC || 'https://mainnet.unichain.org',
     Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-mainnet.g.alchemy.com/public',
   },
   ['Testnet']: {

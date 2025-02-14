@@ -46,12 +46,10 @@ jobs:
           ls -lah watcher/sdk/*.tgz
           md5sum watcher/sdk/*.tgz
           md5sum watcher/sdk/example-liquidity-layer/*.tgz
-          ls -lah watcher/sdk/example-liquidity-layer/*.tgz
           cp -v watcher/sdk/example-liquidity-layer/*.tgz watcher/sdk
-          ls -lah watcher/sdk/
           git diff --stat
-          git status
           git diff --name-only
+          diff <(tar -tvf watcher/sdk/wormhole-foundation-example-liquidity-layer-evm-0.0.1.tgz) <(tar -tvf watcher/sdk/example-liquidity-layer/wormhole-foundation-example-liquidity-layer-evm-0.0.1.tgz)
 
       - name: Compare checksums
         run: git diff --name-only --exit-code && echo "✅ Checksums match. All generated files are consistent with committed versions." || (echo "❌ Checksum mismatch! Generated files do not match committed ones." >&2 && exit 1)

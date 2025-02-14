@@ -10,6 +10,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Ensure Submodules Are Up to Date
+        run: |
+          git submodule update --init --recursive --force
+
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y make
 
@@ -21,9 +25,33 @@ jobs:
       - name: Run Makefile to generate files
         run: make init-submodule && make build-ft-sdk
 
+      - name: Debug File Differences
+        run: |
+          if [ -d "watcher/sdk/example-liquidity-layer" ]; then
+            echo "✅ Submodule exists. Running checks..."
+            git status
+            ls -lah watcher/sdk/example-liquidity-layer
+          else
+            echo "❌ Submodule directory does not exist!"
+            git submodule status
+            exit 1
+          fi
+
       - name: Copy select generated files
         run: |
           cp watcher/sdk/example-liquidity-layer/*.tgz watcher/sdk
+
+      - name: Debug Copy Step
+        run: |
+          ls -lah watcher/sdk/*.tgz
+          md5sum watcher/sdk/*.tgz
+          md5sum watcher/sdk/example-liquidity-layer/*.tgz
+          ls -lah watcher/sdk/example-liquidity-layer/*.tgz
+          cp -v watcher/sdk/example-liquidity-layer/*.tgz watcher/sdk
+          ls -lah watcher/sdk/
+          git diff --stat
+          git status
+          git diff --name-only
 
       - name: Compare checksums
         run: git diff --name-only --exit-code && echo "✅ Checksums match. All generated files are consistent with committed versions." || (echo "❌ Checksum mismatch! Generated files do not match committed ones." >&2 && exit 1)

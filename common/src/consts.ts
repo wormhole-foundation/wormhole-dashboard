@@ -119,7 +119,11 @@ export const INITIAL_FT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlock
   ['Mainnet']: {
     Solana: '285350104',
     Arbitrum: '245882390',
+    Avalanche: '55500000',
     Base: '18956026',
+    Ethereum: '21630000',
+    Optimism: '130500000',
+    Polygon: '66500000',
   },
   ['Testnet']: {
     Solana: '302162456',

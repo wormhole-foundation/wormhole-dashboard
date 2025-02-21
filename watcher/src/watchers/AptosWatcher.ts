@@ -21,7 +21,7 @@ export class AptosWatcher extends Watcher {
   eventHandle: string;
 
   constructor(network: Network) {
-    super(network, 'Aptos');
+    super(network, 'Aptos', 'vaa');
     this.client = new AptosClient(RPCS_BY_CHAIN[this.network][this.chain]!);
     this.coreBridgeAddress = contracts.coreBridge(network, 'Aptos');
     this.eventHandle = `${this.coreBridgeAddress}::state::WormholeMessageHandle`;

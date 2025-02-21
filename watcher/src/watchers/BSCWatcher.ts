@@ -3,7 +3,7 @@ import { EVMWatcher } from './EVMWatcher';
 
 export class BSCWatcher extends EVMWatcher {
   constructor(network: Network) {
-    super(network, 'Bsc');
+    super(network, 'Bsc', 'latest', 'vaa');
   }
   async getFinalizedBlockNumber(): Promise<number> {
     const latestBlock = await super.getFinalizedBlockNumber();

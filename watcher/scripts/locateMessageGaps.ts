@@ -8,7 +8,7 @@ import {
 import { TIMEOUT } from '../src/consts';
 import { BigtableDatabase } from '../src/databases/BigtableDatabase';
 import { parseMessageId } from '../src/databases/utils';
-import { makeFinalizedWatcher } from '../src/watchers/utils';
+import { makeFinalizedVaaWatcher } from '../src/watchers/utils';
 import { Watcher } from '../src/watchers/Watcher';
 import { ChainId, Network, toChain, toChainId } from '@wormhole-foundation/sdk-base';
 
@@ -95,7 +95,7 @@ import { ChainId, Network, toChain, toChainId } from '@wormhole-foundation/sdk-b
       }
       let watcher: Watcher;
       try {
-        watcher = makeFinalizedWatcher(network, chainName);
+        watcher = makeFinalizedVaaWatcher(network, chainName);
       } catch (e) {
         console.error('skipping gap for unsupported chain', chainName);
         continue;

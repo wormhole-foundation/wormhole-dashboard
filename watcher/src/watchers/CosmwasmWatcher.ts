@@ -16,7 +16,7 @@ export class CosmwasmWatcher extends Watcher {
   latestBlockHeight: number;
 
   constructor(network: Network, chain: PlatformToChains<'Cosmwasm'>) {
-    super(network, chain);
+    super(network, chain, 'vaa');
     if (chain === 'Injective') {
       throw new Error('Please use InjectiveExplorerWatcher for injective');
     }

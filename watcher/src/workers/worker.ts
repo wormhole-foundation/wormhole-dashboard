@@ -1,7 +1,7 @@
 import { initDb } from '../databases/utils';
 import {
   makeFinalizedNTTWatcher,
-  makeFinalizedWatcher,
+  makeFinalizedVaaWatcher,
   makeFinalizedFTWatcher,
 } from '../watchers/utils';
 import { workerData } from 'worker_threads';
@@ -12,7 +12,7 @@ const chain = workerData.chain;
 const mode = workerData.mode;
 console.log(`Making watcher for ${network}, ${chain}, ${mode}...`);
 if (mode === 'vaa') {
-  makeFinalizedWatcher(network, chain).watch();
+  makeFinalizedVaaWatcher(network, chain).watch();
 } else if (mode === 'ntt') {
   makeFinalizedNTTWatcher(network, chain).watch();
 } else if (mode === 'ft') {

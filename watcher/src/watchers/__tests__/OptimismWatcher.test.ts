@@ -9,14 +9,14 @@ const initialOptimismBlock = Number(
 );
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Optimism');
+  const watcher = new EVMWatcher('Mainnet', 'Optimism', 'finalized', 'vaa');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   console.log('blockNumber', blockNumber);
   expect(blockNumber).toBeGreaterThan(105235062);
 });
 
 test('getMessagesForBlocks', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Optimism');
+  const watcher = new EVMWatcher('Mainnet', 'Optimism', 'finalized', 'vaa');
   const { vaasByBlock } = await watcher.getMessagesForBlocks(105235070, 105235080);
   expect(vaasByBlock).toMatchObject({
     '105235070/2023-06-06T16:28:37.000Z': [],

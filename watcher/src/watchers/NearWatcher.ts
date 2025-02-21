@@ -12,7 +12,7 @@ export class NearWatcher extends Watcher {
   provider: Provider | null = null;
 
   constructor(network: Network) {
-    super(network, 'Near');
+    super(network, 'Near', 'vaa');
   }
 
   async getFinalizedBlockNumber(): Promise<number> {

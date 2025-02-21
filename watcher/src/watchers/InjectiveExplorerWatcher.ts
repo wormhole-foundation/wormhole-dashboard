@@ -18,7 +18,7 @@ export class InjectiveExplorerWatcher extends Watcher {
   latestBlockHeight: number;
 
   constructor(network: Network) {
-    super(network, 'Injective');
+    super(network, 'Injective', 'vaa');
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);

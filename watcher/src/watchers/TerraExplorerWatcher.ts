@@ -16,7 +16,7 @@ export class TerraExplorerWatcher extends Watcher {
   latestBlockHeight: number;
 
   constructor(network: Network, chain: PlatformToChains<'Cosmwasm'>) {
-    super(network, chain);
+    super(network, chain, 'vaa');
     this.rpc = RPCS_BY_CHAIN[this.network][this.chain];
     if (!this.rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);

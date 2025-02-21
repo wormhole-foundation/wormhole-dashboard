@@ -7,13 +7,13 @@ jest.setTimeout(60000);
 const initialBaseBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Base);
 
 test('getFinalizedBlockNumber', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Base');
+  const watcher = new EVMWatcher('Mainnet', 'Base', 'finalized', 'vaa');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(initialBaseBlock);
 });
 
 test('getMessagesForBlocks', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Base');
+  const watcher = new EVMWatcher('Mainnet', 'Base', 'finalized', 'vaa');
   const { vaasByBlock } = await watcher.getMessagesForBlocks(1544175, 1544185);
   expect(vaasByBlock).toMatchObject({
     '1544175/2023-07-20T18:28:17.000Z': [],
@@ -31,7 +31,7 @@ test('getMessagesForBlocks', async () => {
 });
 
 test('getMessagesForBlockWithWHMsg', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Base');
+  const watcher = new EVMWatcher('Mainnet', 'Base', 'finalized', 'vaa');
   const { vaasByBlock } = await watcher.getMessagesForBlocks(1557420, 1557429);
   expect(vaasByBlock).toMatchObject({
     '1557420/2023-07-21T01:49:47.000Z': [],

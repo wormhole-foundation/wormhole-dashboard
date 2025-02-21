@@ -19,7 +19,7 @@ export class Watcher {
   mode: Mode;
   watchLoopDelay: number = 0; // in milliseconds
 
-  constructor(network: Network, chain: Chain, mode: Mode = 'vaa') {
+  constructor(network: Network, chain: Chain, mode: Mode) {
     this.network = network;
     this.chain = chain;
     this.mode = mode;
@@ -29,6 +29,28 @@ export class Watcher {
     // `ft` -> 'FT_'
     const loggerPrefix = mode.toUpperCase() + '_';
     this.logger = getLogger(loggerPrefix + chain);
+    // Special cases for batch size
+    if (chain === 'Acala' || chain === 'Karura' || chain === 'Berachain') {
+      this.maximumBatchSize = 50;
+    } else if (
+      chain === 'Blast' ||
+      chain === 'Klaytn' ||
+      chain === 'Scroll' ||
+      chain === 'Snaxchain' ||
+      chain === 'Unichain' ||
+      chain === 'Worldchain' ||
+      chain === 'Monad' ||
+      chain === 'Ink' ||
+      chain === 'HyperEVM' ||
+      chain === 'Seievm' ||
+      chain === 'Xlayer'
+    ) {
+      this.maximumBatchSize = 10;
+    }
+    // Special cases for watch loop delay
+    if (chain === 'Berachain') {
+      this.watchLoopDelay = 1000;
+    }
   }
 
   async getFinalizedBlockNumber(): Promise<number> {

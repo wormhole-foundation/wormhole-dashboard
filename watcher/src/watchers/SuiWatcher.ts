@@ -27,7 +27,7 @@ export class SuiWatcher extends Watcher {
   maximumBatchSize: number = 100000; // arbitrarily large as this pages back by events
 
   constructor(network: Network) {
-    super(network, 'Sui');
+    super(network, 'Sui', 'vaa');
     this.client = new JsonRpcClient(RPCS_BY_CHAIN[this.network][this.chain]!);
   }
 

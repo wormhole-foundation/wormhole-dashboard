@@ -1,32 +1,19 @@
 import knex, { Knex } from 'knex';
-import { Watcher } from './Watcher';
 import { chainToChainId, contracts, Network, toChainId } from '@wormhole-foundation/sdk-base';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 import { FAST_TRANSFER_CONTRACTS, FTEVMChain } from '../fastTransfer/consts';
 import { ethers } from 'ethers';
-import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
+import { RPCS_BY_CHAIN } from '../consts';
 import { makeBlockKey } from '../databases/utils';
-import { Block } from './EVMWatcher';
-import { BigNumber } from 'ethers';
-import axios from 'axios';
+import { BlockTag, EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC, wormholeInterface } from './EVMWatcher';
 import { MarketOrder } from '../fastTransfer/types';
-import { Log } from '@ethersproject/abstract-provider';
-import { ethers_contracts } from '@wormhole-foundation/sdk-evm-core';
 import {
   EvmTokenRouter,
   LiquidityLayerTransactionResult,
 } from '@wormhole-foundation/example-liquidity-layer-evm';
 import isNotNull from '../utils/isNotNull';
 
-export type BlockTag = 'finalized' | 'safe' | 'latest';
-export const LOG_MESSAGE_PUBLISHED_TOPIC =
-  '0x6eb224fb001ed210e379b335e35efe88672a8ce935d981a6896b27ffdf52a3b2';
-export const wormholeInterface = ethers_contracts.Implementation__factory.createInterface();
-
-export class FTEVMWatcher extends Watcher {
-  finalizedBlockTag: BlockTag;
-  lastTimestamp: number;
-  latestFinalizedBlockNumber: number;
+export class FTEVMWatcher extends EVMWatcher {
   rpc: string;
   provider: ethers.providers.JsonRpcProvider;
   tokenRouterContract: string;
@@ -39,10 +26,7 @@ export class FTEVMWatcher extends Watcher {
     finalizedBlockTag: BlockTag = 'latest',
     isTest = false
   ) {
-    super(network, chain, 'ft');
-    this.lastTimestamp = 0;
-    this.latestFinalizedBlockNumber = 0;
-    this.finalizedBlockTag = finalizedBlockTag;
+    super(network, chain, finalizedBlockTag, 'ft');
     this.provider = new ethers.providers.JsonRpcProvider(RPCS_BY_CHAIN[network][chain]);
     this.rpc = RPCS_BY_CHAIN[network][chain]!;
     this.evmTokenRouter = new EvmTokenRouter(
@@ -72,71 +56,6 @@ export class FTEVMWatcher extends Watcher {
     }
 
     this.logger.debug(`Initialized FTEVMWatcher for ${network} ${chain}`);
-  }
-
-  async getBlock(blockNumberOrTag: number | BlockTag): Promise<Block> {
-    const rpc = RPCS_BY_CHAIN[this.network][this.chain];
-    if (!rpc) {
-      throw new Error(`${this.chain} RPC is not defined!`);
-    }
-    let result = (
-      await axios.post(
-        rpc,
-        [
-          {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'eth_getBlockByNumber',
-            params: [
-              typeof blockNumberOrTag === 'number'
-                ? `0x${blockNumberOrTag.toString(16)}`
-                : blockNumberOrTag,
-              false,
-            ],
-          },
-        ],
-        AXIOS_CONFIG_JSON
-      )
-    )?.data?.[0];
-    if (result && result.result === null) {
-      // Found null block
-      if (
-        typeof blockNumberOrTag === 'number' &&
-        blockNumberOrTag < this.latestFinalizedBlockNumber - 1000
-      ) {
-        return {
-          hash: '',
-          number: BigNumber.from(blockNumberOrTag).toNumber(),
-          timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
-        };
-      }
-    } else if (result && result.error && result.error.code === 6969) {
-      return {
-        hash: '',
-        number: BigNumber.from(blockNumberOrTag).toNumber(),
-        timestamp: BigNumber.from(this.lastTimestamp).toNumber(),
-      };
-    }
-    result = result?.result;
-    if (result && result.hash && result.number && result.timestamp) {
-      // Convert to Ethers compatible type
-      this.lastTimestamp = result.timestamp;
-      return {
-        hash: result.hash,
-        number: BigNumber.from(result.number).toNumber(),
-        timestamp: BigNumber.from(result.timestamp).toNumber(),
-      };
-    }
-    throw new Error(
-      `Unable to parse result of eth_getBlockByNumber for ${blockNumberOrTag} on ${rpc}`
-    );
-  }
-
-  async getFinalizedBlockNumber(): Promise<number> {
-    this.logger.info(`fetching block ${this.finalizedBlockTag}`);
-    const block: Block = await this.getBlock(this.finalizedBlockTag);
-    this.latestFinalizedBlockNumber = block.number;
-    return block.number;
   }
 
   async getFtMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
@@ -359,49 +278,6 @@ export class FTEVMWatcher extends Watcher {
       blocks.set(blockNumber, block);
     }
     return block.timestamp;
-  }
-
-  async getLogs(
-    fromBlock: number,
-    toBlock: number,
-    address: string,
-    topics: string[]
-  ): Promise<Array<Log>> {
-    const rpc = RPCS_BY_CHAIN[this.network][this.chain];
-    if (!rpc) {
-      throw new Error(`${this.chain} RPC is not defined!`);
-    }
-    const result = (
-      await axios.post(
-        rpc,
-        [
-          {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'eth_getLogs',
-            params: [
-              {
-                fromBlock: `0x${fromBlock.toString(16)}`,
-                toBlock: `0x${toBlock.toString(16)}`,
-                address,
-                topics,
-              },
-            ],
-          },
-        ],
-        AXIOS_CONFIG_JSON
-      )
-    )?.data?.[0]?.result;
-    if (result) {
-      // Convert to Ethers compatible type
-      return result.map((l: Log) => ({
-        ...l,
-        blockNumber: BigNumber.from(l.blockNumber).toNumber(),
-        transactionIndex: BigNumber.from(l.transactionIndex).toNumber(),
-        logIndex: BigNumber.from(l.logIndex).toNumber(),
-      }));
-    }
-    throw new Error(`Unable to parse result of eth_getLogs for ${fromBlock}-${toBlock} on ${rpc}`);
   }
 
   normalizeAddress(address: string): string {

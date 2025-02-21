@@ -21,7 +21,7 @@ export class NearArchiveWatcher extends Watcher {
   provider: Provider | null = null;
 
   constructor(network: Network) {
-    super(network, 'Near');
+    super(network, 'Near', 'vaa');
     this.maximumBatchSize = 1_000_000;
     this.watchLoopDelay = 60 * 60 * 1000; // 1 hour
   }

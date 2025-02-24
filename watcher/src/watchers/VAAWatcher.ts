@@ -5,7 +5,7 @@ export class VAAWatcher extends EVMWatcher {
   constructor(
     network: Network,
     chain: PlatformToChains<'Evm'>,
-    finalizedBlockTag: BlockTag = 'latest'
+    finalizedBlockTag: BlockTag = 'finalized'
   ) {
     super(network, chain, finalizedBlockTag, 'vaa');
   }

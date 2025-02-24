@@ -23,7 +23,7 @@ export class FTEVMWatcher extends EVMWatcher {
   constructor(
     network: Network,
     chain: FTEVMChain,
-    finalizedBlockTag: BlockTag = 'latest',
+    finalizedBlockTag: BlockTag = 'finalized',
     isTest = false
   ) {
     super(network, chain, finalizedBlockTag, 'ft');

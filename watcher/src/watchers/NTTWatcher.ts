@@ -30,7 +30,7 @@ export class NTTWatcher extends EVMWatcher {
   chain: NTTChain;
   pg: Knex;
 
-  constructor(network: Network, chain: NTTEvmChain, finalizedBlockTag: BlockTag = 'latest') {
+  constructor(network: Network, chain: NTTEvmChain, finalizedBlockTag: BlockTag = 'finalized') {
     super(network, chain, finalizedBlockTag, 'ntt');
     this.chain = chain;
     this.pg = knex({

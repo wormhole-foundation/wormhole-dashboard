@@ -1,7 +1,6 @@
 import { AlgorandWatcher } from './AlgorandWatcher';
 import { AptosWatcher } from './AptosWatcher';
 import { CosmwasmWatcher } from './CosmwasmWatcher';
-import { EVMWatcher } from './EVMWatcher';
 import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
 import { TerraExplorerWatcher } from './TerraExplorerWatcher';
@@ -11,12 +10,12 @@ import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
 import { NearArchiveWatcher } from './NearArchiveWatcher';
 import { NTTWatcher } from './NTTWatcher';
-import { NTTArbitrumWatcher } from './NTTArbitrumWatcher';
 import { NTTSolanaWatcher } from './NTTSolanaWatcher';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
 import { FTEVMWatcher } from './FTEVMWatcher';
 import { FTSolanaWatcher } from './FTSolanaWatcher';
 import { isFTEVMChain } from '../fastTransfer/consts';
+import { VAAWatcher } from './VAAWatcher';
 
 export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Watcher {
   if (chainName === 'Solana') {
@@ -49,7 +48,7 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Worldchain' ||
     chainName === 'Xlayer'
   ) {
-    return new EVMWatcher(network, chainName, 'finalized', 'vaa');
+    return new VAAWatcher(network, chainName);
   } else if (chainName === 'Algorand') {
     return new AlgorandWatcher(network);
   } else if (chainName === 'Aptos') {
@@ -80,7 +79,7 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
       chainName === 'PolygonSepolia' ||
       chainName === 'Sepolia'
     ) {
-      return new EVMWatcher(network, chainName, 'finalized', 'vaa');
+      return new VAAWatcher(network, chainName);
     } else {
       throw new Error(
         `Attempted to create finalized watcher for unsupported testnet chain ${chainName}`
@@ -93,12 +92,14 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
 
 export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Watcher {
   if (network === 'Mainnet') {
-    if (chainName === 'Ethereum') {
-      return new NTTWatcher(network, chainName, 'finalized');
-    } else if (chainName === 'Fantom' || chainName === 'Base' || chainName === 'Optimism') {
+    if (
+      chainName === 'Arbitrum' ||
+      chainName === 'Base' ||
+      chainName === 'Ethereum' ||
+      chainName === 'Fantom' ||
+      chainName === 'Optimism'
+    ) {
       return new NTTWatcher(network, chainName);
-    } else if (chainName === 'Arbitrum') {
-      return new NTTArbitrumWatcher(network);
     } else if (chainName === 'Solana') {
       return new NTTSolanaWatcher(network);
     } else {
@@ -108,12 +109,14 @@ export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Wat
     }
   } else if (network === 'Testnet') {
     // These are testnet only chains
-    if (chainName === 'Sepolia' || chainName === 'Holesky') {
-      return new NTTWatcher(network, chainName, 'finalized');
-    } else if (chainName === 'BaseSepolia' || chainName === 'OptimismSepolia') {
+    if (
+      chainName === 'ArbitrumSepolia' ||
+      chainName === 'BaseSepolia' ||
+      chainName === 'Holesky' ||
+      chainName === 'OptimismSepolia' ||
+      chainName === 'Sepolia'
+    ) {
       return new NTTWatcher(network, chainName);
-    } else if (chainName === 'ArbitrumSepolia') {
-      return new NTTArbitrumWatcher(network);
     } else if (chainName === 'Solana') {
       return new NTTSolanaWatcher(network);
     } else {
@@ -132,7 +135,7 @@ export function makeFinalizedFTWatcher(network: Network, chainName: Chain): Watc
   if (chainName === 'Solana') {
     return new FTSolanaWatcher(network);
   } else if (isFTEVMChain(chainName, network)) {
-    return new FTEVMWatcher(network, chainName, 'finalized');
+    return new FTEVMWatcher(network, chainName);
   } else {
     throw new Error(
       `Attempted to create finalized FT watcher for unsupported chain ${chainName} on ${network}`

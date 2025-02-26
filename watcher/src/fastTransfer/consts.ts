@@ -54,10 +54,30 @@ export const FAST_TRANSFER_CONTRACTS: FastTransferContractAddresses = {
       CircleBridge: '0x19330d10D9Cc8751218eaf51E8885D058642E08A',
       SwapLayer: '0x4dE319b7492E791cDe47FDf12c922cF568441C43',
     },
+    Avalanche: {
+      TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
+      CircleBridge: '0x6b25532e1060ce10cc3b0a99e5683b91bfde6982',
+      SwapLayer: '',
+    },
     Base: {
       TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
       CircleBridge: '0x1682Ae6375C4E4A97e4B583BC394c861A46D8962',
       SwapLayer: '0x2Ab7BeEF955826054d03419Ee2122445Ca677eb2',
+    },
+    Ethereum: {
+      TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
+      CircleBridge: '0xbd3fa81b58ba92a82136038b25adec7066af3155',
+      SwapLayer: '',
+    },
+    Optimism: {
+      TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
+      CircleBridge: '0x2B4069517957735bE00ceE0fadAE88a26365528f',
+      SwapLayer: '',
+    },
+    Polygon: {
+      TokenRouter: '0x70287c79ee41C5D1df8259Cd68Ba0890cd389c47',
+      CircleBridge: '0x9daF8c91AEFAE50b9c0E69629D3F6Ca40cA3B3FE',
+      SwapLayer: '',
     },
   },
   Testnet: {
@@ -78,11 +98,17 @@ export const FAST_TRANSFER_CONTRACTS: FastTransferContractAddresses = {
 };
 
 // Separate testnet and mainnet chains
-export type FTEVMMainnetChain = 'Arbitrum' | 'Base';
+export type FTEVMMainnetChain = 'Arbitrum' | 'Base' | 'Ethereum' | 'Optimism' | 'Polygon';
 export type FTEVMTestnetChain = 'ArbitrumSepolia' | 'OptimismSepolia';
 export type FTEVMChain = FTEVMMainnetChain | FTEVMTestnetChain;
 
-export const FTEVMMainnetChains: FTEVMMainnetChain[] = ['Arbitrum', 'Base'];
+export const FTEVMMainnetChains: FTEVMMainnetChain[] = [
+  'Arbitrum',
+  'Base',
+  'Ethereum',
+  'Optimism',
+  'Polygon',
+];
 export const FTEVMTestnetChains: FTEVMTestnetChain[] = ['ArbitrumSepolia', 'OptimismSepolia'];
 
 export const isFTEVMChain = (chain: Chain, network: Network): chain is FTEVMChain => {

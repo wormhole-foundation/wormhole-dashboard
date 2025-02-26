@@ -371,27 +371,26 @@ export class FTEVMWatcher extends Watcher {
     if (!rpc) {
       throw new Error(`${this.chain} RPC is not defined!`);
     }
-    const result = (
-      await axios.post(
-        rpc,
-        [
-          {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'eth_getLogs',
-            params: [
-              {
-                fromBlock: `0x${fromBlock.toString(16)}`,
-                toBlock: `0x${toBlock.toString(16)}`,
-                address,
-                topics,
-              },
-            ],
-          },
-        ],
-        AXIOS_CONFIG_JSON
-      )
-    )?.data?.[0]?.result;
+    const baseResult = await axios.post(
+      rpc,
+      [
+        {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'eth_getLogs',
+          params: [
+            {
+              fromBlock: `0x${fromBlock.toString(16)}`,
+              toBlock: `0x${toBlock.toString(16)}`,
+              address,
+              topics,
+            },
+          ],
+        },
+      ],
+      AXIOS_CONFIG_JSON
+    );
+    const result = baseResult?.data?.[0]?.result;
     if (result) {
       // Convert to Ethers compatible type
       return result.map((l: Log) => ({
@@ -401,7 +400,11 @@ export class FTEVMWatcher extends Watcher {
         logIndex: BigNumber.from(l.logIndex).toNumber(),
       }));
     }
-    throw new Error(`Unable to parse result of eth_getLogs for ${fromBlock}-${toBlock} on ${rpc}`);
+    throw new Error(
+      `Unable to parse result of eth_getLogs for ${fromBlock}-${toBlock} on ${rpc} with result ${JSON.stringify(
+        baseResult.data
+      )}`
+    );
   }
 
   normalizeAddress(address: string): string {

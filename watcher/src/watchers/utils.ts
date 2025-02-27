@@ -30,15 +30,12 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Bsc' ||
     chainName === 'Celo' ||
     chainName === 'Ethereum' ||
-    chainName === 'Fantom' ||
     chainName === 'HyperEVM' ||
     chainName === 'Ink' ||
     chainName === 'Karura' ||
-    chainName === 'Klaytn' ||
     chainName === 'Mantle' ||
     chainName === 'Monad' ||
     chainName === 'Moonbeam' ||
-    chainName === 'Oasis' ||
     chainName === 'Optimism' ||
     chainName === 'Polygon' ||
     chainName === 'Scroll' ||
@@ -49,6 +46,8 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Xlayer'
   ) {
     return new VAAWatcher(network, chainName);
+  } else if (chainName === 'Fantom' || chainName === 'Klaytn' || chainName === 'Oasis') {
+    return new VAAWatcher(network, chainName, 'latest');
   } else if (chainName === 'Algorand') {
     return new AlgorandWatcher(network);
   } else if (chainName === 'Aptos') {

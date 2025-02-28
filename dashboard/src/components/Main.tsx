@@ -14,6 +14,7 @@ import Home from './Home';
 import NTTMetrics from './NTTMetrics';
 import NetworkSelector from './NetworkSelector';
 import Settings from './Settings';
+import FTMetrics from './FTMetrics';
 
 function NavButton(props: any) {
   // fix for Invalid value for prop `navigate` on <a> tag
@@ -84,6 +85,27 @@ function NavLinks() {
           <Typography variant="h6">NTT</Typography>
         </Hidden>
       </NavLink>
+      <NavLink
+        to={`/ft-metrics${search}`}
+        exact
+        component={NavButton}
+        color="inherit"
+        activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
+        style={{
+          paddingRight: 8,
+          marginLeft: 8,
+          textTransform: 'none',
+          borderRadius: 0,
+          minWidth: 0,
+        }}
+      >
+        <Hidden mdUp>
+          <SyncAltOutlined />
+        </Hidden>
+        <Hidden mdDown>
+          <Typography variant="h6">FT</Typography>
+        </Hidden>
+      </NavLink>
     </>
   );
 }
@@ -129,6 +151,9 @@ function Main() {
         </Route>
         <Route path="/contracts">
           <Contracts />
+        </Route>
+        <Route path="/ft-metrics">
+          <FTMetrics />
         </Route>
         <Route path="/">
           <Home

@@ -66,6 +66,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Snaxchain: process.env.SNAXCHAIN_RPC || 'https://snaxchain.io',
     Unichain: process.env.UNICHAIN_RPC || 'https://mainnet.unichain.org',
     Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-mainnet.g.alchemy.com/public',
+    Ink: process.env.INK_RPC || 'https://rpc-qnd.inkonchain.com',
   },
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,

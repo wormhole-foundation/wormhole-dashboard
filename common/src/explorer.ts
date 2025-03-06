@@ -78,6 +78,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://bigdipper.live/wormhole/blocks/${block}`
       : chainId === chainToChainId('Worldchain')
       ? `https://worldscan.org/block/${block}`
+      : chainId === chainToChainId('Ink')
+      ? `https://explorer.inkonchain.com/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/${block}?cluster=testnet`
@@ -221,6 +223,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://bigdipper.live/wormhole/transactions/${tx}`
       : chainId === chainToChainId('Worldchain')
       ? `https://worldscan.org/tx/${tx}`
+      : chainId === chainToChainId('Ink')
+      ? `https://explorer.inkonchain.com/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://solscan.io/txs/${tx}?cluster=testnet`

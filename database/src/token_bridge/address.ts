@@ -1,7 +1,7 @@
 import { tryHexToNativeAssetString, tryHexToNativeStringNear } from './array';
 import { getNetworkInfo, Network } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
-import { SuiClient, getFullnodeUrl } from '@mysten/sui.js/client';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { LCDClient } from '@terra-money/terra.js';
 import {
   ChainId,

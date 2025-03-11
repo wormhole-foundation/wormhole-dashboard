@@ -177,6 +177,16 @@ if [ -z "$PG_HOST" ] || [ "$PG_HOST" == "localhost" ] || [ "$PG_HOST" == "127.0.
     exit 1
 fi
 
+if [ -z "$PG_FT_DATABASE" ]; then
+    echo "PG_FT_DATABASE must be specified"
+    exit 1
+fi
+
+if [ -z "$FT_MISSING_VAA_SLACK_CHANNEL_ID" ]; then
+    echo "FT_MISSING_VAA_SLACK_CHANNEL_ID must be specified"
+    exit 1
+fi
+
 if [ -z "$PG_TOKEN_TRANSFER_TABLE" ]; then
     echo "PG_TOKEN_TRANSFER_TABLE must be specified"
     exit 1
@@ -232,6 +242,7 @@ if [ -z "$SOLANA_RPC" ]; then
     exit 1
 fi
 
+gcloud functions --project "$GCP_PROJECT" deploy alarm-fast-transfer --entry-point alarmFastTransfer --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars FT_MISSING_VAA_SLACK_CHANNEL_ID=$FT_MISSING_VAA_SLACK_CHANNEL_ID,MISSING_VAA_SLACK_POST_URL=$MISSING_VAA_SLACK_POST_URL,MISSING_VAA_SLACK_BOT_TOKEN=$MISSING_VAA_SLACK_BOT_TOKEN,PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_FT_DATABASE=$PG_FT_DATABASE,PG_HOST=$PG_HOST,NETWORK=$NETWORK,FUNCTION=alarmFastTransfer
 gcloud functions --project "$GCP_PROJECT" deploy compute-guardian-set-info --entry-point computeGuardianSetInfo --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FIRESTORE_GUARDIAN_SET_INFO_COLLECTION=$FIRESTORE_GUARDIAN_SET_INFO_COLLECTION,FUNCTION=computeGuardianSetInfo
 gcloud functions --project "$GCP_PROJECT" deploy compute-tvl --entry-point computeTVL --gen2 --runtime nodejs22 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 1GB --region europe-west3 --set-env-vars PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_ATTEST_MESSAGE_TABLE=$PG_ATTEST_MESSAGE_TABLE,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE,PG_TOKEN_TRANSFER_TABLE=$PG_TOKEN_TRANSFER_TABLE,FIRESTORE_TVL_COLLECTION=$FIRESTORE_TVL_COLLECTION,NETWORK=$NETWORK,FUNCTION=computeTVL
 gcloud functions --project "$GCP_PROJECT" deploy compute-tvl-history --entry-point computeTVLHistory --gen2 --runtime nodejs22 --trigger-http --no-allow-unauthenticated --timeout 540 --memory 1GB --region europe-west3 --set-env-vars PG_USER=$PG_USER,PG_PASSWORD=$PG_PASSWORD,PG_DATABASE=$PG_DATABASE,PG_HOST=$PG_HOST,PG_ATTEST_MESSAGE_TABLE=$PG_ATTEST_MESSAGE_TABLE,PG_TOKEN_METADATA_TABLE=$PG_TOKEN_METADATA_TABLE,PG_TOKEN_TRANSFER_TABLE=$PG_TOKEN_TRANSFER_TABLE,FIRESTORE_TVL_HISTORY_COLLECTION=$FIRESTORE_TVL_HISTORY_COLLECTION,PG_TOKEN_PRICE_HISTORY_TABLE=$PG_TOKEN_PRICE_HISTORY_TABLE,NETWORK=$NETWORK,FUNCTION=computeTVLHistory

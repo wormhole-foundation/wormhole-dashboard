@@ -52,7 +52,7 @@ const supportedChains: Chain[] =
         'OptimismSepolia',
         'Holesky',
         'PolygonSepolia',
-        // 'Berachain',
+        'Berachain',
         'Seievm',
         'Snaxchain',
         'Unichain',

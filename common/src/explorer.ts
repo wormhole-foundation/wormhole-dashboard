@@ -135,7 +135,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     : chainId === chainToChainId('Linea')
     ? `https://sepolia.lineascan.build/block/${block}`
     : chainId === chainToChainId('Berachain')
-    ? `https://bartio.beratrail.io/block/${block}`
+    ? `https://bepolia.beratrail.io/block/${block}`
     : chainId === chainToChainId('Seievm')
     ? `https://seitrace.com/block/${block}?chain=atlantic-2`
     : chainId === chainToChainId('Snaxchain')
@@ -280,7 +280,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     : chainId === chainToChainId('Linea')
     ? `https://sepolia.lineascan.build/tx/${tx}`
     : chainId === chainToChainId('Berachain')
-    ? `https://bartio.beratrail.io/tx/${tx}`
+    ? `https://bepolia.beratrail.io/tx/${tx}`
     : chainId === chainToChainId('Seievm')
     ? `https://seitrace.com/tx/${tx}?chain=atlantic-2`
     : chainId === chainToChainId('Snaxchain')

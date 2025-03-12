@@ -104,7 +104,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Holesky: process.env.HOLESKY_RPC,
     Sepolia: process.env.SEPOLIA_RPC,
     PolygonSepolia: process.env.POLYGON_SEPOLIA_RPC || 'https://rpc-amoy.polygon.technology',
-    Berachain: process.env.BERACHAIN_RPC || 'https://bartio.rpc.berachain.com',
+    Berachain: process.env.BERACHAIN_RPC || 'https://bepolia.rpc.berachain.com',
     Seievm: process.env.SEI_EVM_RPC || 'https://evm-rpc-testnet.sei-apis.com',
     Snaxchain: process.env.SNAXCHAIN_RPC || 'https://rpc-snaxchain-s50q0kjngn.t.conduit.xyz',
     Unichain: process.env.UNICHAIN_RPC || 'https://sepolia.unichain.org',

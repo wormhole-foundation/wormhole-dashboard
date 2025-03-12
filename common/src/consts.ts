@@ -85,7 +85,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Sei: '0',
     Wormchain: '4495661',
     PolygonSepolia: '2379275',
-    Berachain: '1473347',
+    Berachain: '846481',
     Seievm: '142153268', // Block of contract creation
     Snaxchain: '482557',
     Unichain: '254961', // Block of contract creation

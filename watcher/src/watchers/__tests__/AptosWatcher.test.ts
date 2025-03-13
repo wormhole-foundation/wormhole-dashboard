@@ -9,13 +9,13 @@ const INITAL_SEQUENCE_NUMBER = Number(
 );
 
 test('getFinalizedSequenceNumber', async () => {
-  const watcher = new AptosWatcher('Mainnet');
+  const watcher = new AptosWatcher('Mainnet', 'Aptos');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(INITAL_SEQUENCE_NUMBER);
 });
 
 test('getMessagesForSequenceNumbers', async () => {
-  const watcher = new AptosWatcher('Mainnet');
+  const watcher = new AptosWatcher('Mainnet', 'Aptos');
   const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(0, 1);
   expect(messages).toMatchObject({
     '1095891/2022-10-19T00:55:54.676Z/0': [

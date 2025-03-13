@@ -112,6 +112,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Monad: process.env.MONAD_RPC, // TODO: There is no Monad public endpoint.
     Ink: process.env.INK_RPC || 'https://rpc-qnd-sepolia.inkonchain.com',
     HyperEVM: process.env.HYPER_EVM_RPC || 'https://api.hyperliquid-testnet.xyz/evm',
+    Movement: process.env.MOVEMENT_RPC || 'https://aptos.testnet.bardock.movementlabs.xyz/v1',
   },
   ['Devnet']: {},
 };

@@ -6,7 +6,7 @@ import { VaasByBlock } from '../databases/types';
 import { makeVaaKey } from '../databases/utils';
 import { AptosEvent } from '../types/aptos';
 import { Watcher } from './Watcher';
-import { Network, contracts } from '@wormhole-foundation/sdk-base';
+import { Chain, Network, contracts } from '@wormhole-foundation/sdk-base';
 
 const APTOS_FIELD_NAME = 'event';
 
@@ -20,10 +20,14 @@ export class AptosWatcher extends Watcher {
   coreBridgeAddress: string;
   eventHandle: string;
 
-  constructor(network: Network) {
-    super(network, 'Aptos', 'vaa');
+  constructor(network: Network, chain: Chain) {
+    super(network, chain, 'vaa');
     this.client = new AptosClient(RPCS_BY_CHAIN[this.network][this.chain]!);
-    this.coreBridgeAddress = contracts.coreBridge(network, 'Aptos');
+    const address = contracts.coreBridge.get(this.network, this.chain);
+    if (!address) {
+      throw new Error(`Core contract not defined for ${this.chain} on ${this.network}!`);
+    }
+    this.coreBridgeAddress = address;
     this.eventHandle = `${this.coreBridgeAddress}::state::WormholeMessageHandle`;
   }
 
@@ -75,9 +79,8 @@ export class AptosWatcher extends Watcher {
       const initialSequence = z
         .number()
         .int()
-        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[this.network].Aptos));
+        .parse(Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN[this.network][this.chain]));
       return (
-        z.number().int().parse(Number(block)) > 1094390 && // initial deployment block
         Date.parse(z.string().datetime().parse(timestamp)) < Date.now() &&
         z.number().int().parse(Number(sequence)) >= initialSequence // initial deployment sequence
       );

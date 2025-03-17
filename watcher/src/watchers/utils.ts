@@ -43,7 +43,8 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Snaxchain' ||
     chainName === 'Unichain' ||
     chainName === 'Worldchain' ||
-    chainName === 'Xlayer'
+    chainName === 'Xlayer' ||
+    chainName === 'Mezo'
   ) {
     return new VAAWatcher(network, chainName);
   } else if (chainName === 'Fantom' || chainName === 'Klaytn' || chainName === 'Oasis') {

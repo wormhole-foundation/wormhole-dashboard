@@ -150,6 +150,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://explorer-sepolia.inkonchain.com/block/${block}`
     : chainId === chainToChainId('HyperEVM')
     ? `https://testnet.purrsec.com/block/${block}`
+    : chainId === chainToChainId('Mezo')
+    ? `https://rpc.test.mezo.org/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -295,6 +297,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://explorer-sepolia.inkonchain.com/tx/${tx}`
     : chainId === chainToChainId('HyperEVM')
     ? `https://testnet.purrsec.com/tx/${tx}`
+    : chainId === chainToChainId('Mezo')
+    ? `https://rpc.test.mezo.org/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

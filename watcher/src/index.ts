@@ -61,6 +61,7 @@ const supportedChains: Chain[] =
         'Ink',
         // 'HyperEVM',
         'Movement',
+        'Mezo',
       ]
     : [
         // This is the list of chains supported in MAINNET.

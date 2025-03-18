@@ -92,6 +92,10 @@ var (
 		Name: "gossip_vaas_unique_total",
 		Help: "The unique number of vaas received over gossip",
 	})
+	uniqueVAAsByGuardianPerChain = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "gossip_vaas_by_guardian_per_chain_total",
+		Help: "The number of unique VAAs received over gossip, grouped by guardian and chain",
+	}, []string{"guardian_name", "chain_name"})
 	heartbeatsByGuardian = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "gossip_heartbeats_by_guardian_total",
 		Help: "The number of heartbeats received over gossip by guardian",
@@ -293,7 +297,6 @@ func main() {
 
 	// Count signed VAAs
 	go func() {
-		// TODO: move this to a function / struct with a mutex so that the cleanup can be run independently from the message handling, so as to not back up the channel
 		uniqueVAAs := make(map[string]time.Time)
 		timeout := time.Hour
 		delay := time.Minute * 10
@@ -314,18 +317,34 @@ func main() {
 				logger.Info("Cleaned up unique VAAs cache", zap.Int("beforeCount", beforeCount), zap.Int("afterCount", afterCount), zap.Int("cleanedUpCount", beforeCount-afterCount))
 				timer.Reset(delay)
 			case m := <-signedInC:
-				// This only has VAABytes. It doesn't have the guardian address
 				gossipByType.WithLabelValues("vaa").Inc()
 				v, err := vaa.Unmarshal(m.Vaa)
 				if err != nil {
 					logger.Warn("received invalid VAA in SignedVAAWithQuorum message", zap.Error(err), zap.Any("message", m))
-				} else {
-					digest := v.HexDigest()
-					if _, exists := uniqueVAAs[digest]; exists {
-						uniqueVAAsCounter.Inc()
-					}
-					uniqueVAAs[digest] = time.Now()
+					continue
 				}
+
+				digest := v.HexDigest()
+				chain := v.EmitterChain.String() // Extract chain name
+
+				// Extract guardian name using signature index
+				guardianName := "unknown"
+				for _, sig := range v.Signatures {
+					guardianIndex := int(sig.Index) // Extract the guardian index
+					if name, found := guardianIndexToNameMap[guardianIndex]; found {
+						guardianName = name
+						break // Take the first matched guardian
+					}
+				}
+
+				if _, exists := uniqueVAAs[digest]; !exists {
+					// Increment the original gossip_vaas_unique_total metric
+					uniqueVAAsCounter.Inc()
+
+					// Increment the new metric with guardian and chain labels
+					uniqueVAAsByGuardianPerChain.WithLabelValues(guardianName, chain).Inc()
+				}
+				uniqueVAAs[digest] = time.Now()
 			}
 		}
 	}()

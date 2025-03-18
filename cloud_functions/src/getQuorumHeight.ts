@@ -28,8 +28,14 @@ interface HeartbeatNetwork {
 
 const isTestnet = assertEnvironmentVariable('NETWORK') === 'TESTNET';
 
+/**
+ * Wormhole Foundation requested an additional buffer to increase the likelihood of success in
+ * the event that a guardian is tracking a height but not properly handling requests.
+ */
+const QUORUM_BUFFER = 1;
+
 export function getQuorumCount(numGuardians: number): number {
-  return isTestnet ? 1 : Math.floor((numGuardians * 2) / 3 + 1);
+  return isTestnet ? 1 : Math.floor((numGuardians * 2) / 3 + 1) + QUORUM_BUFFER;
 }
 
 async function getHeartbeats_() {
@@ -106,7 +112,10 @@ export async function getQuorumHeight(req: any, res: any) {
       latestHeights.sort((a, b) => (a > b ? -1 : a < b ? 1 : 0));
       safeHeights.sort((a, b) => (a > b ? -1 : a < b ? 1 : 0));
       finalizedHeights.sort((a, b) => (a > b ? -1 : a < b ? 1 : 0));
-      const quorumIdx = getQuorumCount(latestHeights.length) - 1;
+      const quorumIdx = Math.min(
+        getQuorumCount(latestHeights.length) - 1,
+        latestHeights.length - 1
+      );
       res.status(200).send(
         JSON.stringify({
           latest: latestHeights[quorumIdx].toString(),

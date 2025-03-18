@@ -43,8 +43,7 @@ export class Watcher {
       chain === 'Ink' ||
       chain === 'HyperEVM' ||
       chain === 'Seievm' ||
-      chain === 'Xlayer' ||
-      chain === 'Mezo'
+      chain === 'Xlayer'
     ) {
       this.maximumBatchSize = 10;
     }

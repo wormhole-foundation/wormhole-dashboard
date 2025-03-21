@@ -115,3 +115,27 @@ test('getMessagesForBlocks - handle failed transactions', async () => {
       .join(',')
   ).toBe('4,3,2,1,0');
 });
+
+test.only('getMessagesForBlocks - shim 1', async () => {
+  const watcher = new SolanaWatcher('Testnet', 'vaa', 'https://explorer-api.devnet.solana.com');
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(356345331, 356345332);
+  expect(Object.keys(messages).length).toBe(1);
+  expect(Object.values(messages).length).toBe(1);
+  expect(messages).toMatchObject({
+    '356345332/2025-01-24T16:42:31.000Z': [
+      '3auPns1kSD2R4GvWfutCQqKTmPfdmSr9yKgUsc3t19bhmVWq6UKtafboCBhrczTehYTbzN5XZh2apLaugg2h8da2:1/83718b7ec89617b7040685e01bdcca03214022980daae91340e0c3f840c005ef/0',
+    ],
+  });
+});
+
+test.only('getMessagesForBlocks - shim 2', async () => {
+  const watcher = new SolanaWatcher('Testnet', 'vaa', 'https://explorer-api.devnet.solana.com');
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(357272507, 357272508);
+  expect(Object.keys(messages).length).toBe(1);
+  expect(Object.values(messages).length).toBe(1);
+  expect(messages).toMatchObject({
+    '357272508/2025-01-28T20:11:01.000Z': [
+      'b8fyUcMJgA5P6SS92HMRtxwFpihhAGe9PdcFVbYeVHRAHnr5vyJNbWJHeJ7ko23c8rg2KQ8oPVxdZbDh6V4Jv9t:1/83718b7ec89617b7040685e01bdcca03214022980daae91340e0c3f840c005ef/4',
+    ],
+  });
+});

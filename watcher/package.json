@@ -45,6 +45,7 @@
     "algosdk": "^2.4.0",
     "anchor-0.29.0": "npm:@coral-xyz/anchor@^0.29.0",
     "aptos": "^1.4.0",
+    "binary-layout": "^1.2.0",
     "bs58": "^5.0.0",
     "dotenv": "^16.0.3",
     "firebase-admin": "^11.4.0",

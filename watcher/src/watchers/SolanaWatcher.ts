@@ -18,16 +18,36 @@ import {
   universalAddress_stripped,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { Watcher } from './Watcher';
-import { Network, contracts } from '@wormhole-foundation/sdk-base';
+import { Network, contracts, encoding } from '@wormhole-foundation/sdk-base';
 import { deserializePostMessage } from '@wormhole-foundation/sdk-solana-core';
 import { getAllKeys } from '../utils/solana';
+import { UniversalAddress } from '@wormhole-foundation/sdk-definitions';
+import { DeriveType, deserialize, Layout } from 'binary-layout';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
 
+const ShimContracts: { [key in Network]: string } = {
+  Mainnet: '',
+  Testnet: 'EtZMZM22ViKMo4r5y4Anovs3wKQ2owUmDpjygnMMcdEX',
+  Devnet: '',
+};
+
+const POST_MESSAGE_INSTRUCTION_ID = 0x01;
+const shimMessageEventDiscriminator = 'e445a52e51cb9a1d441b8f004d4c8970';
+
+const shimMessageEventLayout = [
+  { name: 'discriminator', binary: 'bytes', size: 16 },
+  { name: 'emitterAddress', binary: 'bytes', size: 32 },
+  { name: 'sequence', binary: 'uint', size: 8, endianness: 'little' },
+  { name: 'timestamp', binary: 'uint', size: 4, endianness: 'little' },
+] as const satisfies Layout;
+export type ShimMessageEvent = DeriveType<typeof shimMessageEventLayout>;
+
 export class SolanaWatcher extends Watcher {
   readonly rpc: string;
-  readonly programId: string;
+  readonly coreBridgeProgramId: string;
+  readonly shimProgramId: string;
   // this is set as a class field so we can modify it in tests
   getSignaturesLimit = GET_SIGNATURES_LIMIT;
   // The Solana watcher uses the `getSignaturesForAddress` RPC endpoint to fetch all transactions
@@ -39,10 +59,23 @@ export class SolanaWatcher extends Watcher {
 
   connection: Connection | undefined;
 
-  constructor(network: Network, mode: Mode = 'vaa') {
+  constructor(network: Network, mode: Mode = 'vaa', rpc?: string) {
     super(network, 'Solana', mode);
-    this.rpc = RPCS_BY_CHAIN[this.network].Solana!;
-    this.programId = contracts.coreBridge(this.network, 'Solana');
+    // only allow rpc to be set for 'Testnet' and mode 'vaa'
+    // This allows the use of the explorer RPC for testnet testing.
+    if (rpc && network !== 'Testnet') {
+      throw new Error('RPC can only be set for Testnet');
+    }
+    if (rpc && mode !== 'vaa') {
+      throw new Error('RPC can only be set for mode vaa');
+    }
+    if (rpc && network === 'Testnet') {
+      this.rpc = rpc;
+    } else {
+      this.rpc = RPCS_BY_CHAIN[network].Solana!;
+    }
+    this.coreBridgeProgramId = contracts.coreBridge(this.network, 'Solana');
+    this.shimProgramId = ShimContracts[this.network];
   }
 
   getConnection(): Connection {
@@ -121,11 +154,14 @@ export class SolanaWatcher extends Watcher {
     let currSignature: string | undefined = fromSignature;
     while (numSignatures === this.getSignaturesLimit) {
       const signatures: ConfirmedSignatureInfo[] =
-        await this.getConnection().getSignaturesForAddress(new PublicKey(this.programId), {
-          before: currSignature,
-          until: toSignature,
-          limit: this.getSignaturesLimit,
-        });
+        await this.getConnection().getSignaturesForAddress(
+          new PublicKey(this.coreBridgeProgramId),
+          {
+            before: currSignature,
+            until: toSignature,
+            limit: this.getSignaturesLimit,
+          }
+        );
 
       this.logger.info(`processing ${signatures.length} transactions`);
 
@@ -161,17 +197,27 @@ export class SolanaWatcher extends Watcher {
         }
 
         const accountKeys = await getAllKeys(this.getConnection(), res);
-        const programIdIndex = accountKeys.findIndex((i) => i.toBase58() === this.programId);
+        const coreBridgeProgramIdIndex = accountKeys.findIndex(
+          (i) => i.toBase58() === this.coreBridgeProgramId
+        );
+        const shimProgramIdIndex = accountKeys.findIndex(
+          (i) => i.toBase58() === this.shimProgramId
+        );
         const message: VersionedMessage = res.transaction.message;
-        const instructions = message.compiledInstructions;
+        const outerInstructions = message.compiledInstructions;
         const innerInstructions =
           res.meta?.innerInstructions?.flatMap((i) =>
             i.instructions.map(normalizeCompileInstruction)
           ) || [];
 
-        const whInstructions = innerInstructions
-          .concat(instructions)
-          .filter((i) => i.programIdIndex === programIdIndex);
+        // Need to look for Wormhole instructions and shim instructions
+        const allInstructions = innerInstructions
+          .concat(outerInstructions)
+          .filter(
+            (i) =>
+              i.programIdIndex === coreBridgeProgramIdIndex ||
+              i.programIdIndex === shimProgramIdIndex
+          );
 
         const blockKey = makeBlockKey(
           res.slot.toString(),
@@ -179,22 +225,44 @@ export class SolanaWatcher extends Watcher {
         );
 
         const vaaKeys: string[] = [];
-        for (const instruction of whInstructions) {
-          // skip if not postMessage instruction
+        for (const instruction of allInstructions) {
+          // The only instructions that get this far are either coreBridge or shim instructions
           const instructionId = instruction.data;
-          if (instructionId[0] !== 0x08 && instructionId[0] !== 0x01) continue;
 
-          const accountId = accountKeys[instruction.accountKeyIndexes[1]];
+          let emitterAddress: UniversalAddress;
+          let sequence: bigint;
 
-          const acctInfo = await this.getConnection().getAccountInfo(accountId, COMMITMENT);
-          if (!acctInfo?.data) throw new Error('No data found in message account');
-          const { emitterAddress, sequence } = deserializePostMessage(
-            new Uint8Array(acctInfo.data)
-          );
+          // We don't look for PostMessageUnreliable instructions since they aren't reobservable.
+          if (
+            instruction.programIdIndex === coreBridgeProgramIdIndex &&
+            instructionId[0] === POST_MESSAGE_INSTRUCTION_ID
+          ) {
+            // Got post message instruction
+            const accountId = accountKeys[instruction.accountKeyIndexes[1]];
+
+            const acctInfo = await this.getConnection().getAccountInfo(accountId, COMMITMENT);
+            if (!acctInfo?.data) throw new Error('No data found in message account');
+            const deserializedMsg = deserializePostMessage(new Uint8Array(acctInfo.data));
+            emitterAddress = deserializedMsg.emitterAddress;
+            sequence = deserializedMsg.sequence;
+          } else if (instruction.programIdIndex === shimProgramIdIndex) {
+            // Got shim instruction
+            const parsedMsg = this.parseShimMessage(instruction.data);
+            if (!parsedMsg) {
+              // Failed to parse shim message
+              // This is not a fatal error, just skip it.
+              continue;
+            }
+            emitterAddress = parsedMsg.emitterAddress;
+            sequence = parsedMsg.sequence;
+          } else {
+            // Not a coreBridge post message or shim instruction
+            continue;
+          }
 
           vaaKeys.push(
             makeVaaKey(
-              res.transaction.signatures[0],
+              res.transaction.signatures[0], // This is the tx hash
               this.chain,
               universalAddress_stripped(emitterAddress),
               sequence.toString()
@@ -215,6 +283,25 @@ export class SolanaWatcher extends Watcher {
       new Date(toBlock.blockTime! * 1000).toISOString()
     );
     return { vaasByBlock: { [lastBlockKey]: [], ...vaasByBlock } };
+  }
+
+  parseShimMessage(data: Uint8Array): {
+    emitterAddress: UniversalAddress;
+    sequence: bigint;
+  } | null {
+    // First step is to convert the data into a hex string
+    const hexData = encoding.hex.encode(data);
+
+    // Next, we need to look for the discriminator that we care about.
+    if (hexData.startsWith(shimMessageEventDiscriminator)) {
+      // Use the binary layout to deserialize the data
+      const decoded = deserialize(shimMessageEventLayout, data);
+      const emitterAddress = new UniversalAddress(decoded.emitterAddress);
+      const sequence = decoded.sequence;
+
+      return { emitterAddress, sequence };
+    }
+    return null;
   }
 
   isValidVaaKey(key: string) {

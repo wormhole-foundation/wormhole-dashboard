@@ -107,7 +107,11 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       wallet,
       AnchorProvider.defaultOptions()
     );
-    this.program = new Program(NTT_IDL as any, new PublicKey(this.programId), this.provider);
+    this.program = new Program(
+      NTT_IDL as any,
+      new PublicKey(this.coreBridgeProgramId),
+      this.provider
+    );
     this.nttBorsh = new BorshCoder(NTT_IDL as any);
 
     this.pg = knex({
@@ -227,7 +231,9 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       tokenAmount: nttManagerMessage.payload.trimmedAmount.normalize(NTT_DECIMALS),
       transferSentTxhash: '',
       transferBlockHeight: 0n,
-      nttTransferKey: `${this.programId}/${nttManagerMessage.payload.recipientAddress.toString(
+      nttTransferKey: `${
+        this.coreBridgeProgramId
+      }/${nttManagerMessage.payload.recipientAddress.toString(
         'hex'
       )}/${nttManagerMessage.id.toString('hex')}`,
       vaaId: '',
@@ -413,7 +419,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
       transferSentTxhash: '',
       transferBlockHeight: 0n,
       nttTransferKey: `${
-        this.programId
+        this.coreBridgeProgramId
       }/${recipient}/${transceiverMessage.ntt_managerPayload.id.toString('hex')}`,
       vaaId: `${parsedVaa.emitterChain}/${parsedVaa.emitterAddress.toString('hex')}/${
         parsedVaa.sequence
@@ -468,7 +474,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
         transceiverMessage.ntt_managerPayload.payload.trimmedAmount.normalize(NTT_DECIMALS),
       transferSentTxhash: transaction.transaction.signatures[0],
       transferBlockHeight: BigInt(transaction.slot),
-      nttTransferKey: `${this.programId}/${recipient}/${seq}`,
+      nttTransferKey: `${this.coreBridgeProgramId}/${recipient}/${seq}`,
       vaaId: vaaId,
       digest: getNttManagerMessageDigest(
         chainToChainId(this.chain),

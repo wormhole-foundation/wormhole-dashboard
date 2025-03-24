@@ -282,12 +282,9 @@ export class SolanaWatcher extends Watcher {
     // First step is to convert the data into a hex string
     const hexData = encoding.hex.encode(data);
 
-    // Next, we need to check which discriminator is present in the data
+    // Next, we need to look for the discriminator that we care about.
     if (hexData.startsWith(shimMessageEventDiscriminator)) {
-      // The data is in the format of the discriminator followed by the emitter address, sequence number, and timestamp.
-      // The emitter address is 32 bytes, the sequence number is 8 bytes, and the timestamp is 4 bytes.
-
-      // Try using the layout instead
+      // Use the binary layout to deserialize the data
       const decoded = deserialize(shimMessageEventLayout, data);
       const emitterAddress = new UniversalAddress(decoded.emitterAddress);
       const sequence = BigInt(decoded.sequence);

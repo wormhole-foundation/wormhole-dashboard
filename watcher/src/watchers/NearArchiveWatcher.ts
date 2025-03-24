@@ -144,6 +144,7 @@ export class NearArchiveWatcher extends Watcher {
 
   async getProvider(): Promise<Provider> {
     const nearArchiveRPC: string = assertEnvironmentVariable('NEAR_ARCHIVE_RPC');
+    console.log(`NEAR_ARCHIVE_RPC: [${nearArchiveRPC}]`);
     return (this.provider = this.provider || (await getNearProvider(this.network, nearArchiveRPC)));
   }
 

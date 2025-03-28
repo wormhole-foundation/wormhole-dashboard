@@ -220,6 +220,7 @@ async function getIncompleteOrders(): Promise<DisplayRow[]> {
     .from('market_orders AS mo')
     .join('fast_transfer_auctions AS fta', 'mo.fast_vaa_hash', '=', 'fta.fast_vaa_hash')
     .join('fast_transfer_executions AS fte', 'mo.fast_vaa_hash', '=', 'fte.fast_vaa_hash')
+    .join('fast_transfer_settlements AS fts', 'mo.fast_vaa_hash', '=', 'fts.fast_vaa_hash')
     .where('mo.market_order_timestamp', '>=', pg.raw("NOW() - INTERVAL '31 MINUTES'"))
     .andWhere('mo.market_order_timestamp', '<=', pg.raw("NOW() - INTERVAL '30 SECONDS'"))
     .andWhere((qb) => {

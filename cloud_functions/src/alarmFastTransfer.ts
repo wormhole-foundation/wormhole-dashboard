@@ -159,7 +159,7 @@ async function getDelayedAuctionStartOrders(): Promise<DisplayRow[]> {
       'mo.amount_in AS amountIn'
     )
     .from('market_orders AS mo')
-    .join('fast_transfer_auction AS fta', 'mo.fast_vaa_hash', '=', 'fta.fast_vaa_hash')
+    .join('fast_transfer_auctions AS fta', 'mo.fast_vaa_hash', '=', 'fta.fast_vaa_hash')
     .where('mo.market_order_timestamp', '>=', pg.raw("NOW() - INTERVAL '31 MINUTES'")) // Get orders from last 31 minutes
     .andWhereRaw(
       'EXTRACT(EPOCH FROM (fta.initial_offer_timestamp - mo.market_order_timestamp)) > 10'
@@ -218,7 +218,7 @@ async function getIncompleteOrders(): Promise<DisplayRow[]> {
       'fte.user_amount AS amountOut'
     )
     .from('market_orders AS mo')
-    .join('fast_transfer_auction AS fta', 'mo.fast_vaa_hash', '=', 'fta.fast_vaa_hash')
+    .join('fast_transfer_auctions AS fta', 'mo.fast_vaa_hash', '=', 'fta.fast_vaa_hash')
     .join('fast_transfer_executions AS fte', 'mo.fast_vaa_hash', '=', 'fte.fast_vaa_hash')
     .where('mo.market_order_timestamp', '>=', pg.raw("NOW() - INTERVAL '31 MINUTES'"))
     .andWhere('mo.market_order_timestamp', '<=', pg.raw("NOW() - INTERVAL '30 SECONDS'"))
@@ -256,7 +256,7 @@ type DisplayRow = {
   auctionStartTime?: number; // initial_offer_timestamp - market_order_timestamp, used by getDelayedAuctionStartOrders
   executionTime?: number; // execution_time - market_order_timestamp, used by getDelayedExecutionOrders
   settlementTime?: number; // from fast_transfer_settlements, used by getIncompleteOrders
-  auctionAccount?: string; // from fast_transfer_auction, used by getIncompleteOrders
+  auctionAccount?: string; // from fast_transfer_auctions, used by getIncompleteOrders
   amountIn: bigint; // from MarketOrder
   amountOut?: bigint; // from FastTransferExecutions, used by getDelayedExecutionOrders
 };

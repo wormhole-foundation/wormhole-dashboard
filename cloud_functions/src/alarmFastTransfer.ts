@@ -79,7 +79,7 @@ async function getAndAlarmDelayedExecutionOrders() {
     const formattedAmountIn = formatBigInt(order.amountIn);
     const formattedAmountOut = order.amountOut ? formatBigInt(order.amountOut) : 'not recorded';
     alarmSlackInfo.msg =
-      `🚨 Delayed Order Alert!\n` +
+      `🚨 Delayed Order Execution Alert!\n` +
       `Source Chain: ${order.sourceChain}\n` +
       `Sequence: ${order.sequence}\n` +
       `Status: ${order.status}\n` +
@@ -212,8 +212,8 @@ async function getIncompleteOrders(): Promise<DisplayRow[]> {
       'mo.dst_chain AS destinationChain',
       'fta.initial_offer_timestamp AS auctionStartTime',
       'fte.execution_time AS executionTime',
-      'fta.settlement_time AS settlementTime',
-      'fta.auction_account AS auctionAccount',
+      'fts.settle_time AS settlementTime',
+      'fta.auction_pubkey AS auctionAccount',
       'mo.amount_in AS amountIn',
       'fte.user_amount AS amountOut'
     )
@@ -224,8 +224,8 @@ async function getIncompleteOrders(): Promise<DisplayRow[]> {
     .where('mo.market_order_timestamp', '>=', pg.raw("NOW() - INTERVAL '31 MINUTES'"))
     .andWhere('mo.market_order_timestamp', '<=', pg.raw("NOW() - INTERVAL '30 SECONDS'"))
     .andWhere((qb) => {
-      qb.whereRaw('fta.settlement_time IS NULL')
-        .orWhereRaw('fta.auction_account IS NULL')
+      qb.whereRaw('fts.settle_time IS NULL')
+        .orWhereRaw('fta.auction_pubkey IS NULL')
         .orWhereRaw('fte.execution_time IS NULL')
         .orWhereRaw('fta.initial_offer_timestamp IS NULL')
         .orWhereRaw('mo.amount_in IS NULL')

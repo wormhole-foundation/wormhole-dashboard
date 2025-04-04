@@ -229,8 +229,8 @@ export class SolanaWatcher extends Watcher {
           // The only instructions that get this far are either coreBridge or shim instructions
           const instructionId = instruction.data;
 
-          let emitterAddress: UniversalAddress;
-          let sequence: bigint;
+          let emitterAddress: UniversalAddress | undefined = undefined;
+          let sequence: bigint | undefined = undefined;
 
           // We don't look for PostMessageUnreliable instructions since they aren't reobservable.
           if (
@@ -260,14 +260,16 @@ export class SolanaWatcher extends Watcher {
             continue;
           }
 
-          vaaKeys.push(
-            makeVaaKey(
-              res.transaction.signatures[0], // This is the tx hash
-              this.chain,
-              universalAddress_stripped(emitterAddress),
-              sequence.toString()
-            )
-          );
+          if (emitterAddress !== undefined && sequence !== undefined) {
+            vaaKeys.push(
+              makeVaaKey(
+                res.transaction.signatures[0], // This is the tx hash
+                this.chain,
+                universalAddress_stripped(emitterAddress),
+                sequence.toString()
+              )
+            );
+          }
         }
         if (vaaKeys.length > 0)
           vaasByBlock[blockKey] = [...vaaKeys, ...(vaasByBlock[blockKey] || [])];

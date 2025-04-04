@@ -28,7 +28,7 @@ const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
 
 const ShimContracts: { [key in Network]: string } = {
-  Mainnet: '',
+  Mainnet: 'EtZMZM22ViKMo4r5y4Anovs3wKQ2owUmDpjygnMMcdEX',
   Testnet: 'EtZMZM22ViKMo4r5y4Anovs3wKQ2owUmDpjygnMMcdEX',
   Devnet: '',
 };

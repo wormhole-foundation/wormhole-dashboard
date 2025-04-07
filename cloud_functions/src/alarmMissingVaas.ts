@@ -413,6 +413,9 @@ async function alarmOldHeartbeats(): Promise<void> {
   // Walk all the documents in the collection
   const documents = snapshot.docs;
   for (const doc of documents) {
+    if (network === 'Testnet' && doc.id.startsWith('Dev')) {
+      continue;
+    } // Skip dev guardians
     const data = doc.data();
     if (data) {
       // Only need to look at the timestamp field, which is in nanoseconds

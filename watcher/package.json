@@ -19,10 +19,12 @@
     "dump-messages": "ts-node scripts/dumpMessages.ts",
     "dump-vaas": "ts-node scripts/dumpVAAs.ts",
     "fetch-missing-vaas": "ts-node scripts/fetchMissingVAAs.ts",
+    "find-gaps": "ts-node scripts/findGaps.ts",
     "locate-message-gaps": "ts-node scripts/locateMessageGaps.ts",
     "read-bigtable": "ts-node scripts/readBigtable.ts",
     "read-firestore": "ts-node scripts/readFirestore.ts",
     "reconstruct-vaa": "ts-node scripts/reconstructVAA.ts",
+    "store-and-pub-signed-vaas": "ts-node scripts/storeAndPubSignedVAAs.ts",
     "update-found-vaas": "ts-node scripts/updateFoundVAAs.ts",
     "update-rows": "ts-node scripts/updateRows.ts",
     "watch-ft": "ts-node scripts/watchFt.ts"
@@ -53,6 +55,7 @@
     "knex": "^3.1.0",
     "near-api-js": "^1.1.0",
     "ora": "^5.4.1",
+    "web3": "^4.12.1",
     "winston": "^3.8.2",
     "winston-loki": "^6.0.7",
     "zod": "^3.20.2"

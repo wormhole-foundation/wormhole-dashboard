@@ -80,6 +80,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://worldscan.org/block/${block}`
       : chainId === chainToChainId('Ink')
       ? `https://explorer.inkonchain.com/block/${block}`
+      : chainId === chainToChainId('HyperEVM')
+      ? `https://www.hyperscan.com/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/${block}?cluster=testnet`
@@ -227,6 +229,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://worldscan.org/tx/${tx}`
       : chainId === chainToChainId('Ink')
       ? `https://explorer.inkonchain.com/tx/${tx}`
+      : chainId === chainToChainId('HyperEVM')
+      ? `https://www.hyperscan.com/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://solscan.io/txs/${tx}?cluster=testnet`

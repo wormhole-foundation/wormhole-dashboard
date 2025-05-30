@@ -44,15 +44,16 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Unichain' ||
     chainName === 'Worldchain' ||
     chainName === 'Xlayer' ||
-    chainName === 'Mezo'
+    chainName === 'Mezo' ||
+    chainName === 'Sonic'
   ) {
     return new VAAWatcher(network, chainName);
   } else if (chainName === 'Fantom' || chainName === 'Klaytn' || chainName === 'Oasis') {
     return new VAAWatcher(network, chainName, 'latest');
   } else if (chainName === 'Algorand') {
     return new AlgorandWatcher(network);
-  } else if (chainName === 'Aptos' || chainName === 'Movement') {
-    return new AptosWatcher(network, chainName);
+    // } else if (chainName === 'Aptos' || chainName === 'Movement') {
+    //   return new AptosWatcher(network, chainName);
   } else if (chainName === 'Injective') {
     return new InjectiveExplorerWatcher(network);
   } else if (chainName === 'Near') {

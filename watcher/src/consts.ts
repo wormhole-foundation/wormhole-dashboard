@@ -67,6 +67,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Unichain: process.env.UNICHAIN_RPC || 'https://mainnet.unichain.org',
     Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-mainnet.g.alchemy.com/public',
     Ink: process.env.INK_RPC || 'https://rpc-qnd.inkonchain.com',
+    HyperEVM: process.env.HYPER_EVM_RPC || 'https://rpc.hyperliquid.xyz/evm',
   },
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,
@@ -112,7 +113,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Monad: process.env.MONAD_RPC || 'https://testnet-rpc.monad.xyz',
     Ink: process.env.INK_RPC || 'https://rpc-qnd-sepolia.inkonchain.com',
     HyperEVM: process.env.HYPER_EVM_RPC || 'https://api.hyperliquid-testnet.xyz/evm',
-    Movement: process.env.MOVEMENT_RPC || 'https://aptos.testnet.bardock.movementlabs.xyz/v1',
+    // Movement: process.env.MOVEMENT_RPC || 'https://aptos.testnet.bardock.movementlabs.xyz/v1',
     Mezo: process.env.MEZO_RPC || 'https://rpc.test.mezo.org',
   },
   ['Devnet']: {},

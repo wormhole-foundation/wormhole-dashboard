@@ -59,8 +59,8 @@ const supportedChains: Chain[] =
         'Worldchain',
         'Monad',
         'Ink',
-        // 'HyperEVM',
-        'Movement',
+        'HyperEVM',
+        // 'Movement',
         'Mezo',
       ]
     : [
@@ -97,6 +97,8 @@ const supportedChains: Chain[] =
         'Snaxchain',
         'Unichain',
         'Worldchain',
+        'Ink',
+        'HyperEVM',
         'Wormchain',
       ];
 

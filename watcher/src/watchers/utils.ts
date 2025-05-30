@@ -52,8 +52,8 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     return new VAAWatcher(network, chainName, 'latest');
   } else if (chainName === 'Algorand') {
     return new AlgorandWatcher(network);
-    // } else if (chainName === 'Aptos' || chainName === 'Movement') {
-    //   return new AptosWatcher(network, chainName);
+  } else if (chainName === 'Aptos' /*|| chainName === 'Movement'*/) {
+    return new AptosWatcher(network, chainName);
   } else if (chainName === 'Injective') {
     return new InjectiveExplorerWatcher(network);
   } else if (chainName === 'Near') {

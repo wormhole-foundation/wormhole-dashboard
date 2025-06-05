@@ -18,6 +18,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	node_common "github.com/certusone/wormhole/node/pkg/common"
@@ -64,7 +65,8 @@ var (
 	guardianIndexToNameMap = map[int]string{}
 
 	// The known token bridge emitters
-	knownEmitters = map[string]bool{}
+	knownEmitters              = map[string]bool{}
+	firstObservationTimestamps sync.Map
 )
 
 var (
@@ -108,6 +110,11 @@ var (
 		Name: "gossip_gov_status_by_guardian_total",
 		Help: "The number of heartbeats received over gossip by guardian",
 	}, []string{"guardian_name"})
+	vaaQuorumLatency = promauto.NewHistogram(prometheus.HistogramOpts{
+		Name:    "vaa_quorum_latency_seconds",
+		Help:    "Latency in seconds between first observation and quorum VAA",
+		Buckets: prometheus.ExponentialBuckets(0.01, 2, 15), // ~0.01s to ~5min
+	})
 )
 
 func main() {
@@ -273,6 +280,12 @@ func main() {
 					hash := hex.EncodeToString(o.Hash)
 					if _, exists := uniqueObs[hash]; !exists {
 						uniqueObservationsCounter.Inc()
+
+						// Track first observation time for quorum latency
+						_, loaded := firstObservationTimestamps.LoadOrStore(hash, time.Now())
+						if !loaded {
+							logger.Debug("stored first observation time", zap.String("digest", hash))
+						}
 					}
 					uniqueObs[hash] = time.Now()
 				}
@@ -325,6 +338,12 @@ func main() {
 				}
 
 				digest := v.HexDigest()
+				if val, ok := firstObservationTimestamps.Load(digest); ok {
+					latency := time.Since(val.(time.Time)).Seconds()
+					vaaQuorumLatency.Observe(latency)
+					logger.Debug("observed quorum latency", zap.String("digest", digest), zap.Float64("latency", latency))
+					firstObservationTimestamps.Delete(digest)
+				}
 				chain := v.EmitterChain.String() // Extract chain name
 
 				// Extract guardian name using signature index

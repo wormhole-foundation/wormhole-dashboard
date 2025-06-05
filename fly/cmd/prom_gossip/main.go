@@ -110,11 +110,11 @@ var (
 		Name: "gossip_gov_status_by_guardian_total",
 		Help: "The number of heartbeats received over gossip by guardian",
 	}, []string{"guardian_name"})
-	vaaQuorumLatency = promauto.NewHistogram(prometheus.HistogramOpts{
+	vaaQuorumLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "vaa_quorum_latency_seconds",
 		Help:    "Latency in seconds between first observation and quorum VAA",
-		Buckets: prometheus.ExponentialBuckets(0.01, 2, 15), // ~0.01s to ~5min
-	})
+		Buckets: prometheus.ExponentialBuckets(0.01, 2, 15),
+	}, []string{"chain"})
 )
 
 func main() {
@@ -338,13 +338,13 @@ func main() {
 				}
 
 				digest := v.HexDigest()
+				chain := v.EmitterChain.String() // Extract chain name
 				if val, ok := firstObservationTimestamps.Load(digest); ok {
 					latency := time.Since(val.(time.Time)).Seconds()
-					vaaQuorumLatency.Observe(latency)
-					logger.Debug("observed quorum latency", zap.String("digest", digest), zap.Float64("latency", latency))
+					vaaQuorumLatency.WithLabelValues(chain).Observe(latency)
+					logger.Debug("observed quorum latency", zap.String("digest", digest), zap.Float64("latency", latency), zap.String("chain", chain))
 					firstObservationTimestamps.Delete(digest)
 				}
-				chain := v.EmitterChain.String() // Extract chain name
 
 				// Extract guardian name using signature index
 				guardianName := "unknown"

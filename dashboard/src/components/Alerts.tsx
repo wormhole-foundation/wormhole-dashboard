@@ -65,57 +65,54 @@ function chainDownAlerts(
     (hb) => !STANDBY_GUARDIANS.find((g) => g.pubkey.toLowerCase() === hb.guardianAddr.toLowerCase())
   );
   const downChains: { [chainId: string]: string[] } = {};
-  Object.entries(chainIdsToHeartbeats)
-    // Aurora is known to be disabled, no need to alert on it
-    .filter(([chainId]) => chainId !== chainToChainId('Aurora').toString())
-    .forEach(([chainId, chainHeartbeats]) => {
-      // don't count standby guardians in chain down alerts
-      const filteredChainHeartbeats = chainHeartbeats.filter(
-        (hb) => !STANDBY_GUARDIANS.find((g) => g.pubkey.toLowerCase() === hb.guardian.toLowerCase())
-      );
-      // Search for known guardians without heartbeats
-      const missingGuardians = filteredHeartbeats.filter(
-        (guardianHeartbeat) =>
-          filteredChainHeartbeats.findIndex(
-            (chainHeartbeat) => chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
-          ) === -1
-      );
-      missingGuardians.forEach((guardianHeartbeat) => {
+  Object.entries(chainIdsToHeartbeats).forEach(([chainId, chainHeartbeats]) => {
+    // don't count standby guardians in chain down alerts
+    const filteredChainHeartbeats = chainHeartbeats.filter(
+      (hb) => !STANDBY_GUARDIANS.find((g) => g.pubkey.toLowerCase() === hb.guardian.toLowerCase())
+    );
+    // Search for known guardians without heartbeats
+    const missingGuardians = filteredHeartbeats.filter(
+      (guardianHeartbeat) =>
+        filteredChainHeartbeats.findIndex(
+          (chainHeartbeat) => chainHeartbeat.guardian === guardianHeartbeat.guardianAddr
+        ) === -1
+    );
+    missingGuardians.forEach((guardianHeartbeat) => {
+      if (!downChains[chainId]) {
+        downChains[chainId] = [];
+      }
+      downChains[chainId].push(guardianHeartbeat.nodeName);
+    });
+    // Search for guardians with heartbeats but who are not picking up a height
+    // Could be disconnected or erroring post initial checks
+    // Track highest height to check for lagging guardians
+    let highest = BigInt(0);
+    filteredChainHeartbeats.forEach((chainHeartbeat) => {
+      const height = BigInt(chainHeartbeat.network.height);
+      if (height > highest) {
+        highest = height;
+      }
+      if (chainHeartbeat.network.height === '0') {
         if (!downChains[chainId]) {
           downChains[chainId] = [];
         }
-        downChains[chainId].push(guardianHeartbeat.nodeName);
-      });
-      // Search for guardians with heartbeats but who are not picking up a height
-      // Could be disconnected or erroring post initial checks
-      // Track highest height to check for lagging guardians
-      let highest = BigInt(0);
-      filteredChainHeartbeats.forEach((chainHeartbeat) => {
+        downChains[chainId].push(chainHeartbeat.name);
+      }
+    });
+    // Search for guardians which are lagging significantly behind
+    filteredChainHeartbeats.forEach((chainHeartbeat) => {
+      if (chainHeartbeat.network.height !== '0') {
         const height = BigInt(chainHeartbeat.network.height);
-        if (height > highest) {
-          highest = height;
-        }
-        if (chainHeartbeat.network.height === '0') {
+        const diff = highest - height;
+        if (diff > getBehindDiffForChain(chainHeartbeat.network.id)) {
           if (!downChains[chainId]) {
             downChains[chainId] = [];
           }
           downChains[chainId].push(chainHeartbeat.name);
         }
-      });
-      // Search for guardians which are lagging significantly behind
-      filteredChainHeartbeats.forEach((chainHeartbeat) => {
-        if (chainHeartbeat.network.height !== '0') {
-          const height = BigInt(chainHeartbeat.network.height);
-          const diff = highest - height;
-          if (diff > getBehindDiffForChain(chainHeartbeat.network.id)) {
-            if (!downChains[chainId]) {
-              downChains[chainId] = [];
-            }
-            downChains[chainId].push(chainHeartbeat.name);
-          }
-        }
-      });
+      }
     });
+  });
   return Object.entries(downChains).map(([chainId, names]) => ({
     severity: names.length >= getQuorumLossCount(environment) ? 'error' : 'warning',
     text: `${names.length} guardian${names.length > 1 ? 's' : ''} [${names.join(', ')}] ${

@@ -7,7 +7,6 @@ const initialAvalancheBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Avalanche
 );
 const initialCeloBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Celo);
-const initialOasisBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Oasis);
 const initialMoonbeamBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Moonbeam
 );
@@ -89,14 +88,6 @@ test('getMessagesForBlocks', async () => {
   expect(vaasByBlock['46997506/2024-06-21T13:11:38.000Z'][0]).toEqual(
     '0xe112f65bccc2fee1b8940eb6efecc2a4b1419ce62b7d2ac1a82f7d6c01937198:6/0000000000000000000000000e082f06ff657d94310cb8ce8b0d9a04541d8052/219960'
   );
-});
-
-test('getBlock by tag (Oasis compatibility)', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Oasis', 'finalized', 'vaa');
-  const block = await watcher.getBlock('latest');
-  expect(block.number).toBeGreaterThan(initialOasisBlock);
-  expect(block.timestamp).toBeGreaterThan(3895665);
-  expect(new Date(block.timestamp * 1000).toISOString() > '2022-12-21').toBeTruthy();
 });
 
 test('getBlock by tag (Celo compatibility)', async () => {

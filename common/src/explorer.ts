@@ -22,8 +22,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://polygonscan.com/block/${block}`
       : chainId === chainToChainId('Avalanche')
       ? `https://snowtrace.io/block/${block}`
-      : chainId === chainToChainId('Oasis')
-      ? `https://explorer.emerald.oasis.dev/block/${block}`
       : chainId === chainToChainId('Algorand')
       ? `https://app.dappflow.org/explorer/block/${block}`
       : chainId === chainToChainId('Fantom')
@@ -52,8 +50,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://arbiscan.io/block/${block}`
       : chainId === chainToChainId('Optimism')
       ? `https://optimistic.etherscan.io/block/${block}`
-      : chainId === chainToChainId('Xpla')
-      ? `https://explorer.xpla.io/mainnet/block/${block}`
       : chainId === chainToChainId('Base')
       ? `https://basescan.org/block/${block}`
       : chainId === chainToChainId('Sei')
@@ -94,8 +90,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://mumbai.polygonscan.com/block/${block}`
     : chainId === chainToChainId('Avalanche')
     ? `https://testnet.snowtrace.io/block/${block}`
-    : chainId === chainToChainId('Oasis')
-    ? `https://testnet.oasisscan.com/block/${block}`
     : chainId === chainToChainId('Algorand')
     ? `https://app.dappflow.org/explorer/block/${block}`
     : chainId === chainToChainId('Fantom')
@@ -120,8 +114,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://sepolia.arbiscan.io/block/${block}`
     : chainId === chainToChainId('Optimism')
     ? `https://sepolia-optimism.etherscan.io/block/${block}`
-    : chainId === chainToChainId('Xpla')
-    ? `https://explorer.xpla.io/testnet/block/${block}`
     : chainId === chainToChainId('Base')
     ? `https://goerli.basescan.org/block/${block}`
     : chainId === chainToChainId('Sei')
@@ -170,8 +162,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       : chainId === chainToChainId('Polygon')
       ? `https://polygonscan.com/tx/${tx}`
       : chainId === chainToChainId('Avalanche')
-      ? `https://snowtrace.io/tx/${tx}`
-      : chainId === chainToChainId('Oasis')
       ? `https://explorer.emerald.oasis.dev/tx/${tx}`
       : chainId === chainToChainId('Algorand')
       ? `https://app.dappflow.org/explorer/transaction/${tx}`
@@ -201,8 +191,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://arbiscan.io/tx/${tx}`
       : chainId === chainToChainId('Optimism')
       ? `https://optimistic.etherscan.io/tx/${tx}`
-      : chainId === chainToChainId('Xpla')
-      ? `https://explorer.xpla.io/mainnet/tx/${tx}`
       : chainId === chainToChainId('Base')
       ? `https://basescan.org/tx/${tx}`
       : chainId === chainToChainId('Sei')
@@ -243,8 +231,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://mumbai.polygonscan.com/tx/${tx}`
     : chainId === chainToChainId('Avalanche')
     ? `https://testnet.snowtrace.io/tx/${tx}`
-    : chainId === chainToChainId('Oasis')
-    ? `https://testnet.oasisscan.com/tx/${tx}`
     : chainId === chainToChainId('Algorand')
     ? `https://app.dappflow.org/explorer/transaction/${tx}`
     : chainId === chainToChainId('Fantom')
@@ -269,8 +255,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://sepolia.arbiscan.io/tx/${tx}`
     : chainId === chainToChainId('Optimism')
     ? `https://sepolia-optimism.etherscan.io/tx/${tx}`
-    : chainId === chainToChainId('Xpla')
-    ? `https://explorer.xpla.io/testnet/tx/${tx}`
     : chainId === chainToChainId('Base')
     ? `https://goerli.basescan.org/tx/${tx}`
     : chainId === chainToChainId('Sei')

@@ -62,27 +62,6 @@ test.skip('getMessagesForBlocks(terra explorer, no useful info)', async () => {
   expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
 });
 
-test('getFinalizedBlockNumber(xpla)', async () => {
-  const watcher = new CosmwasmWatcher('Mainnet', 'Xpla');
-  const blockNumber = await watcher.getFinalizedBlockNumber();
-  expect(blockNumber).toBeGreaterThan(1980633);
-});
-
-test('getMessagesForBlocks(xpla)', async () => {
-  const watcher = new CosmwasmWatcher('Mainnet', 'Xpla');
-  const { vaasByBlock } = await watcher.getMessagesForBlocks(1645812, 1645813);
-  const entries = Object.entries(vaasByBlock);
-  expect(entries.length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['1645812/2022-12-13T22:02:58.413Z']).toBeDefined();
-  expect(vaasByBlock['1645812/2022-12-13T22:02:58.413Z'].length).toEqual(1);
-  expect(vaasByBlock['1645812/2022-12-13T22:02:58.413Z'][0]).toEqual(
-    'B01268B9A4A1F502E4278E203DBFF23AADEEFDDD91542880737845A5BDF9B3E4:28/8f9cf727175353b17a5f574270e370776123d90fd74956ae4277962b4fdee24c/19'
-  );
-});
-
 test('getFinalizedBlockNumber(injective)', async () => {
   const watcher = new InjectiveExplorerWatcher('Mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();

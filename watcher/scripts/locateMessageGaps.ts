@@ -13,7 +13,7 @@ import { Watcher } from '../src/watchers/Watcher';
 import { ChainId, Network, toChain, toChainId } from '@wormhole-foundation/sdk-base';
 
 // This script checks for gaps in the message sequences for an emitter.
-// Ideally this shouldn't happen, but there seems to be an issue with Oasis, Karura, and Celo
+// Ideally this shouldn't happen, but there seems to be an issue with Karura, and Celo
 
 (async () => {
   const network: Network = getNetwork();

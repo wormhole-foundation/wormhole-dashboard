@@ -30,7 +30,7 @@ export class Watcher {
     const loggerPrefix = mode.toUpperCase() + '_';
     this.logger = getLogger(loggerPrefix + chain);
     // Special cases for batch size
-    if (chain === 'Acala' || chain === 'Karura' || chain === 'Berachain') {
+    if (chain === 'Berachain') {
       this.maximumBatchSize = 50;
     } else if (
       chain === 'Blast' ||

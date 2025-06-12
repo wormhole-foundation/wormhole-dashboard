@@ -21,7 +21,6 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
   if (chainName === 'Solana') {
     return new SolanaWatcher(network);
   } else if (
-    chainName === 'Acala' ||
     chainName === 'Arbitrum' ||
     chainName === 'Avalanche' ||
     chainName === 'Base' ||
@@ -32,7 +31,6 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Ethereum' ||
     chainName === 'HyperEVM' ||
     chainName === 'Ink' ||
-    chainName === 'Karura' ||
     chainName === 'Mantle' ||
     chainName === 'Monad' ||
     chainName === 'Moonbeam' ||
@@ -48,7 +46,7 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Sonic'
   ) {
     return new VAAWatcher(network, chainName);
-  } else if (chainName === 'Fantom' || chainName === 'Klaytn' || chainName === 'Oasis') {
+  } else if (chainName === 'Fantom' || chainName === 'Klaytn') {
     return new VAAWatcher(network, chainName, 'latest');
   } else if (chainName === 'Algorand') {
     return new AlgorandWatcher(network);
@@ -62,14 +60,10 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     return new SeiExplorerWatcher(network);
   } else if (chainName === 'Sui') {
     return new SuiWatcher(network);
-  } else if (chainName === 'Terra') {
-    return new TerraExplorerWatcher(network, chainName);
   } else if (chainName === 'Terra2') {
     return new CosmwasmWatcher(network, chainName);
   } else if (chainName === 'Wormchain') {
     return new WormchainWatcher(network);
-  } else if (chainName === 'Xpla') {
-    return new CosmwasmWatcher(network, chainName);
   } else if (network === 'Testnet') {
     // These are testnet only chains
     if (

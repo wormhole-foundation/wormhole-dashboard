@@ -14,24 +14,16 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://solana.fm/block/${block}`
       : chainId === chainToChainId('Ethereum')
       ? `https://etherscan.io/block/${block}`
-      : chainId === chainToChainId('Terra')
-      ? `https://finder.terra.money/columbus-5/block/${block}`
       : chainId === chainToChainId('Bsc')
       ? `https://bscscan.com/block/${block}`
       : chainId === chainToChainId('Polygon')
       ? `https://polygonscan.com/block/${block}`
       : chainId === chainToChainId('Avalanche')
       ? `https://snowtrace.io/block/${block}`
-      : chainId === chainToChainId('Oasis')
-      ? `https://explorer.emerald.oasis.dev/block/${block}`
       : chainId === chainToChainId('Algorand')
       ? `https://app.dappflow.org/explorer/block/${block}`
       : chainId === chainToChainId('Fantom')
       ? `https://ftmscan.com/block/${block}`
-      : chainId === chainToChainId('Karura')
-      ? `https://blockscout.karura.network/block/${block}`
-      : chainId === chainToChainId('Acala')
-      ? `https://blockscout.acala.network/block/${block}`
       : chainId === chainToChainId('Klaytn')
       ? `https://scope.klaytn.com/block/${block}`
       : chainId === chainToChainId('Celo')
@@ -52,8 +44,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://arbiscan.io/block/${block}`
       : chainId === chainToChainId('Optimism')
       ? `https://optimistic.etherscan.io/block/${block}`
-      : chainId === chainToChainId('Xpla')
-      ? `https://explorer.xpla.io/mainnet/block/${block}`
       : chainId === chainToChainId('Base')
       ? `https://basescan.org/block/${block}`
       : chainId === chainToChainId('Sei')
@@ -87,22 +77,16 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://explorer.solana.com/${block}?cluster=testnet`
     : chainId === chainToChainId('Ethereum')
     ? `https://sepolia.etherscan.io/block/${block}`
-    : // : chainId === chainToChainId('Terra') <-- not supported on testnet dashboard
-    chainId === chainToChainId('Bsc')
+    : chainId === chainToChainId('Bsc')
     ? `https://testnet.bscscan.com/block/${block}`
     : chainId === chainToChainId('Polygon')
     ? `https://mumbai.polygonscan.com/block/${block}`
     : chainId === chainToChainId('Avalanche')
     ? `https://testnet.snowtrace.io/block/${block}`
-    : chainId === chainToChainId('Oasis')
-    ? `https://testnet.oasisscan.com/block/${block}`
     : chainId === chainToChainId('Algorand')
     ? `https://app.dappflow.org/explorer/block/${block}`
     : chainId === chainToChainId('Fantom')
     ? `https://testnet.ftmscan.com/block/${block}`
-    : // : chainId === chainToChainId('Karura') <-- not supported on testnet dashboard
-    chainId === chainToChainId('Acala')
-    ? `https://blockscout.mandala.aca-staging.network/block/${block}`
     : chainId === chainToChainId('Klaytn')
     ? `https://baobab.klaytnscope.com/block/${block}`
     : chainId === chainToChainId('Celo')
@@ -120,8 +104,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://sepolia.arbiscan.io/block/${block}`
     : chainId === chainToChainId('Optimism')
     ? `https://sepolia-optimism.etherscan.io/block/${block}`
-    : chainId === chainToChainId('Xpla')
-    ? `https://explorer.xpla.io/testnet/block/${block}`
     : chainId === chainToChainId('Base')
     ? `https://goerli.basescan.org/block/${block}`
     : chainId === chainToChainId('Sei')
@@ -163,24 +145,16 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://solana.fm/tx/${tx}`
       : chainId === chainToChainId('Ethereum')
       ? `https://etherscan.io/tx/${tx}`
-      : chainId === chainToChainId('Terra')
-      ? `https://finder.terra.money/columbus-5/tx/${tx}`
       : chainId === chainToChainId('Bsc')
       ? `https://bscscan.com/tx/${tx}`
       : chainId === chainToChainId('Polygon')
       ? `https://polygonscan.com/tx/${tx}`
       : chainId === chainToChainId('Avalanche')
       ? `https://snowtrace.io/tx/${tx}`
-      : chainId === chainToChainId('Oasis')
-      ? `https://explorer.emerald.oasis.dev/tx/${tx}`
       : chainId === chainToChainId('Algorand')
       ? `https://app.dappflow.org/explorer/transaction/${tx}`
       : chainId === chainToChainId('Fantom')
       ? `https://ftmscan.com/tx/${tx}`
-      : chainId === chainToChainId('Karura')
-      ? `https://blockscout.karura.network/tx/${tx}`
-      : chainId === chainToChainId('Acala')
-      ? `https://blockscout.acala.network/tx/${tx}`
       : chainId === chainToChainId('Klaytn')
       ? `https://scope.klaytn.com/tx/${tx}`
       : chainId === chainToChainId('Celo')
@@ -201,8 +175,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://arbiscan.io/tx/${tx}`
       : chainId === chainToChainId('Optimism')
       ? `https://optimistic.etherscan.io/tx/${tx}`
-      : chainId === chainToChainId('Xpla')
-      ? `https://explorer.xpla.io/mainnet/tx/${tx}`
       : chainId === chainToChainId('Base')
       ? `https://basescan.org/tx/${tx}`
       : chainId === chainToChainId('Sei')
@@ -236,22 +208,16 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://solscan.io/txs/${tx}?cluster=testnet`
     : chainId === chainToChainId('Ethereum')
     ? `https://sepolia.etherscan.io/tx/${tx}`
-    : // : chainId === chainToChainId('Terra') <-- not supported on testnet dashboard
-    chainId === chainToChainId('Bsc')
+    : chainId === chainToChainId('Bsc')
     ? `https://testnet.bscscan.com/tx/${tx}`
     : chainId === chainToChainId('Polygon')
     ? `https://mumbai.polygonscan.com/tx/${tx}`
     : chainId === chainToChainId('Avalanche')
     ? `https://testnet.snowtrace.io/tx/${tx}`
-    : chainId === chainToChainId('Oasis')
-    ? `https://testnet.oasisscan.com/tx/${tx}`
     : chainId === chainToChainId('Algorand')
     ? `https://app.dappflow.org/explorer/transaction/${tx}`
     : chainId === chainToChainId('Fantom')
     ? `https://testnet.ftmscan.com/tx/${tx}`
-    : // chainId === chainToChainId('Karura') <-- not supported on testnet dashboard
-    chainId === chainToChainId('Acala')
-    ? `https://blockscout.mandala.aca-staging.network/tx/${tx}`
     : chainId === chainToChainId('Klaytn')
     ? `https://baobab.klaytnscope.com/tx/${tx}`
     : chainId === chainToChainId('Celo')
@@ -269,8 +235,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://sepolia.arbiscan.io/tx/${tx}`
     : chainId === chainToChainId('Optimism')
     ? `https://sepolia-optimism.etherscan.io/tx/${tx}`
-    : chainId === chainToChainId('Xpla')
-    ? `https://explorer.xpla.io/testnet/tx/${tx}`
     : chainId === chainToChainId('Base')
     ? `https://goerli.basescan.org/tx/${tx}`
     : chainId === chainToChainId('Sei')

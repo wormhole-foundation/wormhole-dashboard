@@ -29,19 +29,9 @@ export const getNativeAddress = async (
     if (
       chainToPlatform(chainIdToChain(tokenChain)) === 'Evm' ||
       tokenChain === chainToChainId('Solana') ||
-      tokenChain === chainToChainId('Algorand') ||
-      tokenChain === chainToChainId('Terra')
+      tokenChain === chainToChainId('Algorand')
     ) {
       return tryHexToNativeAssetString(tokenAddress, tokenChain);
-    } else if (tokenChain === chainToChainId('Xpla')) {
-      const client = new LCDClient({
-        URL: 'https://dimension-lcd.xpla.dev',
-        chainID: 'dimension_37-1',
-      });
-      return (
-        (await queryExternalId(client, contracts.tokenBridge('Mainnet', 'Xpla'), tokenAddress)) ||
-        null
-      );
     } else if (tokenChain === chainToChainId('Terra2')) {
       const client = new LCDClient({
         URL: 'https://phoenix-lcd.terra.dev',

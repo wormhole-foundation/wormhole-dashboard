@@ -15,7 +15,7 @@
     "@injectivelabs/sdk-ts": "^1.0.368",
     "@mysten/sui": "^1.21.2",
     "@terra-money/terra.js": "^3.1.3",
-    "@wormhole-foundation/sdk": "^1.23.0",
+    "@wormhole-foundation/sdk": "^2.2.0-temp-chains.beta.0",
     "@xpla/xpla.js": "^0.2.3",
     "aptos": "1.5.0",
     "dotenv": "^16.0.3",

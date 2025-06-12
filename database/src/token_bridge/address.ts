@@ -33,15 +33,6 @@ export const getNativeAddress = async (
       tokenChain === chainToChainId('Terra')
     ) {
       return tryHexToNativeAssetString(tokenAddress, tokenChain);
-    } else if (tokenChain === chainToChainId('Xpla')) {
-      const client = new LCDClient({
-        URL: 'https://dimension-lcd.xpla.dev',
-        chainID: 'dimension_37-1',
-      });
-      return (
-        (await queryExternalId(client, contracts.tokenBridge('Mainnet', 'Xpla'), tokenAddress)) ||
-        null
-      );
     } else if (tokenChain === chainToChainId('Terra2')) {
       const client = new LCDClient({
         URL: 'https://phoenix-lcd.terra.dev',

@@ -29,7 +29,6 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { chainToChainId } from '@wormhole-foundation/sdk-base';
 import { chainIdToName, STANDBY_GUARDIANS } from '@wormhole-foundation/wormhole-monitor-common';
 import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
@@ -270,14 +269,13 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
         (count, heartbeat) => count + (isHeartbeatUnhealthy(heartbeat, highest) ? 0 : 1),
         0
       );
-      if (Number(chainId) !== chainToChainId('Aurora'))
-        if (healthyCount < getQuorumCount(environment)) {
-          numErrors++;
-        } else if (healthyCount < getWarningCount(environment)) {
-          numWarnings++;
-        } else {
-          numSuccess++;
-        }
+      if (healthyCount < getQuorumCount(environment)) {
+        numErrors++;
+      } else if (healthyCount < getWarningCount(environment)) {
+        numWarnings++;
+      } else {
+        numSuccess++;
+      }
       obj[chainId] = { healthyCount, conditionalRowStyle };
       return obj;
     }, {} as ChainHelpers);

@@ -162,7 +162,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       : chainId === chainToChainId('Polygon')
       ? `https://polygonscan.com/tx/${tx}`
       : chainId === chainToChainId('Avalanche')
-      ? `https://explorer.emerald.oasis.dev/tx/${tx}`
+      ? `https://snowtrace.io/tx/${tx}`
       : chainId === chainToChainId('Algorand')
       ? `https://app.dappflow.org/explorer/transaction/${tx}`
       : chainId === chainToChainId('Fantom')

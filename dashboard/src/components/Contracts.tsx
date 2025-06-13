@@ -14,7 +14,7 @@ import { useNetworkContext } from '../contexts/NetworkContext';
 import CollapsibleSection from './CollapsibleSection';
 import useGetGuardianSetInfoByChain from '../hooks/useGetGuardianSetInfoByChain';
 
-const coreBridgeChains = chains.filter(contracts.coreBridge.get('Mainnet', chain));
+const coreBridgeChains = chains.filter((chain) => contracts.coreBridge.get('Mainnet', chain));
 
 function CoreBridgeInfo({
   chain,

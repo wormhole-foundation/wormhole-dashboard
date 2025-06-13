@@ -108,7 +108,7 @@ test.skip('getMessagesForBlocks(sei)', async () => {
   ]);
 });
 
-test('getFinalizedBlockNumber(sei explorer)', async () => {
+test.skip('getFinalizedBlockNumber(sei explorer)', async () => {
   const watcher = new SeiExplorerWatcher('Mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(0);

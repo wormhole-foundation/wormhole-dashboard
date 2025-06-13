@@ -17,7 +17,6 @@ import { AptosTokenBridge } from '@wormhole-foundation/sdk-aptos-tokenbridge';
 import { wormhole } from '@wormhole-foundation/sdk';
 import aptos from '@wormhole-foundation/sdk/aptos';
 import { LCDClient as TerraLCDClient } from '@terra-money/terra.js';
-import { LCDClient as XplaLCDClient } from '@xpla/xpla.js';
 import { queryExternalIdInjective } from './injective';
 import { getTokenCoinType } from '@wormhole-foundation/sdk-sui-tokenbridge';
 
@@ -112,7 +111,7 @@ export interface ExternalIdResponse {
 // returns the TokenId corresponding to the ExternalTokenId
 // see cosmwasm token_addresses.rs
 export const queryExternalId = async (
-  client: TerraLCDClient | XplaLCDClient,
+  client: TerraLCDClient,
   tokenBridgeAddress: string,
   externalTokenId: string
 ) => {

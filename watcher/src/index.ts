@@ -60,6 +60,7 @@ const supportedChains: Chain[] =
         'HyperEVM',
         // 'Movement',
         'Mezo',
+        'Converge',
       ]
     : [
         // This is the list of chains supported in MAINNET.

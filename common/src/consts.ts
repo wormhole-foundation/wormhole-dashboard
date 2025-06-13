@@ -91,6 +91,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Ink: '1907965', // Block of contract creation
     HyperEVM: '13743181', // Block of contract creation
     Mezo: '3102383', // Block of contract creation
+    Converge: '7564', // Block of contract creation
   },
   ['Devnet']: {},
 };

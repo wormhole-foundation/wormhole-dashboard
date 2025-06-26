@@ -112,9 +112,13 @@ var (
 	}, []string{"guardian_name"})
 	vaaQuorumLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "vaa_quorum_latency_seconds",
-		Help:    "Latency in seconds between first observation and quorum VAA",
+		Help:    "Time elapsed in seconds from first guardian observation to quorum (13th signature) for a VAA",
 		Buckets: prometheus.ExponentialBuckets(0.01, 2, 15),
-	}, []string{"chain"})
+	}, []string{"chain", "consistency_level"})
+	vaaQuorumCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "vaa_quorum_total",
+		Help: "Total number of VAAs reaching quorum",
+	}, []string{"chain", "consistency_level"})
 )
 
 func main() {
@@ -341,8 +345,11 @@ func main() {
 				chain := v.EmitterChain.String() // Extract chain name
 				if val, ok := firstObservationTimestamps.Load(digest); ok {
 					latency := time.Since(val.(time.Time)).Seconds()
-					vaaQuorumLatency.WithLabelValues(chain).Observe(latency)
-					logger.Debug("observed quorum latency", zap.String("digest", digest), zap.Float64("latency", latency), zap.String("chain", chain))
+					consistencyLabel := fmt.Sprintf("%d", v.ConsistencyLevel)
+					vaaQuorumLatency.WithLabelValues(chain, consistencyLabel).Observe(latency)
+					vaaQuorumCount.WithLabelValues(chain, consistencyLabel).Inc()
+
+					logger.Debug("observed quorum latency", zap.String("digest", digest), zap.Float64("latency", latency), zap.String("chain", chain), zap.String("consistency_level", consistencyLabel))
 					firstObservationTimestamps.Delete(digest)
 				}
 

@@ -40,7 +40,8 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Xlayer' ||
     chainName === 'Mezo' ||
     chainName === 'Sonic' ||
-    chainName === 'Converge'
+    chainName === 'Converge' ||
+    chainName === 'Plume'
   ) {
     return new VAAWatcher(network, chainName);
   } else if (chainName === 'Fantom' || chainName === 'Klaytn') {

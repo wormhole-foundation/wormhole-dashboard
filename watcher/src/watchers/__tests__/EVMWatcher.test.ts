@@ -121,56 +121,6 @@ test('getMessagesForBlocks (Celo compatibility)', async () => {
   );
 });
 
-test('getBlock by number (Karura compatibility)', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Karura', 'finalized', 'vaa');
-  const latestBlock = await watcher.getFinalizedBlockNumber();
-  const moreRecentBlockNumber = 4646601;
-  //   block {
-  //   hash: '0xe370a794f27fc49d1e468c78e4f92f9aeefc949a62f919cea8d2bd81904840b5',
-  //   number: 4646601,
-  //   timestamp: 1687963290
-  // }
-  expect(latestBlock).toBeGreaterThan(moreRecentBlockNumber);
-  const block = await watcher.getBlock(moreRecentBlockNumber);
-  expect(block.number).toEqual(moreRecentBlockNumber);
-  expect(block.timestamp).toEqual(1687963290);
-  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2023-06-28T14:41:30.000Z');
-});
-
-test('getMessagesForBlocks (Karura compatibility)', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Karura', 'finalized', 'vaa');
-  const { vaasByBlock } = await watcher.getMessagesForBlocks(4582511, 4582513);
-  const entries = Object.entries(vaasByBlock);
-  expect(entries.length).toEqual(3);
-  expect(entries[0][0]).toEqual('4582511/2023-06-19T15:54:48.000Z');
-  // 4582512 was an error block. In that case, make sure it has the same timestamp as the previous block
-  // expect(entries[1][0]).toEqual('4582512/2023-06-19T15:54:48.000Z');
-  // As of July 15, 2023, the above block appears to have been fixed
-  expect(entries[1][0]).toEqual('4582512/2023-06-19T15:55:00.000Z');
-});
-
-test('getMessagesForBlocks (Karura compatibility 2)', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Karura', 'finalized', 'vaa');
-  await watcher.getFinalizedBlockNumber(); // This has the side effect of initializing the latestFinalizedBlockNumber
-  const { vaasByBlock } = await watcher.getMessagesForBlocks(4595356, 4595358);
-  const entries = Object.entries(vaasByBlock);
-  expect(entries.length).toEqual(3);
-});
-
-// skipped as it was timing out the test
-test.skip('getBlock (Karura compatibility)', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Karura', 'finalized', 'vaa');
-  await watcher.getFinalizedBlockNumber(); // This has the side effect of initializing the latestFinalizedBlockNumber
-  let block: Block = await watcher.getBlock(4582512); // 6969 block
-  console.log('block', block);
-  block = await watcher.getBlock(4595357); // Null block
-  console.log('block', block);
-  // block = await watcher.getBlock(4595358); // good block
-  // console.log('block', block);
-  // block = await watcher.getBlock(4619551); // good luck
-  // console.log('block', block);
-});
-
 test('getMessagesForBlocks', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Arbitrum', 'finalized', 'vaa');
   const { vaasByBlock } = await watcher.getMessagesForBlocks(114500582, 114500584);

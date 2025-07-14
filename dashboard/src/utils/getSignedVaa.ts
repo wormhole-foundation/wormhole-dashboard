@@ -13,7 +13,15 @@ export async function getSignedVAA(
   const api = new PublicRPCServiceClientImpl(rpc);
   return await api.GetSignedVAA({
     messageId: {
-      emitterChain: toChainId(emitterChain) as publicrpc.ChainID,
+      emitterChain: (() => {
+        try {
+          return toChainId(emitterChain) as publicrpc.ChainID;
+        } catch (e) {
+          // Identify this as a ChainId conversion error and not an RPC error.
+          console.error(`Failed to convert emitterChain ${emitterChain} to ChainId:`, e);
+          throw e;
+        }
+      })(),
       emitterAddress,
       sequence,
     },

@@ -3,7 +3,6 @@ import { AptosWatcher } from './AptosWatcher';
 import { CosmwasmWatcher } from './CosmwasmWatcher';
 import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
-import { TerraExplorerWatcher } from './TerraExplorerWatcher';
 import { Watcher } from './Watcher';
 import { SuiWatcher } from './SuiWatcher';
 import { SeiExplorerWatcher } from './SeiExplorerWatcher';
@@ -21,7 +20,6 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
   if (chainName === 'Solana') {
     return new SolanaWatcher(network);
   } else if (
-    chainName === 'Acala' ||
     chainName === 'Arbitrum' ||
     chainName === 'Avalanche' ||
     chainName === 'Base' ||
@@ -32,7 +30,6 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Ethereum' ||
     chainName === 'HyperEVM' ||
     chainName === 'Ink' ||
-    chainName === 'Karura' ||
     chainName === 'Mantle' ||
     chainName === 'Monad' ||
     chainName === 'Moonbeam' ||
@@ -63,8 +60,6 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     return new SeiExplorerWatcher(network);
   } else if (chainName === 'Sui') {
     return new SuiWatcher(network);
-  } else if (chainName === 'Terra') {
-    return new TerraExplorerWatcher(network, chainName);
   } else if (chainName === 'Terra2') {
     return new CosmwasmWatcher(network, chainName);
   } else if (chainName === 'Wormchain') {

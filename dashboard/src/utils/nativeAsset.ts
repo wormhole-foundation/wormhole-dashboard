@@ -14,11 +14,16 @@ function hexToNativeAssetStringAlgorand(s: string): string {
 }
 
 const tryUint8ArrayToNative = (a: Uint8Array, chain: number): string => {
-  const platform = chainToPlatform(toChain(chain));
-  if (platform === 'Evm') {
-    return `0x${Buffer.from(a).toString('hex').substring(24)}`;
-  } else if (platform === 'Solana') {
-    return base58.encode(a);
+  let platform;
+  try {
+    platform = chainToPlatform(toChain(chain));
+    if (platform === 'Evm') {
+      return `0x${Buffer.from(a).toString('hex').substring(24)}`;
+    } else if (platform === 'Solana') {
+      return base58.encode(a);
+    }
+  } catch (e) {
+    console.error(`Failed to convert chain ${chain} to Chain:`, e);
   }
   return `0x${Buffer.from(a).toString('hex')}`;
 };

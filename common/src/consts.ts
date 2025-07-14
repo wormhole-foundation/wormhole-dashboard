@@ -192,8 +192,13 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Wormchain: 'aeb534c45c3049d380b9d9b966f9895f53abd4301bfaff407fa09dea8ae7a924',
 };
 
-export const isTokenBridgeEmitter = (chain: ChainId | Chain, emitter: string) =>
-  TOKEN_BRIDGE_EMITTERS[toChain(chain)]?.toLowerCase() === emitter.toLowerCase();
+export const isTokenBridgeEmitter = (chain: ChainId | Chain, emitter: string) => {
+  try {
+    return TOKEN_BRIDGE_EMITTERS[toChain(chain)]?.toLowerCase() === emitter.toLowerCase();
+  } catch (e) {
+    return false;
+  }
+};
 
 export const NFT_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Solana: '0def15a24423e1edd1a5ab16f557b9060303ddbab8c803d2ee48f4b78a1cfd6b',
@@ -213,8 +218,13 @@ export const NFT_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Base: '000000000000000000000000da3adc6621b2677bef9ad26598e6939cf0d92f88',
 };
 
-export const isNFTBridgeEmitter = (chain: ChainId | Chain, emitter: string) =>
-  NFT_BRIDGE_EMITTERS[toChain(chain)]?.toLowerCase() === emitter.toLowerCase();
+export const isNFTBridgeEmitter = (chain: ChainId | Chain, emitter: string) => {
+  try {
+    return NFT_BRIDGE_EMITTERS[toChain(chain)]?.toLowerCase() === emitter.toLowerCase();
+  } catch (e) {
+    return false;
+  }
+};
 
 export const CIRCLE_INTEGRATION_EMITTERS: { [key in Chain]?: string } = {
   Ethereum: '000000000000000000000000aada05bd399372f0b0463744c09113c137636f6a',
@@ -225,8 +235,13 @@ export const CIRCLE_INTEGRATION_EMITTERS: { [key in Chain]?: string } = {
   Polygon: '0000000000000000000000000FF28217dCc90372345954563486528aa865cDd6',
 };
 
-export const isCircleIntegrationEmitter = (chain: ChainId | Chain, emitter: string) =>
-  CIRCLE_INTEGRATION_EMITTERS[toChain(chain)]?.toLowerCase() === emitter.toLowerCase();
+export const isCircleIntegrationEmitter = (chain: ChainId | Chain, emitter: string) => {
+  try {
+    return CIRCLE_INTEGRATION_EMITTERS[toChain(chain)]?.toLowerCase() === emitter.toLowerCase();
+  } catch (e) {
+    return false;
+  }
+};
 
 // https://developers.circle.com/stablecoins/docs/supported-domains
 export const CIRCLE_DOMAIN_TO_CHAIN_ID: { [key: number]: ChainId } = {

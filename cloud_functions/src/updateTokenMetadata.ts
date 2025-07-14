@@ -25,7 +25,13 @@ const findCoinGeckoCoinId = (
   if (coinId !== undefined) {
     return coinId;
   }
-  const chainName = toChain(chainId);
+  let chainName;
+  try {
+    chainName = toChain(chainId);
+  } catch (e) {
+    console.error(`Failed to convert chainId ${chainId} to Chain:`, e);
+    return null;
+  }
   const platform = COINGECKO_PLATFORM_BY_CHAIN[chainName];
   if (platform === undefined) {
     return null;
@@ -77,8 +83,15 @@ export async function updateTokenMetadata(req: any, res: any) {
       symbol,
       decimals,
     } of result) {
-      assertChainId(token_chain);
-      const tokenChainId: ChainId = toChainId(token_chain);
+      let tokenChainId: ChainId;
+      try {
+        assertChainId(token_chain);
+        tokenChainId = toChainId(token_chain);
+      } catch (e) {
+        // Skip the bad token_chain
+        console.error(`Failed to convert token_chain ${token_chain} to ChainId:`, e);
+        continue;
+      }
       let shouldUpdate = false;
       if (native_address === null) {
         native_address = await getNativeAddress(tokenChainId, token_address);

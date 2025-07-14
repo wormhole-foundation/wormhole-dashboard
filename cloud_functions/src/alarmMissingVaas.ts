@@ -96,7 +96,13 @@ export async function alarmMissingVaas(req: any, res: any) {
     if (messages) {
       const now = new Date();
       for (const chain of Object.keys(messages)) {
-        const chainId: ChainId = toChainId(Number(chain));
+        let chainId: ChainId;
+        try {
+          chainId = toChainId(Number(chain));
+        } catch (e) {
+          console.error(`Failed to convert chain ${chain} to ChainId:`, e);
+          continue;
+        }
         const msgs = messages[chainId];
         if (msgs && msgs.messages) {
           for (let i = 0; i < msgs.messages.length; i++) {
@@ -285,8 +291,16 @@ function convert(msg: ObservedMessage): FirestoreVAA {
 function formatMessage(msg: ObservedMessage): string {
   const cName: string = chainIdToName(msg.chain);
   const vaaKeyUrl: string = `https://wormholescan.io/#/tx/${msg.chain}/${msg.emitter}/${msg.seq}`;
-  const txHashUrl: string = explorerTx(network, toChainId(msg.chain), msg.txHash);
-  const blockUrl: string = explorerBlock(network, toChainId(msg.chain), msg.block.toString());
+  let txHashUrl: string;
+  let blockUrl: string;
+  try {
+    txHashUrl = explorerTx(network, toChainId(msg.chain), msg.txHash);
+    blockUrl = explorerBlock(network, toChainId(msg.chain), msg.block.toString());
+  } catch (e) {
+    console.error(`Failed to convert chain ${msg.chain} to ChainId:`, e);
+    txHashUrl = '#';
+    blockUrl = '#';
+  }
   const formattedMsg = `*Chain:* ${cName}(${msg.chain})\n*TxHash:* <${txHashUrl}|${msg.txHash}>\n*VAA Key:* <${vaaKeyUrl}|${msg.chain}/${msg.emitter}/${msg.seq}> \n*Block:* <${blockUrl}|${msg.block}> \n*Timestamp:* ${msg.timestamp}`;
   return formattedMsg;
 }
@@ -303,7 +317,11 @@ async function getLastBlockTimeFromFirestore(): Promise<LatestTimeByChain> {
     snapshot.docs
       .sort((a, b) => Number(a.id) - Number(b.id))
       .forEach((doc) => {
-        values[toChainId(Number(doc.id))] = { latestTime: doc.data().lastBlockKey.split('/')[1] };
+        try {
+          values[toChainId(Number(doc.id))] = { latestTime: doc.data().lastBlockKey.split('/')[1] };
+        } catch (e) {
+          console.error(`Failed to convert chain ${doc.id} to ChainId:`, e);
+        }
       });
   } catch (e) {
     console.error(e);
@@ -331,7 +349,13 @@ async function alarmOldBlockTimes(latestTimes: LatestTimeByChain): Promise<void>
   // Walk all chains and check the latest block time.
   const now = new Date();
   for (const chain of Object.keys(latestTimes)) {
-    const chainId: ChainId = toChainId(Number(chain));
+    let chainId: ChainId;
+    try {
+      chainId = toChainId(Number(chain));
+    } catch (e) {
+      console.error(`Failed to convert chain ${chain} to ChainId:`, e);
+      continue;
+    }
     const latestTime: string | undefined = latestTimes[chainId]?.latestTime;
     if (!latestTime) {
       continue;

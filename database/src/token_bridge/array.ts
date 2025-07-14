@@ -26,7 +26,7 @@ export const tryHexToNativeStringNear = async (
  * Convert an address in a wormhole's 32-byte hex representation into a chain's native
  * string representation.
  *
- * @throws if address is not the right length for the given chain
+ * @throws if address is not the right length for the given chain or the given chain is not supported.
  */
 export const tryHexToNativeAssetString = (h: string, c: ChainId): string =>
   c === chainToChainId('Algorand')

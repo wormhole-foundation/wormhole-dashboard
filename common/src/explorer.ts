@@ -14,8 +14,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://solana.fm/block/${block}`
       : chainId === chainToChainId('Ethereum')
       ? `https://etherscan.io/block/${block}`
-      : chainId === chainToChainId('Terra')
-      ? `https://finder.terra.money/columbus-5/block/${block}`
       : chainId === chainToChainId('Bsc')
       ? `https://bscscan.com/block/${block}`
       : chainId === chainToChainId('Polygon')
@@ -26,10 +24,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://app.dappflow.org/explorer/block/${block}`
       : chainId === chainToChainId('Fantom')
       ? `https://ftmscan.com/block/${block}`
-      : chainId === chainToChainId('Karura')
-      ? `https://blockscout.karura.network/block/${block}`
-      : chainId === chainToChainId('Acala')
-      ? `https://blockscout.acala.network/block/${block}`
       : chainId === chainToChainId('Klaytn')
       ? `https://scope.klaytn.com/block/${block}`
       : chainId === chainToChainId('Celo')
@@ -83,8 +77,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://explorer.solana.com/${block}?cluster=testnet`
     : chainId === chainToChainId('Ethereum')
     ? `https://sepolia.etherscan.io/block/${block}`
-    : // : chainId === chainToChainId('Terra') <-- not supported on testnet dashboard
-    chainId === chainToChainId('Bsc')
+    : chainId === chainToChainId('Bsc')
     ? `https://testnet.bscscan.com/block/${block}`
     : chainId === chainToChainId('Polygon')
     ? `https://mumbai.polygonscan.com/block/${block}`
@@ -94,9 +87,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://app.dappflow.org/explorer/block/${block}`
     : chainId === chainToChainId('Fantom')
     ? `https://testnet.ftmscan.com/block/${block}`
-    : // : chainId === chainToChainId('Karura') <-- not supported on testnet dashboard
-    chainId === chainToChainId('Acala')
-    ? `https://blockscout.mandala.aca-staging.network/block/${block}`
     : chainId === chainToChainId('Klaytn')
     ? `https://baobab.klaytnscope.com/block/${block}`
     : chainId === chainToChainId('Celo')
@@ -157,8 +147,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://solana.fm/tx/${tx}`
       : chainId === chainToChainId('Ethereum')
       ? `https://etherscan.io/tx/${tx}`
-      : chainId === chainToChainId('Terra')
-      ? `https://finder.terra.money/columbus-5/tx/${tx}`
       : chainId === chainToChainId('Bsc')
       ? `https://bscscan.com/tx/${tx}`
       : chainId === chainToChainId('Polygon')
@@ -169,10 +157,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://app.dappflow.org/explorer/transaction/${tx}`
       : chainId === chainToChainId('Fantom')
       ? `https://ftmscan.com/tx/${tx}`
-      : chainId === chainToChainId('Karura')
-      ? `https://blockscout.karura.network/tx/${tx}`
-      : chainId === chainToChainId('Acala')
-      ? `https://blockscout.acala.network/tx/${tx}`
       : chainId === chainToChainId('Klaytn')
       ? `https://scope.klaytn.com/tx/${tx}`
       : chainId === chainToChainId('Celo')
@@ -237,9 +221,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://app.dappflow.org/explorer/transaction/${tx}`
     : chainId === chainToChainId('Fantom')
     ? `https://testnet.ftmscan.com/tx/${tx}`
-    : // chainId === chainToChainId('Karura') <-- not supported on testnet dashboard
-    chainId === chainToChainId('Acala')
-    ? `https://blockscout.mandala.aca-staging.network/tx/${tx}`
     : chainId === chainToChainId('Klaytn')
     ? `https://baobab.klaytnscope.com/tx/${tx}`
     : chainId === chainToChainId('Celo')

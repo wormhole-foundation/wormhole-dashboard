@@ -28,8 +28,7 @@ export const getNativeAddress = async (
     if (
       chainToPlatform(chainIdToChain(tokenChain)) === 'Evm' ||
       tokenChain === chainToChainId('Solana') ||
-      tokenChain === chainToChainId('Algorand') ||
-      tokenChain === chainToChainId('Terra')
+      tokenChain === chainToChainId('Algorand')
     ) {
       return tryHexToNativeAssetString(tokenAddress, tokenChain);
     } else if (tokenChain === chainToChainId('Terra2')) {

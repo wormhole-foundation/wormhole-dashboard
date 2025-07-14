@@ -68,7 +68,13 @@ const getStatusString = (
     const tokenBridgeEmitters = Object.entries(TOKEN_BRIDGE_EMITTERS);
     for (const [chain, emitter] of tokenBridgeEmitters) {
       log.start();
-      const paddedChainId = padUint16(toChainId(chain).toString());
+      let paddedChainId;
+      try {
+        paddedChainId = padUint16(toChainId(chain).toString());
+      } catch (e) {
+        console.error(`Failed to convert chain ${chain} to ChainId:`, e);
+        continue;
+      }
       let start = `${paddedChainId}/${emitter}/`;
       const end = `${start}z`;
       let numRowsRead = 0;

@@ -10,7 +10,6 @@ const COIN_GECKO_API_SLEEP_MS = 1000;
 export const COINGECKO_PLATFORM_BY_CHAIN: { [key in Chain]?: string } = {
   Solana: 'solana',
   Ethereum: 'ethereum',
-  Terra: 'terra',
   Terra2: 'terra-2',
   Bsc: 'binance-smart-chain',
   Polygon: 'polygon-pos',
@@ -18,8 +17,6 @@ export const COINGECKO_PLATFORM_BY_CHAIN: { [key in Chain]?: string } = {
   Algorand: 'algorand',
   Aptos: 'aptos',
   Fantom: 'fantom',
-  Karura: 'karura',
-  Acala: 'acala',
   Klaytn: 'klay-token',
   Celo: 'celo',
   Near: 'near-protocol',

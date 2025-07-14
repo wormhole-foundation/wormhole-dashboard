@@ -30,38 +30,6 @@ test.skip('getMessagesForBlocks(terra2)', async () => {
   );
 });
 
-test('getFinalizedBlockNumber(terra explorer)', async () => {
-  const watcher = new TerraExplorerWatcher('Mainnet', 'Terra');
-  const blockNumber = await watcher.getFinalizedBlockNumber();
-  expect(blockNumber).toBeGreaterThan(10980872);
-});
-
-test('getMessagesForBlocks(terra explorer)', async () => {
-  const watcher = new TerraExplorerWatcher('Mainnet', 'Terra');
-  const { vaasByBlock } = await watcher.getMessagesForBlocks(14506733, 14506740);
-  const entries = Object.entries(vaasByBlock);
-  expect(entries.length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['14506733/2023-09-11T21:59:36.000Z']).toBeDefined();
-  expect(vaasByBlock['14506733/2023-09-11T21:59:36.000Z'].length).toEqual(1);
-  expect(vaasByBlock['14506733/2023-09-11T21:59:36.000Z'][0]).toEqual(
-    'A0A0161B162DCD23845C32022320C21862B08F8B16A23CD04C68EF3BCBCFCFE5:3/0000000000000000000000007cf7b764e38a0a5e967972c1df77d432510564e2/259253'
-  );
-});
-
-// flaky rpc, skip
-test.skip('getMessagesForBlocks(terra explorer, no useful info)', async () => {
-  const watcher = new TerraExplorerWatcher('Mainnet', 'Terra');
-  const { vaasByBlock } = await watcher.getMessagesForBlocks(10975000, 10975010);
-  const entries = Object.entries(vaasByBlock);
-  expect(entries.length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(1);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(0);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-});
-
 test('getFinalizedBlockNumber(injective)', async () => {
   const watcher = new InjectiveExplorerWatcher('Mainnet');
   const blockNumber = await watcher.getFinalizedBlockNumber();

@@ -1,6 +1,5 @@
 import { AlgorandWatcher } from './AlgorandWatcher';
 import { AptosWatcher } from './AptosWatcher';
-import { CosmwasmWatcher } from './CosmwasmWatcher';
 import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
 import { SolanaWatcher } from './SolanaWatcher';
 import { Watcher } from './Watcher';
@@ -24,7 +23,6 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Avalanche' ||
     chainName === 'Base' ||
     chainName === 'Berachain' ||
-    chainName === 'Blast' ||
     chainName === 'Bsc' ||
     chainName === 'Celo' ||
     chainName === 'Ethereum' ||
@@ -37,7 +35,6 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Polygon' ||
     chainName === 'Scroll' ||
     chainName === 'Seievm' ||
-    chainName === 'Snaxchain' ||
     chainName === 'Unichain' ||
     chainName === 'Worldchain' ||
     chainName === 'Xlayer' ||
@@ -60,8 +57,6 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     return new SeiExplorerWatcher(network);
   } else if (chainName === 'Sui') {
     return new SuiWatcher(network);
-  } else if (chainName === 'Terra2') {
-    return new CosmwasmWatcher(network, chainName);
   } else if (chainName === 'Wormchain') {
     return new WormchainWatcher(network);
   } else if (network === 'Testnet') {

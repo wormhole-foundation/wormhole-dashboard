@@ -32,8 +32,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://nearblocks.io/blocks/${block}`
       : chainId === chainToChainId('Moonbeam')
       ? `https://moonscan.io/block/${block}`
-      : chainId === chainToChainId('Terra2')
-      ? `https://finder.terra.money/phoenix-1/block/${block}`
       : chainId === chainToChainId('Injective')
       ? `https://explorer.injective.network/block/${block}`
       : chainId === chainToChainId('Sui')
@@ -52,16 +50,12 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://scrollscan.com/block/${block}`
       : chainId === chainToChainId('Mantle')
       ? `https://explorer.mantle.xyz/block/${block}`
-      : chainId === chainToChainId('Blast')
-      ? `https://blastscan.io/block/${block}`
       : chainId === chainToChainId('Xlayer')
       ? `https://www.oklink.com/xlayer/block/${block}`
       : chainId === chainToChainId('Linea')
       ? `https://lineascan.build/block/${block}`
       : chainId === chainToChainId('Berachain')
       ? `https://berascan.com/block/${block}`
-      : chainId === chainToChainId('Snaxchain')
-      ? `https://snaxchain.io/${block}`
       : chainId === chainToChainId('Unichain')
       ? `https://unichain.blockscout.com/block/${block}`
       : chainId === chainToChainId('Wormchain')
@@ -94,8 +88,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     : // : chainId === chainToChainId('Near') <-- not supported on testnet dashboard
     chainId === chainToChainId('Moonbeam')
     ? `https://moonbase.moonscan.io/block/${block}`
-    : // : chainId === chainToChainId('Terra2') <-- not supported on testnet dashboard
-    // : chainId === chainToChainId('Injective') <-- not supported on testnet dashboard
+    : // : chainId === chainToChainId('Injective') <-- not supported on testnet dashboard
     chainId === chainToChainId('Sui')
     ? `https://suiexplorer.com/checkpoint/${block}?network=testnet`
     : chainId === chainToChainId('Aptos')
@@ -112,8 +105,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://sepolia.scrollscan.com/block/${block}`
     : chainId === chainToChainId('Mantle')
     ? `https://explorer.sepolia.mantle.xyz/block/${block}`
-    : chainId === chainToChainId('Blast')
-    ? `https://testnet.blastscan.io/block/${block}`
     : chainId === chainToChainId('Xlayer')
     ? `https://www.oklink.com/xlayer-test/block/${block}`
     : chainId === chainToChainId('Linea')
@@ -122,8 +113,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://bepolia.beratrail.io/block/${block}`
     : chainId === chainToChainId('Seievm')
     ? `https://seitrace.com/block/${block}?chain=atlantic-2`
-    : chainId === chainToChainId('Snaxchain')
-    ? `https://explorer-snaxchain-s50q0kjngn.t.conduit.xyz/${block}`
     : chainId === chainToChainId('Unichain')
     ? `https://unichain-sepolia.blockscout.com/block/${block}`
     : chainId === chainToChainId('Worldchain')
@@ -165,8 +154,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://explorer.near.org/transactions/${tx}`
       : chainId === chainToChainId('Moonbeam')
       ? `https://moonscan.io/tx/${tx}`
-      : chainId === chainToChainId('Terra2')
-      ? `https://finder.terra.money/phoenix-1/tx/${tx}`
       : chainId === chainToChainId('Injective')
       ? `https://explorer.injective.network/transaction/${tx}`
       : chainId === chainToChainId('Sui')
@@ -185,16 +172,12 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://scrollscan.com/tx/${tx}`
       : chainId === chainToChainId('Mantle')
       ? `https://explorer.mantle.xyz/tx/${tx}`
-      : chainId === chainToChainId('Blast')
-      ? `https://blastscan.io/tx/${tx}`
       : chainId === chainToChainId('Xlayer')
       ? `https://www.oklink.com/xlayer/tx/${tx}`
       : chainId === chainToChainId('Linea')
       ? `https://lineascan.build/tx/${tx}`
       : chainId === chainToChainId('Berachain')
       ? `https://berascan.com/tx/${tx}`
-      : chainId === chainToChainId('Snaxchain')
-      ? `https://snaxchain.io/tx/${tx}`
       : chainId === chainToChainId('Unichain')
       ? `https://unichain.blockscout.com/tx/${tx}`
       : chainId === chainToChainId('Wormchain')
@@ -228,8 +211,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     : //  chainId === chainToChainId('Near') <-- not supported on testnet dashboard
     chainId === chainToChainId('Moonbeam')
     ? `https://moonbase.moonscan.io/tx/${tx}`
-    : // chainId === chainToChainId('Terra2') <-- not supported on testnet dashboard
-    // chainId === chainToChainId('Injective') <-- not supported on testnet dashboard
+    : // chainId === chainToChainId('Injective') <-- not supported on testnet dashboard
     chainId === chainToChainId('Sui')
     ? `https://suiexplorer.com/txblock/${tx}?network=testnet`
     : chainId === chainToChainId('Aptos')
@@ -246,8 +228,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://sepolia.scrollscan.com/tx/${tx}`
     : chainId === chainToChainId('Mantle')
     ? `https://explorer.sepolia.mantle.xyz/tx/${tx}`
-    : chainId === chainToChainId('Blast')
-    ? `https://testnet.blastscan.io/tx/${tx}`
     : chainId === chainToChainId('Xlayer')
     ? `https://www.oklink.com/xlayer-test/tx/${tx}`
     : chainId === chainToChainId('Linea')
@@ -256,8 +236,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://bepolia.beratrail.io/tx/${tx}`
     : chainId === chainToChainId('Seievm')
     ? `https://seitrace.com/tx/${tx}?chain=atlantic-2`
-    : chainId === chainToChainId('Snaxchain')
-    ? `https://explorer-snaxchain-s50q0kjngn.t.conduit.xyz/tx/${tx}`
     : chainId === chainToChainId('Unichain')
     ? `https://unichain-sepolia.blockscout.com/tx/${tx}`
     : chainId === chainToChainId('Worldchain')

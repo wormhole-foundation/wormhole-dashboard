@@ -30,7 +30,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Klaytn: '90563824',
     Celo: '12947144',
     Moonbeam: '1486591',
-    Terra2: '399813',
     Injective: '20908376',
     Arbitrum: '18128584',
     Optimism: '69401779',
@@ -41,11 +40,9 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Base: '1422314',
     Scroll: '4955534',
     Mantle: '64176265',
-    Blast: '2375628',
     Sei: '238594',
     Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A
     Berachain: '968947', //https://berascan.com/tx/0x5a425c6fee87ccc44ef87c1d9cb9c7d1deda4b8596b67c003726e68a2f06e0a4
-    Snaxchain: '306315',
     Unichain: '8115676', // https://unichain.blockscout.com/tx/0x4d65e33abc388c2d92c71ea01374af935a6615d0e555a7abbdef6c44e04613ba
     Worldchain: '5805110', // https://worldscan.org/tx/0x568eb14596296bda3022527cf0e915bfec073613b27c495e695fb9e08652f6fc
     Ink: '7711131', // Block of contract creation, https://explorer.inkonchain.com/tx/0x2576b03a4c0de8566778cb3149a0dbc1c8f8dfcf5d87c9f5f96038c4b15e3797
@@ -61,7 +58,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Klaytn: '0',
     Celo: '0',
     Moonbeam: '0',
-    Terra2: '0',
     Injective: '0',
     Arbitrum: '0',
     Optimism: '0',
@@ -71,14 +67,12 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Sui: '0',
     Scroll: '0',
     Mantle: '0',
-    Blast: '0',
     Base: '0',
     Sei: '0',
     Wormchain: '4495661',
     PolygonSepolia: '2379275',
     Berachain: '846481',
     Seievm: '142153268', // Block of contract creation
-    Snaxchain: '482557',
     Unichain: '254961', // Block of contract creation
     Worldchain: '4487948', // Block of contract creation
     Monad: '520060', // Block of contract creation
@@ -159,7 +153,6 @@ export function getMissThreshold(date: Date, chainish: number | string | Chain |
 export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Solana: 'ec7372995d5cc8732397fb0ad35c0121e0eaa90d26f828a534cab54391b3a4f5',
   Ethereum: '0000000000000000000000003ee18b2214aff97000d974cf647e7c347e8fa585',
-  Terra2: 'a463ad028fb79679cfc8ce1efba35ac0e77b35080a1abe9bebe83461f176b0a3',
   Bsc: '000000000000000000000000b6f6d86a8f9879a9c87f643768d9efc38c1da6e7',
   Polygon: '0000000000000000000000005a58505a96d1dbf8df91cb21b54419fc36e93fde',
   Avalanche: '0000000000000000000000000e082f06ff657d94310cb8ce8b0d9a04541d8052',
@@ -177,7 +170,6 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Base: '0000000000000000000000008d2de8d2f73f1f4cab472ac9a881c9b123c79627',
   Scroll: '00000000000000000000000024850c6f61C438823F01B7A3BF2B89B72174Fa9d',
   Mantle: '00000000000000000000000024850c6f61C438823F01B7A3BF2B89B72174Fa9d',
-  Blast: '00000000000000000000000024850c6f61C438823F01B7A3BF2B89B72174Fa9d',
   Xlayer: '0000000000000000000000005537857664B0f9eFe38C9f320F75fEf23234D904',
   Sei: '86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e',
   Wormchain: 'aeb534c45c3049d380b9d9b966f9895f53abd4301bfaff407fa09dea8ae7a924',

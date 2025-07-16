@@ -2,7 +2,6 @@ import { tryHexToNativeAssetString, tryHexToNativeStringNear } from './array';
 import { getNetworkInfo, Network } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
-import { LCDClient } from '@terra-money/terra.js';
 import {
   ChainId,
   chainIdToChain,
@@ -16,7 +15,6 @@ import { connect } from 'near-api-js';
 import { AptosTokenBridge } from '@wormhole-foundation/sdk-aptos-tokenbridge';
 import { wormhole } from '@wormhole-foundation/sdk';
 import aptos from '@wormhole-foundation/sdk/aptos';
-import { LCDClient as TerraLCDClient } from '@terra-money/terra.js';
 import { queryExternalIdInjective } from './injective';
 import { getTokenCoinType } from '@wormhole-foundation/sdk-sui-tokenbridge';
 
@@ -31,15 +29,6 @@ export const getNativeAddress = async (
       tokenChain === chainToChainId('Algorand')
     ) {
       return tryHexToNativeAssetString(tokenAddress, tokenChain);
-    } else if (tokenChain === chainToChainId('Terra2')) {
-      const client = new LCDClient({
-        URL: 'https://phoenix-lcd.terra.dev',
-        chainID: 'phoenix-1',
-      });
-      return (
-        (await queryExternalId(client, contracts.tokenBridge('Mainnet', 'Terra2'), tokenAddress)) ||
-        null
-      );
     } else if (tokenChain === chainToChainId('Injective')) {
       const client = new ChainGrpcWasmApi(getNetworkInfo(Network.MainnetK8s).grpc);
       return await queryExternalIdInjective(
@@ -106,27 +95,3 @@ export interface ExternalIdResponse {
     };
   };
 }
-
-// returns the TokenId corresponding to the ExternalTokenId
-// see cosmwasm token_addresses.rs
-export const queryExternalId = async (
-  client: TerraLCDClient,
-  tokenBridgeAddress: string,
-  externalTokenId: string
-) => {
-  try {
-    const response = await client.wasm.contractQuery<ExternalIdResponse>(tokenBridgeAddress, {
-      external_id: {
-        external_id: Buffer.from(externalTokenId, 'hex').toString('base64'),
-      },
-    });
-    return (
-      // response depends on the token type
-      response.token_id.Bank?.denom ||
-      response.token_id.Contract?.NativeCW20?.contract_address ||
-      response.token_id.Contract?.ForeignToken?.foreign_address
-    );
-  } catch {
-    return null;
-  }
-};

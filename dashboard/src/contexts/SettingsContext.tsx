@@ -9,6 +9,7 @@ type Settings = {
   backgroundOpacity?: number;
   theme: Theme;
   showChainName?: boolean;
+  showUnknownChains?: boolean;
   showAllMisses?: boolean;
   showMonitorDetails?: boolean;
 };
@@ -19,6 +20,7 @@ type SettingsContextValue = {
   updateBackgroundUrl(value: string): void;
   updateTheme(value: Theme): void;
   updateShowChainName(value: boolean): void;
+  updateShowUnknownChains(value: boolean): void;
   updateShowAllMisses(value: boolean): void;
   updateShowMonitorDetails(value: boolean): void;
 };
@@ -56,6 +58,7 @@ const SettingsContext = React.createContext<SettingsContextValue>({
   updateBackgroundUrl: (value: string) => {},
   updateTheme: (value: Theme) => {},
   updateShowChainName: (value: boolean) => {},
+  updateShowUnknownChains: (value: boolean) => {},
   updateShowAllMisses: (value: boolean) => {},
   updateShowMonitorDetails: (value: boolean) => {},
 });
@@ -74,6 +77,9 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
   const updateShowChainName = useCallback((value: boolean) => {
     setSettings((settings) => ({ ...settings, showChainName: value }));
   }, []);
+  const updateShowUnknownChains = useCallback((value: boolean) => {
+    setSettings((settings) => ({ ...settings, showUnknownChains: value }));
+  }, []);
   const updateShowAllMisses = useCallback((value: boolean) => {
     setSettings((settings) => ({ ...settings, showAllMisses: value }));
   }, []);
@@ -91,6 +97,7 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateBackgroundUrl,
       updateTheme,
       updateShowChainName,
+      updateShowUnknownChains,
       updateShowAllMisses,
       updateShowMonitorDetails,
     }),
@@ -100,6 +107,7 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateBackgroundUrl,
       updateTheme,
       updateShowChainName,
+      updateShowUnknownChains,
       updateShowAllMisses,
       updateShowMonitorDetails,
     ]

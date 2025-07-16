@@ -1,4 +1,11 @@
-import { ArrowDownward, ArrowUpward, Code, ExpandMore, Launch } from '@mui/icons-material';
+import {
+  ArrowDownward,
+  ArrowUpward,
+  Code,
+  ExpandMore,
+  InfoOutlined,
+  Launch,
+} from '@mui/icons-material';
 import {
   Accordion,
   AccordionDetails,
@@ -16,7 +23,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
+import { ChainId, chainIdToChain, isChainId } from '@wormhole-foundation/sdk-base';
 import {
   MISS_THRESHOLD_LABEL,
   explorerBlock,
@@ -280,9 +287,11 @@ function ReobserveCode({ misses }: { misses: MissesByChain | null }) {
 function Misses({
   governorInfo,
   missesWrapper,
+  showUnknownChains,
 }: {
   governorInfo?: CloudGovernorInfo | null;
   missesWrapper: DataWrapper<MissesByChain>;
+  showUnknownChains?: boolean;
 }) {
   const {
     settings: { showAllMisses },
@@ -291,6 +300,7 @@ function Misses({
   const now = new Date();
   const missesElements = misses
     ? Object.entries(misses)
+        .filter((m) => showUnknownChains || isChainId(Number(m[0])))
         .map(([chain, info]) => {
           const filteredMisses = showAllMisses
             ? info.messages
@@ -372,7 +382,7 @@ function Misses({
 
 function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) {
   const {
-    settings: { showAllMisses },
+    settings: { showAllMisses, showUnknownChains },
   } = useSettingsContext();
   const { lastBlockByChainWrapper, messageCountsWrapper, missesWrapper } = useMonitorInfo();
   const lastBlockByChain = lastBlockByChainWrapper.data;
@@ -381,26 +391,28 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
   const missesByChain = useMemo(() => {
     const now = new Date();
     return misses
-      ? Object.entries(misses).reduce<{ [chainId: number]: number }>((counts, [chain, info]) => {
-          const filteredMisses = showAllMisses
-            ? info.messages
-            : info.messages
-                .filter((message) => message.timestamp < getMissThreshold(now, chain))
-                .filter(
-                  (message) =>
-                    !governorInfo?.enqueuedVAAs.some(
-                      (enqueuedVAA) =>
-                        enqueuedVAA.emitterChain === message.chain &&
-                        enqueuedVAA.emitterAddress === message.emitter &&
-                        enqueuedVAA.sequence === message.seq
-                    )
-                );
-          return filteredMisses.length === 0
-            ? counts
-            : { ...counts, [Number(chain) as ChainId]: filteredMisses.length };
-        }, {})
+      ? Object.entries(misses)
+          .filter((m) => showUnknownChains || isChainId(Number(m[0])))
+          .reduce<{ [chainId: number]: number }>((counts, [chain, info]) => {
+            const filteredMisses = showAllMisses
+              ? info.messages
+              : info.messages
+                  .filter((message) => message.timestamp < getMissThreshold(now, chain))
+                  .filter(
+                    (message) =>
+                      !governorInfo?.enqueuedVAAs.some(
+                        (enqueuedVAA) =>
+                          enqueuedVAA.emitterChain === message.chain &&
+                          enqueuedVAA.emitterAddress === message.emitter &&
+                          enqueuedVAA.sequence === message.seq
+                      )
+                  );
+            return filteredMisses.length === 0
+              ? counts
+              : { ...counts, [Number(chain) as ChainId]: filteredMisses.length };
+          }, {})
       : {};
-  }, [governorInfo?.enqueuedVAAs, misses, showAllMisses]);
+  }, [governorInfo?.enqueuedVAAs, misses, showAllMisses, showUnknownChains]);
   return (
     <CollapsibleSection
       defaultExpanded={false}
@@ -413,6 +425,20 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
           }}
         >
           <Box>Monitor</Box>
+          {showUnknownChains ? null : (
+            <Tooltip
+              title={
+                <Typography variant="body1">
+                  Currently hiding misses for unknown chains. This can be adjusted in the settings.
+                </Typography>
+              }
+              componentsProps={{ tooltip: { sx: { maxWidth: '100%' } } }}
+            >
+              <Box>
+                <InfoOutlined sx={{ fontSize: '.8em', ml: 0.5 }} />
+              </Box>
+            </Tooltip>
+          )}
           <Box flexGrow={1} />
           <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
             {Object.keys(missesByChain)
@@ -448,7 +474,11 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
     >
       <Box mt={2}>
         <Card>
-          <Misses governorInfo={governorInfo} missesWrapper={missesWrapper} />
+          <Misses
+            governorInfo={governorInfo}
+            missesWrapper={missesWrapper}
+            showUnknownChains={showUnknownChains}
+          />
         </Card>
       </Box>
       <Box mt={2}>
@@ -492,45 +522,47 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                 <CircularProgress />
               ) : (
                 lastBlockByChain &&
-                Object.entries(lastBlockByChain).map(([chain, lastBlock]) => (
-                  <CollapsibleSection
-                    key={chain}
-                    defaultExpanded={false}
-                    header={
-                      <div>
-                        <Typography variant="h5" sx={{ mb: 0.5 }}>
-                          {chainIdToChain.get(Number(chain) as ChainId)} ({chain})
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 0.5 }}>
-                          Last Indexed Block - {lastBlock.split('/')[0]}
-                          {' - '}
-                          {new Date(lastBlock.split('/')[1]).toLocaleString()}
-                        </Typography>
-                        {messageCounts?.[Number(chain) as ChainId] ? (
-                          <Typography
-                            component="div"
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Box sx={missingBlockSx} />
-                            &nbsp;={' '}
-                            {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
-                            &nbsp;&nbsp;
-                            <Box sx={doneBlockSx} />
-                            &nbsp;={' '}
-                            {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
-                              (messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas ||
-                                0)}
+                Object.entries(lastBlockByChain).map(([chain, lastBlock]) =>
+                  showUnknownChains || isChainId(Number(chain)) ? (
+                    <CollapsibleSection
+                      key={chain}
+                      defaultExpanded={false}
+                      header={
+                        <div>
+                          <Typography variant="h5" sx={{ mb: 0.5 }}>
+                            {chainIdToChain.get(Number(chain) as ChainId)} ({chain})
                           </Typography>
-                        ) : null}
-                      </div>
-                    }
-                  >
-                    <DetailBlocks chain={chain} />
-                  </CollapsibleSection>
-                ))
+                          <Typography variant="body2" sx={{ mb: 0.5 }}>
+                            Last Indexed Block - {lastBlock.split('/')[0]}
+                            {' - '}
+                            {new Date(lastBlock.split('/')[1]).toLocaleString()}
+                          </Typography>
+                          {messageCounts?.[Number(chain) as ChainId] ? (
+                            <Typography
+                              component="div"
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Box sx={missingBlockSx} />
+                              &nbsp;={' '}
+                              {messageCounts?.[Number(chain) as ChainId]?.numMessagesWithoutVaas}
+                              &nbsp;&nbsp;
+                              <Box sx={doneBlockSx} />
+                              &nbsp;={' '}
+                              {(messageCounts?.[Number(chain) as ChainId]?.numTotalMessages || 0) -
+                                (messageCounts?.[Number(chain) as ChainId]
+                                  ?.numMessagesWithoutVaas || 0)}
+                            </Typography>
+                          ) : null}
+                        </div>
+                      }
+                    >
+                      <DetailBlocks chain={chain} />
+                    </CollapsibleSection>
+                  ) : null
+                )
               )}
             </AccordionDetails>
           </Accordion>

@@ -1,4 +1,4 @@
-import { ExpandMore, Search } from '@mui/icons-material';
+import { ExpandMore, InfoOutlined, Search } from '@mui/icons-material';
 import {
   Accordion,
   AccordionDetails,
@@ -25,15 +25,18 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { isChainId } from '@wormhole-foundation/sdk-base';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   GUARDIAN_SET_4,
   chainIdToName,
 } from '@wormhole-foundation/wormhole-monitor-common';
+import { queryContractSmart } from '@wormhole-foundation/wormhole-monitor-common/src/queryContractSmart';
 import { Buffer } from 'buffer';
 import numeral from 'numeral';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDebounce } from 'use-debounce';
+import { useSettingsContext } from '../contexts/SettingsContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
@@ -41,7 +44,6 @@ import useGetAccountantPendingTransfers, {
 } from '../hooks/useGetAccountantPendingTransfers';
 import { TokenDataByChainAddress, TokenDataEntry } from '../hooks/useTokenData';
 import { CHAIN_ICON_MAP, WORMCHAIN_URL } from '../utils/consts';
-import { queryContractSmart } from '@wormhole-foundation/wormhole-monitor-common/src/queryContractSmart';
 import CollapsibleSection from './CollapsibleSection';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
@@ -399,6 +401,9 @@ function Accountant({
   accountantAddress: string;
   isNTT?: boolean;
 }) {
+  const {
+    settings: { showUnknownChains },
+  } = useSettingsContext();
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback((event: any) => {
     event.stopPropagation();
@@ -416,18 +421,20 @@ function Accountant({
 
   const pendingTransfersForAcct: PendingTransferForAcct[] = useMemo(
     () =>
-      pendingTransferInfo.map((transfer) => ({
-        ...transfer,
-        isEnqueuedInGov:
-          governorInfoIsDefined &&
-          !!governorInfo.enqueuedVAAs.find(
-            (vaa) =>
-              vaa.emitterChain === transfer.key.emitter_chain &&
-              vaa.emitterAddress === transfer.key.emitter_address &&
-              vaa.sequence === transfer.key.sequence.toString()
-          ),
-      })),
-    [pendingTransferInfo, governorInfoIsDefined, governorInfo?.enqueuedVAAs]
+      pendingTransferInfo
+        .filter((pt) => showUnknownChains || isChainId(pt.key.emitter_chain))
+        .map((transfer) => ({
+          ...transfer,
+          isEnqueuedInGov:
+            governorInfoIsDefined &&
+            !!governorInfo.enqueuedVAAs.find(
+              (vaa) =>
+                vaa.emitterChain === transfer.key.emitter_chain &&
+                vaa.emitterAddress === transfer.key.emitter_address &&
+                vaa.sequence === transfer.key.sequence.toString()
+            ),
+        })),
+    [pendingTransferInfo, governorInfoIsDefined, governorInfo?.enqueuedVAAs, showUnknownChains]
   );
 
   const guardianSigningStats: GuardianSigningStat[] = useMemo(() => {
@@ -558,11 +565,13 @@ function Accountant({
   });
   const pendingByChain = useMemo(
     () =>
-      pendingTransferInfo.reduce((obj, cur) => {
-        obj[cur.key.emitter_chain] = (obj[cur.key.emitter_chain] || 0) + 1;
-        return obj;
-      }, {} as { [chainId: number]: number }),
-    [pendingTransferInfo]
+      pendingTransferInfo
+        .filter((pt) => showUnknownChains || isChainId(pt.key.emitter_chain))
+        .reduce((obj, cur) => {
+          obj[cur.key.emitter_chain] = (obj[cur.key.emitter_chain] || 0) + 1;
+          return obj;
+        }, {} as { [chainId: number]: number }),
+    [pendingTransferInfo, showUnknownChains]
   );
   return (
     <>
@@ -577,6 +586,21 @@ function Accountant({
             }}
           >
             <Box>{isNTT ? 'NTT ' : ''}Accountant</Box>
+            {showUnknownChains ? null : (
+              <Tooltip
+                title={
+                  <Typography variant="body1">
+                    Currently hiding pending transfers for unknown chains. This can be adjusted in
+                    the settings.
+                  </Typography>
+                }
+                componentsProps={{ tooltip: { sx: { maxWidth: '100%' } } }}
+              >
+                <Box>
+                  <InfoOutlined sx={{ fontSize: '.8em', ml: 0.5 }} />
+                </Box>
+              </Tooltip>
+            )}
             {isNTT ? null : (
               <Box ml={1}>
                 <IconButton onClick={handleOpen} size="small">

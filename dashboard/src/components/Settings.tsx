@@ -26,6 +26,7 @@ function SettingsContent() {
     updateBackgroundUrl,
     updateTheme,
     updateShowChainName,
+    updateShowUnknownChains,
     updateShowAllMisses,
     updateShowMonitorDetails,
   } = useSettingsContext();
@@ -52,6 +53,12 @@ function SettingsContent() {
       updateShowChainName(event.target.checked);
     },
     [updateShowChainName]
+  );
+  const handleShowUnknownChainsChange = useCallback(
+    (event: any) => {
+      updateShowUnknownChains(event.target.checked);
+    },
+    [updateShowUnknownChains]
   );
   const handleShowAllMisses = useCallback(
     (event: any) => {
@@ -107,6 +114,17 @@ function SettingsContent() {
             <Checkbox checked={!!settings.showChainName} onChange={handleShowChainNameChange} />
           }
           label="Show chain names"
+        />
+      </Box>
+      <Box m={2}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={!!settings.showUnknownChains}
+              onChange={handleShowUnknownChainsChange}
+            />
+          }
+          label="Show unknown chains"
         />
       </Box>
       <Box m={2}>

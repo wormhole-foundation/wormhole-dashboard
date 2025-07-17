@@ -1,10 +1,4 @@
-import {
-  Checkpoint,
-  JsonRpcClient,
-  PaginatedEvents,
-  SuiTransactionBlockResponse,
-} from '@mysten/sui.js';
-import { array } from 'superstruct';
+import { SuiClient } from '@mysten/sui/client';
 import { RPCS_BY_CHAIN } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { Watcher } from './Watcher';
@@ -23,19 +17,17 @@ type PublishMessageEvent = {
 };
 
 export class SuiWatcher extends Watcher {
-  client: JsonRpcClient;
+  client: SuiClient;
   maximumBatchSize: number = 100000; // arbitrarily large as this pages back by events
 
   constructor(network: Network) {
     super(network, 'Sui', 'vaa');
-    this.client = new JsonRpcClient(RPCS_BY_CHAIN[this.network][this.chain]!);
+    this.client = new SuiClient({ url: RPCS_BY_CHAIN[this.network][this.chain]! });
   }
 
   // TODO: this might break using numbers, the whole service needs a refactor to use BigInt
   async getFinalizedBlockNumber(): Promise<number> {
-    return Number(
-      (await this.client.request('sui_getLatestCheckpointSequenceNumber', undefined)).result
-    );
+    return Number(await this.client.getLatestCheckpointSequenceNumber());
   }
 
   // TODO: this might break using numbers, the whole service needs a refactor to use BigInt
@@ -49,15 +41,7 @@ export class SuiWatcher extends Watcher {
     {
       // reserve empty slot for initial block so query is cataloged
       const fromCheckpointTimestamp = new Date(
-        Number(
-          (
-            await this.client.requestWithType(
-              'sui_getCheckpoint',
-              { id: fromCheckpoint.toString() },
-              Checkpoint
-            )
-          ).timestampMs
-        )
+        Number((await this.client.getCheckpoint({ id: fromCheckpoint.toString() })).timestampMs)
       ).toISOString();
       const fromBlockKey = makeBlockKey(fromCheckpoint.toString(), fromCheckpointTimestamp);
       vaasByBlock[fromBlockKey] = [];
@@ -67,41 +51,27 @@ export class SuiWatcher extends Watcher {
     let cursor: any = undefined;
     let hasNextPage = false;
     do {
-      const response = await this.client.requestWithType(
-        'suix_queryEvents',
-        {
-          query: { MoveEventType: SUI_EVENT_HANDLE },
-          cursor,
-          descending_order: true,
-        },
-        PaginatedEvents
-      );
+      const response = await this.client.queryEvents({
+        query: { MoveEventType: SUI_EVENT_HANDLE },
+        cursor,
+        order: 'descending',
+      });
       const digest = response.data.length
         ? response.data[response.data.length - 1].id.txDigest
         : null;
       lastCheckpoint = digest
-        ? Number(
-            (
-              await this.client.requestWithType(
-                'sui_getTransactionBlock',
-                { digest },
-                SuiTransactionBlockResponse
-              )
-            ).checkpoint!
-          )
+        ? Number((await this.client.getTransactionBlock({ digest })).checkpoint!)
         : null;
       cursor = response.nextCursor;
       hasNextPage = response.hasNextPage;
       const digestArrayWithDups = response.data.map((e) => e.id.txDigest);
       const digestArray = Array.from(new Set(digestArrayWithDups));
-      const txBlocks = await this.client.requestWithType(
-        'sui_multiGetTransactionBlocks',
-        { digests: digestArray },
-        array(SuiTransactionBlockResponse)
-      );
+      const txBlocks = await this.client.multiGetTransactionBlocks({
+        digests: digestArray,
+      });
       const checkpointByTxDigest = txBlocks.reduce<Record<string, string | undefined>>(
         (value, { digest, checkpoint }) => {
-          value[digest] = checkpoint;
+          value[digest] = checkpoint || undefined;
           return value;
         },
         {}

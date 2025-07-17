@@ -46,7 +46,7 @@ export class Watcher {
       this.maximumBatchSize = 10;
     }
     // Special cases for watch loop delay
-    if (chain === 'Berachain') {
+    if (chain === 'Berachain' || chain === 'Ink') {
       this.watchLoopDelay = 1000;
     }
   }

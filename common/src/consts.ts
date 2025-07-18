@@ -47,6 +47,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Worldchain: '5805110', // https://worldscan.org/tx/0x568eb14596296bda3022527cf0e915bfec073613b27c495e695fb9e08652f6fc
     Ink: '7711131', // Block of contract creation, https://explorer.inkonchain.com/tx/0x2576b03a4c0de8566778cb3149a0dbc1c8f8dfcf5d87c9f5f96038c4b15e3797
     HyperEVM: '3915634', // Block of contract creation, https://purrsec.com/tx/0xd345fd5094fe1c901b9cd43cf68bcdc9829f4a5596853838800b47552e2e19dc
+    Plume: '9146992', // Block of contract creation, https://explorer.plume.org/tx/0x11251febf0fd6b2b247422fe451cda3fad1da42165d32db44a090a262095278b
   },
   ['Testnet']: {
     Ethereum: '0',
@@ -80,6 +81,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     HyperEVM: '13743181', // Block of contract creation
     Mezo: '3102383', // Block of contract creation
     Converge: '7564', // Block of contract creation
+    Plume: '14026067', // Block of contract creation
   },
   ['Devnet']: {},
 };

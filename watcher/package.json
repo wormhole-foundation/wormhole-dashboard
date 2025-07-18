@@ -34,7 +34,7 @@
     "@coral-xyz/spl-token": "^0.30.0",
     "@google-cloud/bigtable": "^4.1.0",
     "@google-cloud/pubsub": "^3.4.1",
-    "@mysten/sui.js": "^0.33.0",
+    "@mysten/sui": "^1.21.2",
     "@solana/spl-token": "^0.4.6",
     "@solana/web3.js": "^1.73.0",
     "@types/bn.js": "^5.1.0",

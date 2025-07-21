@@ -10,9 +10,6 @@ import { NearArchiveWatcher } from './NearArchiveWatcher';
 import { NTTWatcher } from './NTTWatcher';
 import { NTTSolanaWatcher } from './NTTSolanaWatcher';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
-import { FTEVMWatcher } from './FTEVMWatcher';
-import { FTSolanaWatcher } from './FTSolanaWatcher';
-import { isFTEVMChain } from '../fastTransfer/consts';
 import { VAAWatcher } from './VAAWatcher';
 
 export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Watcher {
@@ -118,18 +115,6 @@ export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Wat
   } else {
     throw new Error(
       `Attempted to create finalized NTT watcher for unsupported network ${network}, ${chainName}`
-    );
-  }
-}
-
-export function makeFinalizedFTWatcher(network: Network, chainName: Chain): Watcher {
-  if (chainName === 'Solana') {
-    return new FTSolanaWatcher(network);
-  } else if (isFTEVMChain(chainName, network)) {
-    return new FTEVMWatcher(network, chainName);
-  } else {
-    throw new Error(
-      `Attempted to create finalized FT watcher for unsupported chain ${chainName} on ${network}`
     );
   }
 }

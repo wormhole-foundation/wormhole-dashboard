@@ -1,9 +1,5 @@
 import { initDb } from '../databases/utils';
-import {
-  makeFinalizedNTTWatcher,
-  makeFinalizedVaaWatcher,
-  makeFinalizedFTWatcher,
-} from '../watchers/utils';
+import { makeFinalizedNTTWatcher, makeFinalizedVaaWatcher } from '../watchers/utils';
 import { workerData } from 'worker_threads';
 
 initDb(false);
@@ -15,8 +11,6 @@ if (mode === 'vaa') {
   makeFinalizedVaaWatcher(network, chain).watch();
 } else if (mode === 'ntt') {
   makeFinalizedNTTWatcher(network, chain).watch();
-} else if (mode === 'ft') {
-  makeFinalizedFTWatcher(network, chain).watch();
 } else {
   throw new Error(`Unknown mode: ${mode}`);
 }

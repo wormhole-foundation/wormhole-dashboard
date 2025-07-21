@@ -2,17 +2,6 @@ name: Test
 on:
   pull_request:
 jobs:
-  verify-checksums:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - run: cd watcher/sdk && docker build --target export -f Dockerfile -o type=local,dest=. .
-
-      - name: Compare checksums
-        run: git diff --name-only --exit-code && echo "✅ Checksums match. All generated files are consistent with committed versions." || (echo "❌ Checksum mismatch! Generated files do not match committed ones." >&2 && exit 1)
-
   test-and-build:
     runs-on: ubuntu-latest
     steps:

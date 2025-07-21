@@ -5,7 +5,6 @@ import { initDb } from './databases/utils';
 import { Mode, getNetwork, getMode } from '@wormhole-foundation/wormhole-monitor-common';
 import { startSupervisor } from './workers/supervisor';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
-import { FTEVMMainnetChains, FTEVMTestnetChains } from './fastTransfer/consts';
 
 initDb();
 
@@ -95,15 +94,10 @@ const supportedNTTChains: Chain[] =
     ? ['Solana', 'Sepolia', 'ArbitrumSepolia', 'BaseSepolia', 'OptimismSepolia']
     : ['Solana', 'Ethereum', 'Fantom', 'Arbitrum', 'Optimism', 'Base'];
 
-const supportedFTChains: Chain[] =
-  network === 'Testnet' ? ['Solana', ...FTEVMTestnetChains] : ['Solana', ...FTEVMMainnetChains];
-
 if (mode === 'vaa') {
   startSupervisor(supportedChains);
 } else if (mode === 'ntt') {
   startSupervisor(supportedNTTChains);
-} else if (mode === 'ft') {
-  startSupervisor(supportedFTChains);
 } else {
   throw new Error(`Unknown mode: ${mode}`);
 }

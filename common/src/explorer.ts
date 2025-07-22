@@ -66,6 +66,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://explorer.inkonchain.com/block/${block}`
       : chainId === chainToChainId('HyperEVM')
       ? `https://www.hyperscan.com/block/${block}`
+      : chainId === chainToChainId('Mezo')
+      ? `https://explorer.mezo.org/block/${block}`
       : chainId === chainToChainId('Plume')
       ? `https://explorer.plume.org/block/${block}`
       : ''
@@ -126,7 +128,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     : chainId === chainToChainId('HyperEVM')
     ? `https://testnet.purrsec.com/block/${block}`
     : chainId === chainToChainId('Mezo')
-    ? `https://rpc.test.mezo.org/block/${block}`
+    ? `https://explorer.test.mezo.org/block/${block}`
     : chainId === chainToChainId('Converge')
     ? `https://explorer-converge-testnet-1.t.conduit.xyz/block/${block}`
     : chainId === chainToChainId('Plume')
@@ -192,6 +194,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://explorer.inkonchain.com/tx/${tx}`
       : chainId === chainToChainId('HyperEVM')
       ? `https://www.hyperscan.com/tx/${tx}`
+      : chainId === chainToChainId('Mezo')
+      ? `https://explorer.mezo.org/tx/${tx}`
       : chainId === chainToChainId('Plume')
       ? `https://explorer.plume.org/tx/${tx}`
       : ''
@@ -253,7 +257,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     : chainId === chainToChainId('HyperEVM')
     ? `https://testnet.purrsec.com/tx/${tx}`
     : chainId === chainToChainId('Mezo')
-    ? `https://rpc.test.mezo.org/tx/${tx}`
+    ? `https://explorer.test.mezo.org/tx/${tx}`
     : chainId === chainToChainId('Converge')
     ? `https://explorer-converge-testnet-1.t.conduit.xyz/tx/${tx}`
     : chainId === chainToChainId('Plume')

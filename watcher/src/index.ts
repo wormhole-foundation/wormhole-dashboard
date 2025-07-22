@@ -86,6 +86,7 @@ const supportedChains: Chain[] =
         'Ink',
         'HyperEVM',
         'Wormchain',
+        'Mezo',
         'Plume',
       ];
 

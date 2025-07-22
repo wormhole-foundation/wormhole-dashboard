@@ -60,6 +60,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-mainnet.g.alchemy.com/public',
     Ink: process.env.INK_RPC || 'https://rpc-qnd.inkonchain.com',
     HyperEVM: process.env.HYPER_EVM_RPC || 'https://rpc.hyperliquid.xyz/evm',
+    Mezo: process.env.MEZO_RPC || 'https://jsonrpc-mezo.boar.network',
     Plume: process.env.PLUME_EVM_RPC || 'https://rpc.plume.org',
   },
   ['Testnet']: {

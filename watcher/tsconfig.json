@@ -6,14 +6,7 @@
     "moduleResolution": "node",
     "outDir": "dist",
     "baseUrl": "./",
-    "paths": {
-      "@wormhole-foundation/example-liquidity-layer-evm": [
-        "../node_modules/@wormhole-foundation/example-liquidity-layer-evm/dist/cjs/src/index"
-      ],
-      "@wormhole-foundation/example-liquidity-layer-solana/*": [
-        "../node_modules/@wormhole-foundation/example-liquidity-layer-solana/dist/cjs/*"
-      ]
-    }
+    "paths": {}
   },
   "include": ["scripts", "src", "src/abi/*.json", "src/idls/*.json"]
 }

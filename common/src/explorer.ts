@@ -70,6 +70,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://explorer.mezo.org/block/${block}`
       : chainId === chainToChainId('Plume')
       ? `https://explorer.plume.org/block/${block}`
+      : chainId === chainToChainId('XRPLEVM')
+      ? `https://explorer.xrplevm.org/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/${block}?cluster=testnet`
@@ -133,6 +135,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://explorer-converge-testnet-1.t.conduit.xyz/block/${block}`
     : chainId === chainToChainId('Plume')
     ? `https://testnet-explorer.plume.org/block/${block}`
+    : chainId === chainToChainId('XRPLEVM')
+    ? `https://explorer.testnet.xrplevm.org/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -198,6 +202,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://explorer.mezo.org/tx/${tx}`
       : chainId === chainToChainId('Plume')
       ? `https://explorer.plume.org/tx/${tx}`
+      : chainId === chainToChainId('XRPLEVM')
+      ? `https://explorer.xrplevm.org/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://solscan.io/txs/${tx}?cluster=testnet`
@@ -262,6 +268,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://explorer-converge-testnet-1.t.conduit.xyz/tx/${tx}`
     : chainId === chainToChainId('Plume')
     ? `https://testnet-explorer.plume.org/tx/${tx}`
+    : chainId === chainToChainId('XRPLEVM')
+    ? `https://explorer.testnet.xrplevm.org/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

@@ -55,6 +55,7 @@ const supportedChains: Chain[] =
         'Mezo',
         'Converge',
         'Plume',
+        'XRPLEVM',
       ]
     : [
         // This is the list of chains supported in MAINNET.
@@ -87,6 +88,7 @@ const supportedChains: Chain[] =
         'Wormchain',
         'Mezo',
         'Plume',
+        'XRPLEVM',
       ];
 
 const supportedNTTChains: Chain[] =

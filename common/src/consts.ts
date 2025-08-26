@@ -49,6 +49,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     HyperEVM: '3915634', // Block of contract creation, https://purrsec.com/tx/0xd345fd5094fe1c901b9cd43cf68bcdc9829f4a5596853838800b47552e2e19dc
     Mezo: '232424', // Block of contract creation,https://explorer.mezo.org/tx/0x7ed15d6a210738bfd3b7606f6309bebb5533b67a9777626376864d893bbe51b5
     Plume: '9146992', // Block of contract creation, https://explorer.plume.org/tx/0x11251febf0fd6b2b247422fe451cda3fad1da42165d32db44a090a262095278b
+    XRPLEVM: '1590372', // Block of contract creation, https://explorer.xrplevm.org/tx/0x0421c24113a47514a8f0c5511322702734b06ada4f43ca0a197a829ef1bfb203
   },
   ['Testnet']: {
     Ethereum: '0',
@@ -83,6 +84,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Mezo: '3102383', // Block of contract creation
     Converge: '7564', // Block of contract creation
     Plume: '14026067', // Block of contract creation
+    XRPLEVM: '2545210', // Block of contract creation, https://explorer.testnet.xrplevm.org/tx/0x9d083173bc92c4e3ba97369bd81734eedf99044ca9577e7ab4edefa177b12492
   },
   ['Devnet']: {},
 };
@@ -176,6 +178,7 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Xlayer: '0000000000000000000000005537857664B0f9eFe38C9f320F75fEf23234D904',
   Sei: '86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e',
   Wormchain: 'aeb534c45c3049d380b9d9b966f9895f53abd4301bfaff407fa09dea8ae7a924',
+  XRPLEVM: '0000000000000000000000007d8eBc211C4221eA18E511E4f0fD50c5A539f275',
 };
 
 export const isTokenBridgeEmitter = (chain: ChainId | Chain, emitter: string) => {

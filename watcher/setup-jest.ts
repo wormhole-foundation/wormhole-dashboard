@@ -16,7 +16,25 @@ jest.mock('axios', () => {
       if (existsSync(mockDataPath)) {
         return { data: JSON.parse(readFileSync(mockDataPath, 'utf8')) };
       }
-      return originalAxios.get(url, config);
+      try {
+        const response = await originalAxios.get(url, config);
+        return { data: response.data, status: response.status, statusText: response.statusText };
+      } catch (error: any) {
+        // Create clean error without circular references
+        const cleanError = new Error(error.message);
+        cleanError.name = 'AxiosError';
+        Object.assign(cleanError, {
+          code: error.code,
+          response: error.response
+            ? {
+                status: error.response.status,
+                statusText: error.response.statusText,
+                data: error.response.data,
+              }
+            : undefined,
+        });
+        throw cleanError;
+      }
     }),
     post: jest.fn(async (url: string, data?: any, config?: any) => {
       const dataHash = Buffer.from(
@@ -30,9 +48,25 @@ jest.mock('axios', () => {
         return { data: JSON.parse(readFileSync(mockDataPath, 'utf8')) };
       }
       // console.log('axios.post', url);
-      const retval = await originalAxios.post(url, data, config);
-      // console.log('post retval', stringify(retval));
-      return retval;
+      try {
+        const response = await originalAxios.post(url, data, config);
+        return { data: response.data, status: response.status, statusText: response.statusText };
+      } catch (error: any) {
+        // Create clean error without circular references
+        const cleanError = new Error(error.message);
+        cleanError.name = 'AxiosError';
+        Object.assign(cleanError, {
+          code: error.code,
+          response: error.response
+            ? {
+                status: error.response.status,
+                statusText: error.response.statusText,
+                data: error.response.data,
+              }
+            : undefined,
+        });
+        throw cleanError;
+      }
     }),
   };
 });

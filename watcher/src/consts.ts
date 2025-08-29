@@ -53,7 +53,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Scroll: process.env.SCROLL_RPC || 'https://scroll-rpc.publicnode.com',
     Mantle: process.env.MANTLE_RPC || 'https://mantle-rpc.publicnode.com',
     Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
-    Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.quickapi.com',
+    Wormchain: process.env.WORMCHAIN_RPC || 'https://gateway.mainnet.xlabs.xyz',
     Xlayer: process.env.XLAYER_RPC || 'https://rpc.ankr.com/xlayer',
     Berachain: process.env.BERACHAIN_RPC || 'https://rpc.berachain.com',
     Unichain: process.env.UNICHAIN_RPC || 'https://mainnet.unichain.org',
@@ -83,7 +83,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Base: process.env.BASE_RPC,
     Scroll: process.env.SCROLL_RPC || 'https://scroll-sepolia-rpc.publicnode.com',
     Sei: process.env.SEI_RPC,
-    Wormchain: process.env.WORMCHAIN_RPC,
+    Wormchain: process.env.WORMCHAIN_RPC || 'https://gateway-01.testnet.xlabs.xyz',
     ArbitrumSepolia:
       process.env.ARBITRUM_SEPOLIA_RPC || 'https://arbitrum-sepolia-rpc.publicnode.com',
     BaseSepolia: process.env.BASE_SEPOLIA_RPC,

@@ -83,7 +83,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Base: process.env.BASE_RPC,
     Scroll: process.env.SCROLL_RPC || 'https://scroll-sepolia-rpc.publicnode.com',
     Sei: process.env.SEI_RPC,
-    Wormchain: process.env.WORMCHAIN_RPC || 'https://gateway-01.testnet.xlabs.xyz',
+    Wormchain: process.env.WORMCHAIN_RPC || 'https://gateway.testnet.xlabs.xyz',
     ArbitrumSepolia:
       process.env.ARBITRUM_SEPOLIA_RPC || 'https://arbitrum-sepolia-rpc.publicnode.com',
     BaseSepolia: process.env.BASE_SEPOLIA_RPC,

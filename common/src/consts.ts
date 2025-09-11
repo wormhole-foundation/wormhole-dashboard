@@ -51,6 +51,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Plume: '9146992', // Block of contract creation, https://explorer.plume.org/tx/0x11251febf0fd6b2b247422fe451cda3fad1da42165d32db44a090a262095278b
     XRPLEVM: '1590372', // Block of contract creation, https://explorer.xrplevm.org/tx/0x0421c24113a47514a8f0c5511322702734b06ada4f43ca0a197a829ef1bfb203
     CreditCoin: '2205137', // Block of contract creation, https://creditcoin.blockscout.com/tx/0x1bee86a5b5299a61c4337a8963b31b8e5bc02b383fb129fe2bd209f61675a805
+    Monad: '24707720', // Block of contract creation
   },
   ['Testnet']: {
     Ethereum: '0',
@@ -87,6 +88,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Plume: '14026067', // Block of contract creation
     XRPLEVM: '2545210', // Block of contract creation, https://explorer.testnet.xrplevm.org/tx/0x9d083173bc92c4e3ba97369bd81734eedf99044ca9577e7ab4edefa177b12492
     CreditCoin: '3372887', // Block of contract creation, https://creditcoin-testnet.blockscout.com/tx/0x8dd5689209dfcfd739a4f0af97301b4556687021fd41a1bf761724b5fd78b420
+    Fogo: '9840330', // Block of contract creation
   },
   ['Devnet']: {},
 };

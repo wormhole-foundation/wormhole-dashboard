@@ -23,10 +23,12 @@ import { deserializePostMessage } from '@wormhole-foundation/sdk-solana-core';
 import { getAllKeys } from '../utils/solana';
 import { UniversalAddress } from '@wormhole-foundation/sdk-definitions';
 import { DeriveType, deserialize, Layout } from 'binary-layout';
+import { SVMChain } from 'src/types/svm';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
 
+// TODO: when an SVM chain is added w/ different shim contracts, this will need to be updated
 const ShimContracts: { [key in Network]: string } = {
   Mainnet: 'EtZMZM22ViKMo4r5y4Anovs3wKQ2owUmDpjygnMMcdEX',
   Testnet: 'EtZMZM22ViKMo4r5y4Anovs3wKQ2owUmDpjygnMMcdEX',
@@ -44,7 +46,7 @@ const shimMessageEventLayout = [
 ] as const satisfies Layout;
 export type ShimMessageEvent = DeriveType<typeof shimMessageEventLayout>;
 
-export class SolanaWatcher extends Watcher {
+export class SVMWatcher extends Watcher {
   readonly rpc: string;
   readonly coreBridgeProgramId: string;
   readonly shimProgramId: string;
@@ -59,8 +61,8 @@ export class SolanaWatcher extends Watcher {
 
   connection: Connection | undefined;
 
-  constructor(network: Network, mode: Mode = 'vaa', rpc?: string) {
-    super(network, 'Solana', mode);
+  constructor(network: Network, chain: SVMChain, mode: Mode = 'vaa', rpc?: string) {
+    super(network, chain, mode);
     // only allow rpc to be set for 'Testnet' and mode 'vaa'
     // This allows the use of the explorer RPC for testnet testing.
     if (rpc && network !== 'Testnet') {
@@ -72,9 +74,10 @@ export class SolanaWatcher extends Watcher {
     if (rpc && network === 'Testnet') {
       this.rpc = rpc;
     } else {
-      this.rpc = RPCS_BY_CHAIN[network].Solana!;
+      this.rpc = RPCS_BY_CHAIN[network][chain]!;
     }
-    this.coreBridgeProgramId = contracts.coreBridge(this.network, 'Solana');
+    // TODO: remove `as any` assertion once fogo mainnet is deployed
+    this.coreBridgeProgramId = contracts.coreBridge(this.network, this.chain as any);
     this.shimProgramId = ShimContracts[this.network];
   }
 
@@ -190,7 +193,7 @@ export class SolanaWatcher extends Watcher {
         }
         if (!res || !res.blockTime) {
           throw new Error(
-            `solana: failed to fetch tx for signature ${
+            `${this.chain}: failed to fetch tx for signature ${
               res?.transaction.signatures[0] || 'unknown'
             }`
           );

@@ -1,7 +1,6 @@
 import { AlgorandWatcher } from './AlgorandWatcher';
 import { AptosWatcher } from './AptosWatcher';
 import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
-import { SolanaWatcher } from './SolanaWatcher';
 import { Watcher } from './Watcher';
 import { SuiWatcher } from './SuiWatcher';
 import { SeiExplorerWatcher } from './SeiExplorerWatcher';
@@ -11,10 +10,11 @@ import { NTTWatcher } from './NTTWatcher';
 import { NTTSolanaWatcher } from './NTTSolanaWatcher';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
 import { VAAWatcher } from './VAAWatcher';
+import { SVMWatcher } from './SVMWatcher';
 
 export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Watcher {
-  if (chainName === 'Solana') {
-    return new SolanaWatcher(network);
+  if (chainName === 'Solana' || chainName === 'Fogo') {
+    return new SVMWatcher(network, chainName);
   } else if (
     chainName === 'Arbitrum' ||
     chainName === 'Avalanche' ||

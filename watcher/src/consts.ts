@@ -63,6 +63,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Mezo: process.env.MEZO_RPC || 'https://jsonrpc-mezo.boar.network',
     Plume: process.env.PLUME_EVM_RPC || 'https://rpc.plume.org',
     XRPLEVM: process.env.XRPL_EVM_RPC || 'https://rpc.xrplevm.org',
+    CreditCoin: process.env.XRPL_EVM_RPC || 'https://mainnet3.creditcoin.network',
   },
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,
@@ -105,6 +106,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Converge: process.env.CONVERGE_RPC || 'https://rpc-converge-testnet-1.t.conduit.xyz',
     Plume: process.env.PLUME_EVM_RPC || 'https://testnet-rpc.plume.org',
     XRPLEVM: process.env.XRPL_EVM_RPC || 'https://rpc.testnet.xrplevm.org',
+    CreditCoin: process.env.XRPL_EVM_RPC || 'https://rpc.cc3-testnet.creditcoin.network',
   },
   ['Devnet']: {},
 };

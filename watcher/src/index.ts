@@ -56,7 +56,7 @@ const supportedChains: Chain[] =
         'Converge',
         'Plume',
         'XRPLEVM',
-        "CreditCoin",
+        'CreditCoin',
       ]
     : [
         // This is the list of chains supported in MAINNET.
@@ -90,7 +90,7 @@ const supportedChains: Chain[] =
         'Mezo',
         'Plume',
         'XRPLEVM',
-        "CreditCoin",
+        'CreditCoin',
       ];
 
 const supportedNTTChains: Chain[] =

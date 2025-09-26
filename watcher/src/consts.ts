@@ -106,7 +106,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Converge: process.env.CONVERGE_RPC || 'https://rpc-converge-testnet-1.t.conduit.xyz',
     Plume: process.env.PLUME_EVM_RPC || 'https://testnet-rpc.plume.org',
     XRPLEVM: process.env.XRPL_EVM_RPC || 'https://rpc.testnet.xrplevm.org',
-    CreditCoin: process.env.CREDIT_COIN_RPC || 'https://rpc.cc3-testnet.creditcoin.network',
+    CreditCoin: process.env.CREDITCOIN_RPC || 'https://rpc.cc3-testnet.creditcoin.network',
   },
   ['Devnet']: {},
 };

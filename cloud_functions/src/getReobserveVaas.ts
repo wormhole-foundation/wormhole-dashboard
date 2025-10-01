@@ -35,6 +35,8 @@ export async function getReobserveVaas(req: any, res: any) {
   const vaaArray = Array.from(reobsMap.values());
   // Need to flatten the array of arrays before returning
   const retVal = vaaArray.flat();
+  console.log('returning', retVal.length, 'VAAs to reobserve');
+  console.log(JSON.stringify(retVal));
   res.status(200).send(JSON.stringify(retVal));
   return;
 }

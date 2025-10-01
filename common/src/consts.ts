@@ -152,7 +152,7 @@ export function getMissThreshold(date: Date, chainish: number | string | Chain |
     // If we can't get the chainId, we'll use the default value.
     missThresholdInMins = MISS_THRESHOLD_IN_MINS_DEFAULT;
   }
-  const missDate = date;
+  const missDate = new Date(date);
   missDate.setMinutes(missDate.getMinutes() - missThresholdInMins);
   return missDate.toISOString();
 }

@@ -42,8 +42,8 @@ import {
   ValidatedTransceiverMessage,
   WormholeTransceiverMessage,
 } from './NTTPayloads';
-import { SolanaWatcher } from './SolanaWatcher';
 import { deserializePostMessage } from '@wormhole-foundation/sdk-solana-core';
+import { SVMWatcher } from './SVMWatcher';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;
@@ -66,7 +66,7 @@ type SolanaMessageData = {
 
 export type ExampleNativeTokenTransfers = OmitGenerics<RawExampleNativeTokenTransfers>;
 
-export class NTTSolanaWatcher extends SolanaWatcher {
+export class NTTSolanaWatcher extends SVMWatcher {
   readonly rpc: string;
   readonly programIds: string[];
   readonly quoterProgramId: string;
@@ -86,7 +86,7 @@ export class NTTSolanaWatcher extends SolanaWatcher {
   pg: Knex;
 
   constructor(network: Network) {
-    super(network, 'ntt');
+    super(network, 'Solana', 'ntt');
     this.rpc = RPCS_BY_CHAIN[this.network].Solana!;
     this.programIds = NTT_MANAGER_CONTRACT_ARRAY[this.network].Solana!;
     this.connection = new Connection(this.rpc, COMMITMENT);

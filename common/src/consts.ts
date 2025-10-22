@@ -52,7 +52,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     XRPLEVM: '1590372', // Block of contract creation, https://explorer.xrplevm.org/tx/0x0421c24113a47514a8f0c5511322702734b06ada4f43ca0a197a829ef1bfb203
     CreditCoin: '2205137', // Block of contract creation, https://creditcoin.blockscout.com/tx/0x1bee86a5b5299a61c4337a8963b31b8e5bc02b383fb129fe2bd209f61675a805
     Monad: '24707720', // Block of contract creation
-    Fogo: "32335413", // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
+    Fogo: '32335413', // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
   },
   ['Testnet']: {
     Ethereum: '0',
@@ -184,7 +184,7 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Sei: '86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e',
   Wormchain: 'aeb534c45c3049d380b9d9b966f9895f53abd4301bfaff407fa09dea8ae7a924',
   XRPLEVM: '0000000000000000000000007d8eBc211C4221eA18E511E4f0fD50c5A539f275',
-  Fogo: "289e998e357c96dbfd8490b853595e0d48639ede2d1aed4a819edcc00165904c",
+  Fogo: '289e998e357c96dbfd8490b853595e0d48639ede2d1aed4a819edcc00165904c',
 };
 
 export const isTokenBridgeEmitter = (chain: ChainId | Chain, emitter: string) => {

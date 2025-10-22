@@ -89,7 +89,7 @@ const supportedChains: Chain[] =
         'HyperEVM',
         'Wormchain',
         'Mezo',
-        // uncomment after mainnet launch 'Fogo',
+        'Fogo',
         'Plume',
         'XRPLEVM',
         'CreditCoin',

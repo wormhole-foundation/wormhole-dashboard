@@ -329,12 +329,13 @@ func main() {
 				networks := make([]*map[string]interface{}, 0, len(hb.Networks))
 				for _, network := range hb.Networks {
 					networks = append(networks, &map[string]interface{}{
-						"id":              network.Id,
-						"height":          strconv.FormatInt(network.Height, 10),
-						"contractAddress": network.ContractAddress,
-						"errorCount":      strconv.FormatUint(network.ErrorCount, 10),
-						"safeHeight":      strconv.FormatInt(network.SafeHeight, 10),
-						"finalizedHeight": strconv.FormatInt(network.FinalizedHeight, 10),
+						"id":                      network.Id,
+						"height":                  strconv.FormatInt(network.Height, 10),
+						"contractAddress":         network.ContractAddress,
+						"errorCount":              strconv.FormatUint(network.ErrorCount, 10),
+						"safeHeight":              strconv.FormatInt(network.SafeHeight, 10),
+						"finalizedHeight":         strconv.FormatInt(network.FinalizedHeight, 10),
+						"lastObservationSignedAt": strconv.FormatInt(network.LastObservationSignedAt, 10),
 					})
 				}
 

@@ -14,7 +14,7 @@
     "@injectivelabs/networks": "^1.0.73",
     "@injectivelabs/sdk-ts": "^1.0.368",
     "@mysten/sui": "^1.21.2",
-    "@wormhole-foundation/sdk": "^3.6.0",
+    "@wormhole-foundation/sdk": "^3.11.0",
     "aptos": "1.5.0",
     "dotenv": "^16.0.3",
     "knex": "^2.4.2",

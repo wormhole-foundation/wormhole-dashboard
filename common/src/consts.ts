@@ -53,6 +53,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     CreditCoin: '2205137', // Block of contract creation, https://creditcoin.blockscout.com/tx/0x1bee86a5b5299a61c4337a8963b31b8e5bc02b383fb129fe2bd209f61675a805
     Monad: '24707720', // Block of contract creation
     Fogo: '32335413', // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
+    // Moca: '' Block of contract creation once deployed
   },
   ['Testnet']: {
     Ethereum: '0',
@@ -90,6 +91,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     XRPLEVM: '2545210', // Block of contract creation, https://explorer.testnet.xrplevm.org/tx/0x9d083173bc92c4e3ba97369bd81734eedf99044ca9577e7ab4edefa177b12492
     CreditCoin: '3372887', // Block of contract creation, https://creditcoin-testnet.blockscout.com/tx/0x8dd5689209dfcfd739a4f0af97301b4556687021fd41a1bf761724b5fd78b420
     Fogo: '9840330', // Block of contract creation
+    Moca: '5329055', // Block of contract creation, https://testnet-scan.mocachain.org/tx/0x7d39257dfad53e2985eb26fb5549207200f23692e13a64b0670538148197a5a7
   },
   ['Devnet']: {},
 };

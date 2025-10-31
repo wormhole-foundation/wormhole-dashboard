@@ -76,6 +76,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://explorer.fogo.io/block/${block}?cluster=mainnet`
       : chainId === chainToChainId('Monad')
       ? `https://mainnet-beta.monvision.io/block/${block}`
+      : chainId === chainToChainId('Moca')
+      ? `https://scan.mocachain.org/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/${block}?cluster=testnet`
@@ -143,6 +145,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://explorer.testnet.xrplevm.org/block/${block}`
     : chainId === chainToChainId('Fogo')
     ? `https://explorer.fogo.io/block/${block}?cluster=testnet`
+    : chainId === chainToChainId('Moca')
+    ? `https://testnet-scan.mocachain.org/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -214,6 +218,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://explorer.fogo.io/tx/${tx}?cluster=mainnet`
       : chainId === chainToChainId('Monad')
       ? `https://mainnet-beta.monvision.io/tx/${tx}`
+      : chainId === chainToChainId('Moca')
+      ? `https://scan.mocachain.org/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://solscan.io/txs/${tx}?cluster=testnet`
@@ -282,6 +288,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://explorer.testnet.xrplevm.org/tx/${tx}`
     : chainId === chainToChainId('Fogo')
     ? `https://explorer.fogo.io/tx/${tx}?cluster=testnet`
+    : chainId === chainToChainId('Moca')
+    ? `https://testnet-scan.mocachain.org/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

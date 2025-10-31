@@ -66,6 +66,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     CreditCoin: process.env.CREDITCOIN_RPC || 'https://mainnet3.creditcoin.network',
     Monad: process.env.MONAD_RPC || 'https://rpc.monad.xyz',
     Fogo: process.env.FOGO_RPC || 'https://mainnet.fogo.io',
+    Moca: process.env.MOCA_RPC || 'https://rpc.mocachain.org/',
   },
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,
@@ -110,6 +111,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     XRPLEVM: process.env.XRPL_EVM_RPC || 'https://rpc.testnet.xrplevm.org',
     CreditCoin: process.env.CREDITCOIN_RPC || 'https://rpc.cc3-testnet.creditcoin.network',
     Fogo: process.env.FOGO_RPC || 'https://testnet.fogo.io',
+    Moca: process.env.MOCA_RPC || 'https://testnet-rpc.mocachain.org/',
   },
   ['Devnet']: {},
 };

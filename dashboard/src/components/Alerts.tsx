@@ -104,7 +104,7 @@ function chainDownAlerts(
       if (chainHeartbeat.network.height !== '0') {
         const height = BigInt(chainHeartbeat.network.height);
         const diff = highest - height;
-        if (diff > getBehindDiffForChain(chainHeartbeat.network.id)) {
+        if (diff > BigInt(getBehindDiffForChain(chainHeartbeat.network.id))) {
           if (!downChains[chainId]) {
             downChains[chainId] = [];
           }

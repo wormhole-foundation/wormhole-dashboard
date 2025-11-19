@@ -95,7 +95,7 @@ function ChainDetails({
 
 export const isHeartbeatUnhealthy = (heartbeat: HeartbeatInfo, highest: bigint) =>
   heartbeat.network.height === '0' ||
-  highest - BigInt(heartbeat.network.height) > getBehindDiffForChain(heartbeat.network.id);
+  highest - BigInt(heartbeat.network.height) > BigInt(getBehindDiffForChain(heartbeat.network.id));
 
 function Chain({
   chainId,

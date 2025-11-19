@@ -5,6 +5,7 @@ import useCloudGovernorInfo from '../hooks/useCloudGovernorInfo';
 import { Heartbeat } from '../utils/getLastHeartbeats';
 import Accountant from './Accountant';
 import Chains from './Chains';
+import DailyMessageSigning from './DailyMessageSigning';
 import Governor from './Governor';
 import Guardians from './Guardians';
 import MainnetGovernor from './MainnetGovernor';
@@ -37,6 +38,8 @@ function Home({
         chainIdsToHeartbeats={chainIdsToHeartbeats}
         latestRelease={latestRelease}
       />
+      <Divider />
+      <DailyMessageSigning />
       <Divider />
       {currentNetwork.name === 'Mainnet' ? (
         <>

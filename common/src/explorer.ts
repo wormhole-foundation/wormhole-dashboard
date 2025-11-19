@@ -303,7 +303,7 @@ export const getExplorerTxHash = (_: Network, chain: ChainId, txHash: string) =>
   const platform = chainToPlatform(chainIdToChain(chain));
   if (platform === 'Cosmwasm') {
     explorerTxHash = txHash.slice(2);
-  } else if (platform === 'Sui' || platform === 'Solana') {
+  } else if (platform === 'Sui' || platform === 'Solana' || platform === 'Near') {
     const txHashBytes = Buffer.from(txHash.slice(2), 'hex');
     explorerTxHash = base58.encode(txHashBytes);
   } else {

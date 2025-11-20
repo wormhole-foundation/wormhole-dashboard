@@ -39,8 +39,12 @@ function Home({
         latestRelease={latestRelease}
       />
       <Divider />
-      <DailyMessageSigning />
-      <Divider />
+      {currentNetwork.name === 'Mainnet' && (
+        <>
+          <DailyMessageSigning />
+          <Divider />
+        </>
+      )}
       {currentNetwork.name === 'Mainnet' ? (
         <>
           <MainnetGovernor governorInfo={governorInfo} />

@@ -187,8 +187,11 @@ function DailyMessageSigning() {
 
   const networkData = useMemo(() => {
     if (!statusWrapper.data) return [];
-    // Always show Mainnet data
-    return statusWrapper.data.Mainnet;
+    // Always show Mainnet data, but filter out chains we're not testing
+    const excludedChains = ['Solana', 'Bsc', 'Base', 'Arbitrum', 'Ethereum'];
+    return statusWrapper.data.Mainnet.filter(
+      (tx) => !excludedChains.includes(tx.chain)
+    );
   }, [statusWrapper.data]);
 
   const { successCount, skippedCount, failureCount } = useMemo(() => {
@@ -200,6 +203,7 @@ function DailyMessageSigning() {
 
   return (
     <CollapsibleSection
+      defaultExpanded={false}
       header={
         <Box
           sx={{
@@ -227,7 +231,7 @@ function DailyMessageSigning() {
                     <ListItemIcon>
                       <RemoveCircleOutline color="warning" />
                     </ListItemIcon>
-                    <ListItemText primary="Skipped transactions (e.g., to reduce costs)" />
+                    <ListItemText primary="Skipped transactions (need more gas)" />
                   </ListItem>
                   <ListItem>
                     <ListItemIcon>

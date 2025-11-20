@@ -189,9 +189,7 @@ function DailyMessageSigning() {
     if (!statusWrapper.data) return [];
     // Always show Mainnet data, but filter out chains we're not testing
     const excludedChains = ['Solana', 'Bsc', 'Base', 'Arbitrum', 'Ethereum'];
-    return statusWrapper.data.Mainnet.filter(
-      (tx) => !excludedChains.includes(tx.chain)
-    );
+    return statusWrapper.data.Mainnet.filter((tx) => !excludedChains.includes(tx.chain));
   }, [statusWrapper.data]);
 
   const { successCount, skippedCount, failureCount } = useMemo(() => {

@@ -1,4 +1,9 @@
-import { GitHub, MonitorHeartOutlined, ReceiptLongOutlined, SyncAltOutlined } from '@mui/icons-material';
+import {
+  GitHub,
+  MonitorHeartOutlined,
+  ReceiptLongOutlined,
+  SyncAltOutlined,
+} from '@mui/icons-material';
 import { AppBar, Box, Button, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
 import { contracts } from '@wormhole-foundation/sdk-base';
 import { NavLink, Route, Switch, useLocation } from 'react-router-dom';

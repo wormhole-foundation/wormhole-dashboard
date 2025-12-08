@@ -1,8 +1,8 @@
-import { GitHub, ReceiptLongOutlined, SyncAltOutlined } from '@mui/icons-material';
+import { GitHub, MonitorHeartOutlined, ReceiptLongOutlined, SyncAltOutlined } from '@mui/icons-material';
 import { AppBar, Box, Button, Hidden, IconButton, Toolbar, Typography } from '@mui/material';
 import { contracts } from '@wormhole-foundation/sdk-base';
 import { NavLink, Route, Switch, useLocation } from 'react-router-dom';
-import { useCurrentEnvironment } from '../contexts/NetworkContext';
+import { useCurrentEnvironment, useNetworkContext } from '../contexts/NetworkContext';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';
 import useGetGuardianSet from '../hooks/useGetGuardianSet';
 import useHeartbeats from '../hooks/useHeartbeats';
@@ -11,6 +11,7 @@ import WormholeStatsIcon from '../icons/WormholeStatsIcon';
 import Alerts from './Alerts';
 import Contracts from './Contracts';
 import Home from './Home';
+import LiveVaaStatus from './LiveVaaStatus';
 import NTTMetrics from './NTTMetrics';
 import NetworkSelector from './NetworkSelector';
 import Settings from './Settings';
@@ -23,6 +24,8 @@ function NavButton(props: any) {
 
 function NavLinks() {
   const { search } = useLocation();
+  const { currentNetwork } = useNetworkContext();
+  const isMainnet = currentNetwork.env === 'Mainnet';
   return (
     <>
       <NavLink
@@ -84,6 +87,29 @@ function NavLinks() {
           <Typography variant="h6">NTT</Typography>
         </Hidden>
       </NavLink>
+      {isMainnet && (
+        <NavLink
+          to={`/live-vaa-status${search}`}
+          exact
+          component={NavButton}
+          color="inherit"
+          activeStyle={{ borderBottom: '2px solid', paddingBottom: 4 }}
+          style={{
+            paddingRight: 8,
+            marginLeft: 8,
+            textTransform: 'none',
+            borderRadius: 0,
+            minWidth: 0,
+          }}
+        >
+          <Hidden mdUp>
+            <MonitorHeartOutlined />
+          </Hidden>
+          <Hidden mdDown>
+            <Typography variant="h6">Live Signing</Typography>
+          </Hidden>
+        </NavLink>
+      )}
     </>
   );
 }
@@ -129,6 +155,9 @@ function Main() {
         </Route>
         <Route path="/contracts">
           <Contracts />
+        </Route>
+        <Route path="/live-vaa-status">
+          <LiveVaaStatus />
         </Route>
         <Route path="/">
           <Home

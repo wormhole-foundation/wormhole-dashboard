@@ -165,7 +165,11 @@ function StatusIcon({ status }: { status: HealthStatus }) {
   }
 }
 
-function HealthSummary({ counts }: { counts: { healthy: number; warning: number; error: number } }) {
+function HealthSummary({
+  counts,
+}: {
+  counts: { healthy: number; warning: number; error: number };
+}) {
   return (
     <>
       {counts.healthy > 0 && (
@@ -196,13 +200,7 @@ function HealthSummary({ counts }: { counts: { healthy: number; warning: number;
   );
 }
 
-function LoadingErrorState({
-  isLoading,
-  error,
-}: {
-  isLoading: boolean;
-  error: string | null;
-}) {
+function LoadingErrorState({ isLoading, error }: { isLoading: boolean; error: string | null }) {
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" p={2}>
@@ -246,7 +244,17 @@ function GuardianRow({ guardian, vaaCount }: { guardian: GuardianStat; vaaCount:
           {guardian.observationCount}/{vaaCount} ({guardian.percentage}%)
         </Typography>
       </Box>
-      <Box sx={{ minWidth: 150, textAlign: 'right', ml: 2, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5 }}>
+      <Box
+        sx={{
+          minWidth: 150,
+          textAlign: 'right',
+          ml: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: 0.5,
+        }}
+      >
         <Tooltip title={new Date(guardian.lastSignedAt).toISOString()}>
           <Typography variant="caption" color="text.secondary">
             {new Date(guardian.lastSignedAt).toLocaleString(undefined, {
@@ -317,7 +325,9 @@ function SortableHeader<T extends string>({
 // Helper to format date for datetime-local input
 function formatDateTimeLocal(date: Date): string {
   const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
 }
 
 // Helper to get default time range (last 24 hours)
@@ -392,7 +402,17 @@ function ChainRow({ stat }: { stat: ChainGuardianStat }) {
           {stat.observationCount}/{stat.vaaCount} ({stat.percentage}%)
         </Typography>
       </Box>
-      <Box sx={{ minWidth: 150, textAlign: 'right', ml: 2, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 0.5 }}>
+      <Box
+        sx={{
+          minWidth: 150,
+          textAlign: 'right',
+          ml: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          gap: 0.5,
+        }}
+      >
         <Tooltip title={new Date(stat.lastSignedAt).toISOString()}>
           <Typography variant="caption" color="text.secondary">
             {new Date(stat.lastSignedAt).toLocaleString(undefined, {
@@ -622,7 +642,8 @@ function LiveVaaStatus() {
             title={
               <Typography variant="body2">
                 Shows guardian signing performance for the last 100 VAAs on the selected chain.
-                Guardians with &gt;=76% are healthy, 51-75% are warning, and &lt;=50% indicate issues.
+                Guardians with &gt;=76% are healthy, 51-75% are warning, and &lt;=50% indicate
+                issues.
               </Typography>
             }
           >
@@ -631,9 +652,7 @@ function LiveVaaStatus() {
             </Box>
           </Tooltip>
           <Box flexGrow={1} />
-          {viewMode === 'byChain' && statsWrapper.data && (
-            <HealthSummary counts={healthCounts} />
-          )}
+          {viewMode === 'byChain' && statsWrapper.data && <HealthSummary counts={healthCounts} />}
           {viewMode === 'byGuardian' && guardianChainStats.data && (
             <HealthSummary counts={guardianHealthCounts} />
           )}
@@ -749,12 +768,7 @@ function LiveVaaStatus() {
             {statsWrapper.data && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 {chainIcon && (
-                  <img
-                    src={chainIcon}
-                    alt={statsWrapper.data.chainName}
-                    width={24}
-                    height={24}
-                  />
+                  <img src={chainIcon} alt={statsWrapper.data.chainName} width={24} height={24} />
                 )}
                 <Typography variant="body1" fontWeight="medium">
                   {statsWrapper.data.chainName}
@@ -768,10 +782,7 @@ function LiveVaaStatus() {
               </Box>
             )}
 
-            <LoadingErrorState
-              isLoading={statsWrapper.isFetching}
-              error={statsWrapper.error}
-            />
+            <LoadingErrorState isLoading={statsWrapper.isFetching} error={statsWrapper.error} />
 
             {!statsWrapper.isFetching && !statsWrapper.error && !statsWrapper.data && (
               <Typography color="text.secondary" p={2}>
@@ -836,43 +847,50 @@ function LiveVaaStatus() {
               error={guardianChainStats.error}
             />
 
-            {!guardianChainStats.isFetching && !guardianChainStats.error && sortedChainStats.length === 0 && (
-              <Typography color="text.secondary" p={2}>
-                No guardian stats available.
-              </Typography>
-            )}
+            {!guardianChainStats.isFetching &&
+              !guardianChainStats.error &&
+              sortedChainStats.length === 0 && (
+                <Typography color="text.secondary" p={2}>
+                  No guardian stats available.
+                </Typography>
+              )}
 
-            {!guardianChainStats.isFetching && !guardianChainStats.error && sortedChainStats.length > 0 && (
-              <Box sx={TABLE_CONTAINER_SX}>
-                <Box sx={TABLE_HEADER_SX}>
-                  <SortableHeader
-                    label="Chain"
-                    field="chainName"
-                    currentField={chainSortField}
-                    direction={chainSortDirection}
-                    onSort={handleChainSort}
-                    sx={{ minWidth: 180 }}
-                  />
-                  <SortableHeader
-                    label="Signing Rate"
-                    field="percentage"
-                    currentField={chainSortField}
-                    direction={chainSortDirection}
-                    onSort={handleChainSort}
-                    sx={{ flex: 1, mx: 2 }}
-                  />
-                  <Typography variant="subtitle2" sx={{ minWidth: 120, textAlign: 'right' }}>
-                    Observations
-                  </Typography>
-                  <Typography variant="subtitle2" sx={{ minWidth: 150, textAlign: 'right', ml: 2 }}>
-                    Last Signed
-                  </Typography>
+            {!guardianChainStats.isFetching &&
+              !guardianChainStats.error &&
+              sortedChainStats.length > 0 && (
+                <Box sx={TABLE_CONTAINER_SX}>
+                  <Box sx={TABLE_HEADER_SX}>
+                    <SortableHeader
+                      label="Chain"
+                      field="chainName"
+                      currentField={chainSortField}
+                      direction={chainSortDirection}
+                      onSort={handleChainSort}
+                      sx={{ minWidth: 180 }}
+                    />
+                    <SortableHeader
+                      label="Signing Rate"
+                      field="percentage"
+                      currentField={chainSortField}
+                      direction={chainSortDirection}
+                      onSort={handleChainSort}
+                      sx={{ flex: 1, mx: 2 }}
+                    />
+                    <Typography variant="subtitle2" sx={{ minWidth: 120, textAlign: 'right' }}>
+                      Observations
+                    </Typography>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ minWidth: 150, textAlign: 'right', ml: 2 }}
+                    >
+                      Last Signed
+                    </Typography>
+                  </Box>
+                  {sortedChainStats.map((stat) => (
+                    <ChainRow key={stat.chainId} stat={stat} />
+                  ))}
                 </Box>
-                {sortedChainStats.map((stat) => (
-                  <ChainRow key={stat.chainId} stat={stat} />
-                ))}
-              </Box>
-            )}
+              )}
           </>
         )}
       </Box>

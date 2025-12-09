@@ -54,6 +54,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Monad: '24707720', // Block of contract creation
     Fogo: '32335413', // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
     // Moca: '' Block of contract creation once deployed
+    MegaETH: '1390753', // Block of contract creation https://megaeth-testnet-v3.blockscout.com/tx/0xf6bab2f9b4044d44c5ceb0d0d80ef7352166b0be39954baed61ca950c73ebb99
   },
   ['Testnet']: {
     Ethereum: '0',
@@ -92,6 +93,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     CreditCoin: '3372887', // Block of contract creation, https://creditcoin-testnet.blockscout.com/tx/0x8dd5689209dfcfd739a4f0af97301b4556687021fd41a1bf761724b5fd78b420
     Fogo: '9840330', // Block of contract creation
     Moca: '5329055', // Block of contract creation, https://testnet-scan.mocachain.org/tx/0x7d39257dfad53e2985eb26fb5549207200f23692e13a64b0670538148197a5a7
+    MegaETH: '4290012', // Block of contract creation https://megaeth-testnet-v2.blockscout.com/tx/0x4c0ac471338ea109b8b3cb66967984766aa83edbeb843b63b2e24ded1dce52b9
   },
   ['Devnet']: {},
 };

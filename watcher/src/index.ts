@@ -59,6 +59,7 @@ const supportedChains: Chain[] =
         'XRPLEVM',
         'CreditCoin',
         'Moca',
+        'MegaETH',
       ]
     : [
         // This is the list of chains supported in MAINNET.
@@ -95,6 +96,7 @@ const supportedChains: Chain[] =
         'XRPLEVM',
         'CreditCoin',
         // "Moca",
+        'MegaETH',
       ];
 
 const supportedNTTChains: Chain[] =

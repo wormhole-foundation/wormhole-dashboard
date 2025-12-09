@@ -41,7 +41,8 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Plume' ||
     chainName === 'XRPLEVM' ||
     chainName === 'CreditCoin' ||
-    chainName === 'Moca'
+    chainName === 'Moca' ||
+    chainName === 'MegaETH'
   ) {
     return new VAAWatcher(network, chainName);
   } else if (chainName === 'Fantom' || chainName === 'Klaytn') {

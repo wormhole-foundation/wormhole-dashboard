@@ -3,8 +3,13 @@ import {
   ArrowUpward,
   CheckCircleOutline,
   ErrorOutline,
+  ExpandLess,
+  ExpandMore,
   InfoOutlined,
   Launch,
+  Refresh,
+  UnfoldLess,
+  UnfoldMore,
   WarningAmberOutlined,
 } from '@mui/icons-material';
 import {
@@ -18,8 +23,6 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
-  Switch,
-  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
@@ -28,8 +31,8 @@ import {
 import { chainIdToChain, ChainId } from '@wormhole-foundation/sdk-base';
 import { chainToIcon } from '@wormhole-foundation/sdk-icons';
 import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
-import { Redirect, useLocation } from 'react-router-dom';
+import { memo, useEffect, useMemo, useState } from 'react';
+import { Redirect, useLocation, useHistory } from 'react-router-dom';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
 import CollapsibleSection from './CollapsibleSection';
@@ -37,12 +40,18 @@ import CollapsibleSection from './CollapsibleSection';
 // Constants
 const API_BASE_URL = 'https://api.corinth.gfx.town/api/v1/msc/guardian-stats';
 const HEALTH_THRESHOLDS = { healthy: 76, warning: 51 } as const;
+const PROBLEM_GUARDIAN_CHAIN_THRESHOLD = 3; // Guardian is "problematic" if underperforming on this many chains
 
 // Types
 type SortField = 'guardianName' | 'percentage' | 'lastSignedAt';
 type ChainSortField = 'chainName' | 'percentage';
 type SortDirection = 'asc' | 'desc';
 type HealthStatus = 'healthy' | 'warning' | 'error';
+type TimeFrame = 'recent' | 'daily';
+
+function getApiUrl(chainId: number, timeFrame: TimeFrame): string {
+  return `${API_BASE_URL}/${timeFrame}/${chainId}`;
+}
 
 // Helper functions
 function getHealthStatus(percentage: number): HealthStatus {
@@ -53,6 +62,12 @@ function getHealthStatus(percentage: number): HealthStatus {
 
 function getHealthColor(status: HealthStatus): 'success' | 'warning' | 'error' {
   return status === 'healthy' ? 'success' : status;
+}
+
+// Priority for sorting: error first (0), then warning (1), then healthy (2)
+function getHealthPriority(percentage: number): number {
+  const status = getHealthStatus(percentage);
+  return status === 'error' ? 0 : status === 'warning' ? 1 : 2;
 }
 
 function countByHealth<T>(items: T[], getPercentage: (item: T) => number) {
@@ -322,24 +337,6 @@ function SortableHeader<T extends string>({
   );
 }
 
-// Helper to format date for datetime-local input
-function formatDateTimeLocal(date: Date): string {
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
-    date.getHours()
-  )}:${pad(date.getMinutes())}`;
-}
-
-// Helper to get default time range (last 24 hours)
-function getDefaultTimeRange() {
-  const endTime = new Date();
-  const startTime = new Date(endTime.getTime() - 24 * 60 * 60 * 1000);
-  return {
-    startTime: formatDateTimeLocal(startTime),
-    endTime: formatDateTimeLocal(endTime),
-  };
-}
-
 // Known guardian names (sorted alphabetically)
 const GUARDIAN_NAMES = [
   '01node',
@@ -363,7 +360,7 @@ const GUARDIAN_NAMES = [
   'xLabs',
 ];
 
-type ViewMode = 'byChain' | 'byGuardian';
+type ViewMode = 'aggregate' | 'byChain' | 'byGuardian';
 
 interface ChainGuardianStat {
   chainId: number;
@@ -441,12 +438,236 @@ function ChainRow({ stat }: { stat: ChainGuardianStat }) {
   );
 }
 
+// Aggregate view types and components
+interface AggregateChainData {
+  chainId: number;
+  chainName: string;
+  vaaCount: number;
+  guardianStats: GuardianStat[];
+}
+
+function GuardianPill({
+  guardian,
+  vaaCount,
+  onClick,
+}: {
+  guardian: GuardianStat;
+  vaaCount: number;
+  onClick?: (guardianName: string) => void;
+}) {
+  const status = getHealthStatus(guardian.percentage);
+  const bgColor =
+    status === 'healthy'
+      ? 'success.main'
+      : status === 'warning'
+        ? 'warning.main'
+        : 'error.main';
+
+  return (
+    <Tooltip
+      title={
+        <Box>
+          <Typography variant="body2">
+            {guardian.observationCount}/{vaaCount} observations
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Last signed: {new Date(guardian.lastSignedAt).toLocaleString()}
+          </Typography>
+          {onClick && (
+            <Typography variant="caption" display="block" sx={{ mt: 0.5, fontStyle: 'italic' }}>
+              Click to view guardian details
+            </Typography>
+          )}
+        </Box>
+      }
+    >
+      <Box
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        onClick={() => onClick?.(guardian.guardianName)}
+        onKeyDown={(e) => {
+          if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onClick(guardian.guardianName);
+          }
+        }}
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1.5,
+          px: 1.5,
+          py: 0.75,
+          borderRadius: 1,
+          bgcolor: bgColor,
+          color: 'common.black',
+          fontSize: '0.85rem',
+          fontWeight: 600,
+          mr: 0.5,
+          mb: 0.5,
+          cursor: onClick ? 'pointer' : 'default',
+          minWidth: 140,
+          transition: 'transform 0.1s, box-shadow 0.1s',
+          '&:hover': onClick
+            ? {
+                transform: 'translateY(-1px)',
+                boxShadow: 2,
+              }
+            : {},
+        }}
+      >
+        <span>{guardian.guardianName}</span>
+        <Box component="span" sx={{ fontWeight: 700 }}>{guardian.percentage}%</Box>
+      </Box>
+    </Tooltip>
+  );
+}
+
+const AggregateRow = memo(function AggregateRow({
+  data,
+  isExpanded,
+  onToggle,
+  onChainClick,
+  onGuardianClick,
+}: {
+  data: AggregateChainData;
+  isExpanded: boolean;
+  onToggle: (chainId: number) => void;
+  onChainClick?: (chainId: number) => void;
+  onGuardianClick?: (guardianName: string) => void;
+}) {
+  const chainIcon = getChainIcon(data.chainId);
+
+  // Memoize expensive calculations
+  const sortedGuardians = useMemo(() => {
+    return [...data.guardianStats].sort((a, b) => {
+      const priorityDiff = getHealthPriority(a.percentage) - getHealthPriority(b.percentage);
+      if (priorityDiff !== 0) return priorityDiff;
+      return a.percentage - b.percentage;
+    });
+  }, [data.guardianStats]);
+
+  const { avgPercentage, avgStatus, avgColor, healthCounts } = useMemo(() => {
+    const avg =
+      data.guardianStats.length > 0
+        ? Math.round(
+            data.guardianStats.reduce((sum, g) => sum + g.percentage, 0) / data.guardianStats.length
+          )
+        : 0;
+    return {
+      avgPercentage: avg,
+      avgStatus: getHealthStatus(avg),
+      avgColor: getHealthColor(getHealthStatus(avg)),
+      healthCounts: countByHealth(data.guardianStats, (g) => g.percentage),
+    };
+  }, [data.guardianStats]);
+
+  return (
+    <Box sx={{ ...ROW_SX, flexDirection: 'column', alignItems: 'stretch' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          mb: isExpanded ? 1 : 0,
+        }}
+      >
+        <IconButton size="small" onClick={() => onToggle(data.chainId)} sx={{ p: 0.25 }}>
+          {isExpanded ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+        </IconButton>
+        <Tooltip title={onChainClick ? 'Click to view chain details' : ''}>
+          <Box
+            role={onChainClick ? 'button' : undefined}
+            tabIndex={onChainClick ? 0 : undefined}
+            onClick={() => onChainClick?.(data.chainId)}
+            onKeyDown={(e) => {
+              if (onChainClick && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                onChainClick(data.chainId);
+              }
+            }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              cursor: onChainClick ? 'pointer' : 'default',
+              borderRadius: 1,
+              px: 1,
+              py: 0.5,
+              transition: 'background-color 0.1s',
+              '&:hover': onChainClick ? { bgcolor: 'action.hover' } : {},
+            }}
+          >
+            {chainIcon && <img src={chainIcon} alt={data.chainName} width={20} height={20} />}
+            <Typography variant="body2" fontWeight="medium" sx={{ minWidth: 120 }}>
+              {data.chainName}
+            </Typography>
+            <Typography variant="body2" color={`${avgColor}.main`} fontWeight="bold">
+              {avgPercentage}% avg
+            </Typography>
+          </Box>
+        </Tooltip>
+        {/* Show compact health summary when collapsed */}
+        {!isExpanded && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto' }}>
+            {healthCounts.error > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                <ErrorOutline color="error" sx={{ fontSize: 16 }} />
+                <Typography variant="caption" color="error.main">
+                  {healthCounts.error}
+                </Typography>
+              </Box>
+            )}
+            {healthCounts.warning > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                <WarningAmberOutlined color="warning" sx={{ fontSize: 16 }} />
+                <Typography variant="caption" color="warning.main">
+                  {healthCounts.warning}
+                </Typography>
+              </Box>
+            )}
+            {healthCounts.healthy > 0 && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                <CheckCircleOutline color="success" sx={{ fontSize: 16 }} />
+                <Typography variant="caption" color="success.main">
+                  {healthCounts.healthy}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        )}
+      </Box>
+      {isExpanded && (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+          {sortedGuardians.map((guardian) => (
+            <GuardianPill
+              key={guardian.guardianAddress}
+              guardian={guardian}
+              vaaCount={data.vaaCount}
+              onClick={onGuardianClick}
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+});
+
 function LiveVaaStatus() {
   const { currentNetwork } = useNetworkContext();
-  const { search } = useLocation();
+  const { search, pathname } = useLocation();
+  const history = useHistory();
   const isMainnet = currentNetwork.env === 'Mainnet';
 
-  const [viewMode, setViewMode] = useState<ViewMode>('byChain');
+  // Parse initial view mode from URL query params
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const params = new URLSearchParams(search);
+    const view = params.get('view');
+    if (view && ['aggregate', 'byChain', 'byGuardian'].includes(view)) {
+      return view as ViewMode;
+    }
+    return 'aggregate';
+  });
   const [selectedChainId, setSelectedChainId] = useState<ChainId>(2); // Default to Ethereum
   const [selectedGuardian, setSelectedGuardian] = useState(GUARDIAN_NAMES[0]);
   const [statsWrapper, setStatsWrapper] = useState<DataWrapper<GuardianStatsResponse>>(
@@ -455,14 +676,29 @@ function LiveVaaStatus() {
   const [guardianChainStats, setGuardianChainStats] = useState<DataWrapper<ChainGuardianStat[]>>(
     getEmptyDataWrapper()
   );
+  const [aggregateData, setAggregateData] = useState<DataWrapper<AggregateChainData[]>>(
+    getEmptyDataWrapper()
+  );
   const [sortField, setSortField] = useState<SortField>('percentage');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [chainSortField, setChainSortField] = useState<ChainSortField>('percentage');
   const [chainSortDirection, setChainSortDirection] = useState<SortDirection>('asc');
-  const [useTimeRange, setUseTimeRange] = useState(false);
-  const [startTime, setStartTime] = useState(() => getDefaultTimeRange().startTime);
-  const [endTime, setEndTime] = useState(() => getDefaultTimeRange().endTime);
-  const [fetchTrigger, setFetchTrigger] = useState(0); // Used to trigger fetches
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('recent');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // Initialize with all chains expanded
+  const [expandedChains, setExpandedChains] = useState<Set<number>>(
+    () => new Set(SUPPORTED_CHAIN_IDS)
+  );
+
+  // Sync view mode to URL query params
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const currentView = params.get('view');
+    if (currentView !== viewMode) {
+      params.set('view', viewMode);
+      history.replace({ pathname, search: `?${params.toString()}` });
+    }
+  }, [viewMode, pathname, history, search]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -482,21 +718,14 @@ function LiveVaaStatus() {
     }
   };
 
-  const handleFetch = () => {
-    setFetchTrigger((prev) => prev + 1);
-  };
-
-  // Fetch when chain changes (always), or when fetchTrigger changes (for time range)
+  // Fetch when chain changes or time frame changes
   useEffect(() => {
+    if (viewMode !== 'byChain') return;
+
     let cancelled = false;
     setStatsWrapper((w) => ({ ...w, isFetching: true, error: null }));
 
-    let url = `${API_BASE_URL}/${selectedChainId}`;
-    if (useTimeRange && startTime && endTime) {
-      const startISO = new Date(startTime).toISOString();
-      const endISO = new Date(endTime).toISOString();
-      url += `?startTime=${encodeURIComponent(startISO)}&endTime=${encodeURIComponent(endISO)}`;
-    }
+    const url = getApiUrl(selectedChainId, timeFrame);
 
     axios
       .get<GuardianStatsResponse>(url)
@@ -518,8 +747,7 @@ function LiveVaaStatus() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally exclude time range deps to avoid auto-fetching on input change (causes rate limiting)
-  }, [selectedChainId, fetchTrigger]);
+  }, [viewMode, selectedChainId, timeFrame, refreshTrigger]);
 
   // Fetch guardian stats across all chains when in byGuardian mode
   useEffect(() => {
@@ -532,7 +760,7 @@ function LiveVaaStatus() {
     Promise.all(
       SUPPORTED_CHAIN_IDS.map((chainId) =>
         axios
-          .get<GuardianStatsResponse>(`${API_BASE_URL}/${chainId}`)
+          .get<GuardianStatsResponse>(getApiUrl(chainId, timeFrame))
           .then((res) => res.data)
           .catch(() => null)
       )
@@ -562,7 +790,45 @@ function LiveVaaStatus() {
     return () => {
       cancelled = true;
     };
-  }, [viewMode, selectedGuardian, fetchTrigger]);
+  }, [viewMode, selectedGuardian, timeFrame, refreshTrigger]);
+
+  // Fetch all chain stats for aggregate view
+  useEffect(() => {
+    if (viewMode !== 'aggregate') return;
+
+    let cancelled = false;
+    setAggregateData((w) => ({ ...w, isFetching: true, error: null }));
+
+    Promise.all(
+      SUPPORTED_CHAIN_IDS.map((chainId) =>
+        axios
+          .get<GuardianStatsResponse>(getApiUrl(chainId, timeFrame))
+          .then((res) => res.data)
+          .catch(() => null)
+      )
+    ).then((results) => {
+      if (cancelled) return;
+
+      const chainData: AggregateChainData[] = [];
+      for (const data of results) {
+        if (!data) continue;
+        chainData.push({
+          chainId: data.chainId,
+          chainName: data.chainName,
+          vaaCount: data.vaaCount,
+          guardianStats: data.guardianStats,
+        });
+      }
+
+      // Sort chains by name
+      chainData.sort((a, b) => a.chainName.localeCompare(b.chainName));
+      setAggregateData(receiveDataWrapper(chainData));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewMode, timeFrame, refreshTrigger]);
 
   const handleChainChange = (event: SelectChangeEvent<number>) => {
     setSelectedChainId(event.target.value as ChainId);
@@ -575,6 +841,48 @@ function LiveVaaStatus() {
   const handleViewModeChange = (_: React.MouseEvent<HTMLElement>, newMode: ViewMode | null) => {
     if (newMode) setViewMode(newMode);
   };
+
+  const handleTimeFrameChange = (_: React.MouseEvent<HTMLElement>, newTimeFrame: TimeFrame | null) => {
+    if (newTimeFrame) setTimeFrame(newTimeFrame);
+  };
+
+  const handleRefresh = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
+  // Navigation handlers for aggregate view
+  const handleAggregateChainClick = (chainId: number) => {
+    setSelectedChainId(chainId as ChainId);
+    setViewMode('byChain');
+  };
+
+  const handleAggregateGuardianClick = (guardianName: string) => {
+    setSelectedGuardian(guardianName);
+    setViewMode('byGuardian');
+  };
+
+  // Expand/collapse handlers for aggregate view
+  const handleToggleChainExpand = (chainId: number) => {
+    setExpandedChains((prev) => {
+      const next = new Set(prev);
+      if (next.has(chainId)) {
+        next.delete(chainId);
+      } else {
+        next.add(chainId);
+      }
+      return next;
+    });
+  };
+
+  const handleExpandAll = () => {
+    setExpandedChains(new Set(SUPPORTED_CHAIN_IDS));
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedChains(new Set());
+  };
+
+  const allExpanded = expandedChains.size === SUPPORTED_CHAIN_IDS.length;
 
   const healthCounts = useMemo(() => {
     if (!statsWrapper.data) return { healthy: 0, warning: 0, error: 0 };
@@ -627,6 +935,54 @@ function LiveVaaStatus() {
     return countByHealth(guardianChainStats.data, (s) => s.percentage);
   }, [guardianChainStats.data]);
 
+  const aggregateHealthCounts = useMemo(() => {
+    if (!aggregateData.data) return { healthy: 0, warning: 0, error: 0 };
+    // Count individual guardian stats across all chains
+    const allGuardianStats = aggregateData.data.flatMap((chain) => chain.guardianStats);
+    return countByHealth(allGuardianStats, (g) => g.percentage);
+  }, [aggregateData.data]);
+
+  // Problem guardians: guardians with error on 3+ chains
+  const errorGuardians = useMemo(() => {
+    if (!aggregateData.data) return new Map<string, number>();
+    const counts = new Map<string, number>();
+    for (const chain of aggregateData.data) {
+      for (const guardian of chain.guardianStats) {
+        if (guardian.percentage < HEALTH_THRESHOLDS.warning) {
+          counts.set(guardian.guardianName, (counts.get(guardian.guardianName) || 0) + 1);
+        }
+      }
+    }
+    return counts;
+  }, [aggregateData.data]);
+
+  // Warning guardians: guardians with warning (but not error) on 3+ chains
+  const warningGuardians = useMemo(() => {
+    if (!aggregateData.data) return new Map<string, number>();
+    const counts = new Map<string, number>();
+    for (const chain of aggregateData.data) {
+      for (const guardian of chain.guardianStats) {
+        if (guardian.percentage >= HEALTH_THRESHOLDS.warning && guardian.percentage < HEALTH_THRESHOLDS.healthy) {
+          counts.set(guardian.guardianName, (counts.get(guardian.guardianName) || 0) + 1);
+        }
+      }
+    }
+    return counts;
+  }, [aggregateData.data]);
+
+  // Summary stats for aggregate view
+  const summaryStats = useMemo(() => {
+    if (!aggregateData.data) return { chainsWithIssues: 0, errorGuardiansCount: 0, warningGuardiansCount: 0 };
+    const chainsWithIssues = aggregateData.data.filter((chain) => {
+      const avg =
+        chain.guardianStats.reduce((sum, g) => sum + g.percentage, 0) / chain.guardianStats.length;
+      return avg < HEALTH_THRESHOLDS.healthy;
+    }).length;
+    const errorGuardiansCount = [...errorGuardians.values()].filter((count) => count > 0).length;
+    const warningGuardiansCount = [...warningGuardians.values()].filter((count) => count >= PROBLEM_GUARDIAN_CHAIN_THRESHOLD).length;
+    return { chainsWithIssues, errorGuardiansCount, warningGuardiansCount };
+  }, [aggregateData.data, errorGuardians, warningGuardians]);
+
   // Redirect to home if not on mainnet, preserving query params
   if (!isMainnet) {
     return <Redirect to={`/${search}`} />;
@@ -641,9 +997,8 @@ function LiveVaaStatus() {
           <Tooltip
             title={
               <Typography variant="body2">
-                Shows guardian signing performance for the last 100 VAAs on the selected chain.
-                Guardians with &gt;=76% are healthy, 51-75% are warning, and &lt;=50% indicate
-                issues.
+                Shows guardian signing performance for the selected time frame. Guardians with
+                &gt;=76% are healthy, 51-75% are warning, and &lt;=50% indicate issues.
               </Typography>
             }
           >
@@ -652,6 +1007,9 @@ function LiveVaaStatus() {
             </Box>
           </Tooltip>
           <Box flexGrow={1} />
+          {viewMode === 'aggregate' && aggregateData.data && (
+            <HealthSummary counts={aggregateHealthCounts} />
+          )}
           {viewMode === 'byChain' && statsWrapper.data && <HealthSummary counts={healthCounts} />}
           {viewMode === 'byGuardian' && guardianChainStats.data && (
             <HealthSummary counts={guardianHealthCounts} />
@@ -667,11 +1025,12 @@ function LiveVaaStatus() {
             onChange={handleViewModeChange}
             size="small"
           >
+            <ToggleButton value="aggregate">Aggregate</ToggleButton>
             <ToggleButton value="byChain">By Chain</ToggleButton>
             <ToggleButton value="byGuardian">By Guardian</ToggleButton>
           </ToggleButtonGroup>
 
-          {viewMode === 'byChain' ? (
+          {viewMode === 'byChain' && (
             <FormControl size="small" sx={{ minWidth: 200 }}>
               <InputLabel id="chain-select-label">Chain</InputLabel>
               <Select
@@ -699,7 +1058,9 @@ function LiveVaaStatus() {
                 })}
               </Select>
             </FormControl>
-          ) : (
+          )}
+
+          {viewMode === 'byGuardian' && (
             <FormControl size="small" sx={{ minWidth: 200 }}>
               <InputLabel id="guardian-select-label">Guardian</InputLabel>
               <Select
@@ -717,51 +1078,228 @@ function LiveVaaStatus() {
             </FormControl>
           )}
 
-          {viewMode === 'byChain' && (
-            <>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                  Time Range
-                </Typography>
-                <Switch
-                  size="small"
-                  checked={useTimeRange}
-                  onChange={(e) => setUseTimeRange(e.target.checked)}
-                />
-              </Box>
-              {useTimeRange && (
-                <>
-                  <TextField
-                    label="Start Time"
-                    type="datetime-local"
-                    size="small"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 200 }}
-                  />
-                  <TextField
-                    label="End Time"
-                    type="datetime-local"
-                    size="small"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 200 }}
-                  />
-                  <Button
-                    variant="contained"
-                    size="small"
-                    onClick={handleFetch}
-                    disabled={statsWrapper.isFetching}
-                  >
-                    Fetch
-                  </Button>
-                </>
-              )}
-            </>
-          )}
+          <ToggleButtonGroup
+            value={timeFrame}
+            exclusive
+            onChange={handleTimeFrameChange}
+            size="small"
+          >
+            <ToggleButton value="recent">Last 20 min</ToggleButton>
+            <ToggleButton value="daily">Last 24 hours</ToggleButton>
+          </ToggleButtonGroup>
+
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={handleRefresh}
+            startIcon={<Refresh />}
+            disabled={
+              (viewMode === 'aggregate' && aggregateData.isFetching) ||
+              (viewMode === 'byChain' && statsWrapper.isFetching) ||
+              (viewMode === 'byGuardian' && guardianChainStats.isFetching)
+            }
+          >
+            Refresh
+          </Button>
         </Box>
+
+        {/* Aggregate View */}
+        {viewMode === 'aggregate' && (
+          <>
+            <Box sx={{ mb: 2, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <Box>
+                <Typography variant="body1" fontWeight="medium">
+                  All Chains - Guardian signing rates across {aggregateData.data?.length || 0} chains
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Click chain names for details, click pills to view guardian performance
+                </Typography>
+              </Box>
+              <Tooltip title={allExpanded ? 'Collapse all chains' : 'Expand all chains'}>
+                <IconButton
+                  size="small"
+                  onClick={allExpanded ? handleCollapseAll : handleExpandAll}
+                  sx={{ ml: 1 }}
+                >
+                  {allExpanded ? <UnfoldLess /> : <UnfoldMore />}
+                </IconButton>
+              </Tooltip>
+            </Box>
+
+            {/* Summary bar showing issues at a glance */}
+            {aggregateData.data && (summaryStats.chainsWithIssues > 0 || summaryStats.errorGuardiansCount > 0 || summaryStats.warningGuardiansCount > 0) && (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 1.5,
+                  borderRadius: 1,
+                  bgcolor: 'action.hover',
+                }}
+              >
+                {summaryStats.chainsWithIssues > 0 && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: (summaryStats.errorGuardiansCount > 0 || summaryStats.warningGuardiansCount > 0) ? 1.5 : 0 }}>
+                    <WarningAmberOutlined color="warning" />
+                    <Typography variant="body2">
+                      <strong>{summaryStats.chainsWithIssues}</strong> chain
+                      {summaryStats.chainsWithIssues !== 1 ? 's' : ''} with below-average signing
+                      rates
+                    </Typography>
+                  </Box>
+                )}
+                {summaryStats.errorGuardiansCount > 0 && (
+                  <Box sx={{ mb: summaryStats.warningGuardiansCount > 0 ? 1.5 : 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <ErrorOutline color="error" />
+                      <Typography variant="body2">
+                        <strong>{summaryStats.errorGuardiansCount}</strong> guardian
+                        {summaryStats.errorGuardiansCount !== 1 ? 's' : ''} highly underperforming:
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 4 }}>
+                      {[...errorGuardians.entries()]
+                        .filter(([, count]) => count > 0)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([name, count]) => (
+                          <Box
+                            key={name}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => handleAggregateGuardianClick(name)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleAggregateGuardianClick(name);
+                              }
+                            }}
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: 1,
+                              bgcolor: 'error.main',
+                              color: 'common.black',
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'transform 0.1s, box-shadow 0.1s',
+                              '&:hover': {
+                                transform: 'translateY(-1px)',
+                                boxShadow: 2,
+                              },
+                            }}
+                          >
+                            <span>{name}</span>
+                            <Typography
+                              component="span"
+                              sx={{ fontSize: '0.7rem', opacity: 0.8 }}
+                            >
+                              ({count} chains)
+                            </Typography>
+                          </Box>
+                        ))}
+                    </Box>
+                  </Box>
+                )}
+                {summaryStats.warningGuardiansCount > 0 && (
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <WarningAmberOutlined color="warning" />
+                      <Typography variant="body2">
+                        <strong>{summaryStats.warningGuardiansCount}</strong> guardian
+                        {summaryStats.warningGuardiansCount !== 1 ? 's' : ''} in warning state on {PROBLEM_GUARDIAN_CHAIN_THRESHOLD}+
+                        chains:
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 4 }}>
+                      {[...warningGuardians.entries()]
+                        .filter(([, count]) => count >= PROBLEM_GUARDIAN_CHAIN_THRESHOLD)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([name, count]) => (
+                          <Box
+                            key={name}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => handleAggregateGuardianClick(name)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleAggregateGuardianClick(name);
+                              }
+                            }}
+                            sx={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 0.5,
+                              px: 1,
+                              py: 0.25,
+                              borderRadius: 1,
+                              bgcolor: 'warning.main',
+                              color: 'common.black',
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'transform 0.1s, box-shadow 0.1s',
+                              '&:hover': {
+                                transform: 'translateY(-1px)',
+                                boxShadow: 2,
+                              },
+                            }}
+                          >
+                            <span>{name}</span>
+                            <Typography
+                              component="span"
+                              sx={{ fontSize: '0.7rem', opacity: 0.8 }}
+                            >
+                              ({count} chains)
+                            </Typography>
+                          </Box>
+                        ))}
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            <LoadingErrorState isLoading={aggregateData.isFetching} error={aggregateData.error} />
+
+            {!aggregateData.isFetching &&
+              !aggregateData.error &&
+              (!aggregateData.data || aggregateData.data.length === 0) && (
+                <Typography color="text.secondary" p={2}>
+                  No guardian stats available.
+                </Typography>
+              )}
+
+            {!aggregateData.isFetching &&
+              !aggregateData.error &&
+              aggregateData.data &&
+              aggregateData.data.length > 0 && (
+                <Box sx={TABLE_CONTAINER_SX}>
+                  <Box sx={TABLE_HEADER_SX}>
+                    <Typography variant="subtitle2" sx={{ minWidth: 180 }}>
+                      Chain
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ flex: 1 }}>
+                      Guardian Signing Rates
+                    </Typography>
+                  </Box>
+                  {aggregateData.data.map((chainData) => (
+                    <AggregateRow
+                      key={chainData.chainId}
+                      data={chainData}
+                      isExpanded={expandedChains.has(chainData.chainId)}
+                      onToggle={handleToggleChainExpand}
+                      onChainClick={handleAggregateChainClick}
+                      onGuardianClick={handleAggregateGuardianClick}
+                    />
+                  ))}
+                </Box>
+              )}
+          </>
+        )}
+
         {/* By Chain View */}
         {viewMode === 'byChain' && (
           <>

@@ -67,7 +67,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Monad: process.env.MONAD_RPC || 'https://rpc.monad.xyz',
     Fogo: process.env.FOGO_RPC || 'https://mainnet.fogo.io',
     Moca: process.env.MOCA_RPC || 'https://rpc.mocachain.org/',
-    MegaETH: process.env.MEGAETH_RPC || 'https://alpha.megaeth.com/rpc/',
+    MegaETH: process.env.MEGAETH_RPC || 'https://mainnet.megaeth.com/rpc/',
   },
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,

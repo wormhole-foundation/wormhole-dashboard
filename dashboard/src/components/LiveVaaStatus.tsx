@@ -457,11 +457,7 @@ function GuardianPill({
 }) {
   const status = getHealthStatus(guardian.percentage);
   const bgColor =
-    status === 'healthy'
-      ? 'success.main'
-      : status === 'warning'
-        ? 'warning.main'
-        : 'error.main';
+    status === 'healthy' ? 'success.main' : status === 'warning' ? 'warning.main' : 'error.main';
 
   return (
     <Tooltip
@@ -517,7 +513,9 @@ function GuardianPill({
         }}
       >
         <span>{guardian.guardianName}</span>
-        <Box component="span" sx={{ fontWeight: 700 }}>{guardian.percentage}%</Box>
+        <Box component="span" sx={{ fontWeight: 700 }}>
+          {guardian.percentage}%
+        </Box>
       </Box>
     </Tooltip>
   );
@@ -547,7 +545,7 @@ const AggregateRow = memo(function AggregateRow({
     });
   }, [data.guardianStats]);
 
-  const { avgPercentage, avgStatus, avgColor, healthCounts } = useMemo(() => {
+  const { avgPercentage, avgColor, healthCounts } = useMemo(() => {
     const avg =
       data.guardianStats.length > 0
         ? Math.round(
@@ -556,7 +554,6 @@ const AggregateRow = memo(function AggregateRow({
         : 0;
     return {
       avgPercentage: avg,
-      avgStatus: getHealthStatus(avg),
       avgColor: getHealthColor(getHealthStatus(avg)),
       healthCounts: countByHealth(data.guardianStats, (g) => g.percentage),
     };
@@ -842,7 +839,10 @@ function LiveVaaStatus() {
     if (newMode) setViewMode(newMode);
   };
 
-  const handleTimeFrameChange = (_: React.MouseEvent<HTMLElement>, newTimeFrame: TimeFrame | null) => {
+  const handleTimeFrameChange = (
+    _: React.MouseEvent<HTMLElement>,
+    newTimeFrame: TimeFrame | null
+  ) => {
     if (newTimeFrame) setTimeFrame(newTimeFrame);
   };
 
@@ -962,7 +962,10 @@ function LiveVaaStatus() {
     const counts = new Map<string, number>();
     for (const chain of aggregateData.data) {
       for (const guardian of chain.guardianStats) {
-        if (guardian.percentage >= HEALTH_THRESHOLDS.warning && guardian.percentage < HEALTH_THRESHOLDS.healthy) {
+        if (
+          guardian.percentage >= HEALTH_THRESHOLDS.warning &&
+          guardian.percentage < HEALTH_THRESHOLDS.healthy
+        ) {
           counts.set(guardian.guardianName, (counts.get(guardian.guardianName) || 0) + 1);
         }
       }
@@ -972,14 +975,17 @@ function LiveVaaStatus() {
 
   // Summary stats for aggregate view
   const summaryStats = useMemo(() => {
-    if (!aggregateData.data) return { chainsWithIssues: 0, errorGuardiansCount: 0, warningGuardiansCount: 0 };
+    if (!aggregateData.data)
+      return { chainsWithIssues: 0, errorGuardiansCount: 0, warningGuardiansCount: 0 };
     const chainsWithIssues = aggregateData.data.filter((chain) => {
       const avg =
         chain.guardianStats.reduce((sum, g) => sum + g.percentage, 0) / chain.guardianStats.length;
       return avg < HEALTH_THRESHOLDS.healthy;
     }).length;
     const errorGuardiansCount = [...errorGuardians.values()].filter((count) => count > 0).length;
-    const warningGuardiansCount = [...warningGuardians.values()].filter((count) => count >= PROBLEM_GUARDIAN_CHAIN_THRESHOLD).length;
+    const warningGuardiansCount = [...warningGuardians.values()].filter(
+      (count) => count >= PROBLEM_GUARDIAN_CHAIN_THRESHOLD
+    ).length;
     return { chainsWithIssues, errorGuardiansCount, warningGuardiansCount };
   }, [aggregateData.data, errorGuardians, warningGuardians]);
 
@@ -1106,10 +1112,18 @@ function LiveVaaStatus() {
         {/* Aggregate View */}
         {viewMode === 'aggregate' && (
           <>
-            <Box sx={{ mb: 2, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <Box
+              sx={{
+                mb: 2,
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+              }}
+            >
               <Box>
                 <Typography variant="body1" fontWeight="medium">
-                  All Chains - Guardian signing rates across {aggregateData.data?.length || 0} chains
+                  All Chains - Guardian signing rates across {aggregateData.data?.length || 0}{' '}
+                  chains
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Click chain names for details, click pills to view guardian performance
@@ -1127,140 +1141,155 @@ function LiveVaaStatus() {
             </Box>
 
             {/* Summary bar showing issues at a glance */}
-            {aggregateData.data && (summaryStats.chainsWithIssues > 0 || summaryStats.errorGuardiansCount > 0 || summaryStats.warningGuardiansCount > 0) && (
-              <Box
-                sx={{
-                  mb: 2,
-                  p: 1.5,
-                  borderRadius: 1,
-                  bgcolor: 'action.hover',
-                }}
-              >
-                {summaryStats.chainsWithIssues > 0 && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: (summaryStats.errorGuardiansCount > 0 || summaryStats.warningGuardiansCount > 0) ? 1.5 : 0 }}>
-                    <WarningAmberOutlined color="warning" />
-                    <Typography variant="body2">
-                      <strong>{summaryStats.chainsWithIssues}</strong> chain
-                      {summaryStats.chainsWithIssues !== 1 ? 's' : ''} with below-average signing
-                      rates
-                    </Typography>
-                  </Box>
-                )}
-                {summaryStats.errorGuardiansCount > 0 && (
-                  <Box sx={{ mb: summaryStats.warningGuardiansCount > 0 ? 1.5 : 0 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <ErrorOutline color="error" />
-                      <Typography variant="body2">
-                        <strong>{summaryStats.errorGuardiansCount}</strong> guardian
-                        {summaryStats.errorGuardiansCount !== 1 ? 's' : ''} highly underperforming:
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 4 }}>
-                      {[...errorGuardians.entries()]
-                        .filter(([, count]) => count > 0)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([name, count]) => (
-                          <Box
-                            key={name}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => handleAggregateGuardianClick(name)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                handleAggregateGuardianClick(name);
-                              }
-                            }}
-                            sx={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 0.5,
-                              px: 1,
-                              py: 0.25,
-                              borderRadius: 1,
-                              bgcolor: 'error.main',
-                              color: 'common.black',
-                              fontSize: '0.8rem',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              transition: 'transform 0.1s, box-shadow 0.1s',
-                              '&:hover': {
-                                transform: 'translateY(-1px)',
-                                boxShadow: 2,
-                              },
-                            }}
-                          >
-                            <span>{name}</span>
-                            <Typography
-                              component="span"
-                              sx={{ fontSize: '0.7rem', opacity: 0.8 }}
-                            >
-                              ({count} chains)
-                            </Typography>
-                          </Box>
-                        ))}
-                    </Box>
-                  </Box>
-                )}
-                {summaryStats.warningGuardiansCount > 0 && (
-                  <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            {aggregateData.data &&
+              (summaryStats.chainsWithIssues > 0 ||
+                summaryStats.errorGuardiansCount > 0 ||
+                summaryStats.warningGuardiansCount > 0) && (
+                <Box
+                  sx={{
+                    mb: 2,
+                    p: 1.5,
+                    borderRadius: 1,
+                    bgcolor: 'action.hover',
+                  }}
+                >
+                  {summaryStats.chainsWithIssues > 0 && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        mb:
+                          summaryStats.errorGuardiansCount > 0 ||
+                          summaryStats.warningGuardiansCount > 0
+                            ? 1.5
+                            : 0,
+                      }}
+                    >
                       <WarningAmberOutlined color="warning" />
                       <Typography variant="body2">
-                        <strong>{summaryStats.warningGuardiansCount}</strong> guardian
-                        {summaryStats.warningGuardiansCount !== 1 ? 's' : ''} in warning state on {PROBLEM_GUARDIAN_CHAIN_THRESHOLD}+
-                        chains:
+                        <strong>{summaryStats.chainsWithIssues}</strong> chain
+                        {summaryStats.chainsWithIssues !== 1 ? 's' : ''} with below-average signing
+                        rates
                       </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 4 }}>
-                      {[...warningGuardians.entries()]
-                        .filter(([, count]) => count >= PROBLEM_GUARDIAN_CHAIN_THRESHOLD)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([name, count]) => (
-                          <Box
-                            key={name}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => handleAggregateGuardianClick(name)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                handleAggregateGuardianClick(name);
-                              }
-                            }}
-                            sx={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 0.5,
-                              px: 1,
-                              py: 0.25,
-                              borderRadius: 1,
-                              bgcolor: 'warning.main',
-                              color: 'common.black',
-                              fontSize: '0.8rem',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              transition: 'transform 0.1s, box-shadow 0.1s',
-                              '&:hover': {
-                                transform: 'translateY(-1px)',
-                                boxShadow: 2,
-                              },
-                            }}
-                          >
-                            <span>{name}</span>
-                            <Typography
-                              component="span"
-                              sx={{ fontSize: '0.7rem', opacity: 0.8 }}
+                  )}
+                  {summaryStats.errorGuardiansCount > 0 && (
+                    <Box sx={{ mb: summaryStats.warningGuardiansCount > 0 ? 1.5 : 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <ErrorOutline color="error" />
+                        <Typography variant="body2">
+                          <strong>{summaryStats.errorGuardiansCount}</strong> guardian
+                          {summaryStats.errorGuardiansCount !== 1 ? 's' : ''} highly
+                          underperforming:
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 4 }}>
+                        {[...errorGuardians.entries()]
+                          .filter(([, count]) => count > 0)
+                          .sort((a, b) => b[1] - a[1])
+                          .map(([name, count]) => (
+                            <Box
+                              key={name}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => handleAggregateGuardianClick(name)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  handleAggregateGuardianClick(name);
+                                }
+                              }}
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                px: 1,
+                                py: 0.25,
+                                borderRadius: 1,
+                                bgcolor: 'error.main',
+                                color: 'common.black',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'transform 0.1s, box-shadow 0.1s',
+                                '&:hover': {
+                                  transform: 'translateY(-1px)',
+                                  boxShadow: 2,
+                                },
+                              }}
                             >
-                              ({count} chains)
-                            </Typography>
-                          </Box>
-                        ))}
+                              <span>{name}</span>
+                              <Typography
+                                component="span"
+                                sx={{ fontSize: '0.7rem', opacity: 0.8 }}
+                              >
+                                ({count} chains)
+                              </Typography>
+                            </Box>
+                          ))}
+                      </Box>
                     </Box>
-                  </Box>
-                )}
-              </Box>
-            )}
+                  )}
+                  {summaryStats.warningGuardiansCount > 0 && (
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <WarningAmberOutlined color="warning" />
+                        <Typography variant="body2">
+                          <strong>{summaryStats.warningGuardiansCount}</strong> guardian
+                          {summaryStats.warningGuardiansCount !== 1 ? 's' : ''} in warning state on{' '}
+                          {PROBLEM_GUARDIAN_CHAIN_THRESHOLD}+ chains:
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: 4 }}>
+                        {[...warningGuardians.entries()]
+                          .filter(([, count]) => count >= PROBLEM_GUARDIAN_CHAIN_THRESHOLD)
+                          .sort((a, b) => b[1] - a[1])
+                          .map(([name, count]) => (
+                            <Box
+                              key={name}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => handleAggregateGuardianClick(name)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  handleAggregateGuardianClick(name);
+                                }
+                              }}
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                px: 1,
+                                py: 0.25,
+                                borderRadius: 1,
+                                bgcolor: 'warning.main',
+                                color: 'common.black',
+                                fontSize: '0.8rem',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                transition: 'transform 0.1s, box-shadow 0.1s',
+                                '&:hover': {
+                                  transform: 'translateY(-1px)',
+                                  boxShadow: 2,
+                                },
+                              }}
+                            >
+                              <span>{name}</span>
+                              <Typography
+                                component="span"
+                                sx={{ fontSize: '0.7rem', opacity: 0.8 }}
+                              >
+                                ({count} chains)
+                              </Typography>
+                            </Box>
+                          ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              )}
 
             <LoadingErrorState isLoading={aggregateData.isFetching} error={aggregateData.error} />
 

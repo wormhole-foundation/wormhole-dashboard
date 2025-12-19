@@ -79,7 +79,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       : chainId === chainToChainId('Moca')
       ? `https://scan.mocachain.org/block/${block}`
       : chainId === chainToChainId('MegaETH')
-      ? `https://megaeth-testnet-v3.blockscout.com/block/${block}`
+      ? `https://megaeth.blockscout.com/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/${block}?cluster=testnet`
@@ -225,7 +225,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       : chainId === chainToChainId('Moca')
       ? `https://scan.mocachain.org/tx/${tx}`
       : chainId === chainToChainId('MegaETH')
-      ? `https://megaeth-testnet-v3.blockscout.com/tx/${tx}`
+      ? `https://megaeth.blockscout.com/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://solscan.io/txs/${tx}?cluster=testnet`

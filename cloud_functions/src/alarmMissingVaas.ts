@@ -6,6 +6,7 @@ import {
   formatAndSendToSlack,
   getMissThreshold,
   getNetwork,
+  isChainDeprecated,
   isVAASigned,
   ObservedMessage,
   ReobserveInfo,
@@ -97,6 +98,10 @@ export async function alarmMissingVaas(req: any, res: any) {
       const now = new Date();
       for (const chain of Object.keys(messages)) {
         let chainId: ChainId;
+        if (isChainDeprecated(Number(chain))) {
+          console.log(`skipping over deprecated chain ${chain}`);
+          continue;
+        }
         try {
           chainId = toChainId(Number(chain));
         } catch (e) {

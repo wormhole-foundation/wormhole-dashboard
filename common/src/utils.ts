@@ -239,3 +239,8 @@ export async function retry<T>(
 export function stringifyWithBigInt(obj: any) {
   return JSON.stringify(obj, (_, value) => (typeof value === 'bigint' ? value.toString() : value));
 }
+
+export function isChainDeprecated(chainId: number): boolean {
+  const deprecatedChains = [3, 7, 11, 12, 18, 28, 36, 43];
+  return deprecatedChains.includes(chainId);
+}

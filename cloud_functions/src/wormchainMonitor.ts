@@ -29,7 +29,7 @@ type RetrievedInfo = {
 
 const WormchainRPCs: ClientRPC[] = [
   { address: 'https://wormchain-lcd.quickapi.com/', provider: 'ChainLayer' },
-  { address: 'https://tncnt-eu-wormchain-main-01.rpc.p2p.world/lcd/', provider: 'P2P' },
+  { address: 'https://wormchain-mainnet-1-full-rest.tm.p2p.org/', provider: 'P2P' },
 ];
 const CLIENT_STATE_QUERY: string = 'ibc/core/client/v1/client_states/';
 const BLOCK_QUERY: string = 'cosmos/base/tendermint/v1beta1/blocks/';

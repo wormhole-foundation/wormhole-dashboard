@@ -1,6 +1,7 @@
 import {
   assertEnvironmentVariable,
   chunkArray,
+  isChainDeprecated,
   isTokenDenylisted,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import knex, { Knex } from 'knex';
@@ -84,6 +85,10 @@ export async function updateTokenMetadata(req: any, res: any) {
       decimals,
     } of result) {
       let tokenChainId: ChainId;
+      if (isChainDeprecated(token_chain)) {
+        console.log(`skipping over deprecated chain ${token_chain}`);
+        continue;
+      }
       try {
         assertChainId(token_chain);
         tokenChainId = toChainId(token_chain);

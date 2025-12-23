@@ -28,7 +28,7 @@ type RetrievedInfo = {
 };
 
 const WormchainRPCs: ClientRPC[] = [
-  { address: 'https://wormchain-lcd.quickapi.com/', provider: 'ChainLayer' },
+  // { address: 'https://wormchain-lcd.quickapi.com/', provider: 'ChainLayer' },
   { address: 'https://wormchain-mainnet-1-full-rest.tm.p2p.org/', provider: 'P2P' },
 ];
 const CLIENT_STATE_QUERY: string = 'ibc/core/client/v1/client_states/';

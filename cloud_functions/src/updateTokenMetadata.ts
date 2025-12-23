@@ -27,6 +27,9 @@ const findCoinGeckoCoinId = (
     return coinId;
   }
   let chainName;
+  if (isChainDeprecated(chainId)) {
+    return null;
+  }
   try {
     chainName = toChain(chainId);
   } catch (e) {

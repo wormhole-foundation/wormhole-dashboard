@@ -26,7 +26,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Polygon: '20629146',
     Avalanche: '8237163',
     Algorand: '22931277',
-    Fantom: '31817467',
     Klaytn: '90563824',
     Celo: '12947144',
     Moonbeam: '1486591',
@@ -62,7 +61,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Polygon: '0',
     Avalanche: '0',
     Algorand: '0',
-    Fantom: '0',
     Klaytn: '0',
     Celo: '0',
     Moonbeam: '0',
@@ -102,7 +100,6 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBloc
   ['Mainnet']: {
     Solana: '260508723',
     Ethereum: '19583505',
-    Fantom: '78727372',
     Arbitrum: '201652677',
     Optimism: '118840800',
     Base: '13245519',
@@ -172,7 +169,6 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Avalanche: '0000000000000000000000000e082f06ff657d94310cb8ce8b0d9a04541d8052',
   Algorand: '67e93fa6c8ac5c819990aa7340c0c16b508abb1178be9b30d024b8ac25193d45',
   Aptos: '0000000000000000000000000000000000000000000000000000000000000001',
-  Fantom: '0000000000000000000000007c9fc5741288cdfdd83ceb07f3ea7e22618d79d2',
   Klaytn: '0000000000000000000000005b08ac39eaed75c0439fc750d9fe7e1f9dd0193f',
   Celo: '000000000000000000000000796dff6d74f3e27060b71255fe517bfb23c93eed',
   Near: '148410499d3fcda4dcfd68a1ebfcdddda16ab28326448d4aae4d2f0465cdfcb7',
@@ -205,7 +201,6 @@ export const NFT_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Bsc: '0000000000000000000000005a58505a96d1dbf8df91cb21b54419fc36e93fde',
   Polygon: '00000000000000000000000090bbd86a6fe93d3bc3ed6335935447e75fab7fcf',
   Avalanche: '000000000000000000000000f7b6737ca9c4e08ae573f75a97b73d7a813f5de5',
-  Fantom: '000000000000000000000000a9c7119abda80d4a4e0c06c8f4d8cf5893234535',
   Klaytn: '0000000000000000000000003c3c561757baa0b78c5c025cdeaa4ee24c1dffef',
   Celo: '000000000000000000000000a6a377d75ca5c9052c9a77ed1e865cc25bd97bf3',
   Moonbeam: '000000000000000000000000453cfbe096c0f8d763e8c5f24b441097d577bde2',
@@ -355,9 +350,7 @@ export type GuardianSetInfoByChain = {
 };
 
 // TODO: this should probably be a table in the database
-export const TVL_TOKEN_DENYLIST: { [key in ChainId]?: string[] } = {
-  [chainToChainId('Fantom')]: ['0x5b2af7fd27e2ea14945c82dd254c79d3ed34685e'], // coingecko reporting bad prices
-};
+export const TVL_TOKEN_DENYLIST: { [key in ChainId]?: string[] } = {};
 
 export const isTokenDenylisted = (chainId: ChainId, address: string): boolean => {
   return TVL_TOKEN_DENYLIST[chainId]?.includes(address.toLowerCase()) ?? false;

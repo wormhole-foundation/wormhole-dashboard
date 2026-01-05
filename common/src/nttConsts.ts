@@ -13,7 +13,6 @@ export type NTTContractArray = {
 
 export const nttChains = [
   'Ethereum',
-  'Fantom',
   'Solana',
   'Arbitrum',
   'Optimism',
@@ -54,7 +53,6 @@ export const NTT_MANAGER_CONTRACT: NTTContract = {
   Mainnet: {
     USDC: {
       Ethereum: '0xeBdCe9a913d9400EE75ef31Ce8bd34462D01a1c1',
-      Fantom: '0x68dB2f05Aa2d77DEf981fd2be32661340c9222FB',
     },
     W: {
       Solana: 'NTtAaoDJhkeHeaVUHnyhwbPNAN6WgBpHkHBTc6d7vLK',
@@ -80,7 +78,6 @@ export const NTT_TRANSCEIVER_CONTRACT: NTTContract = {
   Mainnet: {
     USDC: {
       Ethereum: '0x55f7820357FA17A1ECb48E959D5E637bFF956d6F',
-      Fantom: '0x8b47f02E7E20174C76Af910adc0Ad8A4B0342f4c',
     },
     W: {
       Solana: 'ExVbjD8inGXkt7Cx8jVr4GF175sQy1MeqgfaY53Ah8as',
@@ -106,7 +103,6 @@ export const NTT_TOKENS: NTTContract = {
   Mainnet: {
     USDC: {
       Ethereum: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-      Fantom: '0x2F733095B80A04b38b0D10cC884524a3d09b836a',
     },
     W: {
       Solana: '85VBFQZC9TZkfaptBWjvUw7YbZjy52A6mjtPGjstQAmQ',

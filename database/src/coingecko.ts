@@ -15,7 +15,6 @@ export const COINGECKO_PLATFORM_BY_CHAIN: { [key in Chain]?: string } = {
   Avalanche: 'avalanche',
   Algorand: 'algorand',
   Aptos: 'aptos',
-  Fantom: 'fantom',
   Klaytn: 'klay-token',
   Celo: 'celo',
   Near: 'near-protocol',

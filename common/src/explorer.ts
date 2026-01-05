@@ -22,8 +22,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://snowtrace.io/block/${block}`
       : chainId === chainToChainId('Algorand')
       ? `https://app.dappflow.org/explorer/block/${block}`
-      : chainId === chainToChainId('Fantom')
-      ? `https://ftmscan.com/block/${block}`
       : chainId === chainToChainId('Klaytn')
       ? `https://scope.klaytn.com/block/${block}`
       : chainId === chainToChainId('Celo')
@@ -93,8 +91,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://testnet.snowtrace.io/block/${block}`
     : chainId === chainToChainId('Algorand')
     ? `https://app.dappflow.org/explorer/block/${block}`
-    : chainId === chainToChainId('Fantom')
-    ? `https://testnet.ftmscan.com/block/${block}`
     : chainId === chainToChainId('Klaytn')
     ? `https://baobab.klaytnscope.com/block/${block}`
     : chainId === chainToChainId('Celo')
@@ -168,8 +164,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://snowtrace.io/tx/${tx}`
       : chainId === chainToChainId('Algorand')
       ? `https://app.dappflow.org/explorer/transaction/${tx}`
-      : chainId === chainToChainId('Fantom')
-      ? `https://ftmscan.com/tx/${tx}`
       : chainId === chainToChainId('Klaytn')
       ? `https://scope.klaytn.com/tx/${tx}`
       : chainId === chainToChainId('Celo')
@@ -240,8 +234,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://testnet.snowtrace.io/tx/${tx}`
     : chainId === chainToChainId('Algorand')
     ? `https://app.dappflow.org/explorer/transaction/${tx}`
-    : chainId === chainToChainId('Fantom')
-    ? `https://testnet.ftmscan.com/tx/${tx}`
     : chainId === chainToChainId('Klaytn')
     ? `https://baobab.klaytnscope.com/tx/${tx}`
     : chainId === chainToChainId('Celo')

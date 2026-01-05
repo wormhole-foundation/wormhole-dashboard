@@ -45,7 +45,7 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'MegaETH'
   ) {
     return new VAAWatcher(network, chainName);
-  } else if (chainName === 'Fantom' || chainName === 'Klaytn') {
+  } else if (chainName === 'Klaytn') {
     return new VAAWatcher(network, chainName, 'latest');
   } else if (chainName === 'Algorand') {
     return new AlgorandWatcher(network);
@@ -88,7 +88,6 @@ export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Wat
       chainName === 'Arbitrum' ||
       chainName === 'Base' ||
       chainName === 'Ethereum' ||
-      chainName === 'Fantom' ||
       chainName === 'Optimism'
     ) {
       return new NTTWatcher(network, chainName);

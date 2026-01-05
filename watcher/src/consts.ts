@@ -20,8 +20,6 @@ export type WorkerData = {
 // Avalanche
 //   https://docs.avax.network/apis/avalanchego/public-api-server
 //   avalanche: "https://api.avax.network/ext/bc/C/rpc", // 500 error on batch request
-// Fantom
-//   fantom: "https://rpc.ftm.tools", // Cannot read properties of null (reading 'timestamp')"
 // Klaytn
 // this one immediately 429s
 // klaytn: 'https://public-node-api.klaytnapi.com/v1/cypress',
@@ -38,7 +36,6 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Polygon: process.env.POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com',
     Avalanche: process.env.AVALANCHE_RPC || 'https://avalanche-c-chain-rpc.publicnode.com',
     Algorand: process.env.ALGORAND_RPC || 'https://mainnet-api.algonode.cloud',
-    Fantom: process.env.FANTOM_RPC || 'https://fantom-rpc.publicnode.com',
     Klaytn: process.env.KLAYTN_RPC || 'https://klaytn-mainnet-rpc.allthatnode.com:8551',
     Celo: process.env.CELO_RPC || 'https://forno.celo.org',
     Moonbeam: process.env.MOONBEAM_RPC || 'https://moonbeam-rpc.publicnode.com',
@@ -75,7 +72,6 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Polygon: process.env.POLYGON_RPC || 'https://polygon-amoy-bor-rpc.publicnode.com',
     Avalanche: process.env.AVALANCHE_RPC || 'https://avalanche-fuji-c-chain-rpc.publicnode.com',
     Algorand: process.env.ALGORAND_RPC || 'https://testnet-api.algonode.cloud',
-    Fantom: process.env.FANTOM_RPC,
     Klaytn: process.env.KLAYTN_RPC || 'https://rpc.ankr.com/klaytn_testnet',
     Celo: process.env.CELO_RPC || 'https://alfajores-forno.celo-testnet.org',
     Moonbeam: process.env.MOONBEAM_RPC,

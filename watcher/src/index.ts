@@ -24,7 +24,6 @@ const supportedChains: Chain[] =
         // 'Polygon',
         'Avalanche',
         'Algorand',
-        'Fantom',
         'Klaytn',
         'Celo',
         // 'Near',
@@ -69,7 +68,6 @@ const supportedChains: Chain[] =
         'Polygon',
         'Avalanche',
         'Algorand',
-        'Fantom',
         'Klaytn',
         'Celo',
         'Near',
@@ -102,7 +100,7 @@ const supportedChains: Chain[] =
 const supportedNTTChains: Chain[] =
   network === 'Testnet'
     ? ['Solana', 'Sepolia', 'ArbitrumSepolia', 'BaseSepolia', 'OptimismSepolia']
-    : ['Solana', 'Ethereum', 'Fantom', 'Arbitrum', 'Optimism', 'Base'];
+    : ['Solana', 'Ethereum', 'Arbitrum', 'Optimism', 'Base'];
 
 if (mode === 'vaa') {
   startSupervisor(supportedChains);

@@ -52,7 +52,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     CreditCoin: '2205137', // Block of contract creation, https://creditcoin.blockscout.com/tx/0x1bee86a5b5299a61c4337a8963b31b8e5bc02b383fb129fe2bd209f61675a805
     Monad: '24707720', // Block of contract creation
     Fogo: '32335413', // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
-    // Moca: '' Block of contract creation once deployed
+    Moca: '522509', // Block of contract creation https://moca-mainnet.cloud.blockscout.com/tx/0xbae9ee07a270578d125b13fd9a7970a11a40e68dc68a30ccc40caadc40dd2017
     MegaETH: '1390753', // Block of contract creation https://megaeth-testnet-v3.blockscout.com/tx/0xf6bab2f9b4044d44c5ceb0d0d80ef7352166b0be39954baed61ca950c73ebb99
   },
   ['Testnet']: {

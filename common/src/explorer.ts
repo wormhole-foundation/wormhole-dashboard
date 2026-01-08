@@ -75,7 +75,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       : chainId === chainToChainId('Monad')
       ? `https://monadvision.com/block/${block}`
       : chainId === chainToChainId('Moca')
-      ? `https://scan.mocachain.org/block/${block}`
+      ? `https://moca-mainnet.cloud.blockscout.com/block/${block}`
       : chainId === chainToChainId('MegaETH')
       ? `https://megaeth.blockscout.com/block/${block}`
       : ''
@@ -217,7 +217,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       : chainId === chainToChainId('Monad')
       ? `https://monadvision.com/tx/${tx}`
       : chainId === chainToChainId('Moca')
-      ? `https://scan.mocachain.org/tx/${tx}`
+      ? `https://moca-mainnet.cloud.blockscout.com/tx/${tx}`
       : chainId === chainToChainId('MegaETH')
       ? `https://megaeth.blockscout.com/tx/${tx}`
       : ''

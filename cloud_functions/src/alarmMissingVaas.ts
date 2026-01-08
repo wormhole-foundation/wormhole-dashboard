@@ -226,6 +226,10 @@ async function getAndProcessFirestore(): Promise<Map<string, FirestoreVAA>> {
           // if VAA < missThreshold old, leave in firestore
           const vaas: FirestoreVAA[] = data.VAAs;
           vaas.forEach((vaa) => {
+            if (isChainDeprecated(Number(vaa.chain))) {
+              console.log(`skipping over deprecated chain ${vaa.chain} in firestore`);
+              return;
+            }
             // vaa.chain is guaranteed to be a string representation of a number e.g. "34"
             if (vaa.noticedTS > getMissThreshold(now, vaa.chain)) {
               // console.log('keeping VAA in firestore', vaa.vaaKey);
@@ -257,6 +261,10 @@ async function getAndProcessReobsVAAs(): Promise<Map<string, ReobserveInfo>> {
         if (data) {
           const vaas: ReobserveInfo[] = data.VAAs;
           vaas.forEach(async (vaa) => {
+            if (isChainDeprecated(vaa.chain)) {
+              console.log(`skipping over deprecated chain ${vaa.chain} in reobserve`);
+              return;
+            }
             if (!(await isVAASigned(getNetwork(), vaa.vaaKey))) {
               console.log('keeping reobserved VAA in firestore', vaa.vaaKey);
               current.set(vaa.txhash, vaa);

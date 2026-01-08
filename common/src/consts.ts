@@ -33,14 +33,14 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Ethereum: '12959638',
     Fogo: '32335413', // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
     HyperEVM: '3915634', // Block of contract creation, https://purrsec.com/tx/0xd345fd5094fe1c901b9cd43cf68bcdc9829f4a5596853838800b47552e2e19dc
-    Ink: '7711131', // Block of contract creation, https://explorer.inkonchain.com/tx/0x2576b03a4c0de8566778cb3149a0dbc1c8f8dfcf5d87c9f5f96038c4b15e3797
     Injective: '20908376',
+    Ink: '7711131', // Block of contract creation, https://explorer.inkonchain.com/tx/0x2576b03a4c0de8566778cb3149a0dbc1c8f8dfcf5d87c9f5f96038c4b15e3797
     Klaytn: '90563824',
     Linea: '13399665',
     Mantle: '64176265',
     MegaETH: '1390753', // Block of contract creation https://megaeth-testnet-v3.blockscout.com/tx/0xf6bab2f9b4044d44c5ceb0d0d80ef7352166b0be39954baed61ca950c73ebb99
     Mezo: '232424', // Block of contract creation, https://explorer.mezo.org/tx/0x7ed15d6a210738bfd3b7606f6309bebb5533b67a9777626376864d893bbe51b5
-    // Moca: '' Block of contract creation once deployed
+    Moca: '522509', // Block of contract creation https://moca-mainnet.cloud.blockscout.com/tx/0xbae9ee07a270578d125b13fd9a7970a11a40e68dc68a30ccc40caadc40dd2017
     Monad: '24707720', // Block of contract creation
     Moonbeam: '1486591',
     Near: '72767136',

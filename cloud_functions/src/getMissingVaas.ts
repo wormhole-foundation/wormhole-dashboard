@@ -1,6 +1,10 @@
 import { Storage } from '@google-cloud/storage';
 import { ChainId } from '@wormhole-foundation/sdk-base';
-import { getNetwork, ObservedMessage } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  getNetwork,
+  isChainDeprecated,
+  ObservedMessage,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 // Read from cloud storage
 const storage = new Storage();
@@ -37,9 +41,14 @@ export async function getMissingVaas(req: any, res: any) {
     return;
   }
 
-  let messages: MissingVaasByChain = {};
   try {
-    messages = await commonGetMissingVaas();
+    const allMessages = await commonGetMissingVaas();
+    const messages: MissingVaasByChain = {};
+    for (const [chain, data] of Object.entries(allMessages)) {
+      const chainId = Number(chain);
+      if (isChainDeprecated(chainId)) continue;
+      messages[chainId as ChainId] = data;
+    }
     res.status(200).send(JSON.stringify(messages));
   } catch (e) {
     res.sendStatus(500);

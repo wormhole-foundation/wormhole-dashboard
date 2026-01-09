@@ -22,27 +22,28 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Berachain' ||
     chainName === 'Bsc' ||
     chainName === 'Celo' ||
+    chainName === 'Converge' ||
+    chainName === 'CreditCoin' ||
     chainName === 'Ethereum' ||
     chainName === 'HyperEVM' ||
     chainName === 'Ink' ||
+    chainName === 'Linea' ||
     chainName === 'Mantle' ||
+    chainName === 'MegaETH' ||
+    chainName === 'Mezo' ||
+    chainName === 'Moca' ||
     chainName === 'Monad' ||
     chainName === 'Moonbeam' ||
     chainName === 'Optimism' ||
+    chainName === 'Plume' ||
     chainName === 'Polygon' ||
     chainName === 'Scroll' ||
     chainName === 'Seievm' ||
+    chainName === 'Sonic' ||
     chainName === 'Unichain' ||
     chainName === 'Worldchain' ||
     chainName === 'Xlayer' ||
-    chainName === 'Mezo' ||
-    chainName === 'Sonic' ||
-    chainName === 'Converge' ||
-    chainName === 'Plume' ||
-    chainName === 'XRPLEVM' ||
-    chainName === 'CreditCoin' ||
-    chainName === 'Moca' ||
-    chainName === 'MegaETH'
+    chainName === 'XRPLEVM'
   ) {
     return new VAAWatcher(network, chainName);
   } else if (chainName === 'Klaytn') {

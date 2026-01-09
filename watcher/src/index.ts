@@ -92,7 +92,7 @@ const supportedChains: Chain[] =
         'Plume',
         'XRPLEVM',
         'CreditCoin',
-        // "Moca",
+        'Moca',
         'MegaETH',
       ];
 

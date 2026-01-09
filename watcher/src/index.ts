@@ -81,12 +81,13 @@ const supportedChains: Chain[] =
         'Sei',
         'Scroll',
         'Xlayer',
+        'Linea',
         'Berachain',
         'Unichain',
         'Worldchain',
         'Ink',
         'HyperEVM',
-        'Wormchain',
+        'Monad',
         'Mezo',
         'Fogo',
         'Plume',
@@ -94,6 +95,7 @@ const supportedChains: Chain[] =
         'CreditCoin',
         // "Moca",
         'MegaETH',
+        'Wormchain',
       ];
 
 const supportedNTTChains: Chain[] =

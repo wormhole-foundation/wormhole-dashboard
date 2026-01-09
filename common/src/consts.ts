@@ -21,39 +21,40 @@ type NetworkChainBlockMapping = { [key in Network]: { [key in Chain]?: string } 
 
 export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMapping = {
   ['Mainnet']: {
-    Ethereum: '12959638',
-    Bsc: '9745450',
-    Polygon: '20629146',
-    Avalanche: '8237163',
     Algorand: '22931277',
-    Klaytn: '90563824',
-    Celo: '12947144',
-    Moonbeam: '1486591',
-    Injective: '20908376',
-    Arbitrum: '18128584',
-    Optimism: '69401779',
     Aptos: '0', // block is 1094390 but AptosWatcher uses sequence number instead
+    Arbitrum: '18128584',
+    Avalanche: '8237163',
+    Base: '1422314',
+    Berachain: '968947', // https://berascan.com/tx/0x5a425c6fee87ccc44ef87c1d9cb9c7d1deda4b8596b67c003726e68a2f06e0a4
+    Bsc: '9745450',
+    Celo: '12947144',
+    CreditCoin: '2205137', // Block of contract creation, https://creditcoin.blockscout.com/tx/0x1bee86a5b5299a61c4337a8963b31b8e5bc02b383fb129fe2bd209f61675a805
+    Ethereum: '12959638',
+    Fogo: '32335413', // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
+    HyperEVM: '3915634', // Block of contract creation, https://purrsec.com/tx/0xd345fd5094fe1c901b9cd43cf68bcdc9829f4a5596853838800b47552e2e19dc
+    Ink: '7711131', // Block of contract creation, https://explorer.inkonchain.com/tx/0x2576b03a4c0de8566778cb3149a0dbc1c8f8dfcf5d87c9f5f96038c4b15e3797
+    Injective: '20908376',
+    Klaytn: '90563824',
+    Linea: '13399665',
+    Mantle: '64176265',
+    MegaETH: '1390753', // Block of contract creation https://megaeth-testnet-v3.blockscout.com/tx/0xf6bab2f9b4044d44c5ceb0d0d80ef7352166b0be39954baed61ca950c73ebb99
+    Mezo: '232424', // Block of contract creation, https://explorer.mezo.org/tx/0x7ed15d6a210738bfd3b7606f6309bebb5533b67a9777626376864d893bbe51b5
+    // Moca: '' Block of contract creation once deployed
+    Monad: '24707720', // Block of contract creation
+    Moonbeam: '1486591',
     Near: '72767136',
+    Optimism: '69401779',
+    Plume: '9146992', // Block of contract creation, https://explorer.plume.org/tx/0x11251febf0fd6b2b247422fe451cda3fad1da42165d32db44a090a262095278b
+    Polygon: '20629146',
+    Scroll: '4955534',
+    Sei: '238594',
     Solana: '94396403', // https://explorer.solana.com/tx/2L8rQY94W2d44sycRkhHA1PyXdh5z6ND541ftDDk1dgBcv6RLR9a3zUgTJispPmXjkmqdqd5EDytXcnP5PC2AmEJ
     Sui: '1485552', // https://explorer.sui.io/txblock/671SoTvVUvBZQWKXeameDvAwzHQvnr8Nj7dR9MUwm3CV?network=https%3A%2F%2Frpc.mainnet.sui.io
-    Base: '1422314',
-    Scroll: '4955534',
-    Mantle: '64176265',
-    Sei: '238594',
-    Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A
-    Berachain: '968947', //https://berascan.com/tx/0x5a425c6fee87ccc44ef87c1d9cb9c7d1deda4b8596b67c003726e68a2f06e0a4
     Unichain: '8115676', // https://unichain.blockscout.com/tx/0x4d65e33abc388c2d92c71ea01374af935a6615d0e555a7abbdef6c44e04613ba
     Worldchain: '5805110', // https://worldscan.org/tx/0x568eb14596296bda3022527cf0e915bfec073613b27c495e695fb9e08652f6fc
-    Ink: '7711131', // Block of contract creation, https://explorer.inkonchain.com/tx/0x2576b03a4c0de8566778cb3149a0dbc1c8f8dfcf5d87c9f5f96038c4b15e3797
-    HyperEVM: '3915634', // Block of contract creation, https://purrsec.com/tx/0xd345fd5094fe1c901b9cd43cf68bcdc9829f4a5596853838800b47552e2e19dc
-    Mezo: '232424', // Block of contract creation,https://explorer.mezo.org/tx/0x7ed15d6a210738bfd3b7606f6309bebb5533b67a9777626376864d893bbe51b5
-    Plume: '9146992', // Block of contract creation, https://explorer.plume.org/tx/0x11251febf0fd6b2b247422fe451cda3fad1da42165d32db44a090a262095278b
+    Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A
     XRPLEVM: '1590372', // Block of contract creation, https://explorer.xrplevm.org/tx/0x0421c24113a47514a8f0c5511322702734b06ada4f43ca0a197a829ef1bfb203
-    CreditCoin: '2205137', // Block of contract creation, https://creditcoin.blockscout.com/tx/0x1bee86a5b5299a61c4337a8963b31b8e5bc02b383fb129fe2bd209f61675a805
-    Monad: '24707720', // Block of contract creation
-    Fogo: '32335413', // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
-    // Moca: '' Block of contract creation once deployed
-    MegaETH: '1390753', // Block of contract creation https://megaeth-testnet-v3.blockscout.com/tx/0xf6bab2f9b4044d44c5ceb0d0d80ef7352166b0be39954baed61ca950c73ebb99
   },
   ['Testnet']: {
     Ethereum: '0',

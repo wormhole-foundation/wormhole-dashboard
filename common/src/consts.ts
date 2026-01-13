@@ -82,7 +82,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Seievm: '142153268', // Block of contract creation
     Unichain: '254961', // Block of contract creation
     Worldchain: '4487948', // Block of contract creation
-    Monad: '520060', // Block of contract creation
+    Monad: '5776870', // Block of contract creation
     Ink: '1907965', // Block of contract creation
     HyperEVM: '13743181', // Block of contract creation
     Mezo: '3102383', // Block of contract creation

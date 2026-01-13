@@ -73,7 +73,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       : chainId === chainToChainId('Fogo')
       ? `https://explorer.fogo.io/block/${block}?cluster=mainnet`
       : chainId === chainToChainId('Monad')
-      ? `https://mainnet-beta.monvision.io/block/${block}`
+      ? `https://monadvision.com/block/${block}`
       : chainId === chainToChainId('Moca')
       ? `https://scan.mocachain.org/block/${block}`
       : chainId === chainToChainId('MegaETH')
@@ -127,8 +127,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://unichain-sepolia.blockscout.com/block/${block}`
     : chainId === chainToChainId('Worldchain')
     ? `https://worldchain-sepolia.explorer.alchemy.com/block/${block}`
-    : chainId === chainToChainId('Monad')
-    ? `${process.env.MONAD_EXPLORER_URL}/block/${block}`
+    : chainId === chainToChainId('MonadTestnet')
+    ? `https://testnet.monadvision.com/block/${block}`
     : chainId === chainToChainId('Ink')
     ? `https://explorer-sepolia.inkonchain.com/block/${block}`
     : chainId === chainToChainId('HyperEVM')
@@ -215,7 +215,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       : chainId === chainToChainId('Fogo')
       ? `https://explorer.fogo.io/tx/${tx}?cluster=mainnet`
       : chainId === chainToChainId('Monad')
-      ? `https://mainnet-beta.monvision.io/tx/${tx}`
+      ? `https://monadvision.com/tx/${tx}`
       : chainId === chainToChainId('Moca')
       ? `https://scan.mocachain.org/tx/${tx}`
       : chainId === chainToChainId('MegaETH')
@@ -270,8 +270,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://unichain-sepolia.blockscout.com/tx/${tx}`
     : chainId === chainToChainId('Worldchain')
     ? `https://worldchain-sepolia.explorer.alchemy.com/tx/${tx}`
-    : chainId === chainToChainId('Monad')
-    ? `${process.env.MONAD_EXPLORER_URL}/tx/${tx}`
+    : chainId === chainToChainId('MonadTestnet')
+    ? `https://testnet.monadvision.com/tx/${tx}`
     : chainId === chainToChainId('Ink')
     ? `https://explorer-sepolia.inkonchain.com/tx/${tx}`
     : chainId === chainToChainId('HyperEVM')

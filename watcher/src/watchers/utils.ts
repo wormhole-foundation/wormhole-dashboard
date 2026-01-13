@@ -70,7 +70,8 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
       chainName === 'Holesky' ||
       chainName === 'OptimismSepolia' ||
       chainName === 'PolygonSepolia' ||
-      chainName === 'Sepolia'
+      chainName === 'Sepolia' ||
+      chainName === 'MonadTestnet'
     ) {
       return new VAAWatcher(network, chainName);
     } else {

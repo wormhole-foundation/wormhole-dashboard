@@ -47,7 +47,6 @@ const supportedChains: Chain[] =
         'Seievm',
         'Unichain',
         'Worldchain',
-        'Monad',
         'Ink',
         'HyperEVM',
         // 'Movement',
@@ -59,6 +58,7 @@ const supportedChains: Chain[] =
         'CreditCoin',
         'Moca',
         'MegaETH',
+        'MonadTestnet',
       ]
     : [
         // This is the list of chains supported in MAINNET.

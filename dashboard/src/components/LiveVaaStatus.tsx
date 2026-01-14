@@ -29,6 +29,7 @@ import {
   Typography,
 } from '@mui/material';
 import { chainIdToChain, chainIds, ChainId } from '@wormhole-foundation/sdk-base';
+import { isChainDeprecated } from '@wormhole-foundation/wormhole-monitor-common';
 import { chainToIcon } from '@wormhole-foundation/sdk-icons';
 import axios from 'axios';
 import { memo, useEffect, useMemo, useState } from 'react';
@@ -126,32 +127,10 @@ interface GuardianStatsResponse {
   guardianStats: GuardianStat[];
 }
 
-// Deprecated/excluded chain IDs - these chains are no longer actively monitored
-// Source: wormhole-dashboard/common/src/utils.ts isChainDeprecated()
-const EXCLUDED_CHAIN_IDS: number[] = [
-  3, // Terra
-  7, // Oasis
-  9, // Aurora
-  10, // Fantom
-  11, // Karura
-  12, // Acala
-  13, // Klaytn
-  17, // Neon
-  18, // Terra2
-  25, // Gnosis
-  28, // XPLA
-  33, // Rootstock
-  35, // Mantle
-  36, // Blast
-  37, // Xlayer
-  43, // Snaxchain
-  49, // Zerion
-];
-
 // Dynamically derive supported chains from the SDK, filtering out deprecated chains and testnet chains
 const SUPPORTED_CHAIN_IDS: ChainId[] = chainIds
   .filter((id) => id < 10000) // Mainnet chains only (testnet IDs are >= 10000)
-  .filter((id) => !EXCLUDED_CHAIN_IDS.includes(id)) as ChainId[];
+  .filter((id) => !isChainDeprecated(id)) as ChainId[];
 
 function getChainIcon(chainId: number): string | null {
   try {

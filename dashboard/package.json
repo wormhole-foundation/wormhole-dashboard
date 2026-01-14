@@ -4,6 +4,7 @@
   "private": true,
   "license": "Apache-2.0",
   "dependencies": {
+    "@wormhole-foundation/wormhole-monitor-common": "*",
     "@certusone/wormhole-sdk-proto-web": "^0.0.7",
     "@emotion/react": "^11.10.0",
     "@emotion/styled": "^11.10.0",

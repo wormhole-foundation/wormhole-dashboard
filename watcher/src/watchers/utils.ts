@@ -43,7 +43,8 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Unichain' ||
     chainName === 'Worldchain' ||
     chainName === 'Xlayer' ||
-    chainName === 'XRPLEVM'
+    chainName === 'XRPLEVM' ||
+    chainName === 'ZeroGravity'
   ) {
     return new VAAWatcher(network, chainName);
   } else if (chainName === 'Klaytn') {

@@ -55,6 +55,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Worldchain: '5805110', // https://worldscan.org/tx/0x568eb14596296bda3022527cf0e915bfec073613b27c495e695fb9e08652f6fc
     Wormchain: '4510119', // https://bigdipper.live/wormhole/transactions/4D861F1BE86325D227FA006CA2745BBC6748AF5B5E0811DE536D02792928472A
     XRPLEVM: '1590372', // Block of contract creation, https://explorer.xrplevm.org/tx/0x0421c24113a47514a8f0c5511322702734b06ada4f43ca0a197a829ef1bfb203
+    ZeroGravity: '22460269', // Block of contract creation https://chainscan.0g.ai/tx/0xde0f992bc611ef203d84dd5a800cf9065c98a33db18228fae9309e69f22a4625
   },
   ['Testnet']: {
     Ethereum: '0',
@@ -93,6 +94,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Fogo: '9840330', // Block of contract creation
     Moca: '5329055', // Block of contract creation, https://testnet-scan.mocachain.org/tx/0x7d39257dfad53e2985eb26fb5549207200f23692e13a64b0670538148197a5a7
     MegaETH: '4290012', // Block of contract creation https://megaeth-testnet-v2.blockscout.com/tx/0x4c0ac471338ea109b8b3cb66967984766aa83edbeb843b63b2e24ded1dce52b9
+    ZeroGravity: '17810547', // Block of contract creation https://chainscan-galileo.0g.ai/tx/0xf59f5c14398c34fde63f0bf89f6f20c79210f2fd30ce2ffe3af284d19b4d067f
   },
   ['Devnet']: {},
 };

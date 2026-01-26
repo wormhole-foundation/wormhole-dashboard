@@ -59,6 +59,7 @@ const supportedChains: Chain[] =
         'Moca',
         'MegaETH',
         'MonadTestnet',
+        'ZeroGravity',
       ]
     : [
         // This is the list of chains supported in MAINNET.
@@ -96,6 +97,7 @@ const supportedChains: Chain[] =
         'Moca',
         'MegaETH',
         'Wormchain',
+        'ZeroGravity',
       ];
 
 const supportedNTTChains: Chain[] =

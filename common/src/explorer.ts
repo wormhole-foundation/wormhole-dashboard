@@ -78,6 +78,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://moca-mainnet.cloud.blockscout.com/block/${block}`
       : chainId === chainToChainId('MegaETH')
       ? `https://megaeth.blockscout.com/block/${block}`
+      : chainId === chainToChainId('ZeroGravity')
+      ? `https://chainscan.0g.ai/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/${block}?cluster=testnet`
@@ -147,6 +149,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://testnet-scan.mocachain.org/block/${block}`
     : chainId === chainToChainId('MegaETH')
     ? `https://megaeth-testnet-v2.blockscout.com/block/${block}`
+    : chainId === chainToChainId('ZeroGravity')
+    ? `https://chainscan-galileo.0g.ai/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -220,6 +224,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://moca-mainnet.cloud.blockscout.com/tx/${tx}`
       : chainId === chainToChainId('MegaETH')
       ? `https://megaeth.blockscout.com/tx/${tx}`
+      : chainId === chainToChainId('ZeroGravity')
+      ? `https://chainscan.0g.ai/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://solscan.io/txs/${tx}?cluster=testnet`
@@ -290,6 +296,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://testnet-scan.mocachain.org/tx/${tx}`
     : chainId === chainToChainId('MegaETH')
     ? `https://megaeth-testnet-v2.blockscout.com/tx/${tx}`
+    : chainId === chainToChainId('ZeroGravity')
+    ? `https://chainscan-galileo.0g.ai/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

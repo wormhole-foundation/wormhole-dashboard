@@ -113,7 +113,8 @@ test('getMessagesForBlocks - multiple calls (solana)', async () => {
   expect(allMessageKeys.length).toBe(uniqueMessageKeys.length); // assert no duplicate keys
 });
 
-test('getMessagesForBlocks - handle failed transactions (solana)', async () => {
+// This test is using a block range that does not exist anymore.
+test.skip('getMessagesForBlocks - handle failed transactions (solana)', async () => {
   const watcher = new SVMWatcher('Mainnet', 'Solana');
   const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(94401321, 94501321);
   expect(Object.keys(messages).length).toBe(6);

@@ -1,6 +1,9 @@
 import { Firestore } from 'firebase-admin/firestore';
 import { ChainId } from '@wormhole-foundation/sdk-base';
-import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
+import {
+  assertEnvironmentVariable,
+  isChainDeprecated,
+} from '@wormhole-foundation/wormhole-monitor-common';
 
 export type BlocksByChain = {
   [chain in ChainId]?: {
@@ -69,7 +72,13 @@ export async function getLatestBlocks(req: any, res: any) {
       console.log(`cache is still valid, not refreshing ${new Date()}`);
       messages = cache['messages'];
     }
-    res.status(200).send(JSON.stringify(messages));
+    const filteredMessages: BlocksByChain = {};
+    for (const [chain, data] of Object.entries(messages)) {
+      const chainId = Number(chain);
+      if (isChainDeprecated(chainId)) continue;
+      filteredMessages[chainId as ChainId] = data;
+    }
+    res.status(200).send(JSON.stringify(filteredMessages));
   } catch (e) {
     res.sendStatus(500);
   }

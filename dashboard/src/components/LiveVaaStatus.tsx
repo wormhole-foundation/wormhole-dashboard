@@ -41,6 +41,7 @@ import CollapsibleSection from './CollapsibleSection';
 const API_BASE_URL = 'https://api.corinth.gfx.town/api/v1/msc/guardian-stats';
 const HEALTH_THRESHOLDS = { healthy: 76, warning: 51 } as const;
 const PROBLEM_GUARDIAN_CHAIN_THRESHOLD = 3; // Guardian is "problematic" if underperforming on this many chains
+const SVM_CHAIN_IDS: readonly number[] = [1, 51]; // Solana, Fogo
 
 // Types
 type SortField = 'guardianName' | 'percentage' | 'lastSignedAt';
@@ -48,9 +49,19 @@ type ChainSortField = 'chainName' | 'percentage';
 type SortDirection = 'asc' | 'desc';
 type HealthStatus = 'healthy' | 'warning' | 'error';
 type TimeFrame = 'recent' | 'daily';
+type ShimFilter = 'all' | 'shim' | 'native';
 
-function getApiUrl(chainId: number, timeFrame: TimeFrame): string {
-  return `${API_BASE_URL}/${timeFrame}/${chainId}`;
+function isSvmChain(chainId: number): boolean {
+  return SVM_CHAIN_IDS.includes(chainId);
+}
+
+function getApiUrl(chainId: number, timeFrame: TimeFrame, shimFilter?: ShimFilter): string {
+  const baseUrl = `${API_BASE_URL}/${timeFrame}/${chainId}`;
+  const hasShimFilter = (shimFilter === 'shim' || shimFilter === 'native') && isSvmChain(chainId);
+  if (hasShimFilter) {
+    return `${baseUrl}?isShim=${shimFilter === 'shim'}`;
+  }
+  return baseUrl;
 }
 
 // Helper functions
@@ -122,7 +133,9 @@ interface GuardianStatsResponse {
   chainId: number;
   chainName: string;
   vaaCount: number;
-  updatedAt: string;
+  startTime: string;
+  endTime: string;
+  isSolanaShim?: boolean;
   guardianStats: GuardianStat[];
 }
 
@@ -681,6 +694,7 @@ function LiveVaaStatus() {
   const [chainSortField, setChainSortField] = useState<ChainSortField>('percentage');
   const [chainSortDirection, setChainSortDirection] = useState<SortDirection>('asc');
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('recent');
+  const [shimFilter, setShimFilter] = useState<ShimFilter>('all');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   // Initialize with all chains expanded
   const [expandedChains, setExpandedChains] = useState<Set<number>>(
@@ -722,7 +736,7 @@ function LiveVaaStatus() {
     let cancelled = false;
     setStatsWrapper((w) => ({ ...w, isFetching: true, error: null }));
 
-    const url = getApiUrl(selectedChainId, timeFrame);
+    const url = getApiUrl(selectedChainId, timeFrame, shimFilter);
 
     axios
       .get<GuardianStatsResponse>(url)
@@ -744,7 +758,7 @@ function LiveVaaStatus() {
     return () => {
       cancelled = true;
     };
-  }, [viewMode, selectedChainId, timeFrame, refreshTrigger]);
+  }, [viewMode, selectedChainId, timeFrame, shimFilter, refreshTrigger]);
 
   // Fetch guardian stats across all chains when in byGuardian mode
   useEffect(() => {
@@ -757,7 +771,7 @@ function LiveVaaStatus() {
     Promise.all(
       SUPPORTED_CHAIN_IDS.map((chainId) =>
         axios
-          .get<GuardianStatsResponse>(getApiUrl(chainId, timeFrame))
+          .get<GuardianStatsResponse>(getApiUrl(chainId, timeFrame, shimFilter))
           .then((res) => res.data)
           .catch(() => null)
       )
@@ -787,7 +801,7 @@ function LiveVaaStatus() {
     return () => {
       cancelled = true;
     };
-  }, [viewMode, selectedGuardian, timeFrame, refreshTrigger]);
+  }, [viewMode, selectedGuardian, timeFrame, shimFilter, refreshTrigger]);
 
   // Fetch all chain stats for aggregate view
   useEffect(() => {
@@ -799,7 +813,7 @@ function LiveVaaStatus() {
     Promise.all(
       SUPPORTED_CHAIN_IDS.map((chainId) =>
         axios
-          .get<GuardianStatsResponse>(getApiUrl(chainId, timeFrame))
+          .get<GuardianStatsResponse>(getApiUrl(chainId, timeFrame, shimFilter))
           .then((res) => res.data)
           .catch(() => null)
       )
@@ -825,7 +839,7 @@ function LiveVaaStatus() {
     return () => {
       cancelled = true;
     };
-  }, [viewMode, timeFrame, refreshTrigger]);
+  }, [viewMode, timeFrame, shimFilter, refreshTrigger]);
 
   const handleChainChange = (event: SelectChangeEvent<number>) => {
     setSelectedChainId(event.target.value as ChainId);
@@ -844,6 +858,13 @@ function LiveVaaStatus() {
     newTimeFrame: TimeFrame | null
   ) => {
     if (newTimeFrame) setTimeFrame(newTimeFrame);
+  };
+
+  const handleShimFilterChange = (
+    _: React.MouseEvent<HTMLElement>,
+    newShimFilter: ShimFilter | null
+  ) => {
+    if (newShimFilter) setShimFilter(newShimFilter);
   };
 
   const handleRefresh = () => {
@@ -1093,6 +1114,19 @@ function LiveVaaStatus() {
             <ToggleButton value="recent">Last 20 min</ToggleButton>
             <ToggleButton value="daily">Last 24 hours</ToggleButton>
           </ToggleButtonGroup>
+
+          <Tooltip title="Filter Solana/Fogo by shim or native transactions">
+            <ToggleButtonGroup
+              value={shimFilter}
+              exclusive
+              onChange={handleShimFilterChange}
+              size="small"
+            >
+              <ToggleButton value="all">All</ToggleButton>
+              <ToggleButton value="shim">Shim</ToggleButton>
+              <ToggleButton value="native">Native</ToggleButton>
+            </ToggleButtonGroup>
+          </Tooltip>
 
           <Button
             variant="outlined"
@@ -1344,7 +1378,7 @@ function LiveVaaStatus() {
                   {statsWrapper.data.vaaCount} VAAs
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                  (Updated: {new Date(statsWrapper.data.updatedAt).toLocaleString()})
+                  (Updated: {new Date(statsWrapper.data.endTime).toLocaleString()})
                 </Typography>
               </Box>
             )}

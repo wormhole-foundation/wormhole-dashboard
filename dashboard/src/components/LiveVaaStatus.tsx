@@ -133,9 +133,7 @@ interface GuardianStatsResponse {
   chainId: number;
   chainName: string;
   vaaCount: number;
-  startTime: string;
   endTime: string;
-  isSolanaShim?: boolean;
   guardianStats: GuardianStat[];
 }
 

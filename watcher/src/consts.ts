@@ -66,6 +66,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Wormchain: process.env.WORMCHAIN_RPC || 'https://gateway.mainnet.xlabs.xyz',
     Xlayer: process.env.XLAYER_RPC || 'https://rpc.ankr.com/xlayer',
     XRPLEVM: process.env.XRPL_EVM_RPC || 'https://rpc.xrplevm.org',
+    ZeroGravity: process.env.ZERO_GRAVITY_RPC || 'https://evmrpc.0g.ai',
   },
   ['Testnet']: {
     Ethereum: process.env.ETH_RPC,
@@ -111,6 +112,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Fogo: process.env.FOGO_RPC || 'https://testnet.fogo.io',
     Moca: process.env.MOCA_RPC || 'https://testnet-rpc.mocachain.org/',
     MegaETH: process.env.MEGAETH_RPC || 'https://timothy.megaeth.com/rpc',
+    ZeroGravity: process.env.ZERO_GRAVITY_RPC || 'https://rpc.ankr.com/0g_mainnet_evm',
   },
   ['Devnet']: {},
 };

@@ -241,6 +241,6 @@ export function stringifyWithBigInt(obj: any) {
 }
 
 export function isChainDeprecated(chainId: number): boolean {
-  const deprecatedChains = [3, 7, 9, 10, 11, 12, 17, 18, 25, 28, 33, 35, 36, 43, 49];
+  const deprecatedChains = [3, 7, 9, 10, 11, 12, 17, 18, 25, 28, 33, 35, 36, 37, 43, 49];
   return deprecatedChains.includes(chainId);
 }

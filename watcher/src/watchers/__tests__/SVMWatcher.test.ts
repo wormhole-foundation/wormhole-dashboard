@@ -24,7 +24,8 @@ test('getFinalizedBlockNumber fogo', async () => {
   expect(blockNumber).toBeGreaterThan(INITIAL_FOGO_BLOCK);
 });
 
-test('getMessagesForBlocks - single block (solana)', async () => {
+// skip: block 170799004 has been archived/garbage collected
+test.skip('getMessagesForBlocks - single block (solana)', async () => {
   const watcher = new SVMWatcher('Mainnet', 'Solana');
   const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(170799004, 170799004);
   expect(Object.keys(messages).length).toBe(1);
@@ -77,21 +78,24 @@ test('getMessagesForBlocks - block with no transactions (solana)', async () => {
   expect(Object.values(messages).flat().length).toBe(0);
 });
 
-test('getMessagesForBlocks - multiple blocks (solana)', async () => {
+// skip: blocks 171050470-171050474 have been archived/garbage collected
+test.skip('getMessagesForBlocks - multiple blocks (solana)', async () => {
   const watcher = new SVMWatcher('Mainnet', 'Solana');
   const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(171050470, 171050474);
   expect(Object.keys(messages).length).toBe(2);
   expect(Object.values(messages).flat().length).toBe(2);
 });
 
-test('getMessagesForBlocks - multiple blocks, last block empty (solana)', async () => {
+// skip: blocks 170823000-170825000 have been archived/garbage collected
+test.skip('getMessagesForBlocks - multiple blocks, last block empty (solana)', async () => {
   const watcher = new SVMWatcher('Mainnet', 'Solana');
   const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(170823000, 170825000);
   expect(Object.keys(messages).length).toBe(3);
   expect(Object.values(messages).flat().length).toBe(2); // 2 messages, last block has no message
 });
 
-test('getMessagesForBlocks - multiple blocks containing more than `getSignaturesLimit` WH transactions (solana)', async () => {
+// skip: blocks 171582367-171583452 have been archived/garbage collected
+test.skip('getMessagesForBlocks - multiple blocks containing more than `getSignaturesLimit` WH transactions (solana)', async () => {
   const watcher = new SVMWatcher('Mainnet', 'Solana');
   watcher.getSignaturesLimit = 10;
   const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(171582367, 171583452);

@@ -654,7 +654,8 @@ function LiveVaaStatus() {
   const { currentNetwork } = useNetworkContext();
   const { search, pathname } = useLocation();
   const history = useHistory();
-  const isMainnet = currentNetwork.env === 'Mainnet';
+  // const isMainnet = currentNetwork.env === 'Mainnet';
+  const isMainnet = true;
 
   // Parse initial view mode from URL query params
   const [viewMode, setViewMode] = useState<ViewMode>(() => {

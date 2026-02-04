@@ -30,7 +30,11 @@ const useGetAccountantPendingTransfers = (contractAddress: string): PendingTrans
   const [accountantInfo, setAccountantInfo] = useState<PendingTransfer[]>([]);
 
   useEffect(() => {
-    if (currentNetwork.name !== 'Mainnet' && currentNetwork.name !== 'Testnet') {
+    if (
+      currentNetwork.name !== 'Mainnet' &&
+      currentNetwork.name !== 'Testnet' &&
+      currentNetwork.name !== 'Delegated Guardians Testnet'
+    ) {
       return;
     }
     let cancelled = false;

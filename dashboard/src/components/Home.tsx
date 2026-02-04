@@ -64,7 +64,8 @@ function Home({
           <Divider />
           <Monitor governorInfo={governorInfo} />
         </>
-      ) : currentNetwork.name === 'Testnet' ? (
+      ) : currentNetwork.name === 'Testnet' ||
+        currentNetwork.name === 'Delegated Guardians Testnet' ? (
         <>
           <Accountant
             governorInfo={governorInfo}

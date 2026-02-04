@@ -20,7 +20,11 @@ const useGetAccountantAccounts = (contractAddress: string): Account[] => {
   const [accountantInfo, setAccountantInfo] = useState<Account[]>([]);
 
   useEffect(() => {
-    if (currentNetwork.name !== 'Mainnet' && currentNetwork.name !== 'Testnet') {
+    if (
+      currentNetwork.name !== 'Mainnet' &&
+      currentNetwork.name !== 'Testnet' &&
+      currentNetwork.name !== 'Delegated Guardians Testnet'
+    ) {
       return;
     }
     let cancelled = false;

@@ -30,7 +30,8 @@ function NavButton(props: any) {
 function NavLinks() {
   const { search } = useLocation();
   const { currentNetwork } = useNetworkContext();
-  const isMainnet = currentNetwork.env === 'Mainnet';
+  const isMainnet = true
+  // const isMainnet = currentNetwork.env === 'Mainnet';
   return (
     <>
       <NavLink

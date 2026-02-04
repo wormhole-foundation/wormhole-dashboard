@@ -42,6 +42,10 @@ import {
 import { chainIdToName, STANDBY_GUARDIANS } from '@wormhole-foundation/wormhole-monitor-common';
 import { useCallback, useMemo, useState } from 'react';
 import TimeAgo from 'react-timeago';
+import {
+  DelegatedGuardiansConfig,
+  useDelegatedGuardiansContext,
+} from '../contexts/DelegatedGuardiansContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import { Heartbeat } from '../utils/getLastHeartbeats';
 import { isHeartbeatUnhealthy } from './Chains';
@@ -135,10 +139,12 @@ function GuardianCard({
   heartbeat,
   highestByChain,
   latestRelease,
+  delegatedGuardiansConfig,
 }: {
   heartbeat: Heartbeat;
   highestByChain: HighestByChain;
   latestRelease: string | null;
+  delegatedGuardiansConfig: DelegatedGuardiansConfig;
 }) {
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback(() => {
@@ -147,21 +153,46 @@ function GuardianCard({
   const handleClose = useCallback(() => {
     setOpen(false);
   }, []);
-  const chainCount = Object.keys(highestByChain).length;
-  const healthyCount = useMemo(
-    () =>
-      heartbeat.networks.reduce(
-        (count, network) =>
-          isHeartbeatUnhealthy(
-            { guardian: heartbeat.guardianAddr, name: heartbeat.nodeName, network },
-            highestByChain[network.id.toString()]
-          )
-            ? count
-            : count + 1,
-        0
-      ),
-    [heartbeat, highestByChain]
-  );
+
+  // Calculate which chains this guardian is expected to listen to
+  // For delegated chains: only if guardian is in the delegated keys
+  // For non-delegated chains: all guardians should listen
+  const { chainCount, healthyCount } = useMemo(() => {
+    const guardianAddr = heartbeat.guardianAddr.toLowerCase();
+    let expectedChainCount = 0;
+    let healthyChainCount = 0;
+
+    for (const chainIdStr of Object.keys(highestByChain)) {
+      const chainId = Number(chainIdStr);
+      const delegatedConfig = delegatedGuardiansConfig[chainId];
+
+      // Check if this guardian is expected to listen to this chain
+      const isExpectedToListen = delegatedConfig
+        ? delegatedConfig.keys.some((key) => key.toLowerCase() === guardianAddr)
+        : true; // Non-delegated chains: all guardians should listen
+
+      if (!isExpectedToListen) {
+        continue; // Skip chains this guardian is not expected to listen to
+      }
+
+      expectedChainCount++;
+
+      // Check if guardian is healthy for this chain
+      const network = heartbeat.networks.find((n) => n.id === chainId);
+      if (network) {
+        const isUnhealthy = isHeartbeatUnhealthy(
+          { guardian: heartbeat.guardianAddr, name: heartbeat.nodeName, network },
+          highestByChain[chainIdStr]
+        );
+        if (!isUnhealthy) {
+          healthyChainCount++;
+        }
+      }
+      // If no network found, it's unhealthy (not listening)
+    }
+
+    return { chainCount: expectedChainCount, healthyCount: healthyChainCount };
+  }, [heartbeat, highestByChain, delegatedGuardiansConfig]);
   const conditionalRowStyle = useCallback(
     (network: Heartbeat_Network) =>
       isHeartbeatUnhealthy({ network, guardian: '', name: '' }, highestByChain[network.id])
@@ -169,7 +200,7 @@ function GuardianCard({
         : {},
     [highestByChain]
   );
-  const healthyPercent = (healthyCount / chainCount) * 100;
+  const healthyPercent = chainCount > 0 ? (healthyCount / chainCount) * 100 : 100;
   const hasLatestRelease = latestRelease && heartbeat.version !== latestRelease;
   return (
     <Box m={1} height="100%" sx={{ width: { sm: 232, xs: 142 } }}>
@@ -298,6 +329,8 @@ function Guardians({
   chainIdsToHeartbeats: ChainIdToHeartbeats;
   latestRelease: string | null;
 }) {
+  const { config: delegatedGuardiansConfig } = useDelegatedGuardiansContext();
+
   const [guardianHeartbeats, standbyHeartbeats] = useMemo(
     () =>
       heartbeats.reduce(
@@ -373,19 +406,41 @@ function Guardians({
     let numSuccess = 0;
     let numWarnings = 0;
     let numErrors = 0;
-    const chainCount = Object.keys(highestByChain).length;
+
     for (const heartbeat of guardianHeartbeats) {
-      const healthyCount = heartbeat.networks.reduce(
-        (count, network) =>
-          isHeartbeatUnhealthy(
+      const guardianAddr = heartbeat.guardianAddr.toLowerCase();
+      let expectedChainCount = 0;
+      let healthyChainCount = 0;
+
+      for (const chainIdStr of Object.keys(highestByChain)) {
+        const chainId = Number(chainIdStr);
+        const delegatedConfig = delegatedGuardiansConfig[chainId];
+
+        // Check if this guardian is expected to listen to this chain
+        const isExpectedToListen = delegatedConfig
+          ? delegatedConfig.keys.some((key) => key.toLowerCase() === guardianAddr)
+          : true; // Non-delegated chains: all guardians should listen
+
+        if (!isExpectedToListen) {
+          continue;
+        }
+
+        expectedChainCount++;
+
+        // Check if guardian is healthy for this chain
+        const network = heartbeat.networks.find((n) => n.id === chainId);
+        if (network) {
+          const isUnhealthy = isHeartbeatUnhealthy(
             { guardian: heartbeat.guardianAddr, name: heartbeat.nodeName, network },
-            highestByChain[network.id.toString()]
-          )
-            ? count
-            : count + 1,
-        0
-      );
-      const healthyPercent = (healthyCount / chainCount) * 100;
+            highestByChain[chainIdStr]
+          );
+          if (!isUnhealthy) {
+            healthyChainCount++;
+          }
+        }
+      }
+
+      const healthyPercent = expectedChainCount > 0 ? (healthyChainCount / expectedChainCount) * 100 : 100;
       if (healthyPercent === 100) {
         numSuccess++;
       } else if (healthyPercent > 80) {
@@ -399,7 +454,7 @@ function Guardians({
       numWarnings,
       numErrors,
     };
-  }, [guardianHeartbeats, highestByChain]);
+  }, [guardianHeartbeats, highestByChain, delegatedGuardiansConfig]);
   return (
     <CollapsibleSection
       header={
@@ -498,6 +553,7 @@ function Guardians({
                 heartbeat={hb}
                 highestByChain={highestByChain}
                 latestRelease={latestRelease}
+                delegatedGuardiansConfig={delegatedGuardiansConfig}
               />
             ))}
           </Box>
@@ -511,6 +567,7 @@ function Guardians({
                 heartbeat={hb}
                 highestByChain={highestByChain}
                 latestRelease={latestRelease}
+                delegatedGuardiansConfig={delegatedGuardiansConfig}
               />
             ))}
           </Box>

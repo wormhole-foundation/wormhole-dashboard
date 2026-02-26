@@ -29,6 +29,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/protobuf/proto"
 )
@@ -232,6 +233,41 @@ func main() {
 	mu := sync.Mutex{}
 	pythNetSeqs := map[string]map[uint64]time.Time{}
 
+	type latestHeartbeat struct {
+		bootTimestamp int64
+		counter       int64
+	}
+
+	// Holds the most recent heartbeat (time-wise, not reception-wise) (NodeName → last seen)
+	lastHeartbeat := map[string]latestHeartbeat{}
+
+	// Seed most recent heartbeats from existing Firestore data
+	iter := client.Collection("heartbeats").Documents(ctx)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			logger.Info("Error reading heartbeats for seeding", zap.Error(err))
+			break
+		}
+		data := doc.Data()
+		nodeName, _ := data["nodeName"].(string)
+		counterStr, _ := data["counter"].(string)
+		bootTsStr, _ := data["bootTimestamp"].(string)
+		if nodeName == "" {
+			continue
+		}
+		counter, _ := strconv.ParseInt(counterStr, 10, 64)
+		bootTs, _ := strconv.ParseInt(bootTsStr, 10, 64)
+		lastHeartbeat[nodeName] = latestHeartbeat{
+			bootTimestamp: bootTs,
+			counter:       counter,
+		}
+	}
+	logger.Info("Seeded heartbeats from Firestore", zap.Int("count", len(lastHeartbeat)))
+
 	// Write signed VAAs to bigtable periodically
 	go func() {
 		signedVAAs := map[string][]byte{}
@@ -325,6 +361,25 @@ func main() {
 				return
 			case hb := <-heartbeatC:
 				id := hb.NodeName
+
+				// Only write if this is a newer heartbeat than the last one we saw.
+				// Accept if: new guardian (not seen before), newer boot cycle, or higher counter.
+				prev, hasPrev := lastHeartbeat[id]
+				if hasPrev {
+					if hb.BootTimestamp < prev.bootTimestamp {
+						continue
+					}
+					if hb.BootTimestamp == prev.bootTimestamp && hb.Counter <= prev.counter {
+						continue
+					}
+				}
+
+				// Update high-water mark
+				lastHeartbeat[id] = latestHeartbeat{
+					bootTimestamp: hb.BootTimestamp,
+					counter:       hb.Counter,
+				}
+
 				now := time.Now()
 				networks := make([]*map[string]interface{}, 0, len(hb.Networks))
 				for _, network := range hb.Networks {

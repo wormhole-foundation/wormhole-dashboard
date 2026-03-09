@@ -33,12 +33,13 @@ import { chainToIcon } from '@wormhole-foundation/sdk-icons';
 import axios from 'axios';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Redirect, useLocation, useHistory } from 'react-router-dom';
+import { GUARDIAN_SET } from '@wormhole-foundation/wormhole-monitor-common';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
 import CollapsibleSection from './CollapsibleSection';
 
 // Constants
-const API_BASE_URL = 'https://api.corinth.gfx.town/api/v1/msc/guardian-stats';
+const API_BASE_URL = 'https://message-signing-checker.fly.dev/api/v1/msc/guardian-stats';
 const HEALTH_THRESHOLDS = { healthy: 76, warning: 51 } as const;
 const PROBLEM_GUARDIAN_CHAIN_THRESHOLD = 3; // Guardian is "problematic" if underperforming on this many chains
 const SVM_CHAIN_IDS: readonly number[] = [1, 51]; // Solana, Fogo
@@ -349,27 +350,7 @@ function SortableHeader<T extends string>({
 }
 
 // Known guardian names (sorted alphabetically)
-const GUARDIAN_NAMES = [
-  '01node',
-  'ChainLayer',
-  'ChainodeTech',
-  'Chorus One',
-  'Everstake',
-  'Figment',
-  'Forbole',
-  'HashKey Cloud',
-  'Inotel',
-  'MCF',
-  'Moonlet',
-  'P2P Validator',
-  'RockawayX',
-  'Staked',
-  'Staking Facilities',
-  'Staking Fund',
-  'syncnode',
-  'Triton',
-  'xLabs',
-];
+const GUARDIAN_NAMES = GUARDIAN_SET.map((g) => g.name).sort();
 
 type ViewMode = 'aggregate' | 'byChain' | 'byGuardian';
 

@@ -20,7 +20,7 @@ import { Redirect, useLocation } from 'react-router-dom';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import CollapsibleSection from './CollapsibleSection';
 
-const API_BASE_URL = 'https://api.corinth.gfx.town/api/v1/msc/slo-report';
+const API_BASE_URL = 'https://message-signing-checker.fly.dev/api/v1/msc/slo-report';
 const MIN_YEAR = 2021;
 const MAX_YEAR = 2030;
 const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4'] as const;

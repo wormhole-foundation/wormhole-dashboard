@@ -18,6 +18,7 @@ import {
 import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
+import { MSC_API_BASE_URL } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
 
 interface DailyMessageTransaction {
@@ -164,7 +165,7 @@ function DailyMessageSigning() {
     setStatusWrapper((w) => ({ ...w, isFetching: true, error: null }));
 
     axios
-      .get<DailyMessageStatusResponse>('https://message-signing-checker.fly.dev/api/v1/msc/status')
+      .get<DailyMessageStatusResponse>(`${MSC_API_BASE_URL}/status`)
       .then((response) => {
         if (!cancelled) {
           setStatusWrapper(receiveDataWrapper(response.data));

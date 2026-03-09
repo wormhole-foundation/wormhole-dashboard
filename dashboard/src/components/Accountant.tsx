@@ -28,7 +28,7 @@ import {
 import { isChainId } from '@wormhole-foundation/sdk-base';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
-  GUARDIAN_SET_4,
+  GUARDIAN_SET,
   chainIdToName,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { queryContractSmart } from '@wormhole-foundation/wormhole-monitor-common/src/queryContractSmart';
@@ -86,7 +86,7 @@ function getNumSignatures(signatures: string) {
 }
 
 function getSignatureBits(signatures: string) {
-  return Number(signatures).toString(2).padStart(GUARDIAN_SET_4.length, '0');
+  return Number(signatures).toString(2).padStart(GUARDIAN_SET.length, '0');
 }
 
 function getGuardiansFromSignatures(signatures: string) {
@@ -94,7 +94,7 @@ function getGuardiansFromSignatures(signatures: string) {
   const bitString = getSignatureBits(signatures);
   for (let idx = 0; idx < bitString.length; idx++) {
     if (bitString[idx] === '1') {
-      guardians.push(GUARDIAN_SET_4[bitString.length - 1 - idx].name);
+      guardians.push(GUARDIAN_SET[bitString.length - 1 - idx].name);
     }
   }
   return guardians.reverse().join(', ');
@@ -105,7 +105,7 @@ function getMissingGuardiansFromSignatures(signatures: string) {
   const bitString = getSignatureBits(signatures);
   for (let idx = 0; idx < bitString.length; idx++) {
     if (bitString[idx] === '0') {
-      guardians.push(GUARDIAN_SET_4[bitString.length - 1 - idx].name);
+      guardians.push(GUARDIAN_SET[bitString.length - 1 - idx].name);
     }
   }
   return guardians.reverse().join(', ');
@@ -449,7 +449,7 @@ function Accountant({
   );
 
   const guardianSigningStats: GuardianSigningStat[] = useMemo(() => {
-    const stats: GuardianSigningStat[] = GUARDIAN_SET_4.map((g) => ({
+    const stats: GuardianSigningStat[] = GUARDIAN_SET.map((g) => ({
       name: g.name,
       numSigned: 0,
       outOf: pendingTransferInfo.length,

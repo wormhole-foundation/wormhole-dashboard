@@ -19,7 +19,7 @@ import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import { Heartbeat } from '../utils/getLastHeartbeats';
 import {
-  GUARDIAN_SET_4,
+  GUARDIAN_SET,
   STANDBY_GUARDIANS,
   chainIdToName,
 } from '@wormhole-foundation/wormhole-monitor-common';
@@ -34,7 +34,7 @@ export const getBehindDiffForChain = (chainId: number) =>
   isLayer2(chainId) ? BEHIND_DIFF * 2 : BEHIND_DIFF;
 
 export const getNumGuardians = (environment: Environment) =>
-  environment === 'Mainnet' ? GUARDIAN_SET_4.length : 1;
+  environment === 'Mainnet' ? GUARDIAN_SET.length : 1;
 
 export function getQuorumCount(environment: Environment): number {
   return Math.floor((getNumGuardians(environment) * 2) / 3 + 1);

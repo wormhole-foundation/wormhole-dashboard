@@ -10,7 +10,8 @@
     "clean": "tsc -b --clean",
     "watch": "tsc -b -w -i",
     "cf:dev": "npm run build && functions-framework --target=$FUNCTION",
-    "cf:deploy": "bash cloud_functions/scripts/deploy.sh"
+    "cf:deploy": "bash cloud_functions/scripts/deploy.sh",
+    "generate-guardians": "npx tsx scripts/generate-guardian-set.ts"
   },
   "workspaces": [
     "common",

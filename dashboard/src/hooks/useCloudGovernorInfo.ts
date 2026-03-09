@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { getQuorumCount } from '../components/Alerts';
-import { GUARDIAN_SET_4 } from '@wormhole-foundation/wormhole-monitor-common';
+import { GUARDIAN_SET } from '@wormhole-foundation/wormhole-monitor-common';
 import { tryHexToNativeAssetString } from '../utils/nativeAsset';
 
 export interface AvailableNotionalByChain {
@@ -125,12 +125,12 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
   } = {};
   for (const config of configs.data.governorConfigs) {
     if (
-      config.guardianAddress.toLowerCase() === GUARDIAN_SET_4[0].pubkey.toLowerCase().substring(2)
+      config.guardianAddress.toLowerCase() === GUARDIAN_SET[0].pubkey.toLowerCase().substring(2)
     ) {
       firstConfig = config;
     }
     const guardianName =
-      GUARDIAN_SET_4.find(
+      GUARDIAN_SET.find(
         (g) => `0x${config.guardianAddress}`.toLowerCase() === g.pubkey.toLowerCase()
       )?.name || config.guardianAddress;
     for (const chain of config.chains) {
@@ -208,7 +208,7 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
   const totalEnqueuedVaas: TotalEnqueuedVaasByGuardianByChain = {};
   for (const s of status.data.governorStatus) {
     const guardianName =
-      GUARDIAN_SET_4.find((g) => `0x${s.guardianAddress}`.toLowerCase() === g.pubkey.toLowerCase())
+      GUARDIAN_SET.find((g) => `0x${s.guardianAddress}`.toLowerCase() === g.pubkey.toLowerCase())
         ?.name || s.guardianAddress;
     for (const chain of s.chains) {
       for (const emitter of chain.emitters) {

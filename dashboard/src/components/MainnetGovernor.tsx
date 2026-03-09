@@ -30,7 +30,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { GUARDIAN_SET_4, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
+import { GUARDIAN_SET, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import numeral from 'numeral';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
@@ -309,13 +309,13 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
     onSortingChange: setNotionalSorting,
   });
   const guardianHoldingStats: GuardianHoldingStat[] = useMemo(() => {
-    const stats: GuardianHoldingStat[] = GUARDIAN_SET_4.map((g) => ({
+    const stats: GuardianHoldingStat[] = GUARDIAN_SET.map((g) => ({
       name: g.name,
       numHeld: 0,
       byChain: {},
     }));
     for (const gPub of Object.keys(governorInfo.totalEnqueuedVaas)) {
-      const idx = GUARDIAN_SET_4.findIndex(
+      const idx = GUARDIAN_SET.findIndex(
         (g) => `0x${gPub}`.toLowerCase() === g.pubkey.toLowerCase()
       );
       if (idx !== -1) {

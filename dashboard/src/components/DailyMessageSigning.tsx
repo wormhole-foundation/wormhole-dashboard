@@ -164,7 +164,7 @@ function DailyMessageSigning() {
     setStatusWrapper((w) => ({ ...w, isFetching: true, error: null }));
 
     axios
-      .get<DailyMessageStatusResponse>('https://api.corinth.gfx.town/api/v1/msc/status')
+      .get<DailyMessageStatusResponse>('https://message-signing-checker.fly.dev/api/v1/msc/status')
       .then((response) => {
         if (!cancelled) {
           setStatusWrapper(receiveDataWrapper(response.data));

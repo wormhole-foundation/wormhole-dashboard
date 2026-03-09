@@ -36,10 +36,11 @@ import { Redirect, useLocation, useHistory } from 'react-router-dom';
 import { GUARDIAN_SET } from '@wormhole-foundation/wormhole-monitor-common';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/DataWrapper';
+import { MSC_API_BASE_URL } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
 
 // Constants
-const API_BASE_URL = 'https://message-signing-checker.fly.dev/api/v1/msc/guardian-stats';
+const API_BASE_URL = `${MSC_API_BASE_URL}/guardian-stats`;
 const HEALTH_THRESHOLDS = { healthy: 76, warning: 51 } as const;
 const PROBLEM_GUARDIAN_CHAIN_THRESHOLD = 3; // Guardian is "problematic" if underperforming on this many chains
 const SVM_CHAIN_IDS: readonly number[] = [1, 51]; // Solana, Fogo

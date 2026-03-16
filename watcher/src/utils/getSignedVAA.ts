@@ -13,7 +13,7 @@ export const getSignedVAA = async (
     try {
       const result = await axios.get(
         `${host}/v1/signed_vaa/${chain}/${emitter}/${sequence.toString()}`,
-        AXIOS_CONFIG_JSON
+        { ...AXIOS_CONFIG_JSON, timeout: 2000 }
       );
       if (result.data.vaaBytes) {
         return Buffer.from(result.data.vaaBytes, 'base64');

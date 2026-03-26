@@ -83,18 +83,27 @@ func main() {
 			logger.Fatal("failed to create subscription", zap.String("p2pBootstrap", p2pBootstrap), zap.Error(err))
 		}
 
-		topic := fmt.Sprintf("%s/%s", p2pNetworkID, "broadcast")
-		topicHandle, err := ps.Join(topic)
+		topicControl := fmt.Sprintf("%s/%s", p2pNetworkID, "control")
+		topicAttestation := fmt.Sprintf("%s/%s", p2pNetworkID, "attestation")
+		topicControlHandle, err := ps.Join(topicControl)
 		if err != nil {
-			logger.Fatal("failed to join topic", zap.String("p2pBootstrap", p2pBootstrap), zap.Error(err))
+			logger.Fatal("failed to join control topic", zap.String("p2pBootstrap", p2pBootstrap), zap.Error(err))
 		}
-		sub, err := topicHandle.Subscribe()
+		topicAttestationHandle, err := ps.Join(topicAttestation)
 		if err != nil {
-			logger.Fatal("failed to subscribe to topic", zap.String("p2pBootstrap", p2pBootstrap), zap.Error(err))
+			logger.Fatal("failed to join attestation topic", zap.String("p2pBootstrap", p2pBootstrap), zap.Error(err))
+		}
+		subControl, err := topicControlHandle.Subscribe()
+		if err != nil {
+			logger.Fatal("failed to subscribe to control topic", zap.String("p2pBootstrap", p2pBootstrap), zap.Error(err))
+		}
+		subAttestation, err := topicAttestationHandle.Subscribe()
+		if err != nil {
+			logger.Fatal("failed to subscribe to attestation topic", zap.String("p2pBootstrap", p2pBootstrap), zap.Error(err))
 		}
 		go func() {
 			for {
-				envelope, err := sub.Next(localContext)
+				envelope, err := subControl.Next(localContext)
 				if err != nil {
 					logger.Info("failed to receive pubsub message", zap.Error(err))
 					break
@@ -116,6 +125,26 @@ func main() {
 							hbReceived = true
 						}
 					}
+				}
+			}
+			subControl.Cancel()
+		}()
+		go func() {
+			for {
+				envelope, err := subAttestation.Next(localContext)
+				if err != nil {
+					logger.Info("failed to receive pubsub message", zap.Error(err))
+					break
+				}
+				var msg gossipv1.GossipMessage
+				err = proto.Unmarshal(envelope.Data, &msg)
+				if err != nil {
+					logger.Info("received invalid message",
+						zap.Binary("data", envelope.Data),
+						zap.String("from", envelope.GetFrom().String()))
+					continue
+				}
+				switch m := msg.Message.(type) {
 				case *gossipv1.GossipMessage_SignedObservationBatch:
 					logger.Debug("received observation batch")
 					if bytes.Equal(m.SignedObservationBatch.Addr, guardianPubKey) {
@@ -123,22 +152,24 @@ func main() {
 					}
 				}
 			}
-			// Start shutdown
-			logger.Debug("Shutting down...")
-			sub.Cancel()
-			if err := topicHandle.Close(); err != nil {
-				logger.Info("Error closing the broadcast topic", zap.Error(err))
-			}
-			if err := host.Close(); err != nil {
-				logger.Info("Error closing the host", zap.Error(err))
-			}
-			// End shutdown
+			subAttestation.Cancel()
 		}()
 		time.Sleep(timeout)
 		// Cancel local context to break out of sub.Next()
 		localCancel()
-		logger.Info("local context cancelled")
-
+		logger.Debug("local context cancelled")
+		// Start shutdown
+		logger.Info("Shutting down...")
+		if err := topicControlHandle.Close(); err != nil {
+			logger.Debug("Error closing the control topic", zap.Error(err))
+		}
+		if err := topicAttestationHandle.Close(); err != nil {
+			logger.Debug("Error closing the attestation topic", zap.Error(err))
+		}
+		if err := host.Close(); err != nil {
+			logger.Info("Error closing the host", zap.Error(err))
+		}
+		// End shutdown
 		if hbReceived {
 			fmt.Println("✅ guardian heartbeat received", addrInfo.String())
 		} else {

@@ -1,6 +1,6 @@
 module github.com/wormhole-foundation/wormhole-monitor/fly
 
-go 1.23.3
+go 1.24.13
 
 require (
 	cloud.google.com/go/bigtable v1.18.1
@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/pubsub v1.33.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/buger/goterm v1.0.4
-	github.com/certusone/wormhole/node v0.0.0-20251024160016-9dee1cfa9078
+	github.com/certusone/wormhole/node v0.0.0-20260326191553-d739971ee778
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/ipfs/go-log/v2 v2.5.1
@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1
 	github.com/stretchr/testify v1.9.0
-	github.com/wormhole-foundation/wormhole/sdk v0.0.0-20251024160016-9dee1cfa9078
+	github.com/wormhole-foundation/wormhole/sdk v0.0.0-20260326191553-d739971ee778
 	go.uber.org/zap v1.27.0
 	google.golang.org/api v0.126.0
 	google.golang.org/protobuf v1.35.1

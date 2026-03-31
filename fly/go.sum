@@ -191,8 +191,8 @@ github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA
 github.com/census-instrumentation/opencensus-proto v0.3.0/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/census-instrumentation/opencensus-proto v0.4.1 h1:iKLQ0xPNFxR/2hzXZMrBo8f1j86j5WHzznCCQxV/b8g=
 github.com/census-instrumentation/opencensus-proto v0.4.1/go.mod h1:4T9NM4+4Vw91VeyqjLS6ao50K5bOcLKN6Q42XnYaRYw=
-github.com/certusone/wormhole/node v0.0.0-20251024160016-9dee1cfa9078 h1:bR3mRFrGoWMYhKa5Zy2XOgHj7bJgpx9JH3lFc4NGnT0=
-github.com/certusone/wormhole/node v0.0.0-20251024160016-9dee1cfa9078/go.mod h1:n0XY6MoxDMGcPmXdQZrQI68pWu189RWI++4C9pFPuzs=
+github.com/certusone/wormhole/node v0.0.0-20260326191553-d739971ee778 h1:mwYbNga1fKwB2PQytu4lFK68WnxQe1dq7mizgAuaU8Y=
+github.com/certusone/wormhole/node v0.0.0-20260326191553-d739971ee778/go.mod h1:xTx12JQ3VOgK/zYnKpRn75qIAy5vwfPYSwH0X7wOGtk=
 github.com/cespare/cp v0.1.0 h1:SE+dxFebS7Iik5LK0tsi1k9ZCxEaFX4AjQmoyA+1dJk=
 github.com/cespare/cp v0.1.0/go.mod h1:SOGHArjBr4JWaSDEVpWpo/hNg6RoKrls6Oh40hiwW+s=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
@@ -1116,8 +1116,8 @@ github.com/whyrusleeping/go-keyspace v0.0.0-20160322163242-5b898ac5add1/go.mod h
 github.com/wlynxg/anet v0.0.3/go.mod h1:eay5PRQr7fIVAMbTbchTnO9gG65Hg/uYGdc7mguHxoA=
 github.com/wlynxg/anet v0.0.5 h1:J3VJGi1gvo0JwZ/P1/Yc/8p63SoW98B5dHkYDmpgvvU=
 github.com/wlynxg/anet v0.0.5/go.mod h1:eay5PRQr7fIVAMbTbchTnO9gG65Hg/uYGdc7mguHxoA=
-github.com/wormhole-foundation/wormhole/sdk v0.0.0-20251024160016-9dee1cfa9078 h1:XbZLK6D34dv+hjKuy/Fy6aR7mnFIXFizymre61Z8tkc=
-github.com/wormhole-foundation/wormhole/sdk v0.0.0-20251024160016-9dee1cfa9078/go.mod h1:pE/jYet19kY4P3V6mE2+01zvEfxdyBqv6L6HsnSa5uc=
+github.com/wormhole-foundation/wormhole/sdk v0.0.0-20260326191553-d739971ee778 h1:Ryy/05JCBFKWYNZMOBrskDMHW8GX/pgPUUkm5kmy4kM=
+github.com/wormhole-foundation/wormhole/sdk v0.0.0-20260326191553-d739971ee778/go.mod h1:pE/jYet19kY4P3V6mE2+01zvEfxdyBqv6L6HsnSa5uc=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=
 github.com/xdg-go/scram v1.1.1/go.mod h1:RaEWvsqvNKKvBPvcKeFjrG2cJqOkHTiyTpzz23ni57g=
 github.com/xdg-go/stringprep v1.0.3/go.mod h1:W3f5j4i+9rC0kuIEJL0ky1VpHXQU3ocBgklLGvcBnW8=

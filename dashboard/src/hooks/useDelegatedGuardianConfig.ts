@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';
+import { Environment } from '../contexts/NetworkContext';
 
 const DELEGATED_GUARDIAN_CONTRACT = '0x1462800febd49232798132e8c8b721aa86c4c209' as const;
 
@@ -40,10 +41,15 @@ const client = createPublicClient({
   transport: http('https://ethereum-rpc.publicnode.com'),
 });
 
-function useDelegatedGuardianConfig(): DelegatedGuardianConfigMap {
+function useDelegatedGuardianConfig(environment: Environment): DelegatedGuardianConfigMap {
   const [config, setConfig] = useState<DelegatedGuardianConfigMap>({});
 
   useEffect(() => {
+    if (environment !== 'Mainnet') {
+      setConfig({});
+      return;
+    }
+
     let cancelled = false;
 
     async function fetchConfig() {
@@ -75,7 +81,7 @@ function useDelegatedGuardianConfig(): DelegatedGuardianConfigMap {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [environment]);
 
   return config;
 }

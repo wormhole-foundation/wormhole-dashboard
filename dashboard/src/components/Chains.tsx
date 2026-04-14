@@ -294,7 +294,7 @@ type ChainHelpers = {
 
 function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeartbeats }) {
   const environment = useCurrentEnvironment();
-  const delegateConfig = useDelegatedGuardianConfig();
+  const delegateConfig = useDelegatedGuardianConfig(environment);
   const {
     helpers,
     numSuccess,

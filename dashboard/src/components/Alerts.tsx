@@ -17,6 +17,7 @@ import {
 import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
+import { DelegatedGuardianConfigMap } from '../hooks/useDelegatedGuardianConfig';
 import { Heartbeat } from '../utils/getLastHeartbeats';
 import {
   GUARDIAN_SET,
@@ -36,16 +37,35 @@ export const getBehindDiffForChain = (chainId: number) =>
 export const getNumGuardians = (environment: Environment) =>
   environment === 'Mainnet' ? GUARDIAN_SET.length : 1;
 
-export function getQuorumCount(environment: Environment): number {
+export function getQuorumCount(
+  environment: Environment,
+  chainId?: number,
+  delegateConfig?: DelegatedGuardianConfigMap
+): number {
+  if (delegateConfig && chainId !== undefined && delegateConfig[chainId]) {
+    return delegateConfig[chainId].threshold;
+  }
   return Math.floor((getNumGuardians(environment) * 2) / 3 + 1);
 }
 
-export function getWarningCount(environment: Environment): number {
+export function getWarningCount(
+  environment: Environment,
+  chainId?: number,
+  delegateConfig?: DelegatedGuardianConfigMap
+): number {
+  if (delegateConfig && chainId !== undefined && delegateConfig[chainId]) {
+    const { numGuardians } = delegateConfig[chainId];
+    return Math.max(numGuardians - CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD + 1, 1);
+  }
   return Math.max(getNumGuardians(environment) - CHAIN_LESS_THAN_MAX_WARNING_THRESHOLD + 1, 1);
 }
 
-export function getQuorumLossCount(environment: Environment): number {
-  return getNumGuardians(environment) - getQuorumCount(environment) + 1;
+export function getQuorumLossCount(
+  environment: Environment,
+  chainId?: number,
+  delegateConfig?: DelegatedGuardianConfigMap
+): number {
+  return getNumGuardians(environment) - getQuorumCount(environment, chainId, delegateConfig) + 1;
 }
 
 type AlertEntry = {

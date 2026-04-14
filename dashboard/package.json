@@ -26,7 +26,8 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^5.3.4",
     "react-timeago": "^7.1.0",
-    "use-debounce": "^10.0.0"
+    "use-debounce": "^10.0.0",
+    "viem": "^2.47.17"
   },
   "scripts": {
     "start": "vite",

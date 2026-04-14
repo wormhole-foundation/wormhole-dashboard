@@ -34,6 +34,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
+import useDelegatedGuardianConfig, {
+  DelegatedGuardianConfigMap,
+} from '../hooks/useDelegatedGuardianConfig';
 import { CHAIN_ICON_MAP } from '../utils/consts';
 import {
   BEHIND_DIFF,
@@ -103,12 +106,14 @@ function Chain({
   healthyCount,
   conditionalRowStyle,
   environment,
+  delegateConfig,
 }: {
   chainId: string;
   heartbeats: HeartbeatInfo[];
   healthyCount: number;
   conditionalRowStyle?: ((a: HeartbeatInfo) => SxProps<Theme> | undefined) | undefined;
   environment: Environment;
+  delegateConfig: DelegatedGuardianConfigMap;
 }) {
   const [guardianHeartbeats, standbyHeartbeats] = useMemo(
     () =>
@@ -123,6 +128,21 @@ function Chain({
       ),
     [heartbeats]
   );
+  const numChainId = Number(chainId);
+  const dc = delegateConfig[numChainId];
+  const [delegateHeartbeats, canonicalHeartbeats] = useMemo(() => {
+    if (!dc) return [[] as HeartbeatInfo[], guardianHeartbeats];
+    const delegates: HeartbeatInfo[] = [];
+    const canonical: HeartbeatInfo[] = [];
+    for (const hb of guardianHeartbeats) {
+      if (dc.keys.includes(hb.guardian.toLowerCase())) {
+        delegates.push(hb);
+      } else {
+        canonical.push(hb);
+      }
+    }
+    return [delegates, canonical];
+  }, [dc, guardianHeartbeats]);
   const smUp = useMediaQuery((theme: any) => theme.breakpoints.up('sm'));
   const {
     settings: { showChainName },
@@ -134,6 +154,23 @@ function Chain({
   const handleClose = useCallback(() => {
     setOpen(false);
   }, []);
+  const quorum = getQuorumCount(environment, numChainId, delegateConfig);
+  const warning = getWarningCount(environment, numChainId, delegateConfig);
+  const delegateHealthyCount = useMemo(() => {
+    if (!dc) return 0;
+    // Find the highest block among all guardians to determine health
+    let highest = BigInt(0);
+    for (const hb of guardianHeartbeats) {
+      const h = BigInt(hb.network.height);
+      if (h > highest) highest = h;
+    }
+    // Count only delegate set members that are healthy
+    return guardianHeartbeats.filter(
+      (hb) => dc.keys.includes(hb.guardian.toLowerCase()) && !isHeartbeatUnhealthy(hb, highest)
+    ).length;
+  }, [dc, guardianHeartbeats]);
+  const displayCount = dc ? delegateHealthyCount : healthyCount;
+  const totalGuardians = dc ? dc.numGuardians : guardianHeartbeats.length;
   return (
     <>
       <Box my={smUp ? 2 : 0.25} mx={1} textAlign={'center'}>
@@ -141,10 +178,11 @@ function Chain({
           title={
             <Box textAlign="center">
               <Typography>
-                {chainIdToName(Number(chainId))} ({chainId})
+                {chainIdToName(numChainId)} ({chainId})
               </Typography>
               <Typography>
-                {healthyCount} / {guardianHeartbeats.length}
+                {displayCount} / {totalGuardians}
+                {dc ? ` (quorum: ${dc.threshold})` : ''}
               </Typography>
             </Box>
           }
@@ -162,13 +200,9 @@ function Chain({
             <Box sx={{ position: 'relative', display: 'inline-flex' }}>
               <CircularProgress
                 variant="determinate"
-                value={healthyCount === 0 ? 100 : (healthyCount / guardianHeartbeats.length) * 100}
+                value={displayCount === 0 ? 100 : (displayCount / totalGuardians) * 100}
                 color={
-                  healthyCount < getQuorumCount(environment)
-                    ? 'error'
-                    : healthyCount < getWarningCount(environment)
-                    ? 'warning'
-                    : 'success'
+                  displayCount < quorum ? 'error' : displayCount < warning ? 'warning' : 'success'
                 }
                 thickness={smUp ? 6 : 4}
                 size={smUp ? 74 : 47}
@@ -218,7 +252,29 @@ function Chain({
           {chainIdToName(Number(chainId))} ({chainId})
         </DialogTitle>
         <DialogContent>
-          <ChainDetails heartbeats={guardianHeartbeats} conditionalRowStyle={conditionalRowStyle} />
+          {dc ? (
+            <>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                Delegate Guardians ({dc.threshold}/{dc.numGuardians} quorum)
+              </Typography>
+              <ChainDetails
+                heartbeats={delegateHeartbeats}
+                conditionalRowStyle={conditionalRowStyle}
+              />
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                Canonical Guardians
+              </Typography>
+              <ChainDetails
+                heartbeats={canonicalHeartbeats}
+                conditionalRowStyle={conditionalRowStyle}
+              />
+            </>
+          ) : (
+            <ChainDetails
+              heartbeats={guardianHeartbeats}
+              conditionalRowStyle={conditionalRowStyle}
+            />
+          )}
           <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
             Standby Guardians
           </Typography>
@@ -238,6 +294,7 @@ type ChainHelpers = {
 
 function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeartbeats }) {
   const environment = useCurrentEnvironment();
+  const delegateConfig = useDelegatedGuardianConfig();
   const {
     helpers,
     numSuccess,
@@ -269,9 +326,18 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
         (count, heartbeat) => count + (isHeartbeatUnhealthy(heartbeat, highest) ? 0 : 1),
         0
       );
-      if (healthyCount < getQuorumCount(environment)) {
+      const numChainId = Number(chainId);
+      const dc = delegateConfig[numChainId];
+      // For delegated chains, count only healthy guardians in the delegate set
+      const effectiveHealthyCount = dc
+        ? filteredHeartbeats.filter(
+            (hb) =>
+              dc.keys.includes(hb.guardian.toLowerCase()) && !isHeartbeatUnhealthy(hb, highest)
+          ).length
+        : healthyCount;
+      if (effectiveHealthyCount < getQuorumCount(environment, numChainId, delegateConfig)) {
         numErrors++;
-      } else if (healthyCount < getWarningCount(environment)) {
+      } else if (effectiveHealthyCount < getWarningCount(environment, numChainId, delegateConfig)) {
         numWarnings++;
       } else {
         numSuccess++;
@@ -285,7 +351,7 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
       numWarnings,
       numErrors,
     };
-  }, [chainIdsToHeartbeats, environment]);
+  }, [chainIdsToHeartbeats, environment, delegateConfig]);
   return (
     <CollapsibleSection
       header={
@@ -372,6 +438,7 @@ function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeart
             healthyCount={helpers[Number(chainId)].healthyCount}
             conditionalRowStyle={helpers[Number(chainId)].conditionalRowStyle}
             environment={environment}
+            delegateConfig={delegateConfig}
           />
         ))}
       </Box>

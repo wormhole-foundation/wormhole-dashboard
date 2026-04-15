@@ -255,12 +255,7 @@ export const NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET =
 export const NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET =
   'wormhole169tvyx49zmjqhlv7mzwj8j2weprascc0jq3rdglw9pynldqx34nscvhc7k';
 
-export const STANDBY_GUARDIANS = [
-  {
-    pubkey: '0x68c16a92903c4c74ffddc730582ba53d967d3dac',
-    name: 'Google Cloud',
-  },
-];
+export const STANDBY_GUARDIANS: { pubkey: `0x${string}`; name: string }[] = [];
 
 export type GuardianSetInfo = {
   timestamp: string;

@@ -275,10 +275,17 @@ function Chain({
               conditionalRowStyle={conditionalRowStyle}
             />
           )}
-          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-            Standby Guardians
-          </Typography>
-          <ChainDetails heartbeats={standbyHeartbeats} conditionalRowStyle={conditionalRowStyle} />
+          {STANDBY_GUARDIANS.length === 0 ? null : (
+            <>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                Standby Guardians
+              </Typography>
+              <ChainDetails
+                heartbeats={standbyHeartbeats}
+                conditionalRowStyle={conditionalRowStyle}
+              />
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -501,31 +501,39 @@ function Guardians({
               />
             ))}
           </Box>
-          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-            Standby Guardians
-          </Typography>
-          <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
-            {standbyHeartbeats.map((hb) => (
-              <GuardianCard
-                key={`${hb.guardianAddr}-${hb.nodeName}`}
-                heartbeat={hb}
-                highestByChain={highestByChain}
-                latestRelease={latestRelease}
-              />
-            ))}
-          </Box>
+          {STANDBY_GUARDIANS.length === 0 ? null : (
+            <>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                Standby Guardians
+              </Typography>
+              <Box display="flex" flexWrap="wrap" alignItems="center" justifyContent={'center'}>
+                {standbyHeartbeats.map((hb) => (
+                  <GuardianCard
+                    key={`${hb.guardianAddr}-${hb.nodeName}`}
+                    heartbeat={hb}
+                    highestByChain={highestByChain}
+                    latestRelease={latestRelease}
+                  />
+                ))}
+              </Box>
+            </>
+          )}
         </>
       ) : (
         <>
           <Card>
             <Table<Heartbeat> table={table} showRowCount />
           </Card>
-          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-            Standby Guardians
-          </Typography>
-          <Card>
-            <Table<Heartbeat> table={standbyTable} showRowCount />
-          </Card>
+          {STANDBY_GUARDIANS.length === 0 ? null : (
+            <>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                Standby Guardians
+              </Typography>
+              <Card>
+                <Table<Heartbeat> table={standbyTable} showRowCount />
+              </Card>
+            </>
+          )}
         </>
       )}
     </CollapsibleSection>

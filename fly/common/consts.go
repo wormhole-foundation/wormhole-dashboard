@@ -17,9 +17,7 @@ type GuardianEntry struct {
 	Address string
 }
 
-var StandbyMainnetGuardians = []GuardianEntry{
-	{19, "Google Cloud", "0x68c16a92903c4c74ffddc730582ba53d967d3dac"},
-}
+var StandbyMainnetGuardians = []GuardianEntry{}
 
 // Although there are multiple testnet guardians running, they all use the same key, so it looks like one.
 var TestnetGuardians = []GuardianEntry{

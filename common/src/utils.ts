@@ -100,6 +100,8 @@ export async function formatAndSendToSlack(info: SlackInfo): Promise<any> {
   // Construct the payload
   const payload = {
     channel: info.channelId,
+    // https://docs.slack.dev/messaging/unfurling-links-in-messages
+    unfurl_links: false,
     blocks: [
       {
         type: 'section',

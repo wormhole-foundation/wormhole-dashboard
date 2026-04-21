@@ -31,6 +31,7 @@ import {
 } from '@tanstack/react-table';
 import { chainIdToName, STANDBY_GUARDIANS } from '@wormhole-foundation/wormhole-monitor-common';
 import { useCallback, useMemo, useState } from 'react';
+import TimeAgo from 'react-timeago';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
@@ -68,6 +69,24 @@ const columns = [
   }),
   columnHelper.accessor('network.finalizedHeight', {
     header: () => 'Finalized',
+  }),
+  columnHelper.accessor('network.errorCount', {
+    header: () => 'Errors',
+  }),
+  columnHelper.accessor('network.lastObservationSignedAt', {
+    header: () => 'Last Observation',
+    cell: (info) => {
+      const value = info.getValue();
+      if (!value || value === '0') return null;
+      const ms = Number(value) / 1000000;
+      return (
+        <Tooltip title={new Date(ms).toLocaleString()}>
+          <span>
+            <TimeAgo date={ms} />
+          </span>
+        </Tooltip>
+      );
+    },
   }),
   columnHelper.accessor('network.contractAddress', {
     header: () => 'Contract',
@@ -247,7 +266,7 @@ function Chain({
           </Button>
         </Tooltip>
       </Box>
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
         <DialogTitle>
           {chainIdToName(Number(chainId))} ({chainId})
         </DialogTitle>

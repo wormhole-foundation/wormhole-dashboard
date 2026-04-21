@@ -22,6 +22,7 @@ export interface HeartbeatNetwork {
   errorCount: string;
   safeHeight: string;
   finalizedHeight: string;
+  lastObservationSignedAt?: string;
 }
 
 export async function getLastHeartbeats(

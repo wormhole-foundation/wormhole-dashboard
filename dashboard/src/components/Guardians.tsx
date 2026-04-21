@@ -1,4 +1,3 @@
-import { Heartbeat_Network } from '@certusone/wormhole-sdk-proto-web/lib/cjs/gossip/v1/gossip';
 import {
   CheckCircleOutline,
   ErrorOutline,
@@ -43,7 +42,7 @@ import { chainIdToName, STANDBY_GUARDIANS } from '@wormhole-foundation/wormhole-
 import { useCallback, useMemo, useState } from 'react';
 import TimeAgo from 'react-timeago';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
-import { Heartbeat } from '../utils/getLastHeartbeats';
+import { Heartbeat, HeartbeatNetwork } from '../utils/getLastHeartbeats';
 import { isHeartbeatUnhealthy } from './Chains';
 import CollapsibleSection from './CollapsibleSection';
 import Table from './Table';
@@ -87,7 +86,7 @@ const columns = [
 
 type HighestByChain = { [chainId: string]: bigint };
 
-const networkColumnHelper = createColumnHelper<Heartbeat_Network>();
+const networkColumnHelper = createColumnHelper<HeartbeatNetwork>();
 
 const networkColumns = [
   networkColumnHelper.accessor('id', {
@@ -99,7 +98,31 @@ const networkColumns = [
     ),
   }),
   networkColumnHelper.accessor('height', {
-    header: () => 'Height',
+    header: () => 'Latest',
+  }),
+  networkColumnHelper.accessor('safeHeight', {
+    header: () => 'Safe',
+  }),
+  networkColumnHelper.accessor('finalizedHeight', {
+    header: () => 'Finalized',
+  }),
+  networkColumnHelper.accessor('errorCount', {
+    header: () => 'Errors',
+  }),
+  networkColumnHelper.accessor('lastObservationSignedAt', {
+    header: () => 'Last Observation',
+    cell: (info) => {
+      const value = info.getValue();
+      if (!value || value === '0') return null;
+      const ms = Number(value) / 1000000;
+      return (
+        <Tooltip title={new Date(ms).toLocaleString()}>
+          <span>
+            <TimeAgo date={ms} />
+          </span>
+        </Tooltip>
+      );
+    },
   }),
   networkColumnHelper.accessor('contractAddress', {
     header: () => 'Contract',
@@ -113,10 +136,9 @@ function GuardianDetails({
 }: {
   heartbeat: Heartbeat;
   highestByChain: HighestByChain;
-  conditionalRowStyle?: ((a: Heartbeat_Network) => SxProps<Theme> | undefined) | undefined;
+  conditionalRowStyle?: ((a: HeartbeatNetwork) => SxProps<Theme> | undefined) | undefined;
 }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'id', desc: false }]);
-  console.log(sorting);
   const table = useReactTable({
     columns: networkColumns,
     data: heartbeat.networks,
@@ -128,7 +150,7 @@ function GuardianDetails({
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
   });
-  return <Table<Heartbeat_Network> table={table} conditionalRowStyle={conditionalRowStyle} />;
+  return <Table<HeartbeatNetwork> table={table} conditionalRowStyle={conditionalRowStyle} />;
 }
 
 function GuardianCard({
@@ -163,7 +185,7 @@ function GuardianCard({
     [heartbeat, highestByChain]
   );
   const conditionalRowStyle = useCallback(
-    (network: Heartbeat_Network) =>
+    (network: HeartbeatNetwork) =>
       isHeartbeatUnhealthy({ network, guardian: '', name: '' }, highestByChain[network.id])
         ? { backgroundColor: 'rgba(100,0,0,.2)' }
         : {},
@@ -273,7 +295,7 @@ function GuardianCard({
           </Box>
         </CardActionArea>
       </Card>
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="xl" fullWidth>
         <DialogTitle>{heartbeat.nodeName}</DialogTitle>
         <DialogContent>
           <GuardianDetails

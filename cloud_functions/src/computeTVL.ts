@@ -46,6 +46,22 @@ type CachedMetadata = {
   updatedAt: number;
 };
 
+type LatestTokenDataEntry = {
+  token_chain: number;
+  token_address: string;
+  native_address: string;
+  coin_gecko_coin_id: string;
+  decimals: number;
+  symbol: string;
+  name: string;
+  price_usd: number;
+};
+
+type LatestTokenData = {
+  data: LatestTokenDataEntry[];
+  updatedAt: number;
+};
+
 function cacheKey(token_chain: number, token_address: string): string {
   return `${token_chain}_${token_address}`;
 }
@@ -97,9 +113,7 @@ async function writeMetadata(
     .set(entry);
 }
 
-function indexCoinsByPlatform(
-  coins: CoinGeckoCoin[]
-): Map<string, Map<string, CoinGeckoCoin>> {
+function indexCoinsByPlatform(coins: CoinGeckoCoin[]): Map<string, Map<string, CoinGeckoCoin>> {
   const byPlatform = new Map<string, Map<string, CoinGeckoCoin>>();
   for (const coin of coins) {
     for (const [platform, address] of Object.entries(coin.platforms || {})) {
@@ -184,6 +198,9 @@ export async function computeTVL(req: any, res: any) {
   try {
     const tvlCollection = assertEnvironmentVariable('FIRESTORE_TVL_COLLECTION');
     const metadataCollection = assertEnvironmentVariable('FIRESTORE_TVL_METADATA_COLLECTION');
+    const latestTokenDataCollection = assertEnvironmentVariable(
+      'FIRESTORE_LATEST_TOKEN_DATA_COLLECTION'
+    );
     const apiKey = process.env.COINGECKO_API_KEY;
     const firestore = new Firestore();
 
@@ -208,9 +225,7 @@ export async function computeTVL(req: any, res: any) {
         });
       }
     }
-    const toResolve = Array.from(uniqueTokens.entries()).filter(([k]) =>
-      shouldRetry(cache.get(k))
-    );
+    const toResolve = Array.from(uniqueTokens.entries()).filter(([k]) => shouldRetry(cache.get(k)));
     console.log(`Need to resolve ${toResolve.length} tokens`);
 
     let coinsByPlatform: Map<string, Map<string, CoinGeckoCoin>> | undefined;
@@ -305,6 +320,42 @@ export async function computeTVL(req: any, res: any) {
     }
     await firestore.collection(tvlCollection).doc('tvl').set(notionalTvl);
     console.log(`Computed TVL: $${notionalTvl.AllTime['*']['*'].Notional.toFixed(2)}`);
+
+    // Also emit a denormalized token data doc that /latest-tokendata serves.
+    const latestTokenData: LatestTokenData = {
+      updatedAt: Date.now(),
+      data: Array.from(uniqueTokens.keys()).flatMap<LatestTokenDataEntry>((key) => {
+        const m = cache.get(key);
+        if (
+          !m ||
+          !m.resolved ||
+          !m.coin_gecko_coin_id ||
+          !m.native_address ||
+          m.decimals === null ||
+          m.symbol === null ||
+          m.name === null
+        ) {
+          return [];
+        }
+        const price_usd = prices[m.coin_gecko_coin_id]?.usd;
+        if (!price_usd) return [];
+        return [
+          {
+            token_chain: m.token_chain,
+            token_address: m.token_address,
+            native_address: m.native_address,
+            coin_gecko_coin_id: m.coin_gecko_coin_id,
+            decimals: m.decimals,
+            symbol: m.symbol,
+            name: m.name,
+            price_usd,
+          },
+        ];
+      }),
+    };
+    await firestore.collection(latestTokenDataCollection).doc('latest').set(latestTokenData);
+    console.log(`Wrote ${latestTokenData.data.length} token data entries`);
+
     res.sendStatus(200);
   } catch (e) {
     console.error(e);

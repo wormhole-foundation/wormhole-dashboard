@@ -22,6 +22,7 @@ ships `@google-cloud/functions-framework`. From `cloud_functions/`:
    FUNCTION=computeTVL
    FIRESTORE_TVL_COLLECTION=tvl-dev
    FIRESTORE_TVL_METADATA_COLLECTION=tvl-token-metadata-dev
+   FIRESTORE_LATEST_TOKEN_DATA_COLLECTION=latest-tokendata-dev
    # optional (pro CoinGecko key; recommended for first-run cache seed):
    # COINGECKO_API_KEY=<pro key>
    GOOGLE_APPLICATION_CREDENTIALS=../serviceAccount.json
@@ -29,13 +30,17 @@ ships `@google-cloud/functions-framework`. From `cloud_functions/`:
    ```
 
    Use `-dev`-suffixed Firestore collections so local runs don't overwrite the
-   prod `tvl` doc or prod metadata cache. Firestore creates collections
-   lazily on first write.
+   prod `tvl`, metadata cache, or `/latest-tokendata` docs. Firestore creates
+   collections lazily on first write.
 
-3. **Start the framework.**
+3. **Start the framework.** `--source` points directly at the compiled
+   module so you can bypass the `FUNCTION`-env dispatcher in
+   `dist/index.js` (useful when running multiple functions in parallel
+   shells).
 
    ```bash
-   npx functions-framework --target=computeTVL --signature-type=http
+   npx functions-framework --target=computeTVL \
+     --source=dist/computeTVL.js --signature-type=http
    ```
 
    Listens on `:8080`.
@@ -50,15 +55,18 @@ ships `@google-cloud/functions-framework`. From `cloud_functions/`:
    progress, and `Computed TVL: $...`. Re-running should print
    `Need to resolve 0 tokens` once the cache is seeded.
 
-5. **Inspect output.** Either read `tvl-dev/tvl` in the Firestore console, or
-   run `getTVL` locally in a second shell:
+5. **Inspect output.** Read `tvl-dev/tvl` or `latest-tokendata-dev/latest` in
+   the Firestore console, or run the read-side functions locally in
+   additional shells:
 
    ```bash
-   # .env for this shell:
-   # FUNCTION=getTVL
-   # FIRESTORE_TVL_COLLECTION=tvl-dev
-   npx functions-framework --target=getTVL --signature-type=http --port=8081
+   npx functions-framework --target=getTVL \
+     --source=dist/getTVL.js --signature-type=http --port=8081
    curl http://localhost:8081 | jq '.AllTime."*"'
+
+   npx functions-framework --target=getLatestTokenData \
+     --source=dist/getLatestTokenData.js --signature-type=http --port=8082
+   curl http://localhost:8082 | jq '.data | length'
    ```
 
 ### Caveats
@@ -160,7 +168,8 @@ dependencies are the Wormhole accountant contract and CoinGecko.
             +------ computeTVL ------+
                         |
                         v
-         FIRESTORE_TVL_COLLECTION/tvl   <-- served by /tvl
+         FIRESTORE_TVL_COLLECTION/tvl                    <-- served by /tvl
+         FIRESTORE_LATEST_TOKEN_DATA_COLLECTION/latest   <-- served by /latest-tokendata
 ```
 
 Per run:
@@ -182,6 +191,12 @@ Per run:
    `min(MAX_VAA_DECIMALS, decimals)`, and multiply by price.
 6. **Write** the resulting `NotionalTVL` to
    `FIRESTORE_TVL_COLLECTION/tvl`, replacing the prior doc.
+7. **Write** a denormalized `TokenData[]` doc (metadata + `price_usd` for every
+   priced token in the accountant) to
+   `FIRESTORE_LATEST_TOKEN_DATA_COLLECTION/latest`. This is what `/latest-tokendata`
+   serves — the dashboard's `useTokenData` hook reads it to render the Accountant
+   view's TVL/TVM aggregation. The price freshness of `/latest-tokendata` is
+   therefore bounded by the `compute-tvl` cron cadence.
 
 ### Token resolution
 
@@ -216,14 +231,16 @@ the full accountant set. The function reads `COINGECKO_API_KEY` from env
 
 ### Required environment
 
-| var | purpose |
-| --- | --- |
-| `FIRESTORE_TVL_COLLECTION` | collection holding the `tvl` output doc |
-| `FIRESTORE_TVL_METADATA_COLLECTION` | metadata cache, one doc per token |
-| `COINGECKO_API_KEY` | pro key for rate-limited resolution (optional but recommended) |
+| var                                      | purpose                                                        |
+| ---------------------------------------- | -------------------------------------------------------------- |
+| `FIRESTORE_TVL_COLLECTION`               | collection holding the `tvl` output doc                        |
+| `FIRESTORE_TVL_METADATA_COLLECTION`      | metadata cache, one doc per token                              |
+| `FIRESTORE_LATEST_TOKEN_DATA_COLLECTION` | collection holding the denormalized `/latest-tokendata` doc    |
+| `COINGECKO_API_KEY`                      | pro key for rate-limited resolution (optional but recommended) |
 
-There are **no PG_* vars.** The prior SQL-aggregate version has been
-replaced.
+There are **no PG\_\* vars** anywhere in `cloud_functions/`. Postgres has been
+fully removed; metadata and prices come from the Firestore cache +
+CoinGecko.
 
 ### Seeding the cache
 
@@ -233,11 +250,3 @@ the accountant, likely hitting the `RESOLVE_DEADLINE_MS` budget. Subsequent
 runs pick up where the last one left off, so a few back-to-back invocations
 will fully seed the cache. After that, steady-state each run resolves only
 newly-registered tokens.
-
-### Related TVL/TVM functions
-
-- `compute-tvl-tvm` / `latest-tvltvm` — per-chain TVL **and** TVM (tokens
-  locked on non-home chains), also accountant-sourced but writes a separate
-  Firestore collection.
-- `compute-tvl-history` / `tvl-history` — daily historical TVL, still sourced
-  from Postgres token-transfer aggregates.

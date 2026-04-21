@@ -5,7 +5,6 @@ go 1.24.13
 require (
 	cloud.google.com/go/bigtable v1.18.1
 	cloud.google.com/go/firestore v1.11.0
-	cloud.google.com/go/pubsub v1.33.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/buger/goterm v1.0.4
 	github.com/certusone/wormhole/node v0.0.0-20260326191553-d739971ee778

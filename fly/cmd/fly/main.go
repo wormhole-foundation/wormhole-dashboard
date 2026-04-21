@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigtable"
-	"cloud.google.com/go/pubsub"
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/p2p"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
@@ -47,7 +46,6 @@ var (
 	logLevel           string
 	gcpProjectID       string
 	bigtableInstanceID string
-	signedVAATopicName string
 	rpcUrl             string
 	coreBridgeAddr     string
 	credentialsFile    string
@@ -91,18 +89,6 @@ func writeSignedVAAsToBigtable(ctx context.Context, client *bigtable.Client, sig
 	}
 }
 
-func publishSignedVAAs(ctx context.Context, topic *pubsub.Topic, signedVAAs map[string][]byte, logger *zap.Logger) {
-	for key := range signedVAAs {
-		result := topic.Publish(ctx, &pubsub.Message{
-			Data: []byte(key),
-		})
-		_, err := result.Get(ctx)
-		if err != nil {
-			logger.Error("pubsub error", zap.Error(err))
-		}
-	}
-}
-
 func incrementPythNetMsgCount(ctx context.Context, client *firestore.Client, count int, logger *zap.Logger) {
 	date := time.Now().UTC().Format("2006-01-02")
 	_, err := client.Collection("messageCountHistory").Doc(date).Set(ctx, map[string]interface{}{
@@ -127,7 +113,6 @@ func loadEnvVars() {
 	logLevel = verifyEnvVar("LOG_LEVEL")
 	gcpProjectID = verifyEnvVar("GCP_PROJECT_ID")
 	bigtableInstanceID = verifyEnvVar("BIGTABLE_INSTANCE_ID")
-	signedVAATopicName = verifyEnvVar("SIGNED_VAA_TOPIC_NAME")
 	rpcUrl = verifyEnvVar("RPC_URL")
 	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
 	credentialsFile = verifyEnvVar("CREDENTIALS_FILE")
@@ -183,13 +168,6 @@ func main() {
 		log.Fatalln(err)
 	}
 	defer btClient.Close()
-
-	pubsubClient, err := pubsub.NewClient(ctx, gcpProjectID, sa)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer pubsubClient.Close()
-	signedVAATopic := pubsubClient.Topic(signedVAATopicName)
 
 	// Node's main lifecycle context.
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
@@ -296,7 +274,6 @@ func main() {
 					wg.Add(1)
 					// write and publish data
 					writeSignedVAAsToBigtable(rootCtx, btClient, signedVAAsCopy, logger)
-					publishSignedVAAs(rootCtx, signedVAATopic, signedVAAsCopy, logger)
 					incrementPythNetMsgCount(rootCtx, client, pythNetMsgCountCopy, logger)
 					wg.Done()
 				}()

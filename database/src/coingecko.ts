@@ -108,6 +108,35 @@ export const fetchCoins = async (apiKey?: string): Promise<CoinGeckoCoin[]> => {
     .data;
 };
 
+export interface CoinGeckoCoinDetail {
+  id: string;
+  symbol: string;
+  name: string;
+  detail_platforms: {
+    [platform: string]: { decimal_place: number | null; contract_address: string };
+  };
+}
+
+export const fetchCoinDetail = async (
+  coinId: string,
+  apiKey?: string
+): Promise<CoinGeckoCoinDetail | null> => {
+  const [baseUrl, config] = apiKey
+    ? [COIN_GECKO_PRO_API_BASE_URL, createConfig(apiKey)]
+    : [COIN_GECKO_API_BASE_URL, undefined];
+  const url = `${baseUrl}/coins/${coinId}?localization=false&tickers=false&market_data=false&community_data=false&developer_data=false&sparkline=false`;
+  try {
+    const response = await axios.get<CoinGeckoCoinDetail>(url, config);
+    return response.data;
+  } catch (e) {
+    if (isAxiosError(e) && e.response?.status === 404) {
+      console.error(`coin not found: ${coinId}`);
+      return null;
+    }
+    throw e;
+  }
+};
+
 const toTimestamp = (date: Date): number => parseInt((date.getTime() / 1000).toFixed(0));
 
 export const fetchPriceHistories = async (

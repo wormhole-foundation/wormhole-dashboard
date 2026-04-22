@@ -1,14 +1,9 @@
-import { Network, networks } from '@wormhole-foundation/sdk-base';
+import { Network } from '@wormhole-foundation/sdk-base';
 import { EvmChains } from '@wormhole-foundation/sdk-evm';
 
 // This data structure is used in dashboard
 export type NTTContract = {
   [key in Network]: { [tokenName: string]: { [key in NTTChain]?: string } };
-};
-
-// This data structure is used in watchers
-export type NTTContractArray = {
-  [key in Network]: { [key in NTTChain]?: string[] };
 };
 
 export const nttChains = [
@@ -23,31 +18,6 @@ export const nttChains = [
   'OptimismSepolia',
   'Holesky',
 ] as const;
-
-function convertNTTManagerContractToNTTContractArray(
-  nttManagerContract: NTTContract
-): NTTContractArray {
-  const nttContract: NTTContractArray = {} as NTTContractArray;
-
-  for (const network of networks) {
-    nttContract[network] = {};
-
-    for (const tokenName in nttManagerContract[network]) {
-      for (const chain of nttChains) {
-        const tokenAddress = nttManagerContract[network][tokenName][chain];
-
-        if (tokenAddress) {
-          if (!nttContract[network][chain]) {
-            nttContract[network][chain] = [];
-          }
-          nttContract[network][chain]!.push(tokenAddress);
-        }
-      }
-    }
-  }
-
-  return nttContract;
-}
 
 export const NTT_MANAGER_CONTRACT: NTTContract = {
   Mainnet: {
@@ -127,9 +97,6 @@ export const NTT_TOKENS: NTTContract = {
 export type NTTChain = (typeof nttChains)[number];
 
 export type NTTEvmChain = NTTChain & EvmChains;
-
-export const NTT_MANAGER_CONTRACT_ARRAY =
-  convertNTTManagerContractToNTTContractArray(NTT_MANAGER_CONTRACT);
 
 export function NTT_SUPPORTED_CHAINS(network: Network, token: string): NTTChain[] {
   const contractDetails = NTT_MANAGER_CONTRACT[network][token];

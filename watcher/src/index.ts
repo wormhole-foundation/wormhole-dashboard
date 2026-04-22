@@ -100,15 +100,8 @@ const supportedChains: Chain[] =
         'ZeroGravity',
       ];
 
-const supportedNTTChains: Chain[] =
-  network === 'Testnet'
-    ? ['Solana', 'Sepolia', 'ArbitrumSepolia', 'BaseSepolia', 'OptimismSepolia']
-    : ['Solana', 'Ethereum', 'Arbitrum', 'Optimism', 'Base'];
-
 if (mode === 'vaa') {
   startSupervisor(supportedChains);
-} else if (mode === 'ntt') {
-  startSupervisor(supportedNTTChains);
 } else {
   throw new Error(`Unknown mode: ${mode}`);
 }

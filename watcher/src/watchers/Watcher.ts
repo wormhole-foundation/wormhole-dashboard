@@ -6,7 +6,7 @@ import {
 import { z } from 'zod';
 import { HB_INTERVAL, TIMEOUT } from '../consts';
 import { VaasByBlock } from '../databases/types';
-import { getResumeBlockByChain, storeLatestBlock, storeVaasByBlock } from '../databases/utils';
+import { getResumeBlockByChain, storeVaasByBlock } from '../databases/utils';
 import { getLogger, WormholeLogger } from '../utils/logger';
 import { parentPort } from 'worker_threads';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
@@ -25,7 +25,6 @@ export class Watcher {
     this.mode = mode;
 
     // `vaa` -> 'VAA_'
-    // `ntt` -> 'NTT_'
     const loggerPrefix = mode.toUpperCase() + '_';
     this.logger = getLogger(loggerPrefix + chain);
     // Special cases for batch size
@@ -58,10 +57,6 @@ export class Watcher {
     fromBlock: number,
     toBlock: number
   ): Promise<{ vaasByBlock: VaasByBlock; optionalBlockHeight?: number }> {
-    throw new Error('Not Implemented');
-  }
-
-  async getNttMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
     throw new Error('Not Implemented');
   }
 
@@ -98,18 +93,13 @@ export class Watcher {
           // fetch logs for the block range, inclusive of toBlock
           toBlock = Math.min(fromBlock + this.maximumBatchSize - 1, toBlock);
           this.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
-          if (this.mode === 'ntt') {
-            const blockKey = await this.getNttMessagesForBlocks(fromBlock, toBlock);
-            await storeLatestBlock(this.chain, blockKey, this.mode);
-          } else {
-            const { vaasByBlock, optionalBlockHeight } = await this.getMessagesForBlocks(
-              fromBlock,
-              toBlock
-            );
-            await storeVaasByBlock(this.chain, vaasByBlock);
-            if (optionalBlockHeight) {
-              toBlock = optionalBlockHeight;
-            }
+          const { vaasByBlock, optionalBlockHeight } = await this.getMessagesForBlocks(
+            fromBlock,
+            toBlock
+          );
+          await storeVaasByBlock(this.chain, vaasByBlock);
+          if (optionalBlockHeight) {
+            toBlock = optionalBlockHeight;
           }
           fromBlock = toBlock + 1;
         }

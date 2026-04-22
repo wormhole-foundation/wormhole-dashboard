@@ -6,8 +6,6 @@ import { SuiWatcher } from './SuiWatcher';
 import { SeiExplorerWatcher } from './SeiExplorerWatcher';
 import { WormchainWatcher } from './WormchainWatcher';
 import { NearArchiveWatcher } from './NearArchiveWatcher';
-import { NTTWatcher } from './NTTWatcher';
-import { NTTSolanaWatcher } from './NTTSolanaWatcher';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
 import { VAAWatcher } from './VAAWatcher';
 import { SVMWatcher } from './SVMWatcher';
@@ -85,42 +83,3 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
   }
 }
 
-export function makeFinalizedNTTWatcher(network: Network, chainName: Chain): Watcher {
-  if (network === 'Mainnet') {
-    if (
-      chainName === 'Arbitrum' ||
-      chainName === 'Base' ||
-      chainName === 'Ethereum' ||
-      chainName === 'Optimism'
-    ) {
-      return new NTTWatcher(network, chainName);
-    } else if (chainName === 'Solana') {
-      return new NTTSolanaWatcher(network);
-    } else {
-      throw new Error(
-        `Attempted to create finalized NTT watcher for unsupported mainnet chain ${chainName}`
-      );
-    }
-  } else if (network === 'Testnet') {
-    // These are testnet only chains
-    if (
-      chainName === 'ArbitrumSepolia' ||
-      chainName === 'BaseSepolia' ||
-      chainName === 'Holesky' ||
-      chainName === 'OptimismSepolia' ||
-      chainName === 'Sepolia'
-    ) {
-      return new NTTWatcher(network, chainName);
-    } else if (chainName === 'Solana') {
-      return new NTTSolanaWatcher(network);
-    } else {
-      throw new Error(
-        `Attempted to create finalized NTT watcher for unsupported testnet chain ${chainName}`
-      );
-    }
-  } else {
-    throw new Error(
-      `Attempted to create finalized NTT watcher for unsupported network ${network}, ${chainName}`
-    );
-  }
-}

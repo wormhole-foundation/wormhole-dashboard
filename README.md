@@ -39,13 +39,19 @@ npm run dev -w watcher
 Currently three options to load and save data:
 
 1. local .json file: set env variable DB_SOURCE="local" (default) and optionally set JSON_DB_FILE path
-2. google firestore: set DB_SOURCE="firestore" and set FIRESTORE_ACCOUNT_KEY=/path/of/service/account/key.json
-   In addition, set FIRESTORE_COLLECTION to name of your table where you intend to store the data.
-3. google bigtable with firestore:
-   > you will need to set up your credentials: https://cloud.google.com/docs/authentication/provide-credentials-adc and set GOOGLE_APPLICATION_CREDENTIALS to the path of your credentials
-   > set up the instance and table: https://cloud.google.com/bigtable/docs/creating-instance
-   > set DB_SOURCE="bigtable", BIGTABLE_INSTANCE_ID, BIGTABLE_TABLE_ID, BIGTABLE_SIGNED_VAAS_TABLE_ID, and BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID
-   > The current implementation of bigtable uses firestore to read/write the latest processed blocks by chain (incl empty blocks). Set FIRESTORE_LATEST_COLLECTION to the firestore table that will store these values
+2. google firestore (primary): set DB_SOURCE="firestore" and set FIRESTORE_ACCOUNT_KEY=/path/of/service/account/key.json
+   In addition, set FIRESTORE_COLLECTION to name of your table where you intend to store the data, plus
+   FIRESTORE_LATEST_COLLECTION for the per-chain last-processed-block pointer, and
+   FIRESTORE_MISSING_VAAS_COLLECTION / FIRESTORE_SIGNED_VAAS_COLLECTION for the miss tracking and VAA archive.
+3. google bigtable (rollback only): kept during the Firestore migration's stabilization window so we can flip
+   `DB_SOURCE="bigtable"` if the Firestore path misbehaves. For that fallback you'll need:
+
+   > credentials: https://cloud.google.com/docs/authentication/provide-credentials-adc (set GOOGLE_APPLICATION_CREDENTIALS)
+   > instance + table: https://cloud.google.com/bigtable/docs/creating-instance > `DB_SOURCE="bigtable"`, `BIGTABLE_INSTANCE_ID`, `BIGTABLE_TABLE_ID`, `BIGTABLE_SIGNED_VAAS_TABLE_ID`, `BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID`
+   > The bigtable path also uses firestore for per-chain last-processed-block pointers; set `FIRESTORE_LATEST_COLLECTION`.
+
+   After the migration stabilizes (see `plans/firestore_migration.md` Phase 9), this option goes away along with
+   the `BigtableDatabase.ts` implementation, the `@google-cloud/bigtable` dependency, and the BigTable instance itself.
 
 # Web
 

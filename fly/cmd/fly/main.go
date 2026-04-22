@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"cloud.google.com/go/bigtable"
 	"github.com/certusone/wormhole/node/pkg/common"
 	"github.com/certusone/wormhole/node/pkg/p2p"
 	gossipv1 "github.com/certusone/wormhole/node/pkg/proto/gossip/v1"
@@ -20,13 +19,11 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	fly_common "github.com/wormhole-foundation/wormhole-monitor/fly/common"
 	"github.com/wormhole-foundation/wormhole-monitor/fly/utils"
-	"github.com/wormhole-foundation/wormhole/sdk/vaa"
 
 	"go.uber.org/zap"
 
 	"log"
 
-	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -39,65 +36,16 @@ var (
 )
 
 var (
-	p2pNetworkID       string
-	p2pPort            uint
-	p2pBootstrap       string
-	nodeKeyPath        string
-	logLevel           string
-	gcpProjectID       string
-	bigtableInstanceID string
-	rpcUrl             string
-	coreBridgeAddr     string
-	credentialsFile    string
-	network            string
+	p2pNetworkID    string
+	p2pPort         uint
+	p2pBootstrap    string
+	nodeKeyPath     string
+	logLevel        string
+	rpcUrl          string
+	coreBridgeAddr  string
+	credentialsFile string
+	network         string
 )
-
-// Make a bigtable row key from a VAA
-// example: 00002/0000000000000000000000008ea8874192c8c715e620845f833f48f39b24e222/00000000000000000000
-func makeRowKey(v *vaa.VAA) string {
-	s := strconv.FormatUint(v.Sequence, 10)
-	return fmt.Sprintf("%05d/%s/%020s", v.EmitterChain, v.EmitterAddress, s)
-}
-
-func writeSignedVAAsToBigtable(ctx context.Context, client *bigtable.Client, signedVAAs map[string][]byte, logger *zap.Logger) {
-	if len(signedVAAs) == 0 {
-		return
-	}
-	tbl := client.Open("signedVAAs")
-	muts := make([]*bigtable.Mutation, len(signedVAAs))
-	rowKeys := make([]string, len(signedVAAs))
-	i := 0
-	for rowKey, bytes := range signedVAAs {
-		muts[i] = bigtable.NewMutation()
-		// write 0 timestamp to only keep 1 cell each
-		// https://cloud.google.com/bigtable/docs/gc-latest-value
-		muts[i].Set("info", "bytes", 0, bytes)
-		rowKeys[i] = rowKey
-		i++
-	}
-	// TODO: benchmark simple vs batch writes
-	// https://cloud.google.com/bigtable/docs/writes#not-simple
-	rowErrs, err := tbl.ApplyBulk(ctx, rowKeys, muts)
-	if err != nil {
-		logger.Error("Could not apply bulk row mutation", zap.Error(err))
-	}
-	if rowErrs != nil {
-		logger.Error("Could not write some rows")
-	}
-	if err == nil && rowErrs == nil {
-		logger.Info("Wrote signedVAAs rows", zap.Int("count", len(rowKeys)))
-	}
-}
-
-func incrementPythNetMsgCount(ctx context.Context, client *firestore.Client, count int, logger *zap.Logger) {
-	date := time.Now().UTC().Format("2006-01-02")
-	_, err := client.Collection("messageCountHistory").Doc(date).Set(ctx, map[string]interface{}{
-		strconv.Itoa(int(vaa.ChainIDPythNet)): firestore.Increment(count),
-	}, firestore.MergeAll)
-	if err != nil {
-		logger.Error("Failed to write message counts", zap.Error(err))
-	}
-}
 
 func loadEnvVars() {
 	err := godotenv.Load() // By default loads .env
@@ -111,8 +59,6 @@ func loadEnvVars() {
 	p2pPort = uint(port)
 	nodeKeyPath = verifyEnvVar("NODE_KEY_PATH")
 	logLevel = verifyEnvVar("LOG_LEVEL")
-	gcpProjectID = verifyEnvVar("GCP_PROJECT_ID")
-	bigtableInstanceID = verifyEnvVar("BIGTABLE_INSTANCE_ID")
 	rpcUrl = verifyEnvVar("RPC_URL")
 	coreBridgeAddr = verifyEnvVar("CORE_BRIDGE_ADDR")
 	credentialsFile = verifyEnvVar("CREDENTIALS_FILE")
@@ -163,18 +109,9 @@ func main() {
 	}
 	defer client.Close()
 
-	btClient, err := bigtable.NewClient(ctx, gcpProjectID, bigtableInstanceID, sa)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer btClient.Close()
-
 	// Node's main lifecycle context.
 	rootCtx, rootCtxCancel = context.WithCancel(context.Background())
 	defer rootCtxCancel()
-
-	// Inbound signed VAAs
-	signedInC := make(chan *gossipv1.SignedVAAWithQuorum, 50)
 
 	// Heartbeat updates
 	heartbeatC := make(chan *gossipv1.Heartbeat, 50)
@@ -207,9 +144,6 @@ func main() {
 
 	notionalByChainMu := sync.Mutex{}
 	availableNotionalByChain := map[string]map[uint32]uint64{}
-
-	mu := sync.Mutex{}
-	pythNetSeqs := map[string]map[uint64]time.Time{}
 
 	type latestHeartbeat struct {
 		bootTimestamp int64
@@ -245,90 +179,6 @@ func main() {
 		}
 	}
 	logger.Info("Seeded heartbeats from Firestore", zap.Int("count", len(lastHeartbeat)))
-
-	// Write signed VAAs to bigtable periodically
-	go func() {
-		signedVAAs := map[string][]byte{}
-		pythNetMsgCount := 0
-		ticker := time.NewTicker(time.Minute)
-		var wg sync.WaitGroup
-		defer ticker.Stop()
-		for {
-			select {
-			case <-rootCtx.Done():
-				wg.Wait()
-				return
-			case <-ticker.C:
-				mu.Lock()
-				// copy data so it's not modified by another thread
-				// while writing it to the db
-				signedVAAsCopy := map[string][]byte{}
-				for key, bytes := range signedVAAs {
-					signedVAAsCopy[key] = bytes
-				}
-				signedVAAs = map[string][]byte{}
-				pythNetMsgCountCopy := pythNetMsgCount
-				pythNetMsgCount = 0
-				mu.Unlock()
-				go func() {
-					wg.Add(1)
-					// write and publish data
-					writeSignedVAAsToBigtable(rootCtx, btClient, signedVAAsCopy, logger)
-					incrementPythNetMsgCount(rootCtx, client, pythNetMsgCountCopy, logger)
-					wg.Done()
-				}()
-			case m := <-signedInC:
-				v, err := vaa.Unmarshal(m.Vaa)
-				if err != nil {
-					logger.Warn("received invalid VAA in SignedVAAWithQuorum message",
-						zap.Error(err), zap.Any("message", m))
-					continue
-				}
-				mu.Lock()
-				// don't write pythnet VAAs to bigtable
-				if v.EmitterChain != vaa.ChainIDPythNet {
-					rowKey := makeRowKey(v)
-					signedVAAs[rowKey] = m.Vaa
-				}
-				// increment pythnet message counter
-				if v.EmitterChain == vaa.ChainIDPythNet {
-					emitterAddress := v.EmitterAddress.String()
-					if _, ok := pythNetSeqs[emitterAddress]; !ok {
-						pythNetSeqs[emitterAddress] = map[uint64]time.Time{}
-					}
-					if _, ok := pythNetSeqs[emitterAddress][v.Sequence]; !ok {
-						pythNetSeqs[emitterAddress][v.Sequence] = time.Now()
-						pythNetMsgCount += 1
-					}
-				}
-				mu.Unlock()
-			}
-		}
-	}()
-
-	// Periodically clear the pythnet emitter sequences set
-	go func() {
-		ticker := time.NewTicker(15 * time.Minute)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-rootCtx.Done():
-				return
-			case <-ticker.C:
-				fifteenMinutesAgo := time.Now().Add(-15 * time.Minute)
-				mu.Lock()
-				// clear entries with timestamps older than 15 min ago
-				for _, seqs := range pythNetSeqs {
-					for seq, t := range seqs {
-						if t.Before(fifteenMinutesAgo) {
-							delete(seqs, seq)
-						}
-					}
-				}
-				mu.Unlock()
-			}
-		}
-	}()
 
 	// Handle heartbeats
 	go func() {
@@ -543,7 +393,6 @@ func main() {
 		gst,
 		rootCtxCancel,
 		p2p.WithComponents(components),
-		p2p.WithSignedVAAListener(signedInC),
 		p2p.WithChainGovernorConfigListener(govConfigC),
 		p2p.WithChainGovernorStatusListener(govStatusC),
 	)

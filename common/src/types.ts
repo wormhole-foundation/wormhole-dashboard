@@ -1,4 +1,4 @@
-import { ChainId, chainIds } from '@wormhole-foundation/sdk-base';
+import { ChainId } from '@wormhole-foundation/sdk-base';
 
 export type ObservedEventInfo = {
   info: {
@@ -32,34 +32,6 @@ export type ObservedMessage = {
   txHash: any;
   hasSignedVaa: any;
 };
-
-export type ObservedMessageResponse = {
-  messages: ObservedMessage[];
-  lastUpdated: number;
-  lastRowKey: string;
-};
-
-export type MessagesByChain = {
-  [chain in ChainId]?: ObservedMessageResponse;
-};
-
-export function makeCacheEntry(): ObservedMessageResponse {
-  return {
-    messages: [],
-    lastUpdated: 0,
-    lastRowKey: '',
-  };
-}
-
-export function makeCache(): MessagesByChain {
-  const cache: MessagesByChain = {};
-
-  chainIds.forEach((chainId) => {
-    cache[chainId] = makeCacheEntry();
-  });
-
-  return cache;
-}
 
 export interface LockedAsset {
   Address: string;

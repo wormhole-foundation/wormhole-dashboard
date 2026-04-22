@@ -4,7 +4,6 @@ go 1.24.13
 
 require (
 	cloud.google.com/go/bigtable v1.18.1
-	cloud.google.com/go/firestore v1.11.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/buger/goterm v1.0.4
 	github.com/certusone/wormhole/node v0.0.0-20260326191553-d739971ee778
@@ -27,6 +26,7 @@ require (
 require (
 	cloud.google.com/go v0.110.6 // indirect
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
+	cloud.google.com/go/firestore v1.11.0 // indirect
 	cloud.google.com/go/iam v1.1.1 // indirect
 	cloud.google.com/go/longrunning v0.5.1 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect

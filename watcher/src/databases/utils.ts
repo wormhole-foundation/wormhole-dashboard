@@ -9,6 +9,7 @@ import {
 import { DB_SOURCE } from '../consts';
 import { BigtableDatabase } from './BigtableDatabase';
 import { Database } from './Database';
+import { FirestoreDatabase } from './FirestoreDatabase';
 import { JsonDatabase } from './JsonDatabase';
 import { VaasByBlock } from './types';
 export { makeMessageId, parseMessageId } from '@wormhole-foundation/wormhole-monitor-common';
@@ -42,6 +43,12 @@ export const initDb = (startWatching: boolean = true): Database => {
     if (startWatching) {
       console.log('Starting Bigtable watcher...');
       (database as BigtableDatabase).watchMissing();
+    }
+  } else if (DB_SOURCE === 'firestore') {
+    database = new FirestoreDatabase();
+    if (startWatching) {
+      console.log('Starting Firestore watcher...');
+      (database as FirestoreDatabase).watchMissing();
     }
   } else {
     database = new JsonDatabase();

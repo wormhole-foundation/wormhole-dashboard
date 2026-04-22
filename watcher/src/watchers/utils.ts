@@ -82,4 +82,3 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     throw new Error(`Attempted to create finalized watcher for unsupported chain ${chainName}`);
   }
 }
-

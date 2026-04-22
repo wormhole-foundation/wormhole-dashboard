@@ -18,7 +18,6 @@ require (
 	github.com/mr-tron/base58 v1.2.0
 	github.com/prometheus/client_golang v1.20.5
 	github.com/prometheus/client_model v0.6.1
-	github.com/stretchr/testify v1.9.0
 	github.com/wormhole-foundation/wormhole/sdk v0.0.0-20260326191553-d739971ee778
 	go.uber.org/zap v1.27.0
 	google.golang.org/api v0.126.0
@@ -250,6 +249,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.14.0 // indirect
 	github.com/streamingfast/logging v0.0.0-20220813175024-b4fbb0e893df // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tendermint/btcd v0.1.1 // indirect

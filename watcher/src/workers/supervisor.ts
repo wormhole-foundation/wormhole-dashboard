@@ -1,8 +1,11 @@
+import path from 'path';
 import { Worker } from 'worker_threads';
 import { HB_INTERVAL, WorkerData } from '../consts';
 import { getLogger } from '../utils/logger';
 import { Mode, getMode, getNetwork, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
+
+const WORKER_PATH = path.resolve(__dirname, 'worker.js');
 
 interface WorkerInfo {
   worker: Worker;
@@ -18,7 +21,7 @@ const mode: Mode = getMode();
 function spawnWorker(data: WorkerData) {
   const workerName = `${data.chain}Worker`;
   logger.info(`Spawning worker ${workerName} on network ${network} in mode ${mode}...`);
-  const worker = new Worker('./dist/src/workers/worker.js', { workerData: data });
+  const worker = new Worker(WORKER_PATH, { workerData: data });
 
   worker.on('message', (message) => {
     if (message === 'heartbeat') {

@@ -10,3 +10,4 @@ export * from './evm';
 export * from './types';
 export * from './wormhole';
 export * from './queryContractSmart';
+export * from './firestoreKeys';

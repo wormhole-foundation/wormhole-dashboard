@@ -33,28 +33,8 @@ fi
 #
 # These are required for both MAINNET and TESTNET
 #
-if [ -z "$BIGTABLE_INSTANCE_ID" ]; then
-    echo "BIGTABLE_INSTANCE_ID must be specified"
-    exit 1
-fi
-
-if [ -z "$BIGTABLE_TABLE_ID" ]; then
-    echo "BIGTABLE_TABLE_ID must be specified"
-    exit 1
-fi
-
-if [ -z "$CLOUD_FUNCTIONS_NUM_ROWS" ]; then
-    echo "CLOUD_FUNCTIONS_NUM_ROWS must be specified"
-    exit 1
-fi
-
 if [ -z "$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL" ]; then
     echo "CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL be specified"
-    exit 1
-fi
-
-if [ -z "$CLOUD_FUNCTIONS_BLOCK_INCREMENT" ]; then
-    echo "CLOUD_FUNCTIONS_BLOCK_INCREMENT must be specified"
     exit 1
 fi
 
@@ -80,6 +60,11 @@ fi
 
 if [ -z "$FIRESTORE_LATEST_TOKEN_DATA_COLLECTION" ]; then
     echo "FIRESTORE_LATEST_TOKEN_DATA_COLLECTION must be specified"
+    exit 1
+fi
+
+if [ -z "$FIRESTORE_MISSING_VAAS_COLLECTION" ]; then
+    echo "FIRESTORE_MISSING_VAAS_COLLECTION must be specified"
     exit 1
 fi
 
@@ -112,8 +97,6 @@ fi
 #          There are no cloud functions that only go into TESTNET.
 # First, deploy the functions that are common to both MAINNET and TESTNET
 gcloud functions --project "$GCP_PROJECT" deploy alarm-missing-vaas --entry-point alarmMissingVaas --gen2 --runtime nodejs22 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 1GB --region europe-west3 --set-env-vars MISSING_VAA_SLACK_CHANNEL_ID=$MISSING_VAA_SLACK_CHANNEL_ID,MISSING_VAA_SLACK_POST_URL=$MISSING_VAA_SLACK_POST_URL,MISSING_VAA_SLACK_BOT_TOKEN=$MISSING_VAA_SLACK_BOT_TOKEN,FIRESTORE_ALARM_MISSING_VAAS_COLLECTION=$FIRESTORE_ALARM_MISSING_VAAS_COLLECTION,FIRESTORE_GOVERNOR_STATUS_COLLECTION=$FIRESTORE_GOVERNOR_STATUS_COLLECTION,FIRESTORE_LATEST_COLLECTION=$FIRESTORE_LATEST_COLLECTION,FIRESTORE_GUARDIAN_HEARTBEAT_COLLECTION=$FIRESTORE_GUARDIAN_HEARTBEAT_COLLECTION,NETWORK=$NETWORK,FUNCTION=alarmMissingVaas
-gcloud functions --project "$GCP_PROJECT" deploy compute-message-counts --entry-point computeMessageCounts --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 4GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,NETWORK=$NETWORK,FUNCTION=computeMessageCounts
-gcloud functions --project "$GCP_PROJECT" deploy compute-missing-vaas --entry-point computeMissingVaas --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 4GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,NETWORK=$NETWORK,FUNCTION=computeMissingVaas
 gcloud functions --project "$GCP_PROJECT" deploy compute-ntt-rate-limits --entry-point computeNTTRateLimits --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FUNCTION=computeNTTRateLimits
 gcloud functions --project "$GCP_PROJECT" deploy compute-total-supply-and-locked --entry-point computeTotalSupplyAndLocked --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FUNCTION=computeTotalSupplyAndLocked
 gcloud functions --project "$GCP_PROJECT" deploy get-ntt-rate-limits --entry-point getNTTRateLimits --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FUNCTION=getNTTRateLimits
@@ -123,9 +106,7 @@ gcloud functions --project "$GCP_PROJECT" deploy guardian-heartbeats --entry-poi
 gcloud functions --project "$GCP_PROJECT" deploy get-quorum-height --entry-point getQuorumHeight --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,NETWORK=$NETWORK,FUNCTION=getQuorumHeight
 gcloud functions --project "$GCP_PROJECT" deploy get-total-supply-and-locked --entry-point getTotalSupplyAndLocked --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FUNCTION=getTotalSupplyAndLocked
 gcloud functions --project "$GCP_PROJECT" deploy latest-blocks --entry-point getLatestBlocks --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,FIRESTORE_LATEST_COLLECTION=$FIRESTORE_LATEST_COLLECTION,NETWORK=$NETWORK,FUNCTION=getLatestBlocks
-gcloud functions --project "$GCP_PROJECT" deploy message-counts --entry-point getMessageCounts --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FUNCTION=getMessageCounts
-gcloud functions --project "$GCP_PROJECT" deploy messages --entry-point getMessages --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 1GB --region europe-west3 --set-env-vars BIGTABLE_TABLE_ID=$BIGTABLE_TABLE_ID,BIGTABLE_INSTANCE_ID=$BIGTABLE_INSTANCE_ID,CLOUD_FUNCTIONS_NUM_ROWS=$CLOUD_FUNCTIONS_NUM_ROWS,CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,CLOUD_FUNCTIONS_BLOCK_INCREMENT=$CLOUD_FUNCTIONS_BLOCK_INCREMENT,NETWORK=$NETWORK,FUNCTION=getMessages
-gcloud functions --project "$GCP_PROJECT" deploy missing-vaas --entry-point getMissingVaas --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars NETWORK=$NETWORK,FUNCTION=getMissingVaas
+gcloud functions --project "$GCP_PROJECT" deploy missing-vaas --entry-point getMissingVaas --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars FIRESTORE_MISSING_VAAS_COLLECTION=$FIRESTORE_MISSING_VAAS_COLLECTION,NETWORK=$NETWORK,FUNCTION=getMissingVaas
 gcloud functions --project "$GCP_PROJECT" deploy reobserve-vaas --entry-point getReobserveVaas --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars FIRESTORE_ALARM_MISSING_VAAS_COLLECTION=$FIRESTORE_ALARM_MISSING_VAAS_COLLECTION,NETWORK=$NETWORK,FUNCTION=getReobserveVaas --set-secrets 'REOBSERVE_VAA_API_KEY=Reobs_VAA_API_key_xLabs:1'
 gcloud functions --project "$GCP_PROJECT" deploy tvl --entry-point getTVL --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars FIRESTORE_TVL_COLLECTION=$FIRESTORE_TVL_COLLECTION,NETWORK=$NETWORK,FUNCTION=getTVL
 

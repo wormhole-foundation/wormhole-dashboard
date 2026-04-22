@@ -1,0 +1,21 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "signedVAAs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chainId", "order": "ASCENDING" },
+        { "fieldPath": "day", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "signedVAAs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chainEmitter", "order": "ASCENDING" },
+        { "fieldPath": "day", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

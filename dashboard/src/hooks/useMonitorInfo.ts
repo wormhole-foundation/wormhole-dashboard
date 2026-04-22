@@ -5,14 +5,6 @@ import { DataWrapper, getEmptyDataWrapper, receiveDataWrapper } from '../utils/D
 import { ChainId } from '@wormhole-foundation/sdk-base';
 
 export type LastBlockByChain = { [chainId: string]: string };
-export type CountsByChain = {
-  [chain in ChainId]?: {
-    numTotalMessages: number;
-    numMessagesWithoutVaas: number;
-    lastRowKey: string;
-    firstMissingVaaRowKey: string;
-  };
-};
 export type MissesByChain = {
   [chain in ChainId]?: {
     messages: ObservedMessage[];
@@ -69,39 +61,6 @@ const useMonitorInfo = () => {
     };
   }, [currentNetwork]);
 
-  const [messageCountsWrapper, setMessageCountsWrapper] = useState<DataWrapper<CountsByChain>>(
-    getEmptyDataWrapper()
-  );
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setMessageCountsWrapper((r) => ({ ...r, isFetching: true, error: null }));
-      while (!cancelled) {
-        try {
-          const url: string = `${currentNetwork.endpoint}/message-counts`;
-          const response = await axios.get<CountsByChain>(url);
-          if (response.data && !cancelled) {
-            setMessageCountsWrapper(receiveDataWrapper(response.data));
-          }
-        } catch (e: any) {
-          if (!cancelled) {
-            setMessageCountsWrapper((r) => ({
-              ...r,
-              isFetching: false,
-              error: e?.message || 'An error occurred while fetching the database',
-            }));
-          }
-        }
-        if (!cancelled) {
-          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentNetwork]);
-
   const [missesWrapper, setMissesWrapper] = useState<DataWrapper<MissesByChain>>(
     getEmptyDataWrapper()
   );
@@ -136,7 +95,7 @@ const useMonitorInfo = () => {
     };
   }, [currentNetwork]);
 
-  return { lastBlockByChainWrapper, messageCountsWrapper, missesWrapper };
+  return { lastBlockByChainWrapper, missesWrapper };
 };
 
 export default useMonitorInfo;

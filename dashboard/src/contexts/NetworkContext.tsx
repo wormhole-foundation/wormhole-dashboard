@@ -83,6 +83,24 @@ export const networkOptions: Network[] = [
     logo: '',
     type: 'guardian',
   },
+  ...(import.meta.env.VITE_SHOW_LOCAL_ENDPOINTS === 'true'
+    ? ([
+        {
+          env: 'Mainnet',
+          endpoint: import.meta.env.VITE_LOCAL_ENDPOINT || 'http://localhost:8080',
+          name: 'Local (Mainnet)',
+          logo: '',
+          type: 'cloudfunction',
+        },
+        {
+          env: 'Testnet',
+          endpoint: import.meta.env.VITE_LOCAL_ENDPOINT || 'http://localhost:8080',
+          name: 'Local (Testnet)',
+          logo: '',
+          type: 'cloudfunction',
+        },
+      ] as Network[])
+    : []),
 ];
 
 const defaultNetwork: Network = networkOptions[0];

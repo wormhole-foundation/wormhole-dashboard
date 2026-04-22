@@ -19,9 +19,7 @@ post to Slack / PagerDuty).
 | `/governor-configs`            | `getGovernorConfigs`               | Firestore `governorConfigs`               | dashboard `useCloudGovernorInfo`                                                                                                                         |
 | `/governor-status`             | `getGovernorStatus`                | Firestore `governorStatus`                | dashboard `useCloudGovernorInfo`                                                                                                                         |
 | `/latest-blocks`               | `getLatestBlocks`                  | `FIRESTORE_LATEST_COLLECTION`             | dashboard `useMonitorInfo`                                                                                                                               |
-| `/message-counts`              | `getMessageCounts`                 | Bigtable                                  | dashboard `useMonitorInfo`                                                                                                                               |
-| `/messages`                    | `getMessages`                      | Bigtable                                  | dashboard `Monitor`                                                                                                                                      |
-| `/missing-vaas`                | `getMissingVaas`                   | Bigtable                                  | dashboard `useMonitorInfo` + watcher scripts                                                                                                             |
+| `/missing-vaas`                | `getMissingVaas`                   | `FIRESTORE_MISSING_VAAS_COLLECTION`       | dashboard `useMonitorInfo` + watcher scripts                                                                                                             |
 | `/get-guardian-set-info`       | `getGuardianSetInfo`               | `FIRESTORE_GUARDIAN_SET_INFO_COLLECTION`  | dashboard `useGetGuardianSetInfoByChain`                                                                                                                 |
 | `/get-ntt-rate-limits`         | `getNTTRateLimits`                 | on-chain RPC                              | dashboard `useRateLimits`                                                                                                                                |
 | `/get-total-supply-and-locked` | `getTotalSupplyAndLocked`          | on-chain RPC                              | dashboard `useTotalSupplyAndLocked`                                                                                                                      |
@@ -29,14 +27,12 @@ post to Slack / PagerDuty).
 | `/get-solana-events`           | `getSolanaEvents`                  | Solana RPC                                | external [defillama](https://github.com/DefiLlama/bridges-server/blob/9d05756f0b83b0b6c84c04e85fc40cadca431f04/src/adapters/portal/index.ts#L297)        |
 | `/reobserve-vaas`              | `getReobserveVaas` (API-key gated) | `FIRESTORE_ALARM_MISSING_VAAS_COLLECTION` | guardians                                                                                                                                                |
 
-### Compute jobs (cron → Firestore / Bigtable)
+### Compute jobs (cron → Firestore)
 
 | deploy                            | entry point                   | purpose                                                                |
 | --------------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
 | `compute-tvl`                     | `computeTVL`                  | rebuild `tvl` doc + `latest-tokendata` doc from accountant + CoinGecko |
 | `compute-guardian-set-info`       | `computeGuardianSetInfo`      | populate `FIRESTORE_GUARDIAN_SET_INFO_COLLECTION`                      |
-| `compute-message-counts`          | `computeMessageCounts`        | aggregate Bigtable → message counts                                    |
-| `compute-missing-vaas`            | `computeMissingVaas`          | find VAAs with no counterpart                                          |
 | `compute-ntt-rate-limits`         | `computeNTTRateLimits`        | snapshot on-chain NTT rate limits                                      |
 | `compute-total-supply-and-locked` | `computeTotalSupplyAndLocked` | snapshot on-chain NTT supply / locked                                  |
 

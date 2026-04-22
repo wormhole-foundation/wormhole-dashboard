@@ -85,12 +85,6 @@ export interface NotionalTVL {
   AllTime: ChainsAssets;
 }
 
-export interface MessageCountsHistory {
-  DailyTotals: {
-    [date: string]: { [chainId: string]: number };
-  };
-}
-
 export type AccountEntry = {
   key: {
     chain_id: number;

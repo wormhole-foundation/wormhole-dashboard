@@ -26,7 +26,6 @@ export class Watcher {
 
     // `vaa` -> 'VAA_'
     // `ntt` -> 'NTT_'
-    // `ft` -> 'FT_'
     const loggerPrefix = mode.toUpperCase() + '_';
     this.logger = getLogger(loggerPrefix + chain);
     // Special cases for batch size
@@ -66,10 +65,6 @@ export class Watcher {
     throw new Error('Not Implemented');
   }
 
-  async getFtMessagesForBlocks(fromBlock: number, toBlock: number): Promise<string> {
-    throw new Error('Not Implemented');
-  }
-
   isValidBlockKey(key: string) {
     try {
       const [block, timestamp] = key.split('/');
@@ -105,9 +100,6 @@ export class Watcher {
           this.logger.info(`fetching messages from ${fromBlock} to ${toBlock}`);
           if (this.mode === 'ntt') {
             const blockKey = await this.getNttMessagesForBlocks(fromBlock, toBlock);
-            await storeLatestBlock(this.chain, blockKey, this.mode);
-          } else if (this.mode === 'ft') {
-            const blockKey = await this.getFtMessagesForBlocks(fromBlock, toBlock);
             await storeLatestBlock(this.chain, blockKey, this.mode);
           } else {
             const { vaasByBlock, optionalBlockHeight } = await this.getMessagesForBlocks(

@@ -7,7 +7,7 @@ import {
   toChainId,
 } from '@wormhole-foundation/sdk-base';
 
-export type Mode = 'vaa' | 'ntt' | 'ft';
+export type Mode = 'vaa' | 'ntt';
 
 // This is defined here in an effort to keep the number and text in sync.
 // The default value is not exported because the getMissThreshold() function should be used to get the value.
@@ -117,29 +117,11 @@ export const INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBloc
   ['Devnet']: {},
 };
 
-export const INITIAL_FT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMapping = {
-  ['Mainnet']: {
-    Solana: '285350104',
-    Arbitrum: '245882390',
-    Avalanche: '55500000',
-    Base: '18956026',
-    Ethereum: '21630000',
-    Optimism: '130500000',
-    Polygon: '66500000',
-  },
-  ['Testnet']: {
-    Solana: '302162456',
-    ArbitrumSepolia: '49505590',
-  },
-  ['Devnet']: {},
-};
-
 export const INITIAL_DEPLOYMENT_BLOCK_BY_MODE: {
   [mode in Mode]: NetworkChainBlockMapping;
 } = {
   vaa: INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   ntt: INITIAL_NTT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
-  ft: INITIAL_FT_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
 };
 
 export function getMissThreshold(date: Date, chainish: number | string | Chain | ChainId): string {

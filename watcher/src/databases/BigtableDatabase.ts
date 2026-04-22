@@ -38,7 +38,6 @@ export class BigtableDatabase extends Database {
   firestoreDb: FirebaseFirestore.Firestore;
   latestCollectionName: string;
   latestNTTCollectionName: string;
-  latestFTCollectionName: string;
   collectionNameByMode: { [key in Mode]: string };
   constructor() {
     super();
@@ -48,11 +47,9 @@ export class BigtableDatabase extends Database {
     this.instanceId = assertEnvironmentVariable('BIGTABLE_INSTANCE_ID');
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
     this.latestNTTCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_NTT_COLLECTION');
-    this.latestFTCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_FT_COLLECTION');
     this.collectionNameByMode = {
       vaa: this.latestCollectionName,
       ntt: this.latestNTTCollectionName,
-      ft: this.latestFTCollectionName,
     };
     try {
       this.bigtable = new Bigtable();

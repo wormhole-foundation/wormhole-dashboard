@@ -26,6 +26,7 @@ function useChainHeartbeats(heartbeats: Heartbeat[]) {
             height: '0',
             safeHeight: '0',
             finalizedHeight: '0',
+            lastObservationSignedAt: '0',
           },
         }));
       }

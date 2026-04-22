@@ -11,7 +11,7 @@ import { Buffer } from 'buffer';
 export const explorerBlock = (network: Network, chainId: ChainId, block: string) =>
   network === 'Mainnet'
     ? chainId === chainToChainId('Solana')
-      ? `https://solana.fm/block/${block}`
+      ? `https://explorer.solana.com/block/${block}`
       : chainId === chainToChainId('Ethereum')
       ? `https://etherscan.io/block/${block}`
       : chainId === chainToChainId('Bsc')
@@ -73,7 +73,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       : chainId === chainToChainId('Fogo')
       ? `https://explorer.fogo.io/block/${block}?cluster=mainnet`
       : chainId === chainToChainId('Monad')
-      ? `https://monadvision.com/block/${block}`
+      ? `https://monadscan.com/block/${block}`
       : chainId === chainToChainId('Moca')
       ? `https://moca-mainnet.cloud.blockscout.com/block/${block}`
       : chainId === chainToChainId('MegaETH')
@@ -82,7 +82,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://chainscan.0g.ai/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
-    ? `https://explorer.solana.com/${block}?cluster=testnet`
+    ? `https://explorer.solana.com/block/${block}?cluster=devnet`
     : chainId === chainToChainId('Ethereum')
     ? `https://sepolia.etherscan.io/block/${block}`
     : chainId === chainToChainId('Bsc')
@@ -130,7 +130,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     : chainId === chainToChainId('Worldchain')
     ? `https://worldchain-sepolia.explorer.alchemy.com/block/${block}`
     : chainId === chainToChainId('MonadTestnet')
-    ? `https://testnet.monadvision.com/block/${block}`
+    ? `https://testnet.monadscan.com/block/${block}`
     : chainId === chainToChainId('Ink')
     ? `https://explorer-sepolia.inkonchain.com/block/${block}`
     : chainId === chainToChainId('HyperEVM')
@@ -157,7 +157,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
 export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
   network === 'Mainnet'
     ? chainId === chainToChainId('Solana')
-      ? `https://solana.fm/tx/${tx}`
+      ? `https://explorer.solana.com/tx/${tx}`
       : chainId === chainToChainId('Ethereum')
       ? `https://etherscan.io/tx/${tx}`
       : chainId === chainToChainId('Bsc')
@@ -219,7 +219,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       : chainId === chainToChainId('Fogo')
       ? `https://explorer.fogo.io/tx/${tx}?cluster=mainnet`
       : chainId === chainToChainId('Monad')
-      ? `https://monadvision.com/tx/${tx}`
+      ? `https://monadscan.com/tx/${tx}`
       : chainId === chainToChainId('Moca')
       ? `https://moca-mainnet.cloud.blockscout.com/tx/${tx}`
       : chainId === chainToChainId('MegaETH')
@@ -228,7 +228,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://chainscan.0g.ai/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
-    ? `https://solscan.io/txs/${tx}?cluster=testnet`
+    ? `https://explorer.solana.com/tx/${tx}?cluster=devnet`
     : chainId === chainToChainId('Ethereum')
     ? `https://sepolia.etherscan.io/tx/${tx}`
     : // : chainId === chainToChainId('Terra') <-- not supported on testnet dashboard
@@ -277,7 +277,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     : chainId === chainToChainId('Worldchain')
     ? `https://worldchain-sepolia.explorer.alchemy.com/tx/${tx}`
     : chainId === chainToChainId('MonadTestnet')
-    ? `https://testnet.monadvision.com/tx/${tx}`
+    ? `https://testnet.monadscan.com/tx/${tx}`
     : chainId === chainToChainId('Ink')
     ? `https://explorer-sepolia.inkonchain.com/tx/${tx}`
     : chainId === chainToChainId('HyperEVM')

@@ -54,6 +54,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://lineascan.build/block/${block}`
       : chainId === chainToChainId('Berachain')
       ? `https://berascan.com/block/${block}`
+      : chainId === chainToChainId('Seievm')
+      ? `https://seiscan.io/block/${block}`
       : chainId === chainToChainId('Unichain')
       ? `https://unichain.blockscout.com/block/${block}`
       : chainId === chainToChainId('Wormchain')
@@ -124,7 +126,7 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     : chainId === chainToChainId('Berachain')
     ? `https://bepolia.beratrail.io/block/${block}`
     : chainId === chainToChainId('Seievm')
-    ? `https://seitrace.com/block/${block}?chain=atlantic-2`
+    ? `https://testnet.seiscan.io/block/${block}`
     : chainId === chainToChainId('Unichain')
     ? `https://unichain-sepolia.blockscout.com/block/${block}`
     : chainId === chainToChainId('Worldchain')
@@ -200,6 +202,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://lineascan.build/tx/${tx}`
       : chainId === chainToChainId('Berachain')
       ? `https://berascan.com/tx/${tx}`
+      : chainId === chainToChainId('Seievm')
+      ? `https://seiscan.io/tx/${tx}`
       : chainId === chainToChainId('Unichain')
       ? `https://unichain.blockscout.com/tx/${tx}`
       : chainId === chainToChainId('Wormchain')
@@ -271,7 +275,7 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     : chainId === chainToChainId('Berachain')
     ? `https://bepolia.beratrail.io/tx/${tx}`
     : chainId === chainToChainId('Seievm')
-    ? `https://seitrace.com/tx/${tx}?chain=atlantic-2`
+    ? `https://testnet.seiscan.io/tx/${tx}`
     : chainId === chainToChainId('Unichain')
     ? `https://unichain-sepolia.blockscout.com/tx/${tx}`
     : chainId === chainToChainId('Worldchain')

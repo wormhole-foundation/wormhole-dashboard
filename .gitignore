@@ -5,7 +5,10 @@ dist/
 db.json
 lastBlockByChain.json
 .env
+.env.*
+!.env.sample
 serviceAccountKey.json
 bigtableAccountKey.json
 tsconfig.tsbuildinfo
 serviceAccount.json
+serviceAccount.json.*

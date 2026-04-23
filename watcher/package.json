@@ -25,8 +25,7 @@
     "reconstruct-vaa": "ts-node scripts/reconstructVAA.ts",
     "update-found-vaas": "ts-node scripts/updateFoundVAAs.ts",
     "update-rows": "ts-node scripts/updateRows.ts",
-    "migrate-to-firestore": "ts-node scripts/migrateBigtableToFirestore.ts",
-    "backfill-missing-vaas": "ts-node scripts/backfillMissingVaas.ts"
+    "migrate-missing-vaas": "ts-node scripts/migrateMissingVaas.ts"
   },
   "dependencies": {
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",

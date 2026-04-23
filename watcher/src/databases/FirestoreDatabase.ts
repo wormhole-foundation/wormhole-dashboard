@@ -46,8 +46,8 @@ export class FirestoreDatabase extends Database {
   constructor() {
     super();
     this.latestCollectionName = assertEnvironmentVariable('FIRESTORE_LATEST_COLLECTION');
-    this.missingVaasCollectionName = process.env.FIRESTORE_MISSING_VAAS_COLLECTION || 'missingVaas';
-    this.signedVAAsCollectionName = process.env.FIRESTORE_SIGNED_VAAS_COLLECTION || 'signedVAAs';
+    this.missingVaasCollectionName = assertEnvironmentVariable('FIRESTORE_MISSING_VAAS_COLLECTION');
+    this.signedVAAsCollectionName = assertEnvironmentVariable('FIRESTORE_SIGNED_VAAS_COLLECTION');
     this.collectionNameByMode = {
       vaa: this.latestCollectionName,
     };

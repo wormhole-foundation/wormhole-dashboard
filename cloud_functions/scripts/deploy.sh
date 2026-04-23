@@ -48,21 +48,6 @@ if [ -z "$FIRESTORE_LATEST_COLLECTION" ]; then
     exit 1
 fi
 
-if [ -z "$FIRESTORE_TVL_COLLECTION" ]; then
-    echo "FIRESTORE_TVL_COLLECTION must be specified"
-    exit 1
-fi
-
-if [ -z "$FIRESTORE_TVL_METADATA_COLLECTION" ]; then
-    echo "FIRESTORE_TVL_METADATA_COLLECTION must be specified"
-    exit 1
-fi
-
-if [ -z "$FIRESTORE_LATEST_TOKEN_DATA_COLLECTION" ]; then
-    echo "FIRESTORE_LATEST_TOKEN_DATA_COLLECTION must be specified"
-    exit 1
-fi
-
 if [ -z "$FIRESTORE_MISSING_VAAS_COLLECTION" ]; then
     echo "FIRESTORE_MISSING_VAAS_COLLECTION must be specified"
     exit 1
@@ -70,11 +55,6 @@ fi
 
 if [ -z "$FIRESTORE_ALARM_MISSING_VAAS_COLLECTION" ]; then
     echo "FIRESTORE_ALARM_MISSING_VAAS_COLLECTION must be specified"
-    exit 1
-fi
-
-if [ -z "$FIRESTORE_GUARDIAN_SET_INFO_COLLECTION" ]; then
-    echo "FIRESTORE_GUARDIAN_SET_INFO_COLLECTION must be specified"
     exit 1
 fi
 
@@ -108,7 +88,6 @@ gcloud functions --project "$GCP_PROJECT" deploy get-total-supply-and-locked --e
 gcloud functions --project "$GCP_PROJECT" deploy latest-blocks --entry-point getLatestBlocks --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,FIRESTORE_LATEST_COLLECTION=$FIRESTORE_LATEST_COLLECTION,NETWORK=$NETWORK,FUNCTION=getLatestBlocks
 gcloud functions --project "$GCP_PROJECT" deploy missing-vaas --entry-point getMissingVaas --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars FIRESTORE_MISSING_VAAS_COLLECTION=$FIRESTORE_MISSING_VAAS_COLLECTION,NETWORK=$NETWORK,FUNCTION=getMissingVaas
 gcloud functions --project "$GCP_PROJECT" deploy reobserve-vaas --entry-point getReobserveVaas --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars FIRESTORE_ALARM_MISSING_VAAS_COLLECTION=$FIRESTORE_ALARM_MISSING_VAAS_COLLECTION,NETWORK=$NETWORK,FUNCTION=getReobserveVaas --set-secrets 'REOBSERVE_VAA_API_KEY=Reobs_VAA_API_key_xLabs:1'
-gcloud functions --project "$GCP_PROJECT" deploy tvl --entry-point getTVL --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars FIRESTORE_TVL_COLLECTION=$FIRESTORE_TVL_COLLECTION,NETWORK=$NETWORK,FUNCTION=getTVL
 
 #
 # Bail out if we are only deploying TESTNET functions
@@ -121,6 +100,27 @@ fi
 #
 # The following are MAINNET only
 #
+
+if [ -z "$FIRESTORE_TVL_COLLECTION" ]; then
+    echo "FIRESTORE_TVL_COLLECTION must be specified"
+    exit 1
+fi
+
+if [ -z "$FIRESTORE_TVL_METADATA_COLLECTION" ]; then
+    echo "FIRESTORE_TVL_METADATA_COLLECTION must be specified"
+    exit 1
+fi
+
+if [ -z "$FIRESTORE_LATEST_TOKEN_DATA_COLLECTION" ]; then
+    echo "FIRESTORE_LATEST_TOKEN_DATA_COLLECTION must be specified"
+    exit 1
+fi
+
+if [ -z "$FIRESTORE_GUARDIAN_SET_INFO_COLLECTION" ]; then
+    echo "FIRESTORE_GUARDIAN_SET_INFO_COLLECTION must be specified"
+    exit 1
+fi
+
 if [ -z "$WORMCHAIN_SLACK_CHANNEL_ID" ]; then
     echo "WORMCHAIN_SLACK_CHANNEL_ID must be specified"
     exit 1
@@ -157,6 +157,7 @@ gcloud functions --project "$GCP_PROJECT" deploy get-guardian-set-info --entry-p
 gcloud functions --project "$GCP_PROJECT" deploy get-solana-events --entry-point getSolanaEvents --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars SOLANA_RPC=$SOLANA_RPC,NETWORK=$NETWORK,FUNCTION=getSolanaEvents
 gcloud functions --project "$GCP_PROJECT" deploy latest-tokendata --entry-point getLatestTokenData --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL=$CLOUD_FUNCTIONS_REFRESH_TIME_INTERVAL,FIRESTORE_LATEST_TOKEN_DATA_COLLECTION=$FIRESTORE_LATEST_TOKEN_DATA_COLLECTION,NETWORK=$NETWORK,FUNCTION=getLatestTokenData
 gcloud functions --project "$GCP_PROJECT" deploy wormchain-monitor --entry-point wormchainMonitor --gen2 --runtime nodejs22 --trigger-http --no-allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars WORMCHAIN_SLACK_CHANNEL_ID=$WORMCHAIN_SLACK_CHANNEL_ID,WORMCHAIN_SLACK_POST_URL=$WORMCHAIN_SLACK_POST_URL,WORMCHAIN_SLACK_BOT_TOKEN=$WORMCHAIN_SLACK_BOT_TOKEN,WORMCHAIN_PAGERDUTY_ROUTING_KEY=$WORMCHAIN_PAGERDUTY_ROUTING_KEY,WORMCHAIN_PAGERDUTY_URL=$WORMCHAIN_PAGERDUTY_URL,NETWORK=$NETWORK,FUNCTION=wormchainMonitor
+gcloud functions --project "$GCP_PROJECT" deploy tvl --entry-point getTVL --gen2 --runtime nodejs22 --trigger-http --allow-unauthenticated --timeout 300 --memory 512MB --region europe-west3 --set-env-vars FIRESTORE_TVL_COLLECTION=$FIRESTORE_TVL_COLLECTION,NETWORK=$NETWORK,FUNCTION=getTVL
 
 if [ "$NETWORK" == "MAINNET" ]; then
     echo "Finished deploying MAINNET functions"

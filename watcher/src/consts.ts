@@ -32,7 +32,7 @@ export type WorkerData = {
 export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = {
   ['Mainnet']: {
     Algorand: process.env.ALGORAND_RPC || 'https://mainnet-api.algonode.cloud',
-    Aptos: process.env.APTOS_RPC || 'https://fullnode.mainnet.aptoslabs.com/',
+    Aptos: process.env.APTOS_RPC || 'https://api.mainnet.aptoslabs.com',
     Arbitrum: process.env.ARBITRUM_RPC || 'https://arbitrum-one-rpc.publicnode.com',
     Avalanche: process.env.AVALANCHE_RPC || 'https://avalanche-c-chain-rpc.publicnode.com',
     Base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
@@ -50,7 +50,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Mantle: process.env.MANTLE_RPC || 'https://mantle-rpc.publicnode.com',
     MegaETH: process.env.MEGAETH_RPC || 'https://mainnet.megaeth.com/rpc/',
     Mezo: process.env.MEZO_RPC || 'https://jsonrpc-mezo.boar.network',
-    Moca: process.env.MOCA_RPC || 'https://rpc.mocachain.org/',
+    Moca: process.env.MOCA_RPC || 'https://moca.drpc.org',
     Monad: process.env.MONAD_RPC || 'https://rpc.monad.xyz',
     Moonbeam: process.env.MOONBEAM_RPC || 'https://moonbeam-rpc.publicnode.com',
     Near: process.env.NEAR_RPC || 'https://rpc.mainnet.near.org',
@@ -58,7 +58,8 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Plume: process.env.PLUME_EVM_RPC || 'https://rpc.plume.org',
     Polygon: process.env.POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com',
     Scroll: process.env.SCROLL_RPC || 'https://scroll-rpc.publicnode.com',
-    Sei: process.env.SEI_RPC || 'https://sei-rest.brocha.in', // https://docs.sei.io/develop/resources
+    Sei: process.env.SEI_RPC || 'https://sei-rest.publicnode.com',
+    Seievm: process.env.SEI_EVM_RPC || 'https://evm-rpc.sei-apis.com',
     Solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',
     Sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
     Unichain: process.env.UNICHAIN_RPC || 'https://mainnet.unichain.org',
@@ -79,7 +80,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Moonbeam: process.env.MOONBEAM_RPC,
     Arbitrum: process.env.ARBITRUM_RPC,
     Optimism: process.env.OPTIMISM_RPC,
-    Aptos: process.env.APTOS_RPC,
+    Aptos: process.env.APTOS_RPC || 'https://api.testnet.aptoslabs.com',
     Near: process.env.NEAR_RPC,
     Injective: process.env.INJECTIVE_RPC,
     Solana: process.env.SOLANA_RPC,

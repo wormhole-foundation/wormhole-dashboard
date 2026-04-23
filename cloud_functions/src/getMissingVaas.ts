@@ -1,6 +1,7 @@
 import { ChainId } from '@wormhole-foundation/sdk-base';
 import {
   ObservedMessage,
+  assertEnvironmentVariable,
   fromFirestoreDocId,
   isChainDeprecated,
   parseMessageId,
@@ -47,7 +48,7 @@ export async function getMissingVaas(req: any, res: any) {
 export async function commonGetMissingVaas(): Promise<MissingVaasByChain> {
   const firestore = new Firestore();
   const collection = firestore.collection(
-    process.env.FIRESTORE_MISSING_VAAS_COLLECTION || 'missingVaas'
+    assertEnvironmentVariable('FIRESTORE_MISSING_VAAS_COLLECTION')
   );
   const snapshot = await collection.get();
   const now = Date.now();

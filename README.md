@@ -53,6 +53,15 @@ Currently three options to load and save data:
    After the migration stabilizes (see `plans/firestore_migration.md` Phase 9), this option goes away along with
    the `BigtableDatabase.ts` implementation, the `@google-cloud/bigtable` dependency, and the BigTable instance itself.
 
+## Firestore Indexes
+
+The first time the Firestore database is set up, remember to create the composite indexes for signedVAAs
+
+```bash
+gcloud firestore --project "<PROJECT>" indexes composite create --collection-group=signedVAAs --query-scope=COLLECTION --field-config=field-path=chainId,order=ascending --field-config=field-path=day,order=ascending
+gcloud firestore --project "<PROJECT>" indexes composite create --collection-group=signedVAAs --query-scope=COLLECTION --field-config=field-path=chainEmitter,order=ascending --field-config=field-path=day,order=ascending
+```
+
 # Web
 
 Displays a visualization of the database.

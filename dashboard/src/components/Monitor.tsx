@@ -190,11 +190,7 @@ type ChainSummary = {
   misses: ObservedMessage[];
 };
 
-function ChainMonitorCard({
-  summary,
-}: {
-  summary: ChainSummary;
-}) {
+function ChainMonitorCard({ summary }: { summary: ChainSummary }) {
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback(() => setOpen(true), []);
   const handleClose = useCallback(() => setOpen(false), []);
@@ -383,8 +379,7 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
   }, [governorInfo?.enqueuedVAAs, lastBlockByChain, misses, showAllMisses, showUnknownChains]);
 
   const headerChips = useMemo(
-    () =>
-      summaries.filter((s) => s.misses.length > 0 || s.staleness !== 'healthy'),
+    () => summaries.filter((s) => s.misses.length > 0 || s.staleness !== 'healthy'),
     [summaries]
   );
 
@@ -430,15 +425,11 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                   title={
                     <Typography variant="body2">
                       {s.chainLabel} ({s.chainId})
-                      {missCount > 0
-                        ? ` — ${missCount} miss${missCount === 1 ? '' : 'es'}`
-                        : ''}
+                      {missCount > 0 ? ` — ${missCount} miss${missCount === 1 ? '' : 'es'}` : ''}
                       {stale
                         ? ` — watcher ${s.staleness}${
                             s.lastBlockTimestampMs
-                              ? ` (last block ${new Date(
-                                  s.lastBlockTimestampMs
-                                ).toLocaleString()})`
+                              ? ` (last block ${new Date(s.lastBlockTimestampMs).toLocaleString()})`
                               : ''
                           }`
                         : ''}
@@ -486,7 +477,8 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
         <CircularProgress />
       ) : summaries.length === 0 ? (
         <Typography pl={0.5}>
-          No chains reporting{showAllMisses ? '' : ` · misses filtered to > ${MISS_THRESHOLD_LABEL}`}
+          No chains reporting
+          {showAllMisses ? '' : ` · misses filtered to > ${MISS_THRESHOLD_LABEL}`}
         </Typography>
       ) : (
         <Box display="flex" flexWrap="wrap" alignItems="stretch" justifyContent="center">
@@ -498,10 +490,8 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
       {missesWrapper.receivedAt || lastBlockByChainWrapper.receivedAt ? (
         <Typography variant="body2" sx={{ mt: 2, textAlign: 'right' }}>
           Misses fetched{' '}
-          {missesWrapper.receivedAt
-            ? new Date(missesWrapper.receivedAt).toLocaleString()
-            : '—'}
-          ; blocks fetched{' '}
+          {missesWrapper.receivedAt ? new Date(missesWrapper.receivedAt).toLocaleString() : '—'};
+          blocks fetched{' '}
           {lastBlockByChainWrapper.receivedAt
             ? new Date(lastBlockByChainWrapper.receivedAt).toLocaleString()
             : '—'}

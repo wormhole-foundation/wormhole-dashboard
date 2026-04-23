@@ -24,8 +24,9 @@ import { Chain, contracts, Network } from '@wormhole-foundation/sdk-base';
 // all transactions for the core bridge contract from the NEAR Explorer backend API and then uses
 // the archival RPC node to backfill messages in the given range.
 //
-// Ensure `DB_SOURCE` and Bigtable environment variables are set to backfill Bigtable database.
-// Otherwise, the script will backfill the local JSON database.
+// Set `DB_SOURCE=firestore` (plus the required `FIRESTORE_*` env vars) to
+// backfill the Firestore database. Otherwise the script writes to the local
+// JSON database.
 
 const BATCH_SIZE = 100;
 

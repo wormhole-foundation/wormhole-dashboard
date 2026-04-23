@@ -1,13 +1,11 @@
 import { Chain, Network, chainToChainId } from '@wormhole-foundation/sdk-base';
 import {
   INITIAL_DEPLOYMENT_BLOCK_BY_MODE,
-  MAX_UINT_64,
   Mode,
   padUint16,
   padUint64,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { DB_SOURCE } from '../consts';
-import { BigtableDatabase } from './BigtableDatabase';
 import { Database } from './Database';
 import { FirestoreDatabase } from './FirestoreDatabase';
 import { JsonDatabase } from './JsonDatabase';
@@ -28,23 +26,13 @@ export const makeVaaKey = (
   seq: string
 ): string => `${transactionHash}:${chainToChainId(chain)}/${emitter}/${seq}`;
 
-// make a bigtable row key for the `vaasByTxHash` table
-export const makeVAAsByTxHashRowKey = (txHash: string, chain: number): string =>
-  `${txHash}/${padUint16(chain.toString())}`;
-
-// make a bigtable row key for the `signedVAAs` table
+// composite key for the `signedVAAs` Firestore collection
 export const makeSignedVAAsRowKey = (chain: number, emitter: string, sequence: string): string =>
   `${padUint16(chain.toString())}/${emitter}/${padUint64(sequence)}`;
 
 let database: Database = new Database();
 export const initDb = (startWatching: boolean = true): Database => {
-  if (DB_SOURCE === 'bigtable') {
-    database = new BigtableDatabase();
-    if (startWatching) {
-      console.log('Starting Bigtable watcher...');
-      (database as BigtableDatabase).watchMissing();
-    }
-  } else if (DB_SOURCE === 'firestore') {
+  if (DB_SOURCE === 'firestore') {
     database = new FirestoreDatabase();
     if (startWatching) {
       console.log('Starting Firestore watcher...');
@@ -81,22 +69,3 @@ export const getResumeBlockByChain = async (
 export const storeVaasByBlock = async (chain: Chain, vaasByBlock: VaasByBlock): Promise<void> => {
   return database.storeVaasByBlock(chain, vaasByBlock);
 };
-
-export function printRow(rowkey: string, rowData: { [x: string]: any }) {
-  console.log(`Reading data for ${rowkey}:`);
-
-  for (const columnFamily of Object.keys(rowData)) {
-    const columnFamilyData = rowData[columnFamily];
-    console.log(`Column Family ${columnFamily}`);
-
-    for (const columnQualifier of Object.keys(columnFamilyData)) {
-      const col = columnFamilyData[columnQualifier];
-
-      for (const cell of col) {
-        const labels = cell.labels.length ? ` [${cell.labels.join(',')}]` : '';
-        console.log(`\t${columnQualifier}: ${cell.value} @${cell.timestamp}${labels}`);
-      }
-    }
-  }
-  console.log();
-}

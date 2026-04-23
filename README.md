@@ -36,22 +36,14 @@ npm run dev -w watcher
 
 # Database
 
-Currently three options to load and save data:
+Two options to load and save data:
 
-1. local .json file: set env variable DB_SOURCE="local" (default) and optionally set JSON_DB_FILE path
-2. google firestore (primary): set DB_SOURCE="firestore" and set FIRESTORE_ACCOUNT_KEY=/path/of/service/account/key.json
-   In addition, set FIRESTORE_COLLECTION to name of your table where you intend to store the data, plus
-   FIRESTORE_LATEST_COLLECTION for the per-chain last-processed-block pointer, and
-   FIRESTORE_MISSING_VAAS_COLLECTION / FIRESTORE_SIGNED_VAAS_COLLECTION for the miss tracking and VAA archive.
-3. google bigtable (rollback only): kept during the Firestore migration's stabilization window so we can flip
-   `DB_SOURCE="bigtable"` if the Firestore path misbehaves. For that fallback you'll need:
-
-   > credentials: https://cloud.google.com/docs/authentication/provide-credentials-adc (set GOOGLE_APPLICATION_CREDENTIALS)
-   > instance + table: https://cloud.google.com/bigtable/docs/creating-instance > `DB_SOURCE="bigtable"`, `BIGTABLE_INSTANCE_ID`, `BIGTABLE_TABLE_ID`, `BIGTABLE_SIGNED_VAAS_TABLE_ID`, `BIGTABLE_VAAS_BY_TX_HASH_TABLE_ID`
-   > The bigtable path also uses firestore for per-chain last-processed-block pointers; set `FIRESTORE_LATEST_COLLECTION`.
-
-   After the migration stabilizes (see `plans/firestore_migration.md` Phase 9), this option goes away along with
-   the `BigtableDatabase.ts` implementation, the `@google-cloud/bigtable` dependency, and the BigTable instance itself.
+1. **local .json file** — `DB_SOURCE=local` (default). Optionally set `JSON_DB_FILE` for the file path.
+2. **Google Firestore** — `DB_SOURCE=firestore` plus:
+   - `FIRESTORE_ACCOUNT_KEY_PATH=/path/to/service-account.json`
+   - `FIRESTORE_LATEST_COLLECTION` — per-chain last-processed-block pointer
+   - `FIRESTORE_MISSING_VAAS_COLLECTION` — miss tracking
+   - `FIRESTORE_SIGNED_VAAS_COLLECTION` — signed VAA archive
 
 ## Firestore Indexes
 

@@ -32,6 +32,7 @@ import { useCallback, useMemo, useState } from 'react';
 import useGovernorInfo from '../hooks/useGovernorInfo';
 import { CHAIN_ICON_MAP, WORMHOLE_RPC_HOSTS } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
+import FetchedAt from './FetchedAt';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
@@ -330,6 +331,13 @@ function Governor() {
           </Accordion>
         </Card>
       </Box>
+      <FetchedAt
+        entries={[
+          { label: 'Notionals', receivedAt: governorInfo.notionalsReceivedAt },
+          { label: 'Tokens', receivedAt: governorInfo.tokensReceivedAt },
+          { label: 'Enqueued', receivedAt: governorInfo.enqueuedReceivedAt },
+        ]}
+      />
     </CollapsibleSection>
   );
 }

@@ -25,9 +25,19 @@ export type PendingTransfer = {
   ];
 };
 
-const useGetAccountantPendingTransfers = (contractAddress: string): PendingTransfer[] => {
+export type AccountantPendingTransfersResult = {
+  pendingTransfers: PendingTransfer[];
+  receivedAt: string | null;
+};
+
+const useGetAccountantPendingTransfers = (
+  contractAddress: string
+): AccountantPendingTransfersResult => {
   const { currentNetwork } = useNetworkContext();
-  const [accountantInfo, setAccountantInfo] = useState<PendingTransfer[]>([]);
+  const [result, setResult] = useState<AccountantPendingTransfersResult>({
+    pendingTransfers: [],
+    receivedAt: null,
+  });
 
   useEffect(() => {
     if (currentNetwork.name !== 'Mainnet' && currentNetwork.name !== 'Testnet') {
@@ -56,11 +66,11 @@ const useGetAccountantPendingTransfers = (contractAddress: string): PendingTrans
               response.pending.length && response.pending[response.pending.length - 1].key;
           } while (response.pending.length === PAGE_LIMIT);
           if (!cancelled) {
-            setAccountantInfo(pending);
+            setResult({ pendingTransfers: pending, receivedAt: new Date().toISOString() });
           }
         } catch (error) {
           if (!cancelled) {
-            setAccountantInfo([]);
+            setResult({ pendingTransfers: [], receivedAt: null });
           }
           console.error(error);
         }
@@ -74,7 +84,7 @@ const useGetAccountantPendingTransfers = (contractAddress: string): PendingTrans
     };
   }, [currentNetwork, contractAddress]);
 
-  return accountantInfo;
+  return result;
 };
 
 export default useGetAccountantPendingTransfers;

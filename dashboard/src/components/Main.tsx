@@ -94,7 +94,7 @@ function Main() {
     'Ethereum',
     contracts.coreBridge(env, 'Ethereum')
   );
-  const heartbeats = useHeartbeats(currentGuardianSet);
+  const { heartbeats, receivedAt: heartbeatsReceivedAt } = useHeartbeats(currentGuardianSet);
   const chainIdsToHeartbeats = useChainHeartbeats(heartbeats);
   const latestRelease = useLatestRelease();
   return (
@@ -133,6 +133,7 @@ function Main() {
         <Route path="/">
           <Home
             heartbeats={heartbeats}
+            heartbeatsReceivedAt={heartbeatsReceivedAt}
             chainIdsToHeartbeats={chainIdsToHeartbeats}
             latestRelease={latestRelease}
           />

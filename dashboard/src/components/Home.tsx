@@ -18,22 +18,25 @@ import {
 
 function Home({
   heartbeats,
+  heartbeatsReceivedAt,
   chainIdsToHeartbeats,
   latestRelease,
 }: {
   heartbeats: Heartbeat[];
+  heartbeatsReceivedAt: string | null;
   chainIdsToHeartbeats: ChainIdToHeartbeats;
   latestRelease: string | null;
 }) {
   const { currentNetwork } = useNetworkContext();
   const governorInfo = useCloudGovernorInfo();
-  const tokenData = useTokenData();
+  const { tokenData, receivedAt: tokenDataReceivedAt } = useTokenData();
   return (
     <>
       <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} />
       <Divider />
       <Guardians
         heartbeats={heartbeats}
+        heartbeatsReceivedAt={heartbeatsReceivedAt}
         chainIdsToHeartbeats={chainIdsToHeartbeats}
         latestRelease={latestRelease}
       />
@@ -45,12 +48,14 @@ function Home({
           <Accountant
             governorInfo={governorInfo}
             tokenData={tokenData}
+            tokenDataReceivedAt={tokenDataReceivedAt}
             accountantAddress={ACCOUNTANT_CONTRACT_ADDRESS}
           />
           <Divider />
           <Accountant
             governorInfo={governorInfo}
             tokenData={tokenData}
+            tokenDataReceivedAt={tokenDataReceivedAt}
             accountantAddress={NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET}
             isNTT
           />
@@ -62,6 +67,7 @@ function Home({
           <Accountant
             governorInfo={governorInfo}
             tokenData={tokenData}
+            tokenDataReceivedAt={tokenDataReceivedAt}
             accountantAddress={NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET}
             isNTT
           />

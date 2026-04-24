@@ -3,8 +3,13 @@ import { Network } from '../contexts/NetworkContext';
 import { NTTRateLimit } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 
-export function useRateLimits(network: Network) {
-  const [rateLimits, setRateLimits] = useState<NTTRateLimit[]>([]);
+export type RateLimitsResult = {
+  rateLimits: NTTRateLimit[];
+  receivedAt: string | null;
+};
+
+export function useRateLimits(network: Network): RateLimitsResult {
+  const [result, setResult] = useState<RateLimitsResult>({ rateLimits: [], receivedAt: null });
 
   useEffect(() => {
     let cancelled = false;
@@ -24,12 +29,12 @@ export function useRateLimits(network: Network) {
         }
       );
       if (cancelled || !response.data) return;
-      setRateLimits(response.data);
+      setResult({ rateLimits: response.data, receivedAt: new Date().toISOString() });
     })();
     return () => {
       cancelled = true;
     };
   }, [network]);
 
-  return rateLimits;
+  return result;
 }

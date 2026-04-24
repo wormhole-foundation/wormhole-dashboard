@@ -15,6 +15,7 @@ import { useNetworkContext } from '../contexts/NetworkContext';
 import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
 import { NTTRateLimit, chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
+import FetchedAt from './FetchedAt';
 import { normalizeBigNumber } from '../utils/normalizeBigNumber';
 
 const rateLimitColumnHelper = createColumnHelper<NTTRateLimit>();
@@ -106,7 +107,7 @@ const rateLimitColumns = [
 
 export function NTTRateLimits() {
   const network = useNetworkContext();
-  const rateLimits = useRateLimits(network.currentNetwork);
+  const { rateLimits, receivedAt } = useRateLimits(network.currentNetwork);
   const [rateLimitSorting, setRateLimitSorting] = useState<SortingState>([]);
   const [rateLimitExpanded, setRateLimitExpanded] = useState<ExpandedState>({});
 
@@ -146,6 +147,9 @@ export function NTTRateLimits() {
         <Card>
           <Table<NTTRateLimit> table={table} />
         </Card>
+      </Box>
+      <Box mx={2}>
+        <FetchedAt entries={[{ label: 'Rate limits', receivedAt }]} />
       </Box>
     </CollapsibleSection>
   );

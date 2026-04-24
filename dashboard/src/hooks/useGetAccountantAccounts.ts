@@ -3,7 +3,6 @@ import { useNetworkContext } from '../contexts/NetworkContext';
 import { TESTNET_WORMCHAIN_URL, WORMCHAIN_URL } from '../utils/consts';
 import { queryContractSmart } from '@wormhole-foundation/wormhole-monitor-common/src/queryContractSmart';
 
-const POLL_INTERVAL_MS = 1 * 60 * 1000;
 const PAGE_LIMIT = 2000; // throws a gas limit error over this
 
 export type Account = {
@@ -15,48 +14,49 @@ export type Account = {
   balance: string;
 };
 
-const useGetAccountantAccounts = (contractAddress: string): Account[] => {
+export type AccountantAccountsResult = {
+  accounts: Account[];
+  receivedAt: string | null;
+};
+
+const useGetAccountantAccounts = (contractAddress: string): AccountantAccountsResult => {
   const { currentNetwork } = useNetworkContext();
-  const [accountantInfo, setAccountantInfo] = useState<Account[]>([]);
+  const [result, setResult] = useState<AccountantAccountsResult>({
+    accounts: [],
+    receivedAt: null,
+  });
 
   useEffect(() => {
+    setResult({ accounts: [], receivedAt: null });
     if (currentNetwork.name !== 'Mainnet' && currentNetwork.name !== 'Testnet') {
       return;
     }
     let cancelled = false;
     (async () => {
-      while (!cancelled) {
-        try {
-          let accounts: Account[] = [];
-          let response;
-          let start_after = undefined;
-          do {
-            response = await queryContractSmart(
-              currentNetwork.name === 'Mainnet' ? WORMCHAIN_URL : TESTNET_WORMCHAIN_URL,
-              contractAddress,
-              {
-                all_accounts: {
-                  limit: PAGE_LIMIT,
-                  start_after,
-                },
-              }
-            );
-            accounts = [...accounts, ...response.accounts];
-            start_after =
-              response.accounts.length && response.accounts[response.accounts.length - 1].key;
-          } while (response.accounts.length === PAGE_LIMIT);
-          if (!cancelled) {
-            setAccountantInfo(accounts);
-          }
-        } catch (error) {
-          if (!cancelled) {
-            setAccountantInfo([]);
-          }
-          console.error(error);
-        }
+      try {
+        let accounts: Account[] = [];
+        let response;
+        let start_after = undefined;
+        do {
+          response = await queryContractSmart(
+            currentNetwork.name === 'Mainnet' ? WORMCHAIN_URL : TESTNET_WORMCHAIN_URL,
+            contractAddress,
+            {
+              all_accounts: {
+                limit: PAGE_LIMIT,
+                start_after,
+              },
+            }
+          );
+          accounts = [...accounts, ...response.accounts];
+          start_after =
+            response.accounts.length && response.accounts[response.accounts.length - 1].key;
+        } while (response.accounts.length === PAGE_LIMIT);
         if (!cancelled) {
-          await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+          setResult({ accounts, receivedAt: new Date().toISOString() });
         }
+      } catch (error) {
+        console.error(error);
       }
     })();
     return () => {
@@ -64,7 +64,7 @@ const useGetAccountantAccounts = (contractAddress: string): Account[] => {
     };
   }, [currentNetwork, contractAddress]);
 
-  return accountantInfo;
+  return result;
 };
 
 export default useGetAccountantAccounts;

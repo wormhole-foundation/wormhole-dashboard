@@ -22,7 +22,7 @@ const createEmptyInfo = (): GovernorInfo => ({
   enqueued: [],
 });
 
-const TIMEOUT = 10 * 1000;
+const TIMEOUT = 60 * 1000;
 
 function useGovernorInfo(): GovernorInfo {
   const { currentNetwork } = useNetworkContext();

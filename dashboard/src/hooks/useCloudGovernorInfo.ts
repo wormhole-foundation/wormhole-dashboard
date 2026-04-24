@@ -95,7 +95,7 @@ interface GovernorStatusResponse {
   governorStatus: GovernorStatus[];
 }
 
-const POLL_INTERVAL_MS = 10 * 1000;
+const POLL_INTERVAL_MS = 60 * 1000;
 
 const createEmptyInfo = (): CloudGovernorInfo => ({
   notionals: [],
@@ -104,11 +104,11 @@ const createEmptyInfo = (): CloudGovernorInfo => ({
   totalEnqueuedVaas: {},
 });
 
-const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
-  const [configs, status] = await Promise.all([
-    axios.get<GovernorConfigsResponse>(`${endpoint}/governor-configs`),
-    axios.get<GovernorStatusResponse>(`${endpoint}/governor-status`),
-  ]);
+type GovernorConfigsInfo = Pick<CloudGovernorInfo, 'notionals' | 'tokens'>;
+type GovernorStatusInfo = Pick<CloudGovernorInfo, 'enqueuedVAAs' | 'totalEnqueuedVaas'>;
+
+const getConfigsInfo = async (endpoint: string): Promise<GovernorConfigsInfo> => {
+  const configs = await axios.get<GovernorConfigsResponse>(`${endpoint}/governor-configs`);
 
   let firstConfig: GovernorConfig | undefined = undefined;
   const availableNotionalByChain: {
@@ -204,6 +204,14 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
       return entry;
     }) || [];
 
+  notionals.sort((a, b) => (a.chainId < b.chainId ? -1 : a.chainId > b.chainId ? 1 : 0));
+
+  return { notionals, tokens };
+};
+
+const getStatusInfo = async (endpoint: string): Promise<GovernorStatusInfo> => {
+  const status = await axios.get<GovernorStatusResponse>(`${endpoint}/governor-status`);
+
   const vaaById: { [key: string]: EnqueuedVAA } = {};
   const totalEnqueuedVaas: TotalEnqueuedVaasByGuardianByChain = {};
   for (const s of status.data.governorStatus) {
@@ -240,8 +248,6 @@ const getInfo = async (endpoint: string): Promise<CloudGovernorInfo> => {
 
   const enqueuedVAAs = Object.values(vaaById);
   return {
-    notionals,
-    tokens,
     enqueuedVAAs,
     totalEnqueuedVaas,
   };
@@ -258,14 +264,15 @@ const useCloudGovernorInfo = (): CloudGovernorInfo => {
     }
     let cancelled = false;
     (async () => {
+      let configsInfo: GovernorConfigsInfo | undefined;
       while (!cancelled) {
         try {
-          const info = await getInfo(currentNetwork.endpoint);
-          info.notionals.sort((a, b) =>
-            a.chainId < b.chainId ? -1 : a.chainId > b.chainId ? 1 : 0
-          );
+          if (!configsInfo) {
+            configsInfo = await getConfigsInfo(currentNetwork.endpoint);
+          }
+          const statusInfo = await getStatusInfo(currentNetwork.endpoint);
           if (!cancelled) {
-            setGovernorInfo(info);
+            setGovernorInfo({ ...configsInfo, ...statusInfo });
           }
         } catch (error) {
           if (!cancelled) {

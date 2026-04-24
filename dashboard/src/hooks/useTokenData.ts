@@ -26,19 +26,16 @@ function useTokenData(): TokenDataByChainAddress | null {
     if (skip) return;
     let cancelled = false;
     (async () => {
-      while (!cancelled) {
-        const response = await axios.get<{ data: TokenDataEntry[] }>(
-          `${currentNetwork.endpoint}/latest-tokendata`
+      const response = await axios.get<{ data: TokenDataEntry[] }>(
+        `${currentNetwork.endpoint}/latest-tokendata`
+      );
+      if (!cancelled) {
+        setTokenData(
+          response.data?.data.reduce<TokenDataByChainAddress>((obj, tokenData) => {
+            obj[`${tokenData.token_chain}/${tokenData.token_address}`] = tokenData;
+            return obj;
+          }, {}) || null
         );
-        if (!cancelled) {
-          setTokenData(
-            response.data?.data.reduce<TokenDataByChainAddress>((obj, tokenData) => {
-              obj[`${tokenData.token_chain}/${tokenData.token_address}`] = tokenData;
-              return obj;
-            }, {}) || null
-          );
-          await new Promise((resolve) => setTimeout(resolve, 60000));
-        }
       }
     })();
     return () => {

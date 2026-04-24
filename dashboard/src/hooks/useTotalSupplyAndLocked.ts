@@ -3,10 +3,16 @@ import { Network } from '../contexts/NetworkContext';
 import { NTTTotalSupplyAndLockedData } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 
-export function useTotalSupplyAndLocked(network: Network) {
-  const [totalSupplyAndLocked, setTotalSupplyAndLocked] = useState<NTTTotalSupplyAndLockedData[]>(
-    []
-  );
+export type TotalSupplyAndLockedResult = {
+  totalSupplyAndLocked: NTTTotalSupplyAndLockedData[];
+  receivedAt: string | null;
+};
+
+export function useTotalSupplyAndLocked(network: Network): TotalSupplyAndLockedResult {
+  const [result, setResult] = useState<TotalSupplyAndLockedResult>({
+    totalSupplyAndLocked: [],
+    receivedAt: null,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -15,7 +21,10 @@ export function useTotalSupplyAndLocked(network: Network) {
         `${network.endpoint}/get-total-supply-and-locked`
       );
       if (!cancelled && response.data) {
-        setTotalSupplyAndLocked(response.data);
+        setResult({
+          totalSupplyAndLocked: response.data,
+          receivedAt: new Date().toISOString(),
+        });
       }
     })();
     return () => {
@@ -23,5 +32,5 @@ export function useTotalSupplyAndLocked(network: Network) {
     };
   }, [network]);
 
-  return totalSupplyAndLocked;
+  return result;
 }

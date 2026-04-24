@@ -17,12 +17,17 @@ export type TokenDataByChainAddress = {
   [chainAddress: string]: TokenDataEntry;
 };
 
-function useTokenData(): TokenDataByChainAddress | null {
+export type TokenDataResult = {
+  tokenData: TokenDataByChainAddress | null;
+  receivedAt: string | null;
+};
+
+function useTokenData(): TokenDataResult {
   const { currentNetwork } = useNetworkContext();
   const skip = currentNetwork.type !== 'cloudfunction';
-  const [tokenData, setTokenData] = useState<TokenDataByChainAddress | null>(null);
+  const [result, setResult] = useState<TokenDataResult>({ tokenData: null, receivedAt: null });
   useEffect(() => {
-    setTokenData(null);
+    setResult({ tokenData: null, receivedAt: null });
     if (skip) return;
     let cancelled = false;
     (async () => {
@@ -30,18 +35,20 @@ function useTokenData(): TokenDataByChainAddress | null {
         `${currentNetwork.endpoint}/latest-tokendata`
       );
       if (!cancelled) {
-        setTokenData(
-          response.data?.data.reduce<TokenDataByChainAddress>((obj, tokenData) => {
-            obj[`${tokenData.token_chain}/${tokenData.token_address}`] = tokenData;
-            return obj;
-          }, {}) || null
-        );
+        setResult({
+          tokenData:
+            response.data?.data.reduce<TokenDataByChainAddress>((obj, tokenData) => {
+              obj[`${tokenData.token_chain}/${tokenData.token_address}`] = tokenData;
+              return obj;
+            }, {}) || null,
+          receivedAt: new Date().toISOString(),
+        });
       }
     })();
     return () => {
       cancelled = true;
     };
   }, [currentNetwork, skip]);
-  return tokenData;
+  return result;
 }
 export default useTokenData;

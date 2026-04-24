@@ -3,11 +3,16 @@ import { useNetworkContext } from '../contexts/NetworkContext';
 import { getLastHeartbeats, Heartbeat } from '../utils/getLastHeartbeats';
 import { GUARDIAN_SET } from '@wormhole-foundation/wormhole-monitor-common';
 
-function useHeartbeats(currentGuardianSet: string | null): Heartbeat[] {
+export type HeartbeatsResult = {
+  heartbeats: Heartbeat[];
+  receivedAt: string | null;
+};
+
+function useHeartbeats(currentGuardianSet: string | null): HeartbeatsResult {
   const { currentNetwork } = useNetworkContext();
-  const [heartbeats, setHeartbeats] = useState<Heartbeat[]>([]);
+  const [result, setResult] = useState<HeartbeatsResult>({ heartbeats: [], receivedAt: null });
   useEffect(() => {
-    setHeartbeats([]);
+    setResult({ heartbeats: [], receivedAt: null });
   }, [currentNetwork, currentGuardianSet]);
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +38,10 @@ function useHeartbeats(currentGuardianSet: string | null): Heartbeat[] {
               }
             }
           }
-          setHeartbeats(heartbeats.sort((a, b) => a.nodeName.localeCompare(b.nodeName)));
+          setResult({
+            heartbeats: heartbeats.sort((a, b) => a.nodeName.localeCompare(b.nodeName)),
+            receivedAt: new Date().toISOString(),
+          });
           await new Promise((resolve) =>
             setTimeout(resolve, currentNetwork.type === 'guardian' ? 15000 : 30000)
           );
@@ -44,6 +52,6 @@ function useHeartbeats(currentGuardianSet: string | null): Heartbeat[] {
       cancelled = true;
     };
   }, [currentNetwork, currentGuardianSet]);
-  return heartbeats;
+  return result;
 }
 export default useHeartbeats;

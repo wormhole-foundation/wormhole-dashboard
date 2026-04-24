@@ -42,6 +42,7 @@ import {
 import { CHAIN_ICON_MAP, WORMHOLE_RPC_HOSTS } from '../utils/consts';
 import { getQuorumLossCount } from './Alerts';
 import CollapsibleSection from './CollapsibleSection';
+import FetchedAt from './FetchedAt';
 import EnqueuedVAAChecker from './EnqueuedVAAChecker';
 import { ExplorerTxHash } from './ExplorerTxHash';
 import Table from './Table';
@@ -507,6 +508,12 @@ function MainnetGovernor({ governorInfo }: { governorInfo: CloudGovernorInfo }) 
           </Accordion>
         </Card>
       </Box>
+      <FetchedAt
+        entries={[
+          { label: 'Configs', receivedAt: governorInfo.configsReceivedAt },
+          { label: 'Status', receivedAt: governorInfo.statusReceivedAt },
+        ]}
+      />
     </CollapsibleSection>
   );
 }

@@ -46,6 +46,8 @@ export interface CloudGovernorInfo {
   tokens: GovernorToken[];
   enqueuedVAAs: EnqueuedVAA[];
   totalEnqueuedVaas: TotalEnqueuedVaasByGuardianByChain;
+  configsReceivedAt: string | null;
+  statusReceivedAt: string | null;
 }
 
 interface Chain {
@@ -102,6 +104,8 @@ const createEmptyInfo = (): CloudGovernorInfo => ({
   tokens: [],
   enqueuedVAAs: [],
   totalEnqueuedVaas: {},
+  configsReceivedAt: null,
+  statusReceivedAt: null,
 });
 
 type GovernorConfigsInfo = Pick<CloudGovernorInfo, 'notionals' | 'tokens'>;
@@ -269,15 +273,24 @@ const useCloudGovernorInfo = (): CloudGovernorInfo => {
         try {
           if (!configsInfo) {
             configsInfo = await getConfigsInfo(currentNetwork.endpoint);
+            if (!cancelled) {
+              const fetched = configsInfo;
+              setGovernorInfo((info) => ({
+                ...info,
+                ...fetched,
+                configsReceivedAt: new Date().toISOString(),
+              }));
+            }
           }
           const statusInfo = await getStatusInfo(currentNetwork.endpoint);
           if (!cancelled) {
-            setGovernorInfo({ ...configsInfo, ...statusInfo });
+            setGovernorInfo((info) => ({
+              ...info,
+              ...statusInfo,
+              statusReceivedAt: new Date().toISOString(),
+            }));
           }
         } catch (error) {
-          if (!cancelled) {
-            setGovernorInfo(createEmptyInfo());
-          }
           console.error(error);
         }
         if (!cancelled) {

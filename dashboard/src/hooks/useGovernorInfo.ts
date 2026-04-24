@@ -14,12 +14,18 @@ type GovernorInfo = {
   notionals: GovernorGetAvailableNotionalByChainResponse_Entry[];
   tokens: GovernorGetTokenListResponse_Entry[];
   enqueued: GovernorGetEnqueuedVAAsResponse_Entry[];
+  notionalsReceivedAt: string | null;
+  tokensReceivedAt: string | null;
+  enqueuedReceivedAt: string | null;
 };
 
 const createEmptyInfo = (): GovernorInfo => ({
   notionals: [],
   tokens: [],
   enqueued: [],
+  notionalsReceivedAt: null,
+  tokensReceivedAt: null,
+  enqueuedReceivedAt: null,
 });
 
 const TIMEOUT = 60 * 1000;
@@ -36,7 +42,11 @@ function useGovernorInfo(): GovernorInfo {
       while (!cancelled && currentNetwork.type === 'guardian') {
         const response = await getGovernorAvailableNotionalByChain(currentNetwork);
         if (!cancelled) {
-          setGovernorInfo((info) => ({ ...info, notionals: response.entries }));
+          setGovernorInfo((info) => ({
+            ...info,
+            notionals: response.entries,
+            notionalsReceivedAt: new Date().toISOString(),
+          }));
           await new Promise((resolve) => setTimeout(resolve, TIMEOUT));
         }
       }
@@ -66,6 +76,7 @@ function useGovernorInfo(): GovernorInfo {
               } catch (e) {}
               return entry;
             }),
+            tokensReceivedAt: new Date().toISOString(),
           }));
           await new Promise((resolve) => setTimeout(resolve, TIMEOUT));
         }
@@ -81,7 +92,11 @@ function useGovernorInfo(): GovernorInfo {
       while (!cancelled && currentNetwork.type === 'guardian') {
         const response = await getGovernorEnqueuedVAAs(currentNetwork);
         if (!cancelled) {
-          setGovernorInfo((info) => ({ ...info, enqueued: response.entries }));
+          setGovernorInfo((info) => ({
+            ...info,
+            enqueued: response.entries,
+            enqueuedReceivedAt: new Date().toISOString(),
+          }));
           await new Promise((resolve) => setTimeout(resolve, TIMEOUT));
         }
       }

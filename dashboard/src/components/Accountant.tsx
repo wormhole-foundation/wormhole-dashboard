@@ -46,6 +46,7 @@ import { TokenDataByChainAddress, TokenDataEntry } from '../hooks/useTokenData';
 import { CHAIN_ICON_MAP, WORMCHAIN_URL } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
 import { ExplorerTxHash } from './ExplorerTxHash';
+import FetchedAt from './FetchedAt';
 import Table from './Table';
 
 const NTT_ACCOUNTANT_TOKEN_ADDRESS_OVERRIDE: {
@@ -404,11 +405,13 @@ const MemoizedAccountantSearch = memo(AccountantSearch);
 function Accountant({
   governorInfo,
   tokenData,
+  tokenDataReceivedAt,
   accountantAddress,
   isNTT,
 }: {
   governorInfo?: CloudGovernorInfo;
   tokenData: TokenDataByChainAddress | null;
+  tokenDataReceivedAt: string | null;
   accountantAddress: string;
   isNTT?: boolean;
 }) {
@@ -424,9 +427,11 @@ function Accountant({
     setOpen(false);
   }, []);
 
-  const pendingTransferInfo = useGetAccountantPendingTransfers(accountantAddress);
+  const { pendingTransfers: pendingTransferInfo, receivedAt: pendingTransfersReceivedAt } =
+    useGetAccountantPendingTransfers(accountantAddress);
 
-  const accountsInfo = useGetAccountantAccounts(accountantAddress);
+  const { accounts: accountsInfo, receivedAt: accountsReceivedAt } =
+    useGetAccountantAccounts(accountantAddress);
 
   const governorInfoIsDefined = !!governorInfo;
 
@@ -712,6 +717,13 @@ function Accountant({
             </Accordion>
           </Card>
         </Box>
+        <FetchedAt
+          entries={[
+            { label: 'Pending transfers', receivedAt: pendingTransfersReceivedAt },
+            { label: 'Accounts', receivedAt: accountsReceivedAt },
+            { label: 'Tokens', receivedAt: tokenDataReceivedAt },
+          ]}
+        />
       </CollapsibleSection>
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>Accountant Transfer Search</DialogTitle>

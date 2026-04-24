@@ -45,6 +45,7 @@ import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import { Heartbeat, HeartbeatNetwork } from '../utils/getLastHeartbeats';
 import { isHeartbeatUnhealthy } from './Chains';
 import CollapsibleSection from './CollapsibleSection';
+import FetchedAt from './FetchedAt';
 import Table from './Table';
 
 const columnHelper = createColumnHelper<Heartbeat>();
@@ -313,10 +314,12 @@ type Displays = 'cards' | 'table';
 
 function Guardians({
   heartbeats,
+  heartbeatsReceivedAt,
   chainIdsToHeartbeats,
   latestRelease,
 }: {
   heartbeats: Heartbeat[];
+  heartbeatsReceivedAt: string | null;
   chainIdsToHeartbeats: ChainIdToHeartbeats;
   latestRelease: string | null;
 }) {
@@ -558,6 +561,7 @@ function Guardians({
           )}
         </>
       )}
+      <FetchedAt entries={[{ label: 'Heartbeats', receivedAt: heartbeatsReceivedAt }]} />
     </CollapsibleSection>
   );
 }

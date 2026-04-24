@@ -16,6 +16,7 @@ import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import { useTotalSupplyAndLocked } from '../hooks/useTotalSupplyAndLocked';
 import { NTTTotalSupplyAndLockedData } from '@wormhole-foundation/wormhole-monitor-common';
 import CollapsibleSection from './CollapsibleSection';
+import FetchedAt from './FetchedAt';
 import { normalizeBigNumber } from '../utils/normalizeBigNumber';
 
 const totalSupplyAndLockedColumnHelper = createColumnHelper<NTTTotalSupplyAndLockedData>();
@@ -71,7 +72,7 @@ const rateLimitColumns = [
 
 export function NTTTotalSupplyAndLocked() {
   const network = useNetworkContext();
-  const totalSupplyAndLocked = useTotalSupplyAndLocked(network.currentNetwork);
+  const { totalSupplyAndLocked, receivedAt } = useTotalSupplyAndLocked(network.currentNetwork);
   const [totalSupplyAndLockedSorting, setTotalSupplyAndLockedSorting] = useState<SortingState>([]);
   const [totalSupplyAndLockedExpanded, setTotalSupplyAndLockedExpanded] = useState<ExpandedState>(
     {}
@@ -114,6 +115,9 @@ export function NTTTotalSupplyAndLocked() {
         <Card>
           <Table<NTTTotalSupplyAndLockedData> table={table} />
         </Card>
+      </Box>
+      <Box mx={2}>
+        <FetchedAt entries={[{ label: 'Total supply and locked', receivedAt }]} />
       </Box>
     </CollapsibleSection>
   );

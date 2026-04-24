@@ -13,7 +13,6 @@ import useTokenData from '../hooks/useTokenData';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   NTT_ACCOUNTANT_CONTRACT_ADDRESS_MAINNET,
-  NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET,
 } from '@wormhole-foundation/wormhole-monitor-common';
 
 function Home({
@@ -63,17 +62,7 @@ function Home({
           <Monitor governorInfo={governorInfo} />
         </>
       ) : currentNetwork.name === 'Testnet' ? (
-        <>
-          <Accountant
-            governorInfo={governorInfo}
-            tokenData={tokenData}
-            tokenDataReceivedAt={tokenDataReceivedAt}
-            accountantAddress={NTT_ACCOUNTANT_CONTRACT_ADDRESS_TESTNET}
-            isNTT
-          />
-          <Divider />
-          <Monitor />
-        </>
+        <Monitor />
       ) : (
         <Governor />
       )}

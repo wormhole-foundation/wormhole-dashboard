@@ -35,7 +35,7 @@ function useHeartbeats(currentGuardianSet: string | null): Heartbeat[] {
           }
           setHeartbeats(heartbeats.sort((a, b) => a.nodeName.localeCompare(b.nodeName)));
           await new Promise((resolve) =>
-            setTimeout(resolve, currentNetwork.type === 'guardian' ? 1000 : 10000)
+            setTimeout(resolve, currentNetwork.type === 'guardian' ? 15000 : 30000)
           );
         }
       }

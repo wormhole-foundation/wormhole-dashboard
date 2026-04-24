@@ -3,16 +3,12 @@ import { Network } from '../contexts/NetworkContext';
 import { NTTRateLimit } from '@wormhole-foundation/wormhole-monitor-common';
 import axios from 'axios';
 
-const REFRESH_INTERVAL = 120_000; // 2 minutes
-
 export function useRateLimits(network: Network) {
   const [rateLimits, setRateLimits] = useState<NTTRateLimit[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-
-    const fetchRateLimits = async () => {
-      if (cancelled) return;
+    (async () => {
       const response = await axios.post<NTTRateLimit[]>(
         `${network.endpoint}/get-ntt-rate-limits`,
         {},
@@ -27,20 +23,9 @@ export function useRateLimits(network: Network) {
           },
         }
       );
-
       if (cancelled || !response.data) return;
       setRateLimits(response.data);
-    };
-
-    const startAutoRefresh = async () => {
-      while (!cancelled) {
-        await fetchRateLimits();
-        await new Promise((resolve) => setTimeout(resolve, REFRESH_INTERVAL));
-      }
-    };
-
-    startAutoRefresh();
-
+    })();
     return () => {
       cancelled = true;
     };

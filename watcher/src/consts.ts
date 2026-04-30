@@ -64,7 +64,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
     Unichain: process.env.UNICHAIN_RPC || 'https://mainnet.unichain.org',
     Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-mainnet.g.alchemy.com/public',
-    Wormchain: process.env.WORMCHAIN_RPC || 'https://gateway.mainnet.xlabs.xyz',
+    Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain.mainnet.xlabs.xyz',
     Xlayer: process.env.XLAYER_RPC || 'https://rpc.ankr.com/xlayer',
     XRPLEVM: process.env.XRPL_EVM_RPC || 'https://rpc.xrplevm.org',
     ZeroGravity: process.env.ZERO_GRAVITY_RPC || 'https://evmrpc.0g.ai',
@@ -88,7 +88,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Base: process.env.BASE_RPC,
     Scroll: process.env.SCROLL_RPC || 'https://scroll-sepolia-rpc.publicnode.com',
     Sei: process.env.SEI_RPC,
-    Wormchain: process.env.WORMCHAIN_RPC || 'https://gateway.testnet.xlabs.xyz',
+    Wormchain: process.env.WORMCHAIN_RPC,
     ArbitrumSepolia:
       process.env.ARBITRUM_SEPOLIA_RPC || 'https://arbitrum-sepolia-rpc.publicnode.com',
     BaseSepolia: process.env.BASE_SEPOLIA_RPC,

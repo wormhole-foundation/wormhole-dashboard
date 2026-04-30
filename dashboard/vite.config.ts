@@ -25,10 +25,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/wormchain': {
-        target: 'https://gateway.mainnet.xlabs.xyz',
+        target: 'https://wormchain.mainnet.xlabs.xyz',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/wormchain/, ''),
       },
+      // fixme(SEJeff): xLabs no longer runs testnet
       '/wormchain-testnet': {
         target: 'https://gateway.testnet.xlabs.xyz',
         changeOrigin: true,

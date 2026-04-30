@@ -19,7 +19,7 @@ import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
 import { Firestore } from 'firebase-admin/firestore';
 
 const WORMCHAIN_URLS: string[] = [
-  'https://gateway.mainnet.xlabs.xyz',
+  'https://wormchain.mainnet.xlabs.xyz',
   'https://tncnt-eu-wormchain-main-01.rpc.p2p.world',
   'https://wormchain-rpc.quickapi.com',
 ];

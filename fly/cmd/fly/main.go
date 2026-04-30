@@ -207,6 +207,17 @@ func main() {
 					counter:       hb.Counter,
 				}
 
+				// Look up the libp2p peer ID that sent this heartbeat. The p2p loop
+				// stores (addr, peerID) → hb in gst.lastHeartbeats before sending hb
+				// to our channel, so the same pointer should be in the map.
+				p2pNodeAddr := ""
+				for peerId, stored := range gst.LastHeartbeat(eth_common.HexToAddress(hb.GuardianAddr)) {
+					if stored == hb {
+						p2pNodeAddr = peerId.String()
+						break
+					}
+				}
+
 				now := time.Now()
 				networks := make([]*map[string]interface{}, 0, len(hb.Networks))
 				for _, network := range hb.Networks {
@@ -231,6 +242,7 @@ func main() {
 					"timestamp":     strconv.FormatInt(hb.Timestamp, 10),
 					"updatedAt":     now,
 					"version":       hb.Version,
+					"p2pNodeAddr":   p2pNodeAddr,
 				})
 				if err != nil {
 					// Handle any errors in an appropriate way, such as returning them.

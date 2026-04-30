@@ -1,8 +1,8 @@
 // AUTO-GENERATED — do not edit manually.
-// Source: https://raw.githubusercontent.com/wormhole-foundation/wormhole/main/guardianset/mainnetv2/v5.prototxt
+// Source: https://raw.githubusercontent.com/wormhole-foundation/wormhole/refs/heads/main/guardianset/mainnetv2/canonical_sets/v6.prototxt
 // Run:    npm run generate-guardians
 
-export const GUARDIAN_SET_5 = [
+export const GUARDIAN_SET_6 = [
   {
     pubkey: '0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3',
     name: 'RockawayX',
@@ -24,7 +24,7 @@ export const GUARDIAN_SET_5 = [
     name: 'Inotel',
   },
   {
-    pubkey: '0x11b39756C042441BE6D8650b69b54EbE715E2343',
+    pubkey: '0x42579bFFbCF4276E290aB8E4C162bd4052b97970',
     name: 'HashQuark',
   },
   {
@@ -32,12 +32,12 @@ export const GUARDIAN_SET_5 = [
     name: 'Chainlayer',
   },
   {
-    pubkey: '0x15e7cAF07C4e3DC8e7C469f92C8Cd88FB8005a20',
+    pubkey: '0x18e41674CcF26329cD111406C1D05C6c80b23EdC',
     name: 'xLabs',
   },
   {
-    pubkey: '0x74a3bf913953D695260D88BC1aA25A4eeE363ef0',
-    name: 'Forbole',
+    pubkey: '0x9D16870160e703324D057c3361c34C5beFBa2c34',
+    name: 'Liquify',
   },
   {
     pubkey: '0x000aC0076727b35FBea2dAc28fEE5cCB0fEA768e',
@@ -64,16 +64,16 @@ export const GUARDIAN_SET_5 = [
     name: 'Everstake',
   },
   {
-    pubkey: '0x43ac8f567A31e7850Da532B361988Bfe0d3ae11b',
-    name: 'Chorus One',
+    pubkey: '0x3F851Ad586A47ceF8d04748f33ab0D71395f06b4',
+    name: 'DSRV',
   },
   {
     pubkey: '0x178e21ad2E77AE06711549CFBB1f9c7a9d8096e8',
     name: 'Syncnode',
   },
   {
-    pubkey: '0x5E1487F35515d02A92753504a8D75471b9f49EdB',
-    name: 'Triton',
+    pubkey: '0x7899cEAB1DC961Dae9defDB7A4f521269a5448FC',
+    name: 'Google Cloud',
   },
   {
     pubkey: '0x6FbEBc898F403E4773E95feB15E80C9A99c8348d',
@@ -82,4 +82,4 @@ export const GUARDIAN_SET_5 = [
 ];
 
 /** Always points to the active guardian set. Update GUARDIAN_SET_N above and bump this alias. */
-export const GUARDIAN_SET = GUARDIAN_SET_5;
+export const GUARDIAN_SET = GUARDIAN_SET_6;

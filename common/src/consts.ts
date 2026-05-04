@@ -37,7 +37,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Ink: '7711131', // Block of contract creation, https://explorer.inkonchain.com/tx/0x2576b03a4c0de8566778cb3149a0dbc1c8f8dfcf5d87c9f5f96038c4b15e3797
     Klaytn: '90563824',
     Linea: '13399665',
-    Mantle: '64176265',
     MegaETH: '1390753', // Block of contract creation https://megaeth-testnet-v3.blockscout.com/tx/0xf6bab2f9b4044d44c5ceb0d0d80ef7352166b0be39954baed61ca950c73ebb99
     Mezo: '232424', // Block of contract creation, https://explorer.mezo.org/tx/0x7ed15d6a210738bfd3b7606f6309bebb5533b67a9777626376864d893bbe51b5
     Moca: '522509', // Block of contract creation https://moca-mainnet.cloud.blockscout.com/tx/0xbae9ee07a270578d125b13fd9a7970a11a40e68dc68a30ccc40caadc40dd2017
@@ -47,7 +46,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Optimism: '69401779',
     Plume: '9146992', // Block of contract creation, https://explorer.plume.org/tx/0x11251febf0fd6b2b247422fe451cda3fad1da42165d32db44a090a262095278b
     Polygon: '20629146',
-    Scroll: '4955534',
     Sei: '238594',
     Seievm: '137405273', // https://seiscan.io/tx/0xcd7a2903cf75422a885be54836d30245dc34cc6ff002c5b9f0e08ec75c590962
     Solana: '94396403', // https://explorer.solana.com/tx/2L8rQY94W2d44sycRkhHA1PyXdh5z6ND541ftDDk1dgBcv6RLR9a3zUgTJispPmXjkmqdqd5EDytXcnP5PC2AmEJ
@@ -74,8 +72,6 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Near: '0',
     Solana: '0',
     Sui: '0',
-    Scroll: '0',
-    Mantle: '0',
     Base: '0',
     Sei: '0',
     Wormchain: '4495661',
@@ -118,7 +114,7 @@ export function getMissThreshold(date: Date, chainish: number | string | Chain |
       // At this point we either have a number, a non-number string, a Chain, or a ChainId
       chainId = toChainId(chainish);
     }
-    missThresholdInMins = chainId === toChainId('Scroll') ? 120 : MISS_THRESHOLD_IN_MINS_DEFAULT;
+    missThresholdInMins = MISS_THRESHOLD_IN_MINS_DEFAULT;
   } catch (e) {
     // If we can't get the chainId, we'll use the default value.
     missThresholdInMins = MISS_THRESHOLD_IN_MINS_DEFAULT;
@@ -145,9 +141,6 @@ export const TOKEN_BRIDGE_EMITTERS: { [key in Chain]?: string } = {
   Injective: '00000000000000000000000045dbea4617971d93188eda21530bc6503d153313',
   Sui: 'ccceeb29348f71bdd22ffef43a2a19c1f5b5e17c5cca5411529120182672ade5',
   Base: '0000000000000000000000008d2de8d2f73f1f4cab472ac9a881c9b123c79627',
-  Scroll: '00000000000000000000000024850c6f61C438823F01B7A3BF2B89B72174Fa9d',
-  Mantle: '00000000000000000000000024850c6f61C438823F01B7A3BF2B89B72174Fa9d',
-  Xlayer: '0000000000000000000000005537857664B0f9eFe38C9f320F75fEf23234D904',
   Sei: '86c5fd957e2db8389553e1728f9c27964b22a8154091ccba54d75f4b10c61f5e',
   Wormchain: 'aeb534c45c3049d380b9d9b966f9895f53abd4301bfaff407fa09dea8ae7a924',
   XRPLEVM: '0000000000000000000000007d8eBc211C4221eA18E511E4f0fD50c5A539f275',

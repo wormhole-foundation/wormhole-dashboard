@@ -32,14 +32,12 @@ export class Watcher {
       this.maximumBatchSize = 50;
     } else if (
       chain === 'Klaytn' ||
-      chain === 'Scroll' ||
       chain === 'Unichain' ||
       chain === 'Worldchain' ||
       chain === 'Monad' ||
       chain === 'Ink' ||
       chain === 'HyperEVM' ||
-      chain === 'Seievm' ||
-      chain === 'Xlayer'
+      chain === 'Seievm'
     ) {
       this.maximumBatchSize = 10;
     }

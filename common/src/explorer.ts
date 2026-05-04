@@ -44,12 +44,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://basescan.org/block/${block}`
       : chainId === chainToChainId('Sei')
       ? `https://www.seiscan.app/pacific-1/blocks/${block}`
-      : chainId === chainToChainId('Scroll')
-      ? `https://scrollscan.com/block/${block}`
-      : chainId === chainToChainId('Mantle')
-      ? `https://explorer.mantle.xyz/block/${block}`
-      : chainId === chainToChainId('Xlayer')
-      ? `https://www.oklink.com/xlayer/block/${block}`
       : chainId === chainToChainId('Linea')
       ? `https://lineascan.build/block/${block}`
       : chainId === chainToChainId('Berachain')
@@ -115,12 +109,6 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://goerli.basescan.org/block/${block}`
     : chainId === chainToChainId('Sei')
     ? `https://www.seiscan.app/atlantic-2/blocks/${block}`
-    : chainId === chainToChainId('Scroll')
-    ? `https://sepolia.scrollscan.com/block/${block}`
-    : chainId === chainToChainId('Mantle')
-    ? `https://explorer.sepolia.mantle.xyz/block/${block}`
-    : chainId === chainToChainId('Xlayer')
-    ? `https://www.oklink.com/xlayer-test/block/${block}`
     : chainId === chainToChainId('Linea')
     ? `https://sepolia.lineascan.build/block/${block}`
     : chainId === chainToChainId('Berachain')
@@ -192,12 +180,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://basescan.org/tx/${tx}`
       : chainId === chainToChainId('Sei')
       ? `https://www.seiscan.app/pacific-1/txs/${tx}`
-      : chainId === chainToChainId('Scroll')
-      ? `https://scrollscan.com/tx/${tx}`
-      : chainId === chainToChainId('Mantle')
-      ? `https://explorer.mantle.xyz/tx/${tx}`
-      : chainId === chainToChainId('Xlayer')
-      ? `https://www.oklink.com/xlayer/tx/${tx}`
       : chainId === chainToChainId('Linea')
       ? `https://lineascan.build/tx/${tx}`
       : chainId === chainToChainId('Berachain')
@@ -264,12 +246,6 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://goerli.basescan.org/tx/${tx}`
     : chainId === chainToChainId('Sei')
     ? `https://www.seiscan.app/atlantic-2/txs/${tx}`
-    : chainId === chainToChainId('Scroll')
-    ? `https://sepolia.scrollscan.com/tx/${tx}`
-    : chainId === chainToChainId('Mantle')
-    ? `https://explorer.sepolia.mantle.xyz/tx/${tx}`
-    : chainId === chainToChainId('Xlayer')
-    ? `https://www.oklink.com/xlayer-test/tx/${tx}`
     : chainId === chainToChainId('Linea')
     ? `https://sepolia.lineascan.build/tx/${tx}`
     : chainId === chainToChainId('Berachain')

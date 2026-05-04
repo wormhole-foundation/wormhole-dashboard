@@ -68,6 +68,10 @@ async function fetchGuardianSetInfo(chain: Chain, address: string): Promise<Guar
       ? 'https://rpc.mainnet.near.org'
       : chain === 'Pythnet'
       ? 'http://pythnet.rpcpool.com'
+      : chain === 'Wormchain'
+      ? 'https://wormchain.mainnet.xlabs.xyz'
+      : chain === 'Tempo'
+      ? 'https://rpc.mainnet.tempo.xyz'
       : rpc.rpcAddress('Mainnet', chain);
   if (!rpcUrl) {
     console.error(`Mainnet ${chain} rpc url not found`);

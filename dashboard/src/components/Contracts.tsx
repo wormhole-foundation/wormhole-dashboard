@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Chain, chainToChainId, chains, contracts } from '@wormhole-foundation/sdk-base';
+import { useMemo } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import CollapsibleSection from './CollapsibleSection';
 import useGetGuardianSetInfoByChain from '../hooks/useGetGuardianSetInfoByChain';
@@ -20,14 +21,18 @@ function CoreBridgeInfo({
   chain,
   address,
   guardianSetIndex,
+  highestGuardianSetIndex,
 }: {
   chain: Chain;
   address: string | undefined;
   guardianSetIndex: string | undefined;
+  highestGuardianSetIndex: number;
 }) {
   if (!address) return null;
+  const idx = guardianSetIndex !== undefined ? Number(guardianSetIndex) : NaN;
+  const behind = Number.isFinite(idx) && idx < highestGuardianSetIndex;
   return (
-    <TableRow>
+    <TableRow sx={behind ? { backgroundColor: 'rgba(100,0,0,.2)' } : undefined}>
       <TableCell>{chain}</TableCell>
       <TableCell>{chainToChainId(chain)}</TableCell>
       <TableCell>{address}</TableCell>
@@ -40,6 +45,13 @@ function Contracts() {
   const { currentNetwork } = useNetworkContext();
   // const [guardianSetInfoByChain, setGuardianSetInfoByChain] = useState<GuardianSetInfoByChain>({});
   const guardianSetInfoByChain = useGetGuardianSetInfoByChain();
+  const highestGuardianSetIndex = useMemo(
+    () =>
+      Math.max(
+        ...Object.values(guardianSetInfoByChain).map((info) => Number(info.guardianSetIndex))
+      ),
+    [guardianSetInfoByChain]
+  );
 
   return currentNetwork.name === 'Mainnet' ? (
     <CollapsibleSection header="Core">
@@ -61,6 +73,7 @@ function Contracts() {
                   chain={chain}
                   address={contracts.coreBridge.get('Mainnet', chain)}
                   guardianSetIndex={guardianSetInfoByChain[chain]?.guardianSetIndex.toString()}
+                  highestGuardianSetIndex={highestGuardianSetIndex}
                 />
               ))}
             </TableBody>

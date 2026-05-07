@@ -17,6 +17,8 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  ColumnFiltersState,
+  FilterFn,
   SortingState,
   createColumnHelper,
   getCoreRowModel,
@@ -214,18 +216,26 @@ const pendingTransferColumns = [
 
 const accountsColumnHelper = createColumnHelper<AccountWithTokenData>();
 
+const chainFilterFn: FilterFn<AccountWithTokenData> = (row, columnId, filterValue) => {
+  const value = row.getValue<number>(columnId);
+  const search = String(filterValue).toLowerCase();
+  return `${chainIdToName(value)} (${value})`.toLowerCase().includes(search);
+};
+
 const accountsColumns = [
   accountsColumnHelper.accessor('key.chain_id', {
     header: () => 'Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
     enableGlobalFilter: false,
+    filterFn: chainFilterFn,
   }),
   accountsColumnHelper.accessor('key.token_chain', {
     header: () => 'Token Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
     enableGlobalFilter: false,
+    filterFn: chainFilterFn,
   }),
   accountsColumnHelper.accessor('tokenData.native_address', {
     header: () => 'Native Address',
@@ -562,12 +572,14 @@ function Accountant({
   const handleAccountsGlobalFilterChange = useCallback((e: any) => {
     setAccountsGlobalFilter(e.target.value);
   }, []);
+  const [accountsColumnFilters, setAccountsColumnFilters] = useState<ColumnFiltersState>([]);
   const [accountsSorting, setAccountsSorting] = useState<SortingState>([]);
   const accounts = useReactTable({
     columns: accountsColumns,
     data: accountsWithTokenData,
     state: {
       globalFilter: accountsGlobalFilter,
+      columnFilters: accountsColumnFilters,
       sorting: accountsSorting,
     },
     getRowId: (token) => JSON.stringify(token.key),
@@ -577,6 +589,7 @@ function Accountant({
     getSortedRowModel: getSortedRowModel(),
     autoResetPageIndex: false,
     onGlobalFilterChange: setAccountsGlobalFilter,
+    onColumnFiltersChange: setAccountsColumnFilters,
     onSortingChange: setAccountsSorting,
   });
   const pendingByChain = useMemo(
@@ -712,7 +725,7 @@ function Accountant({
                   }}
                   placeholder="Search Token"
                 />
-                <Table<AccountWithTokenData> table={accounts} paginated noWrap />
+                <Table<AccountWithTokenData> table={accounts} paginated noWrap showColumnFilters />
               </AccordionDetails>
             </Accordion>
           </Card>

@@ -19,6 +19,7 @@ import {
   TableFooter,
   TableHead,
   TableRow,
+  TextField,
   Theme,
   useTheme,
 } from '@mui/material';
@@ -30,12 +31,14 @@ function Table<T>({
   noWrap = false,
   paginated = false,
   showRowCount = false,
+  showColumnFilters = false,
   conditionalRowStyle,
 }: {
   table: TanTable<T>;
   noWrap?: boolean;
   paginated?: boolean;
   showRowCount?: boolean;
+  showColumnFilters?: boolean;
   conditionalRowStyle?: (a: T) => SxProps<Theme> | undefined;
 }) {
   const theme = useTheme();
@@ -82,6 +85,31 @@ function Table<T>({
                 ))}
               </TableRow>
             ))}
+            {showColumnFilters
+              ? table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={`${headerGroup.id}-filters`}>
+                    {headerGroup.headers.map((header) => {
+                      const canFilter = !header.isPlaceholder && header.column.getCanFilter();
+                      return (
+                        <TableCell key={`${header.id}-filter`} sx={{ pt: 0.5, pb: 1 }}>
+                          {canFilter ? (
+                            <TextField
+                              value={(header.column.getFilterValue() as string) ?? ''}
+                              onChange={(e) => header.column.setFilterValue(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              size="small"
+                              fullWidth
+                              placeholder="Filter"
+                              variant="standard"
+                              inputProps={{ 'aria-label': 'Filter column' }}
+                            />
+                          ) : null}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              : null}
           </TableHead>
           <TableBody>
             {table.getRowModel().rows.map((row) => (

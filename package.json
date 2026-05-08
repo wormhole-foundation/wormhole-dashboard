@@ -11,7 +11,8 @@
     "watch": "tsc -b -w -i",
     "cf:dev": "npm run build && functions-framework --target=$FUNCTION",
     "cf:deploy": "bash cloud_functions/scripts/deploy.sh",
-    "generate-guardians": "npx tsx scripts/generate-guardian-set.ts"
+    "generate-guardians": "npx tsx scripts/generate-guardian-set.ts",
+    "debug-miss": "npx tsx scripts/debug-miss.ts"
   },
   "workspaces": [
     "common",

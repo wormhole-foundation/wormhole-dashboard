@@ -64,6 +64,35 @@ Displays a visualization of the database.
 npm start -w web
 ```
 
+# Scripts
+
+## Debugging misses
+
+`scripts/debug-miss.ts` traces stuck VAAs through the pipeline and reports the first stage each one is blocked at. It checks, in order:
+
+0. Is a signed VAA already published on Wormholescan? (if so, the miss is stale and downstream checks are informational)
+1. Has the source-chain transaction reached finality, per the watcher's last indexed block?
+2. If the chain is in the delegate set, have enough current delegate guardians signed?
+3. Is the message held in the governor by any guardians?
+4. Is the message pending in the global accountant?
+5. Have enough current canonical guardians observed the message to reach quorum?
+
+Stages 2 and 5 only count signatures from guardians currently in the relevant set; rotated-out keys are ignored.
+
+```bash
+# Analyze every current miss past the standard miss threshold
+npm run debug-miss
+
+# Skip the threshold filter and look at all reported misses
+npm run debug-miss -- --all
+
+# Inspect one specific VAA
+npm run debug-miss -- 30/0000000000000000000000008d2de8d2f73f1f4cab472ac9a881c9b123c79627/254903
+
+# Also write a CSV report
+npm run debug-miss -- --csv miss.csv
+```
+
 # Cloud Functions
 
 ## Development

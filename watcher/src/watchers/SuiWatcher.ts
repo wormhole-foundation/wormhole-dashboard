@@ -43,7 +43,10 @@ type FetchEventsResponse<T = any> = {
   events: EventData<T>[];
   pagination: Pagination;
 };
-type SuccessfulGetTransactionResult = Extract<GetTransactionResult['result'], { oneofKind: 'transaction' }>;
+type SuccessfulGetTransactionResult = Extract<
+  GetTransactionResult['result'],
+  { oneofKind: 'transaction' }
+>;
 
 export class SuiWatcher extends Watcher {
   graphql: SuiGraphQLClient;
@@ -52,15 +55,21 @@ export class SuiWatcher extends Watcher {
 
   constructor(network: Network) {
     super(network, 'Sui', 'vaa');
-    this.graphql = new SuiGraphQLClient({ network: this.network, url: SUI_GRAPHQL_URLS[this.network] });
-    this.client = new SuiGrpcClient({ network: this.network, baseUrl: SUI_GRPC_URLS[this.network] });
+    this.graphql = new SuiGraphQLClient({
+      network: this.network,
+      url: SUI_GRAPHQL_URLS[this.network],
+    });
+    this.client = new SuiGrpcClient({
+      network: this.network,
+      baseUrl: SUI_GRPC_URLS[this.network],
+    });
   }
 
   // TODO: this might break using numbers, the whole service needs a refactor to use BigInt
   async getFinalizedBlockNumber(): Promise<number> {
     const { response: info } = await this.client.ledgerService.getServiceInfo({});
     if (!info.checkpointHeight) {
-      throw new Error('Failed to retrieve last checkpoint height')
+      throw new Error('Failed to retrieve last checkpoint height');
     }
     return Number(info.checkpointHeight);
   }
@@ -94,7 +103,7 @@ export class SuiWatcher extends Watcher {
         return { vaasByBlock };
       }
 
-      this.logger.debug(`fetched ${events.length} publish message events`)
+      this.logger.debug(`fetched ${events.length} publish message events`);
 
       cursor = pagination.endCursor;
       hasNextPage = pagination.hasNextPage;
@@ -118,7 +127,12 @@ export class SuiWatcher extends Watcher {
 
         const msg = event.contents.json;
         const timestamp = new Date(Number(msg.timestamp) * 1000).toISOString();
-        const vaaKey = makeVaaKey(event.transaction.digest, 'Sui', msg.sender.slice(2), msg.sequence);
+        const vaaKey = makeVaaKey(
+          event.transaction.digest,
+          'Sui',
+          msg.sender.slice(2),
+          msg.sequence
+        );
         const blockKey = makeBlockKey(checkpoint, timestamp);
         vaasByBlock[blockKey] = [...(vaasByBlock[blockKey] || []), vaaKey];
       }
@@ -127,25 +141,27 @@ export class SuiWatcher extends Watcher {
   }
 
   private async fetchCheckpoint(fromCheckpoint: number): Promise<Checkpoint> {
-    const { response } = await this.client.ledgerService.getCheckpoint(
-      {
-        checkpointId: { oneofKind: 'sequenceNumber', sequenceNumber: BigInt(fromCheckpoint) },
-        readMask: {
-          paths: ['summary']
-        }
-      }
-    );
+    const { response } = await this.client.ledgerService.getCheckpoint({
+      checkpointId: { oneofKind: 'sequenceNumber', sequenceNumber: BigInt(fromCheckpoint) },
+      readMask: {
+        paths: ['summary'],
+      },
+    });
     if (!response.checkpoint) {
-      throw new Error(`Failed to fetch checkpoint: ${fromCheckpoint}`)
+      throw new Error(`Failed to fetch checkpoint: ${fromCheckpoint}`);
     }
     return response.checkpoint;
   }
 
-  private async fetchEvents(from: number, to: number, cursor?: string): Promise<FetchEventsResponse<PublishMessageEvent>> {
+  private async fetchEvents(
+    from: number,
+    to: number,
+    cursor?: string
+  ): Promise<FetchEventsResponse<PublishMessageEvent>> {
     const { data, errors } = await this.graphql.query<GraphQLFetchEventsResponse>({
-        query: this.graphqlEventsQuery(from, to, cursor),
-        variables: {}
-      });
+      query: this.graphqlEventsQuery(from, to, cursor),
+      variables: {},
+    });
 
     if (errors && errors.length > 0) {
       throw new Error(`Failed to fetch events: ${errors.join('\n')}`);
@@ -153,7 +169,7 @@ export class SuiWatcher extends Watcher {
 
     return {
       events: data!.events.nodes,
-      pagination: data!.events.pageInfo
+      pagination: data!.events.pageInfo,
     };
   }
 
@@ -161,21 +177,20 @@ export class SuiWatcher extends Watcher {
     const { response } = await this.client.ledgerService.batchGetTransactions({
       digests,
       readMask: {
-        paths: ['digest', 'checkpoint']
-      }
+        paths: ['digest', 'checkpoint'],
+      },
     });
 
     // add the manual cast since typescript won't narrow the type down after the filter
-    const results =
-      response.transactions
-        .map(r => r.result)
-        .filter(r => r.oneofKind === 'transaction') as SuccessfulGetTransactionResult[];
+    const results = response.transactions
+      .map((r) => r.result)
+      .filter((r) => r.oneofKind === 'transaction') as SuccessfulGetTransactionResult[];
 
     if (results.length !== digests.length) {
       throw new Error(`Expected to get ${digests.length} but got ${results.length}`);
     }
 
-    return results.map(r => r.transaction);
+    return results.map((r) => r.transaction);
   }
 
   private graphqlEventsQuery(from: number, to: number, cursor?: string): string {

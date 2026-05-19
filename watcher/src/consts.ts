@@ -200,9 +200,9 @@ export const SUI_GRAPHQL_URLS: { [key in Network]: string } = {
   'Devnet': process.env.SUI_GRAPHQL_URL ?? 'https://graphql.devnet.sui.io/graphql',
 };
 export const SUI_GRPC_URLS: { [key in Network]: string } = {
-  'Mainnet': process.env.SUI_GRPC_URL ?? 'rpc.mainnet.sui.io:443',
-  'Testnet': process.env.SUI_GRPC_URL ?? 'rpc.testnet.sui.io:443',
-  'Devnet': process.env.SUI_GRPC_URL ?? 'rpc.devnet.sui.io:443',
+  'Mainnet': process.env.SUI_GRPC_URL ?? 'https://rpc.mainnet.sui.io:443',
+  'Testnet': process.env.SUI_GRPC_URL ?? 'https://rpc.testnet.sui.io:443',
+  'Devnet': process.env.SUI_GRPC_URL ?? 'https://rpc.devnet.sui.io:443',
 };
 
 export type AlgorandInfo = {

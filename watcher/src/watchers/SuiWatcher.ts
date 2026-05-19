@@ -1,6 +1,6 @@
 import { SuiGrpcClient } from '@mysten/sui/grpc';
 import { SuiGraphQLClient } from '@mysten/sui/graphql';
-import { RPCS_BY_CHAIN, SUI_GRAPHQL_URLS, SUI_GRPC_URLS } from '../consts';
+import { SUI_GRAPHQL_URLS, SUI_GRPC_URLS } from '../consts';
 import { VaasByBlock } from '../databases/types';
 import { Watcher } from './Watcher';
 import { makeBlockKey, makeVaaKey } from '../databases/utils';

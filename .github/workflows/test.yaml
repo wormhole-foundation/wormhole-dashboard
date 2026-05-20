@@ -23,9 +23,9 @@ jobs:
       - run: npm run build -w dashboard
       - name: Run tests
         env:
-          ETH_RPC: ${{ secrets.ETH_RPC }}
-          SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
-          NEAR_ARCHIVE_RPC: ${{ secrets.NEAR_ARCHIVE_RPC }}
+          ETH_RPC: ${{ secrets.ETH_RPC }} # zizmor: ignore[secrets-outside-env]
+          SOLANA_RPC: ${{ secrets.SOLANA_RPC }} # zizmor: ignore[secrets-outside-env]
+          NEAR_ARCHIVE_RPC: ${{ secrets.NEAR_ARCHIVE_RPC }} # zizmor: ignore[secrets-outside-env]
         run: npm run test --workspaces --if-present
   format:
     runs-on: ubuntu-latest

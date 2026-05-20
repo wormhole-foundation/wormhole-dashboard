@@ -6,6 +6,7 @@ permissions:
   pull-requests: read
 jobs:
   test-and-build:
+    environment: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -23,9 +24,9 @@ jobs:
       - run: npm run build -w dashboard
       - name: Run tests
         env:
-          ETH_RPC: ${{ secrets.ETH_RPC }} # zizmor: ignore[secrets-outside-env]
-          SOLANA_RPC: ${{ secrets.SOLANA_RPC }} # zizmor: ignore[secrets-outside-env]
-          NEAR_ARCHIVE_RPC: ${{ secrets.NEAR_ARCHIVE_RPC }} # zizmor: ignore[secrets-outside-env]
+          ETH_RPC: ${{ secrets.ETH_RPC }}
+          SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
+          NEAR_ARCHIVE_RPC: ${{ secrets.NEAR_ARCHIVE_RPC }}
         run: npm run test --workspaces --if-present
   format:
     runs-on: ubuntu-latest

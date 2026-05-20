@@ -86,7 +86,6 @@ export class SuiWatcher extends Watcher {
       // reserve empty slot for initial block so query is cataloged
       const checkpoint = await this.fetchCheckpoint(fromCheckpoint);
       const fromCheckpointTimestamp = new Date(
-        // TODO: check if nano/ms/s units
         Number(checkpoint.summary?.timestamp?.seconds) * 1000
       ).toISOString();
       const fromBlockKey = makeBlockKey(fromCheckpoint.toString(), fromCheckpointTimestamp);

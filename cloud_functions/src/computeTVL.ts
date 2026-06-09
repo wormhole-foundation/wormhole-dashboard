@@ -14,6 +14,7 @@ import {
   fetchCoins,
   fetchPrices,
   getNativeAddress,
+  normalizeCoinGeckoPlatformAddress,
 } from '@wormhole-foundation/wormhole-monitor-database';
 import { ChainId, chainIdToChain } from '@wormhole-foundation/sdk-base';
 import { Firestore } from 'firebase-admin/firestore';
@@ -123,7 +124,7 @@ function indexCoinsByPlatform(coins: CoinGeckoCoin[]): Map<string, Map<string, C
         bucket = new Map();
         byPlatform.set(platform, bucket);
       }
-      bucket.set(address.toLowerCase(), coin);
+      bucket.set(normalizeCoinGeckoPlatformAddress(platform, address), coin);
     }
   }
   return byPlatform;
@@ -163,7 +164,9 @@ async function resolveMetadata(
   }
   if (!native) return base;
   base.native_address = native;
-  const coin = coinsByPlatform.get(platform)?.get(native.toLowerCase());
+  const coin = coinsByPlatform
+    .get(platform)
+    ?.get(normalizeCoinGeckoPlatformAddress(platform, native));
   if (!coin) return base;
   base.coin_gecko_coin_id = coin.id;
   base.symbol = coin.symbol;

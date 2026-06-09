@@ -2,6 +2,7 @@ import { Divider } from '@mui/material';
 import { useNetworkContext } from '../contexts/NetworkContext';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
 import useCloudGovernorInfo from '../hooks/useCloudGovernorInfo';
+import { DelegatedGuardianConfigMap } from '../hooks/useDelegatedGuardianConfig';
 import { Heartbeat } from '../utils/getLastHeartbeats';
 import Accountant from './Accountant';
 import Chains from './Chains';
@@ -19,11 +20,13 @@ function Home({
   heartbeats,
   heartbeatsReceivedAt,
   chainIdsToHeartbeats,
+  delegateConfig,
   latestRelease,
 }: {
   heartbeats: Heartbeat[];
   heartbeatsReceivedAt: string | null;
   chainIdsToHeartbeats: ChainIdToHeartbeats;
+  delegateConfig: DelegatedGuardianConfigMap;
   latestRelease: string | null;
 }) {
   const { currentNetwork } = useNetworkContext();
@@ -31,12 +34,13 @@ function Home({
   const { tokenData, receivedAt: tokenDataReceivedAt } = useTokenData();
   return (
     <>
-      <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} />
+      <Chains chainIdsToHeartbeats={chainIdsToHeartbeats} delegateConfig={delegateConfig} />
       <Divider />
       <Guardians
         heartbeats={heartbeats}
         heartbeatsReceivedAt={heartbeatsReceivedAt}
         chainIdsToHeartbeats={chainIdsToHeartbeats}
+        delegateConfig={delegateConfig}
         latestRelease={latestRelease}
       />
       <Divider />

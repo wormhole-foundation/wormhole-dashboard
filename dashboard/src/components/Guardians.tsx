@@ -42,6 +42,7 @@ import { chainIdToName, STANDBY_GUARDIANS } from '@wormhole-foundation/wormhole-
 import { useCallback, useMemo, useState } from 'react';
 import TimeAgo from 'react-timeago';
 import { ChainIdToHeartbeats } from '../hooks/useChainHeartbeats';
+import { DelegatedGuardianConfigMap } from '../hooks/useDelegatedGuardianConfig';
 import { Heartbeat, HeartbeatNetwork } from '../utils/getLastHeartbeats';
 import { isHeartbeatUnhealthy } from './Chains';
 import CollapsibleSection from './CollapsibleSection';
@@ -86,6 +87,37 @@ const columns = [
 ];
 
 type HighestByChain = { [chainId: string]: bigint };
+
+// A guardian is "responsible" for a chain if either the chain has no delegate
+// config (canonical set applies) or the guardian is in the delegate key set.
+// Chains a guardian was delegated away from don't count toward their health.
+function computeGuardianHealth(
+  heartbeat: Heartbeat,
+  highestByChain: HighestByChain,
+  delegateConfig: DelegatedGuardianConfigMap
+): { healthyCount: number; responsibleCount: number } {
+  const guardian = heartbeat.guardianAddr.toLowerCase();
+  const networkById = new Map(heartbeat.networks.map((n) => [n.id, n]));
+  let responsibleCount = 0;
+  let healthyCount = 0;
+  for (const chainIdStr of Object.keys(highestByChain)) {
+    const chainId = Number(chainIdStr);
+    const dc = delegateConfig[chainId];
+    if (dc && !dc.keys.includes(guardian)) continue;
+    responsibleCount++;
+    const network = networkById.get(chainId);
+    if (
+      network &&
+      !isHeartbeatUnhealthy(
+        { guardian: heartbeat.guardianAddr, name: heartbeat.nodeName, network },
+        highestByChain[chainIdStr]
+      )
+    ) {
+      healthyCount++;
+    }
+  }
+  return { healthyCount, responsibleCount };
+}
 
 const networkColumnHelper = createColumnHelper<HeartbeatNetwork>();
 
@@ -157,10 +189,12 @@ function GuardianDetails({
 function GuardianCard({
   heartbeat,
   highestByChain,
+  delegateConfig,
   latestRelease,
 }: {
   heartbeat: Heartbeat;
   highestByChain: HighestByChain;
+  delegateConfig: DelegatedGuardianConfigMap;
   latestRelease: string | null;
 }) {
   const [open, setOpen] = useState(false);
@@ -170,20 +204,9 @@ function GuardianCard({
   const handleClose = useCallback(() => {
     setOpen(false);
   }, []);
-  const chainCount = Object.keys(highestByChain).length;
-  const healthyCount = useMemo(
-    () =>
-      heartbeat.networks.reduce(
-        (count, network) =>
-          isHeartbeatUnhealthy(
-            { guardian: heartbeat.guardianAddr, name: heartbeat.nodeName, network },
-            highestByChain[network.id.toString()]
-          )
-            ? count
-            : count + 1,
-        0
-      ),
-    [heartbeat, highestByChain]
+  const { healthyCount, responsibleCount: chainCount } = useMemo(
+    () => computeGuardianHealth(heartbeat, highestByChain, delegateConfig),
+    [heartbeat, highestByChain, delegateConfig]
   );
   const conditionalRowStyle = useCallback(
     (network: HeartbeatNetwork) =>
@@ -192,7 +215,7 @@ function GuardianCard({
         : {},
     [highestByChain]
   );
-  const healthyPercent = (healthyCount / chainCount) * 100;
+  const healthyPercent = chainCount === 0 ? 100 : (healthyCount / chainCount) * 100;
   const hasLatestRelease = latestRelease && heartbeat.version !== latestRelease;
   return (
     <Box m={1} height="100%" sx={{ width: { sm: 232, xs: 142 } }}>
@@ -316,11 +339,13 @@ function Guardians({
   heartbeats,
   heartbeatsReceivedAt,
   chainIdsToHeartbeats,
+  delegateConfig,
   latestRelease,
 }: {
   heartbeats: Heartbeat[];
   heartbeatsReceivedAt: string | null;
   chainIdsToHeartbeats: ChainIdToHeartbeats;
+  delegateConfig: DelegatedGuardianConfigMap;
   latestRelease: string | null;
 }) {
   const [guardianHeartbeats, standbyHeartbeats] = useMemo(
@@ -398,19 +423,13 @@ function Guardians({
     let numSuccess = 0;
     let numWarnings = 0;
     let numErrors = 0;
-    const chainCount = Object.keys(highestByChain).length;
     for (const heartbeat of guardianHeartbeats) {
-      const healthyCount = heartbeat.networks.reduce(
-        (count, network) =>
-          isHeartbeatUnhealthy(
-            { guardian: heartbeat.guardianAddr, name: heartbeat.nodeName, network },
-            highestByChain[network.id.toString()]
-          )
-            ? count
-            : count + 1,
-        0
+      const { healthyCount, responsibleCount } = computeGuardianHealth(
+        heartbeat,
+        highestByChain,
+        delegateConfig
       );
-      const healthyPercent = (healthyCount / chainCount) * 100;
+      const healthyPercent = responsibleCount === 0 ? 100 : (healthyCount / responsibleCount) * 100;
       if (healthyPercent === 100) {
         numSuccess++;
       } else if (healthyPercent > 80) {
@@ -424,7 +443,7 @@ function Guardians({
       numWarnings,
       numErrors,
     };
-  }, [guardianHeartbeats, highestByChain]);
+  }, [guardianHeartbeats, highestByChain, delegateConfig]);
   return (
     <CollapsibleSection
       header={
@@ -522,6 +541,7 @@ function Guardians({
                 key={`${hb.guardianAddr}-${hb.nodeName}`}
                 heartbeat={hb}
                 highestByChain={highestByChain}
+                delegateConfig={delegateConfig}
                 latestRelease={latestRelease}
               />
             ))}
@@ -537,6 +557,7 @@ function Guardians({
                     key={`${hb.guardianAddr}-${hb.nodeName}`}
                     heartbeat={hb}
                     highestByChain={highestByChain}
+                    delegateConfig={delegateConfig}
                     latestRelease={latestRelease}
                   />
                 ))}

@@ -39,7 +39,11 @@ export const getNativeAddress = async (
     } else if (tokenChain === chainToChainId('Aptos')) {
       const wh = await wormhole('Mainnet', [aptos]);
       const config = new AptosConfig({
-        fullnode: 'https://fullnode.mainnet.aptoslabs.com',
+        // `@aptos-labs/ts-sdk` 2.x expects the fullnode URL to include the
+        // `/v1` version path; the old `aptos` 1.x `AptosClient` appended it
+        // automatically. Without `/v1` every request 404s and the surrounding
+        // try/catch silently returns null.
+        fullnode: 'https://fullnode.mainnet.aptoslabs.com/v1',
         network: AptosNetwork.MAINNET,
       });
       const client = new Aptos(config);
@@ -48,7 +52,12 @@ export const getNativeAddress = async (
         return null;
       }
       const aptosTB = new AptosTokenBridge('Mainnet', 'Aptos', client, contracts);
-      return await aptosTB.getTypeFromExternalAddress(tokenAddress);
+      // Accountant stores token addresses as raw hex (no `0x`). The Aptos REST
+      // API rejects `vector<u8>` table keys without a `0x` prefix and the
+      // surrounding try/catch silently returns null, which is why every chain
+      // 22 metadata doc had `native_address: null`.
+      const prefixed = tokenAddress.startsWith('0x') ? tokenAddress : `0x${tokenAddress}`;
+      return await aptosTB.getTypeFromExternalAddress(prefixed);
     } else if (tokenChain === chainToChainId('Near')) {
       const NATIVE_NEAR_WH_ADDRESS =
         '0000000000000000000000000000000000000000000000000000000000000000';

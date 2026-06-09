@@ -27,6 +27,19 @@ export const COINGECKO_PLATFORM_BY_CHAIN: { [key in Chain]?: string } = {
   Sei: 'sei-network',
 };
 
+// CoinGecko and the on-chain SDKs use different canonical forms for Move-style
+// type addresses. For Sui, CoinGecko stores `0x0000...0002::sui::SUI` while
+// `getTokenCoinType` returns Sui's `TypeName` canonical form
+// `0000...0002::sui::SUI` (no `0x`). For Aptos, CoinGecko stores
+// `0x1::aptos_coin::AptosCoin` while the Aptos REST API returns the padded
+// form `0x0000...0001::aptos_coin::AptosCoin`. Strip an optional `0x` prefix
+// and any leading zeros from the address portion so all of these collapse to
+// the same key (e.g. `2::sui::sui`, `1::aptos_coin::aptoscoin`).
+export const normalizeCoinGeckoPlatformAddress = (platform: string, address: string): string => {
+  const lower = address.toLowerCase();
+  return platform === 'sui' || platform === 'aptos' ? lower.replace(/^(0x)?0*/, '') : lower;
+};
+
 export interface CoinGeckoPrices {
   [coinId: string]: { usd: number | null };
 }

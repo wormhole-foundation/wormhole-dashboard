@@ -35,9 +35,7 @@ import TimeAgo from 'react-timeago';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { ChainIdToHeartbeats, HeartbeatInfo } from '../hooks/useChainHeartbeats';
-import useDelegatedGuardianConfig, {
-  DelegatedGuardianConfigMap,
-} from '../hooks/useDelegatedGuardianConfig';
+import { DelegatedGuardianConfigMap } from '../hooks/useDelegatedGuardianConfig';
 import { CHAIN_ICON_MAP } from '../utils/consts';
 import {
   BEHIND_DIFF,
@@ -318,9 +316,14 @@ type ChainHelpers = {
   };
 };
 
-function Chains({ chainIdsToHeartbeats }: { chainIdsToHeartbeats: ChainIdToHeartbeats }) {
+function Chains({
+  chainIdsToHeartbeats,
+  delegateConfig,
+}: {
+  chainIdsToHeartbeats: ChainIdToHeartbeats;
+  delegateConfig: DelegatedGuardianConfigMap;
+}) {
   const environment = useCurrentEnvironment();
-  const delegateConfig = useDelegatedGuardianConfig(environment);
   const {
     helpers,
     numSuccess,

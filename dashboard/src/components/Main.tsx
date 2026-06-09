@@ -4,6 +4,7 @@ import { contracts } from '@wormhole-foundation/sdk-base';
 import { NavLink, Route, Switch, useLocation } from 'react-router-dom';
 import { useCurrentEnvironment } from '../contexts/NetworkContext';
 import useChainHeartbeats from '../hooks/useChainHeartbeats';
+import useDelegatedGuardianConfig from '../hooks/useDelegatedGuardianConfig';
 import useGetGuardianSet from '../hooks/useGetGuardianSet';
 import useHeartbeats from '../hooks/useHeartbeats';
 import useLatestRelease from '../hooks/useLatestRelease';
@@ -97,6 +98,7 @@ function Main() {
   const { heartbeats, receivedAt: heartbeatsReceivedAt } = useHeartbeats(currentGuardianSet);
   const chainIdsToHeartbeats = useChainHeartbeats(heartbeats);
   const latestRelease = useLatestRelease();
+  const delegateConfig = useDelegatedGuardianConfig(env);
   return (
     <>
       <AppBar position="static">
@@ -128,13 +130,14 @@ function Main() {
           <NTTMetrics />
         </Route>
         <Route path="/contracts">
-          <Contracts />
+          <Contracts delegateConfig={delegateConfig} />
         </Route>
         <Route path="/">
           <Home
             heartbeats={heartbeats}
             heartbeatsReceivedAt={heartbeatsReceivedAt}
             chainIdsToHeartbeats={chainIdsToHeartbeats}
+            delegateConfig={delegateConfig}
             latestRelease={latestRelease}
           />
         </Route>

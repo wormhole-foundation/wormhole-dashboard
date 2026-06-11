@@ -8,7 +8,7 @@
     "@injectivelabs/networks": "^1.0.73",
     "@injectivelabs/sdk-ts": "^1.0.368",
     "@mysten/sui": "^1.21.2",
-    "@wormhole-foundation/sdk": "^4.19.0",
+    "@wormhole-foundation/sdk": "4.23.0",
     "aptos": "1.5.0",
     "dotenv": "^16.0.3",
     "near-api-js": "^1.0.0",

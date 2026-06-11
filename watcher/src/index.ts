@@ -56,6 +56,7 @@ const supportedChains: Chain[] =
         // 'CreditCoin',
         // 'Moca',
         // 'MegaETH',
+        'Arc',
         'MonadTestnet',
         // 'ZeroGravity',
       ]

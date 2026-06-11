@@ -110,6 +110,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Moca: process.env.MOCA_RPC || 'https://testnet-rpc.mocachain.org/',
     MegaETH: process.env.MEGAETH_RPC || 'https://timothy.megaeth.com/rpc',
     ZeroGravity: process.env.ZERO_GRAVITY_RPC || 'https://rpc.ankr.com/0g_mainnet_evm',
+    Arc: process.env.ARC_RPC || 'https://rpc.testnet.arc.network',
   },
   ['Devnet']: {},
 };

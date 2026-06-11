@@ -31,6 +31,7 @@ export class Watcher {
     if (chain === 'Berachain' || chain === 'BaseSepolia') {
       this.maximumBatchSize = 50;
     } else if (
+      chain === 'Arc' ||
       chain === 'Klaytn' ||
       chain === 'Unichain' ||
       chain === 'Worldchain' ||

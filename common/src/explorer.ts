@@ -141,6 +141,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
     ? `https://megaeth-testnet-v2.blockscout.com/block/${block}`
     : chainId === chainToChainId('ZeroGravity')
     ? `https://chainscan-galileo.0g.ai/block/${block}`
+    : chainId === chainToChainId('Arc')
+    ? `https://testnet.arcscan.app/block/${block}`
     : // : chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 
@@ -278,6 +280,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
     ? `https://megaeth-testnet-v2.blockscout.com/tx/${tx}`
     : chainId === chainToChainId('ZeroGravity')
     ? `https://chainscan-galileo.0g.ai/tx/${tx}`
+    : chainId === chainToChainId('Arc')
+    ? `https://testnet.arcscan.app/tx/${tx}`
     : // chainId === chainToChainId('Wormscan') <-- not supported on testnet dashboard
       '';
 

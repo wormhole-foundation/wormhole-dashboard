@@ -13,6 +13,7 @@ const initialMoonbeamBlock = Number(
 const initialPolygonBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Polygon
 );
+const initialArcBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Testnet'].Arc);
 
 jest.setTimeout(60000);
 
@@ -146,4 +147,27 @@ test('getFinalizedBlockNumber', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Polygon', 'finalized', 'vaa');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(initialPolygonBlock);
+});
+
+test('getBlock by number (Arc testnet compatibility)', async () => {
+  const watcher = new EVMWatcher('Testnet', 'Arc', 'finalized', 'vaa');
+  const block = await watcher.getBlock(initialArcBlock);
+  expect(block.number).toEqual(initialArcBlock);
+  expect(block.hash).toEqual('0x2bc26f9b188b0091ef759d12f79e95440fddd7b97f49ec6a9a9d4b6b574be337');
+  expect(block.timestamp).toEqual(1781095426);
+  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2026-06-10T12:43:46.000Z');
+});
+
+test('getFinalizedBlockNumber (Arc testnet compatibility)', async () => {
+  const watcher = new EVMWatcher('Testnet', 'Arc', 'finalized', 'vaa');
+  const blockNumber = await watcher.getFinalizedBlockNumber();
+  expect(blockNumber).toBeGreaterThan(initialArcBlock);
+});
+
+test('Arc resolves a testnet core contract and uses a capped batch size', () => {
+  const watcher = new EVMWatcher('Testnet', 'Arc', 'finalized', 'vaa');
+  expect(watcher.maximumBatchSize).toEqual(10);
+  expect(contracts.coreBridge('Testnet', 'Arc')).toEqual(
+    '0xBB73cB66C26740F31d1FabDC6b7A46a038A300dd'
+  );
 });

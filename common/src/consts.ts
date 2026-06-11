@@ -92,6 +92,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Moca: '5329055', // Block of contract creation, https://testnet-scan.mocachain.org/tx/0x7d39257dfad53e2985eb26fb5549207200f23692e13a64b0670538148197a5a7
     MegaETH: '4290012', // Block of contract creation https://megaeth-testnet-v2.blockscout.com/tx/0x4c0ac471338ea109b8b3cb66967984766aa83edbeb843b63b2e24ded1dce52b9
     ZeroGravity: '17810547', // Block of contract creation https://chainscan-galileo.0g.ai/tx/0xf59f5c14398c34fde63f0bf89f6f20c79210f2fd30ce2ffe3af284d19b4d067f
+    Arc: '46448585', // Block of contract creation, https://testnet.arcscan.app/tx/0x167836a926ebfe74aa0d5720cf86eba5282a1ef4eb900531a3027acbe69ca4a9
   },
   ['Devnet']: {},
 };

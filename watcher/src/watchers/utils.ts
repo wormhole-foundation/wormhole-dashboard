@@ -15,6 +15,7 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     return new SVMWatcher(network, chainName);
   } else if (
     chainName === 'Arbitrum' ||
+    chainName === 'Arc' ||
     chainName === 'Avalanche' ||
     chainName === 'Base' ||
     chainName === 'Berachain' ||

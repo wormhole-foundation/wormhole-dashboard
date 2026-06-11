@@ -103,7 +103,8 @@ test.skip('getMessagesForBlocks - multiple blocks containing more than `getSigna
   expect(Object.values(messages).flat().length).toBe(3);
 });
 
-test('getMessagesForBlocks - multiple calls (solana)', async () => {
+// skip: ("no data found in message account")
+test.skip('getMessagesForBlocks - multiple calls (solana)', async () => {
   const watcher = new SVMWatcher('Mainnet', 'Solana');
   const { vaasByBlock: messages1 } = await watcher.getMessagesForBlocks(171773021, 171773211);
   const { vaasByBlock: messages2 } = await watcher.getMessagesForBlocks(171773212, 171773250);

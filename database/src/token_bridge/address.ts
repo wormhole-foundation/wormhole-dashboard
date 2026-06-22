@@ -78,7 +78,9 @@ export const getNativeAddress = async (
     } else if (tokenChain === chainToChainId('Sui')) {
       // SDK 5.x migrated Sui to @mysten/sui v2's gRPC client; getTokenCoinType
       // now expects a SuiGrpcClient instead of the v1 JSON-RPC SuiClient.
-      const transport = new GrpcWebFetchTransport({ baseUrl: 'https://fullnode.mainnet.sui.io:443' });
+      const transport = new GrpcWebFetchTransport({
+        baseUrl: 'https://fullnode.mainnet.sui.io:443',
+      });
       const provider = new SuiGrpcClient({ network: 'mainnet', transport });
       return await getTokenCoinType(
         provider,

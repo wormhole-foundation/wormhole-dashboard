@@ -14,9 +14,7 @@ const initialPolygonBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Polygon
 );
 const initialArcBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Testnet'].Arc);
-const initialArcMainnetBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Arc
-);
+const initialArcMainnetBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Arc);
 
 jest.setTimeout(60000);
 

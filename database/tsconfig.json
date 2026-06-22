@@ -2,7 +2,15 @@
   "extends": "../tsconfig.base.json",
   "references": [{ "path": "../common" }],
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    // @mysten/sui v2 (required by wormhole-sdk 5.x) ships its `./grpc` subpath
+    // types only as `.d.mts` behind the package `exports` map. The repo-wide
+    // classic `moduleResolution: node` can't read `exports`/`.d.mts`, so point
+    // this one specifier at the declaration file explicitly. Runtime resolution
+    // (Node) already finds `./grpc` fine; this only fixes type lookup.
+    "paths": {
+      "@mysten/sui/grpc": ["./node_modules/@mysten/sui/dist/grpc/index.d.mts"]
+    }
   },
   "include": ["src"]
 }

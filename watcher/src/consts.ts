@@ -34,6 +34,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Algorand: process.env.ALGORAND_RPC || 'https://mainnet-api.algonode.cloud',
     Aptos: process.env.APTOS_RPC || 'https://api.mainnet.aptoslabs.com',
     Arbitrum: process.env.ARBITRUM_RPC || 'https://arbitrum-one-rpc.publicnode.com',
+    Arc: process.env.ARC_RPC || 'https://rpc.arc.network',
     Avalanche: process.env.AVALANCHE_RPC || 'https://avalanche-c-chain-rpc.publicnode.com',
     Base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
     Berachain: process.env.BERACHAIN_RPC || 'https://rpc.berachain.com',

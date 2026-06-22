@@ -76,6 +76,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://megaeth.blockscout.com/block/${block}`
       : chainId === chainToChainId('ZeroGravity')
       ? `https://chainscan.0g.ai/block/${block}`
+      : chainId === chainToChainId('Arc')
+      ? `https://arcscan.app/block/${block}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/block/${block}?cluster=devnet`
@@ -214,6 +216,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://megaeth.blockscout.com/tx/${tx}`
       : chainId === chainToChainId('ZeroGravity')
       ? `https://chainscan.0g.ai/tx/${tx}`
+      : chainId === chainToChainId('Arc')
+      ? `https://arcscan.app/tx/${tx}`
       : ''
     : chainId === chainToChainId('Solana')
     ? `https://explorer.solana.com/tx/${tx}?cluster=devnet`

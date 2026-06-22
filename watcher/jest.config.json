@@ -1,8 +1,10 @@
 {
   "preset": "ts-jest/presets/default-esm",
   "transform": {
-    "^.+\\.tsx?$": "ts-jest"
+    "^.+\\.tsx?$": "ts-jest",
+    "^.+\\.jsx?$": ["babel-jest", { "presets": [["@babel/preset-env", { "targets": { "node": "current" } }]] }]
   },
+  "transformIgnorePatterns": ["/node_modules/(?!(@wormhole-foundation)/)"],
   "testRegex": "(/__tests__/.*|/tests/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
   "setupFiles": ["./setup-jest.ts"],

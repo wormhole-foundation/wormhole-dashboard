@@ -1,7 +1,7 @@
 import { tryHexToNativeAssetString, tryHexToNativeStringNear } from './array';
 import { getNetworkInfo, Network } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
-import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { GrpcWebFetchTransport, SuiGrpcClient } from '@mysten/sui/grpc';
 import {
   ChainId,
   chainIdToChain,
@@ -76,7 +76,10 @@ export const getNativeAddress = async (
         );
       }
     } else if (tokenChain === chainToChainId('Sui')) {
-      const provider = new SuiClient({ url: getFullnodeUrl('mainnet') });
+      // SDK 5.x migrated Sui to @mysten/sui v2's gRPC client; getTokenCoinType
+      // now expects a SuiGrpcClient instead of the v1 JSON-RPC SuiClient.
+      const transport = new GrpcWebFetchTransport({ baseUrl: 'https://fullnode.mainnet.sui.io:443' });
+      const provider = new SuiGrpcClient({ network: 'mainnet', transport });
       return await getTokenCoinType(
         provider,
         contracts.tokenBridge('Mainnet', 'Sui'),

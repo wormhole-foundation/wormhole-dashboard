@@ -14,6 +14,9 @@ const initialPolygonBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Polygon
 );
 const initialArcBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Testnet'].Arc);
+const initialArcMainnetBlock = Number(
+  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Arc
+);
 
 jest.setTimeout(60000);
 
@@ -170,4 +173,24 @@ test('Arc resolves a testnet core contract and uses a capped batch size', () => 
   expect(contracts.coreBridge('Testnet', 'Arc')).toEqual(
     '0xBB73cB66C26740F31d1FabDC6b7A46a038A300dd'
   );
+});
+
+test('Arc resolves a mainnet core contract and uses a capped batch size', () => {
+  const watcher = new EVMWatcher('Mainnet', 'Arc', 'finalized', 'vaa');
+  expect(watcher.maximumBatchSize).toEqual(10);
+  expect(contracts.coreBridge('Mainnet', 'Arc')).toEqual(
+    '0xC8aD24fC6063c41cB5C12a8e3851AafC3b3CF027'
+  );
+  expect(initialArcMainnetBlock).toEqual(4647062);
+});
+
+// skip: Arc mainnet's public RPC (https://rpc.arc.network) is not live yet, so live-block
+// assertions can't run in CI. Unskip once the public RPC is reachable.
+test.skip('getBlock by number (Arc mainnet compatibility)', async () => {
+  const watcher = new EVMWatcher('Mainnet', 'Arc', 'finalized', 'vaa');
+  const block = await watcher.getBlock(initialArcMainnetBlock);
+  expect(block.number).toEqual(initialArcMainnetBlock);
+  expect(block.hash).toEqual('0x97acb3c8f2069317ab527d5d621a9c8679c5f2e58df3cfd4fabfb42ddb8c1cc6');
+  expect(block.timestamp).toEqual(1781201783);
+  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2026-06-11T18:16:23.000Z');
 });

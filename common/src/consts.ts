@@ -24,6 +24,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Algorand: '22931277',
     Aptos: '0', // block is 1094390 but AptosWatcher uses sequence number instead
     Arbitrum: '18128584',
+    Arc: '4647062', // Block of contract creation, https://arcscan.app/tx/0x97acb3c8f2069317ab527d5d621a9c8679c5f2e58df3cfd4fabfb42ddb8c1cc6
     Avalanche: '8237163',
     Base: '1422314',
     Berachain: '968947', // https://berascan.com/tx/0x5a425c6fee87ccc44ef87c1d9cb9c7d1deda4b8596b67c003726e68a2f06e0a4

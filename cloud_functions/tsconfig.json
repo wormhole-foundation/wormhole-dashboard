@@ -5,9 +5,29 @@
     "rootDir": "src",
     "outDir": "dist",
     "skipLibCheck": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true
+    // Classic CommonJS resolution (matches common/watcher). wormhole-sdk 5.x is
+    // ESM-only; under NodeNext a CJS emit can't `require()` it (TS1479). Node 22
+    // (the deploy runtime) supports require-of-ESM, so classic `node` resolution
+    // + commonjs emit works for these SDK imports.
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    // The NTT betas (sdk-*-ntt@0.0.1-beta.4) are built against the 0.6.x SDK and
+    // hoist a full 0.6.8 @wormhole-foundation/* subtree into
+    // cloud_functions/node_modules. Without this, cloud_functions' OWN source
+    // resolves `Chain`/`chains`/`chainToChainId` to that stale 0.6.8 copy (whose
+    // ChainId/Chain unions predate Tempo/Nexus/Arc), causing spurious type errors.
+    // Pin the shared SDK specifiers to the hoisted 5.2.0 copies; the NTT packages
+    // still resolve their own 0.6.x deps internally.
+    "paths": {
+      "@wormhole-foundation/sdk-base": ["../node_modules/@wormhole-foundation/sdk-base"],
+      "@wormhole-foundation/sdk-definitions": [
+        "../node_modules/@wormhole-foundation/sdk-definitions"
+      ],
+      "@wormhole-foundation/sdk-solana-core": [
+        "../node_modules/@wormhole-foundation/sdk-solana-core"
+      ]
+    }
   },
   "include": ["src", "src/data/*.json"]
 }

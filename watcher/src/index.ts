@@ -76,6 +76,7 @@ const supportedChains: Chain[] =
         'Sui',
         'Aptos',
         'Arbitrum',
+        'Arc',
         'Optimism',
         'Base',
         'Sei',

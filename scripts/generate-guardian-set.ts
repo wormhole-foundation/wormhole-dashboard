@@ -11,7 +11,7 @@ import fs from 'fs';
 import path from 'path';
 
 const PROTOTXT_URL =
-  'https://raw.githubusercontent.com/wormhole-foundation/wormhole/main/guardianset/mainnetv2/v5.prototxt';
+  'https://raw.githubusercontent.com/wormhole-foundation/wormhole/refs/heads/main/guardianset/mainnetv2/canonical_sets/v7.prototxt';
 
 // Version number parsed from the URL filename (e.g. "v5" → 5)
 const VERSION = parseInt(PROTOTXT_URL.match(/v(\d+)\.prototxt$/)![1], 10);

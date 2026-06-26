@@ -62,7 +62,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Sui: process.env.SUI_RPC || 'https://rpc.mainnet.sui.io',
     Unichain: process.env.UNICHAIN_RPC || 'https://mainnet.unichain.org',
     Worldchain: process.env.WORLDCHAIN_RPC || 'https://worldchain-mainnet.g.alchemy.com/public',
-    Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain.mainnet.xlabs.xyz',
+    Wormchain: process.env.WORMCHAIN_RPC || 'https://wormchain-rpc.01.ro',
     XRPLEVM: process.env.XRPL_EVM_RPC || 'https://rpc.xrplevm.org',
     ZeroGravity: process.env.ZERO_GRAVITY_RPC || 'https://evmrpc.0g.ai',
   },

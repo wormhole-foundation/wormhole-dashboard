@@ -33,7 +33,7 @@ import {
 
 const MESSAGE_DB_ENDPOINT = 'https://europe-west3-wormhole-message-db-mainnet.cloudfunctions.net';
 const WORMHOLESCAN_API = 'https://api.wormholescan.io/api/v1';
-const WORMCHAIN_RPC = 'https://wormchain.mainnet.xlabs.xyz';
+const WORMCHAIN_RPC = 'https://wormchain-rpc.01.ro';
 const ETH_RPC = 'https://ethereum-rpc.publicnode.com';
 const DELEGATED_GUARDIAN_CONTRACT = '0x1462800febd49232798132e8c8b721aa86c4c209';
 

@@ -1,9 +1,7 @@
 import { chainIdToChain, chainIds } from '@wormhole-foundation/sdk-base';
 import { chainToIcon } from '@wormhole-foundation/sdk-icons';
 
-export const WORMCHAIN_URL = import.meta.env.DEV
-  ? '/wormchain'
-  : 'https://wormchain.mainnet.xlabs.xyz';
+export const WORMCHAIN_URL = import.meta.env.DEV ? '/wormchain' : 'https://wormchain-rpc.01.ro';
 // fixme(SEJeff): xLabs no longer runs testnet at all
 export const TESTNET_WORMCHAIN_URL = import.meta.env.DEV
   ? '/wormchain-testnet'

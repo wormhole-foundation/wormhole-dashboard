@@ -69,7 +69,7 @@ async function fetchGuardianSetInfo(chain: Chain, address: string): Promise<Guar
       : chain === 'Pythnet'
       ? 'http://pythnet.rpcpool.com'
       : chain === 'Wormchain'
-      ? 'https://wormchain.mainnet.xlabs.xyz'
+      ? 'https://wormchain-rpc.01.ro'
       : chain === 'Tempo'
       ? 'https://rpc.mainnet.tempo.xyz'
       : rpc.rpcAddress('Mainnet', chain);

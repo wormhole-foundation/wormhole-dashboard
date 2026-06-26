@@ -1,8 +1,8 @@
 // AUTO-GENERATED — do not edit manually.
-// Source: https://raw.githubusercontent.com/wormhole-foundation/wormhole/refs/heads/main/guardianset/mainnetv2/canonical_sets/v6.prototxt
+// Source: https://raw.githubusercontent.com/wormhole-foundation/wormhole/refs/heads/main/guardianset/mainnetv2/canonical_sets/v7.prototxt
 // Run:    npm run generate-guardians
 
-export const GUARDIAN_SET_6 = [
+export const GUARDIAN_SET_7 = [
   {
     pubkey: '0x5893B5A76c3f739645648885bDCcC06cd70a3Cd3',
     name: 'RockawayX',
@@ -32,8 +32,8 @@ export const GUARDIAN_SET_6 = [
     name: 'Chainlayer',
   },
   {
-    pubkey: '0x18e41674CcF26329cD111406C1D05C6c80b23EdC',
-    name: 'xLabs',
+    pubkey: '0xF3ea0AD4FFB5a178AE4EBc21861651B25BdcbB91',
+    name: 'Chainstack',
   },
   {
     pubkey: '0x9D16870160e703324D057c3361c34C5beFBa2c34',
@@ -60,8 +60,8 @@ export const GUARDIAN_SET_6 = [
     name: 'MCF',
   },
   {
-    pubkey: '0xD1F64e26238811de5553C40f64af41eE1B6057Cc',
-    name: 'Everstake',
+    pubkey: '0xaE565927Bb8dB25CD8Bf3e7BB663D70023e4Ea78',
+    name: 'Firstset',
   },
   {
     pubkey: '0x3F851Ad586A47ceF8d04748f33ab0D71395f06b4',
@@ -76,10 +76,10 @@ export const GUARDIAN_SET_6 = [
     name: 'Google Cloud',
   },
   {
-    pubkey: '0x6FbEBc898F403E4773E95feB15E80C9A99c8348d',
-    name: 'Staking Facilities',
+    pubkey: '0x61D9800f9FCb4160FB0C6cf3A0902592bAC2B434',
+    name: 'Senseinode',
   },
 ];
 
 /** Always points to the active guardian set. Update GUARDIAN_SET_N above and bump this alias. */
-export const GUARDIAN_SET = GUARDIAN_SET_6;
+export const GUARDIAN_SET = GUARDIAN_SET_7;

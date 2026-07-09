@@ -22,7 +22,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { ChainId, chainIdToChain, isChainId } from '@wormhole-foundation/sdk-base';
+import { ChainId, chainIdToChain, isChainId, Chain } from '@wormhole-foundation/sdk-base';
 import {
   MISS_THRESHOLD_LABEL,
   chainIdToName,
@@ -54,13 +54,27 @@ const MISSING_COLOR = 'darkred';
 const STALE_BLOCK_WARNING_MS = 45 * 60 * 1000;
 const STALE_BLOCK_ERROR_MS = 90 * 60 * 1000;
 
+// Chains with unusually long finality windows (e.g. Linea, Ink) can lag well
+// beyond the default thresholds during normal operation, so give them a wider
+// window before flagging: warn at 4 hours, error at 8 hours.
+const LONG_FINALITY_WARNING_MS = 4 * 60 * 60 * 1000;
+const LONG_FINALITY_ERROR_MS = 8 * 60 * 60 * 1000;
+const LONG_FINALITY_CHAINS = new Set<Chain>(['Linea', 'Ink']);
+
 type Staleness = 'healthy' | 'warning' | 'error' | 'unknown';
 
-function getStaleness(lastBlockTimestampMs: number | null, now: number = Date.now()): Staleness {
+function getStaleness(
+  lastBlockTimestampMs: number | null,
+  chainName?: Chain,
+  now: number = Date.now()
+): Staleness {
   if (lastBlockTimestampMs === null) return 'unknown';
   const age = now - lastBlockTimestampMs;
-  if (age >= STALE_BLOCK_ERROR_MS) return 'error';
-  if (age >= STALE_BLOCK_WARNING_MS) return 'warning';
+  const isLongFinality = chainName ? LONG_FINALITY_CHAINS.has(chainName) : false;
+  const errorMs = isLongFinality ? LONG_FINALITY_ERROR_MS : STALE_BLOCK_ERROR_MS;
+  const warningMs = isLongFinality ? LONG_FINALITY_WARNING_MS : STALE_BLOCK_WARNING_MS;
+  if (age >= errorMs) return 'error';
+  if (age >= warningMs) return 'warning';
   return 'healthy';
 }
 
@@ -365,13 +379,13 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
                     )
                 )
           : [];
+        const chainName = chainIdToChain.get(Number(chainId) as ChainId);
         return {
           chainId,
-          chainLabel:
-            chainIdToChain.get(Number(chainId) as ChainId) ?? chainIdToName(Number(chainId)),
+          chainLabel: chainName ?? chainIdToName(Number(chainId)),
           lastBlock,
           lastBlockTimestampMs,
-          staleness: getStaleness(lastBlockTimestampMs, nowMs),
+          staleness: getStaleness(lastBlockTimestampMs, chainName, nowMs),
           misses: filteredMisses,
         };
       })

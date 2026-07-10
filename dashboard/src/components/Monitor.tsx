@@ -22,7 +22,13 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { ChainId, chainIdToChain, isChainId, Chain } from '@wormhole-foundation/sdk-base';
+import {
+  ChainId,
+  chainIdToChain,
+  chainToChainId,
+  isChainId,
+  Chain,
+} from '@wormhole-foundation/sdk-base';
 import {
   MISS_THRESHOLD_LABEL,
   chainIdToName,
@@ -36,6 +42,7 @@ import TimeAgo from 'react-timeago';
 import { Environment, useCurrentEnvironment } from '../contexts/NetworkContext';
 import { useSettingsContext } from '../contexts/SettingsContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
+import useAptosLatestSequence from '../hooks/useAptosLatestSequence';
 import useMonitorInfo, { MissesByChain, ObservedMessage } from '../hooks/useMonitorInfo';
 import { CHAIN_ICON_MAP } from '../utils/consts';
 import CollapsibleSection from './CollapsibleSection';
@@ -60,6 +67,11 @@ const STALE_BLOCK_ERROR_MS = 90 * 60 * 1000;
 const LONG_FINALITY_WARNING_MS = 4 * 60 * 60 * 1000;
 const LONG_FINALITY_ERROR_MS = 8 * 60 * 60 * 1000;
 const LONG_FINALITY_CHAINS = new Set<Chain>(['Linea', 'Ink']);
+
+// Aptos is event-driven: its stored last-block timestamp only advances when a
+// Wormhole message occurs, so time-based staleness alone yields false errors
+// during quiet periods. It's reconciled against the on-chain sequence instead.
+const APTOS_CHAIN_ID: number = chainToChainId('Aptos');
 
 type Staleness = 'healthy' | 'warning' | 'error' | 'unknown';
 
@@ -392,9 +404,33 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
       .sort((a, b) => Number(a.chainId) - Number(b.chainId));
   }, [governorInfo?.enqueuedVAAs, lastBlockByChain, misses, showAllMisses, showUnknownChains]);
 
-  const headerChips = useMemo(
-    () => summaries.filter((s) => s.misses.length > 0 || s.staleness !== 'healthy'),
+  // Aptos only records a block when a Wormhole message occurs, so its stored
+  // timestamp can be days old during quiet periods and trip the time-based error
+  // even when the watcher is healthy. Only when Aptos looks stale, fetch the
+  // latest on-chain event sequence; if the watcher has processed up to it, the
+  // watcher is caught up and we treat Aptos as healthy regardless of age.
+  const env = useCurrentEnvironment();
+  const aptosStaleness = useMemo(
+    () => summaries.find((s) => Number(s.chainId) === APTOS_CHAIN_ID)?.staleness,
     [summaries]
+  );
+  const aptosNeedsCheck = aptosStaleness !== undefined && aptosStaleness !== 'healthy';
+  const aptosLatestSequence = useAptosLatestSequence(env, aptosNeedsCheck);
+  const adjustedSummaries = useMemo<ChainSummary[]>(() => {
+    if (!aptosNeedsCheck || aptosLatestSequence === null) return summaries;
+    return summaries.map((s) => {
+      if (Number(s.chainId) !== APTOS_CHAIN_ID) return s;
+      // Aptos block key is `block_height/timestamp/sequence`.
+      const raw = lastBlockByChain?.[s.chainId];
+      const watcherSequence = raw ? Number(raw.split('/')[2]) : NaN;
+      const caughtUp = !isNaN(watcherSequence) && watcherSequence >= aptosLatestSequence;
+      return caughtUp ? { ...s, staleness: 'healthy' } : s;
+    });
+  }, [summaries, aptosNeedsCheck, aptosLatestSequence, lastBlockByChain]);
+
+  const headerChips = useMemo(
+    () => adjustedSummaries.filter((s) => s.misses.length > 0 || s.staleness !== 'healthy'),
+    [adjustedSummaries]
   );
 
   const isInitialLoad =
@@ -489,14 +525,14 @@ function Monitor({ governorInfo }: { governorInfo?: CloudGovernorInfo | null }) 
     >
       {isInitialLoad ? (
         <CircularProgress />
-      ) : summaries.length === 0 ? (
+      ) : adjustedSummaries.length === 0 ? (
         <Typography pl={0.5}>
           No chains reporting
           {showAllMisses ? '' : ` · misses filtered to > ${MISS_THRESHOLD_LABEL}`}
         </Typography>
       ) : (
         <Box display="flex" flexWrap="wrap" alignItems="stretch" justifyContent="center">
-          {summaries.map((summary) => (
+          {adjustedSummaries.map((summary) => (
             <ChainMonitorCard key={summary.chainId} summary={summary} />
           ))}
         </Box>

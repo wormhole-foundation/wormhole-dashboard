@@ -55,13 +55,6 @@ export const networkOptions: Network[] = [
     type: 'guardian',
   },
   {
-    env: 'Mainnet',
-    endpoint: 'https://guardian.mainnet.xlabs.xyz',
-    name: 'xLabs',
-    logo: '',
-    type: 'guardian',
-  },
-  {
     env: 'Testnet',
     endpoint: 'https://europe-west3-wormhole-message-db-testnet.cloudfunctions.net',
     name: 'Testnet',

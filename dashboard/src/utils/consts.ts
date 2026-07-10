@@ -1,17 +1,19 @@
 import { chainIdToChain, chainIds } from '@wormhole-foundation/sdk-base';
 import { chainToIcon } from '@wormhole-foundation/sdk-icons';
 
-export const WORMCHAIN_URL = import.meta.env.DEV ? '/wormchain' : 'https://wormchain-rpc.01.ro';
-// fixme(SEJeff): xLabs no longer runs testnet at all
-export const TESTNET_WORMCHAIN_URL = import.meta.env.DEV
-  ? '/wormchain-testnet'
-  : 'https://gateway.testnet.xlabs.xyz';
+export const WORMCHAIN_URL = 'https://wormchain-rpc.01.ro';
+
+// Public Aptos fullnode REST endpoints, used to check whether the (event-driven)
+// Aptos watcher is caught up with the latest on-chain Wormhole message.
+export const APTOS_RPC_BY_NETWORK: { [env: string]: string } = {
+  Mainnet: 'https://api.mainnet.aptoslabs.com',
+  Testnet: 'https://api.testnet.aptoslabs.com',
+};
 
 export const WORMHOLE_RPC_HOSTS = [
   'https://wormhole-v2-mainnet-api.mcf.rocks',
   'https://wormhole-v2-mainnet-api.chainlayer.network',
   'https://wormhole-v2-mainnet-api.staking.fund',
-  'https://guardian.mainnet.xlabs.xyz',
 ];
 
 export const CHAIN_ICON_MAP: { [key: string]: string } = chainIds.reduce<{ [key: string]: string }>(

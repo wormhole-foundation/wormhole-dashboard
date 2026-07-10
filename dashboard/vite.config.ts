@@ -22,19 +22,4 @@ export default defineConfig({
       include: [/common/, /node_modules/],
     },
   },
-  server: {
-    proxy: {
-      '/wormchain': {
-        target: 'https://wormchain.mainnet.xlabs.xyz',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/wormchain/, ''),
-      },
-      // fixme(SEJeff): xLabs no longer runs testnet
-      '/wormchain-testnet': {
-        target: 'https://gateway.testnet.xlabs.xyz',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/wormchain-testnet/, ''),
-      },
-    },
-  },
 });

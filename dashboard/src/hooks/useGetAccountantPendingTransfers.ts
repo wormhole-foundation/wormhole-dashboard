@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNetworkContext } from '../contexts/NetworkContext';
-import { TESTNET_WORMCHAIN_URL, WORMCHAIN_URL } from '../utils/consts';
+import { WORMCHAIN_URL } from '../utils/consts';
 import { queryContractSmart } from '@wormhole-foundation/wormhole-monitor-common/src/queryContractSmart';
 
 const POLL_INTERVAL_MS = 60 * 1000;
@@ -40,7 +40,7 @@ const useGetAccountantPendingTransfers = (
   });
 
   useEffect(() => {
-    if (currentNetwork.name !== 'Mainnet' && currentNetwork.name !== 'Testnet') {
+    if (currentNetwork.name !== 'Mainnet') {
       return;
     }
     let cancelled = false;
@@ -52,7 +52,7 @@ const useGetAccountantPendingTransfers = (
           let start_after = undefined;
           do {
             response = await queryContractSmart(
-              currentNetwork.name === 'Mainnet' ? WORMCHAIN_URL : TESTNET_WORMCHAIN_URL,
+              WORMCHAIN_URL,
               contractAddress,
               {
                 all_pending_transfers: {

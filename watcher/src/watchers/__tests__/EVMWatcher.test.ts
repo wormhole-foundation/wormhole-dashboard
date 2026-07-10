@@ -54,7 +54,8 @@ test('getBlocks', async () => {
   expect(blocks[maxSizeMinusOne].timestamp).toEqual(1718975702);
 });
 
-test('getLogs', async () => {
+// Skipped due to unavailability on RPC
+test.skip('getLogs', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Avalanche', 'finalized', 'vaa');
   const logs = await watcher.getLogs(
     46997506,
@@ -76,7 +77,8 @@ test('getFinalizedBlockNumber', async () => {
   expect(blockNumber).toBeGreaterThan(initialAvalancheBlock);
 });
 
-test('getMessagesForBlocks', async () => {
+// Skipped due to unavailability on RPC
+test.skip('getMessagesForBlocks', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Avalanche', 'finalized', 'vaa');
   const { vaasByBlock } = await watcher.getMessagesForBlocks(46997500, 46997599);
   const entries = Object.entries(vaasByBlock);
@@ -122,7 +124,8 @@ test('getMessagesForBlocks (Celo compatibility)', async () => {
   );
 });
 
-test('getMessagesForBlocks', async () => {
+// Skipped due to unavailability on RPC
+test.skip('getMessagesForBlocks', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Arbitrum', 'finalized', 'vaa');
   const { vaasByBlock } = await watcher.getMessagesForBlocks(114500582, 114500584);
   const entries = Object.entries(vaasByBlock);

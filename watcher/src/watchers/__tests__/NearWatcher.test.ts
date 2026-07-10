@@ -17,7 +17,8 @@ const INITIAL_NEAR_BLOCK = Number(
 );
 let archiveWatcher: NearArchiveWatcher = new NearArchiveWatcher('Mainnet');
 
-test('getFinalizedBlockNumber', async () => {
+// Skipped due to UnauthorizedError: {"error":"message: API key disabled, reason: Freemium monthly quota exhausted. To continue querying the blockchain, upgrade to Premium or wait until next month for quota renewal., json-rpc code: -32051, rest code: 403"}
+test.skip('getFinalizedBlockNumber', async () => {
   const blockNumber = await archiveWatcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(INITIAL_NEAR_BLOCK);
 });

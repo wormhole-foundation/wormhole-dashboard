@@ -38,16 +38,12 @@ const useGetAccountantAccounts = (contractAddress: string): AccountantAccountsRe
         let response;
         let start_after = undefined;
         do {
-          response = await queryContractSmart(
-            WORMCHAIN_URL,
-            contractAddress,
-            {
-              all_accounts: {
-                limit: PAGE_LIMIT,
-                start_after,
-              },
-            }
-          );
+          response = await queryContractSmart(WORMCHAIN_URL, contractAddress, {
+            all_accounts: {
+              limit: PAGE_LIMIT,
+              start_after,
+            },
+          });
           accounts = [...accounts, ...response.accounts];
           start_after =
             response.accounts.length && response.accounts[response.accounts.length - 1].key;

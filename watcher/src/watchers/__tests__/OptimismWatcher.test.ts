@@ -15,7 +15,8 @@ test('getFinalizedBlockNumber', async () => {
   expect(blockNumber).toBeGreaterThan(105235062);
 });
 
-test('getMessagesForBlocks', async () => {
+// Skipped due to unavailability on RPC
+test.skip('getMessagesForBlocks', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Optimism', 'finalized', 'vaa');
   const { vaasByBlock } = await watcher.getMessagesForBlocks(105235070, 105235080);
   expect(vaasByBlock).toMatchObject({

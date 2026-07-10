@@ -51,16 +51,12 @@ const useGetAccountantPendingTransfers = (
           let response;
           let start_after = undefined;
           do {
-            response = await queryContractSmart(
-              WORMCHAIN_URL,
-              contractAddress,
-              {
-                all_pending_transfers: {
-                  limit: PAGE_LIMIT,
-                  start_after,
-                },
-              }
-            );
+            response = await queryContractSmart(WORMCHAIN_URL, contractAddress, {
+              all_pending_transfers: {
+                limit: PAGE_LIMIT,
+                start_after,
+              },
+            });
             pending = [...pending, ...response.pending];
             start_after =
               response.pending.length && response.pending[response.pending.length - 1].key;

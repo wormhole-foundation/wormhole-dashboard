@@ -8,10 +8,11 @@
     "@injectivelabs/networks": "^1.0.73",
     "@injectivelabs/sdk-ts": "^1.0.368",
     "@mysten/sui": "^1.21.2",
-    "@wormhole-foundation/sdk": "4.23.0",
+    "@wormhole-foundation/sdk": "6.1.4",
     "aptos": "1.5.0",
     "dotenv": "^16.0.3",
     "near-api-js": "^1.0.0",
-    "ora": "^5.4.1"
+    "ora": "^5.4.1",
+    "@wormhole-foundation/wormhole-monitor-common": "^0.0.1"
   }
 }

@@ -2,7 +2,6 @@ import { Provider as NearProvider } from 'near-api-js/lib/providers';
 import { hashLookup } from './near';
 
 import {
-  Chain,
   ChainId,
   UniversalAddress,
   chainToChainId,

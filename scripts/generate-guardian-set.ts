@@ -81,6 +81,9 @@ ${entries},
 
 /** Always points to the active guardian set. Update GUARDIAN_SET_N above and bump this alias. */
 export const GUARDIAN_SET = ${SET_NAME};
+
+/** The index of the active guardian set. */
+export const GUARDIAN_SET_INDEX = ${VERSION};
 `;
 }
 

@@ -32,6 +32,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     CreditCoin: '2205137', // Block of contract creation, https://creditcoin.blockscout.com/tx/0x1bee86a5b5299a61c4337a8963b31b8e5bc02b383fb129fe2bd209f61675a805
     Ethereum: '12959638',
     Fogo: '32335413', // Block of contract creation https://explorer.fogo.io/address/wormQuCVWSSmPdjVmEzAWxAXViVyTSWnLyhff5hVYGS?cluster=custom&customUrl=https%3A%2F%2Fmainnet.fogo.io
+    Hydration: '13154879', // https://hydration.subscan.io/tx/0xe507c930ebc33583efae04ab7d439806c226a2e02a43d7b3e7fbdcc7fc3c6946
     HyperEVM: '3915634', // Block of contract creation, https://purrsec.com/tx/0xd345fd5094fe1c901b9cd43cf68bcdc9829f4a5596853838800b47552e2e19dc
     Injective: '20908376',
     Ink: '7711131', // Block of contract creation, https://explorer.inkonchain.com/tx/0x2576b03a4c0de8566778cb3149a0dbc1c8f8dfcf5d87c9f5f96038c4b15e3797

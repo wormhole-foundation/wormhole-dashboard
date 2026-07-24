@@ -60,6 +60,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://explorer.inkonchain.com/block/${block}`
       : chainId === chainToChainId('HyperEVM')
       ? `https://www.hyperscan.com/block/${block}`
+      : chainId === chainToChainId('Hydration')
+      ? `https://hydration.subscan.io/block/${block}`
       : chainId === chainToChainId('Mezo')
       ? `https://explorer.mezo.org/block/${block}`
       : chainId === chainToChainId('Plume')
@@ -198,6 +200,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://explorer.inkonchain.com/tx/${tx}`
       : chainId === chainToChainId('HyperEVM')
       ? `https://www.hyperscan.com/tx/${tx}`
+      : chainId === chainToChainId('Hydration')
+      ? `https://hydration.subscan.io/tx/${tx}`
       : chainId === chainToChainId('Mezo')
       ? `https://explorer.mezo.org/tx/${tx}`
       : chainId === chainToChainId('Plume')

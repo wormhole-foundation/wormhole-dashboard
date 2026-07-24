@@ -1,7 +1,7 @@
 import { tryHexToNativeAssetString, tryHexToNativeStringNear } from './array';
 import { getNetworkInfo, Network } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
-import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { SuiGrpcClient } from '@mysten/sui/grpc';
 import {
   ChainId,
   chainIdToChain,
@@ -76,7 +76,10 @@ export const getNativeAddress = async (
         );
       }
     } else if (tokenChain === chainToChainId('Sui')) {
-      const provider = new SuiClient({ url: getFullnodeUrl('mainnet') });
+      const provider = new SuiGrpcClient({
+        network: 'Mainnet',
+        baseUrl: process.env.SUI_GRPC_URL ?? 'https://rpc.mainnet.sui.io:443',
+      });
       return await getTokenCoinType(
         provider,
         contracts.tokenBridge('Mainnet', 'Sui'),

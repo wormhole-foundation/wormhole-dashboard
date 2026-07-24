@@ -24,6 +24,7 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Converge' ||
     chainName === 'CreditCoin' ||
     chainName === 'Ethereum' ||
+    chainName === 'Hydration' ||
     chainName === 'HyperEVM' ||
     chainName === 'Ink' ||
     chainName === 'Linea' ||

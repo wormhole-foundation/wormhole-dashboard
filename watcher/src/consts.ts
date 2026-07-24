@@ -42,6 +42,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     CreditCoin: process.env.CREDITCOIN_RPC || 'https://mainnet3.creditcoin.network',
     Ethereum: process.env.ETH_RPC,
     Fogo: process.env.FOGO_RPC || 'https://mainnet.fogo.io',
+    Hydration: process.env.HYDRATION_EVM_RPC || 'https://rpc.coke.hydration.cloud',
     HyperEVM: process.env.HYPER_EVM_RPC || 'https://rpc.hyperliquid.xyz/evm',
     Ink: process.env.INK_RPC || 'https://rpc-qnd.inkonchain.com',
     Injective: process.env.INJECTIVE_RPC || 'https://sentry.exchange.grpc-web.injective.network',

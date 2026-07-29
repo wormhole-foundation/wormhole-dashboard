@@ -4,11 +4,11 @@ dotenv.config();
 import { Connection } from '@solana/web3.js';
 import axios from 'axios';
 import ora from 'ora';
-import { RPCS_BY_CHAIN } from '../src/consts';
+import { RPCS_BY_CHAIN } from '../src/consts.js';
 import {
   isLegacyMessage,
   normalizeCompileInstruction,
-} from '@wormhole-foundation/wormhole-monitor-common/src/solana';
+} from '@wormhole-foundation/wormhole-monitor-common';
 import { getMissThreshold } from '@wormhole-foundation/wormhole-monitor-common';
 import { contracts } from '@wormhole-foundation/sdk-base';
 

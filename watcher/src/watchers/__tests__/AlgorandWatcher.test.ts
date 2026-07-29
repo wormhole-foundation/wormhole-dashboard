@@ -1,6 +1,6 @@
 import { expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
-import { AlgorandWatcher } from '../AlgorandWatcher';
+import { AlgorandWatcher } from '../AlgorandWatcher.js';
 
 jest.setTimeout(180000);
 

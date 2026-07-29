@@ -2,18 +2,19 @@
   "name": "@wormhole-foundation/wormhole-monitor-watcher",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "start": "node dist/src/index.js",
-    "dev": "ts-node src/index.ts",
-    "test": "jest",
-    "backfill-arbitrum": "ts-node scripts/backfillArbitrum.ts",
-    "backfill-near": "ts-node scripts/backfillNear.ts",
-    "check-solana": "ts-node scripts/checkSolana.ts",
-    "reconstruct-vaa": "ts-node scripts/reconstructVAA.ts",
-    "migrate-missing-vaas": "ts-node scripts/migrateMissingVaas.ts"
+    "dev": "tsx src/index.ts",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "backfill-arbitrum": "tsx scripts/backfillArbitrum.ts",
+    "backfill-near": "tsx scripts/backfillNear.ts",
+    "check-solana": "tsx scripts/checkSolana.ts",
+    "reconstruct-vaa": "tsx scripts/reconstructVAA.ts",
+    "migrate-missing-vaas": "tsx scripts/migrateMissingVaas.ts"
   },
   "dependencies": {
     "@celo-tools/celo-ethers-wrapper": "^0.3.0",
@@ -29,6 +30,7 @@
     "anchor-0.29.0": "npm:@coral-xyz/anchor@^0.29.0",
     "aptos": "^1.4.0",
     "binary-layout": "^1.2.0",
+    "bn.js": "^5.2.1",
     "bs58": "^5.0.0",
     "dotenv": "^16.0.3",
     "firebase-admin": "^11.4.0",
@@ -44,7 +46,7 @@
     "jest": "^29.7.0",
     "prettier": "2.8.1",
     "ts-jest": "^29.0.3",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.4.5"
   }
 }

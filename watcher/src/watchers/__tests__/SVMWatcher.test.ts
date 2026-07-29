@@ -1,6 +1,6 @@
 import { expect, jest, test } from '@jest/globals';
-import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
-import { SVMWatcher } from '../SVMWatcher';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
+import { SVMWatcher } from '../SVMWatcher.js';
 
 jest.setTimeout(60000);
 

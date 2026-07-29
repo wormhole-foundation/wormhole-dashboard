@@ -1,4 +1,4 @@
-export { AptosWatcher } from './AptosWatcher';
-export { CosmwasmWatcher } from './CosmwasmWatcher';
-export { EVMWatcher } from './EVMWatcher';
-export { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
+export { AptosWatcher } from './AptosWatcher.js';
+export { CosmwasmWatcher } from './CosmwasmWatcher.js';
+export { EVMWatcher } from './EVMWatcher.js';
+export { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher.js';

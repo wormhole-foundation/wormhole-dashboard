@@ -5,10 +5,10 @@ import {
   SEI_EXPLORER_GRAPHQL_TESTNET,
   SEI_EXPLORER_TXS_MAINNET,
   SEI_EXPLORER_TXS_TESTNET,
-} from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { CosmwasmHashResult, CosmwasmWatcher } from './CosmwasmWatcher';
+} from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
+import { CosmwasmHashResult, CosmwasmWatcher } from './CosmwasmWatcher.js';
 import { sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
 

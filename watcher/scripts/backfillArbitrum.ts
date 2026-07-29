@@ -2,9 +2,9 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import axios from 'axios';
 import ora from 'ora';
-import { initDb } from '../src/databases/utils';
-import { AXIOS_CONFIG_JSON } from '../src/consts';
-import { EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../src/watchers/EVMWatcher';
+import { initDb } from '../src/databases/utils.js';
+import { AXIOS_CONFIG_JSON } from '../src/consts.js';
+import { EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../src/watchers/EVMWatcher.js';
 import { Chain, contracts } from '@wormhole-foundation/sdk-base';
 
 // This script exists because the Arbitrum RPC node only supports a 10 block range which is super slow

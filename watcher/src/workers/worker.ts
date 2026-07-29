@@ -1,5 +1,5 @@
-import { initDb } from '../databases/utils';
-import { makeFinalizedVaaWatcher } from '../watchers/utils';
+import { initDb } from '../databases/utils.js';
+import { makeFinalizedVaaWatcher } from '../watchers/utils.js';
 import { workerData } from 'worker_threads';
 
 initDb(false);

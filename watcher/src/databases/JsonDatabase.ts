@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
-import { DB_LAST_BLOCK_FILE, JSON_DB_FILE } from '../consts';
-import { Database } from './Database';
-import { DB, LastBlockByChain, VaasByBlock } from './types';
+import { DB_LAST_BLOCK_FILE, JSON_DB_FILE } from '../consts.js';
+import { Database } from './Database.js';
+import { DB, LastBlockByChain, VaasByBlock } from './types.js';
 import { Chain, chainToChainId } from '@wormhole-foundation/sdk-base';
 import { Mode } from '@wormhole-foundation/wormhole-monitor-common';
 

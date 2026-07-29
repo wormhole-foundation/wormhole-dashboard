@@ -1,8 +1,8 @@
 import { ChainId, Network, encoding, toChainId } from '@wormhole-foundation/sdk-base';
 import { UniversalAddress } from '@wormhole-foundation/sdk-definitions';
 import axios from 'axios';
-import { Mode } from './consts';
-import { PagerDutyInfo, SlackInfo } from './types';
+import { Mode } from './consts.js';
+import { PagerDutyInfo, SlackInfo } from './types.js';
 
 export async function sleep(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout));

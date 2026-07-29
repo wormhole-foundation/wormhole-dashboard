@@ -1,10 +1,10 @@
 import { expect, jest, test } from '@jest/globals';
-import { CosmwasmWatcher, maybeBase64Decode } from '../CosmwasmWatcher';
-import { InjectiveExplorerWatcher } from '../InjectiveExplorerWatcher';
-import { SeiExplorerWatcher } from '../SeiExplorerWatcher';
-import { WormchainWatcher } from '../WormchainWatcher';
+import { CosmwasmWatcher, maybeBase64Decode } from '../CosmwasmWatcher.js';
+import { InjectiveExplorerWatcher } from '../InjectiveExplorerWatcher.js';
+import { SeiExplorerWatcher } from '../SeiExplorerWatcher.js';
+import { WormchainWatcher } from '../WormchainWatcher.js';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
-import { isBase64Encoded } from '../../utils/isBase64Encoded';
+import { isBase64Encoded } from '../../utils/isBase64Encoded.js';
 
 jest.setTimeout(60000);
 

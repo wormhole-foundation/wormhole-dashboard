@@ -1,11 +1,16 @@
 import axios from 'axios';
-import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { Watcher } from './Watcher';
-import { SHA256 } from 'jscrypto/SHA256';
-import { Base64 } from 'jscrypto/Base64';
-import { isBase64Encoded } from '../utils/isBase64Encoded';
+import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
+import { Watcher } from './Watcher.js';
+import SHA256Module from 'jscrypto/SHA256.js';
+import Base64Module from 'jscrypto/Base64.js';
+
+// jscrypto ships CommonJS whose named exports aren't statically detectable by
+// Node's ESM loader; reach them through the default (module.exports) object.
+const { SHA256 } = SHA256Module;
+const { Base64 } = Base64Module;
+import { isBase64Encoded } from '../utils/isBase64Encoded.js';
 import { Network, PlatformToChains, contracts } from '@wormhole-foundation/sdk-base';
 
 export class CosmwasmWatcher extends Watcher {

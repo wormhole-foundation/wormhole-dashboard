@@ -1,9 +1,9 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { initDb } from './databases/utils';
+import { initDb } from './databases/utils.js';
 import { Mode, getNetwork, getMode } from '@wormhole-foundation/wormhole-monitor-common';
-import { startSupervisor } from './workers/supervisor';
+import { startSupervisor } from './workers/supervisor.js';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
 
 initDb();

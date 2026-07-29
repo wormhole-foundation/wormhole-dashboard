@@ -1,11 +1,12 @@
-import path from 'path';
 import { Worker } from 'worker_threads';
-import { HB_INTERVAL, WorkerData } from '../consts';
-import { getLogger } from '../utils/logger';
+import { HB_INTERVAL, WorkerData } from '../consts.js';
+import { getLogger } from '../utils/logger.js';
 import { Mode, getMode, getNetwork, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
 
-const WORKER_PATH = path.resolve(__dirname, 'worker.js');
+// Resolve the compiled worker relative to this module (ESM has no __dirname).
+// A file: URL also lets worker_threads load the sibling bundle directly.
+const WORKER_PATH = new URL('./worker.js', import.meta.url);
 
 interface WorkerInfo {
   worker: Worker;

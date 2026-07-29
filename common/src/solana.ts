@@ -8,10 +8,12 @@ import {
   VersionedTransactionResponse,
 } from '@solana/web3.js';
 import axios from 'axios';
-import { decode } from 'bs58';
+import bs58 from 'bs58';
+
+const { decode } = bs58;
 import { encoding } from '@wormhole-foundation/sdk-base';
-import { TokenAmount } from './types';
-import { retry } from './utils';
+import { TokenAmount } from './types.js';
+import { retry } from './utils.js';
 
 export const isLegacyMessage = (message: Message | MessageV0): message is Message => {
   return message.version === 'legacy';

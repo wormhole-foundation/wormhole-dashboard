@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { keccak256 } from '@wormhole-foundation/sdk-definitions';
-import { retry } from './utils';
+import { retry } from './utils.js';
 
 export async function callContractMethod(
   rpc: string,

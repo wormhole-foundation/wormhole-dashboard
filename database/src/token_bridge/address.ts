@@ -1,7 +1,6 @@
-import { tryHexToNativeAssetString, tryHexToNativeStringNear } from './array';
+import { tryHexToNativeAssetString, tryHexToNativeStringNear } from './array.js';
 import { getNetworkInfo, Network } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
-import { SuiGrpcClient } from '@mysten/sui/grpc';
 import {
   ChainId,
   chainIdToChain,
@@ -15,7 +14,8 @@ import { connect } from 'near-api-js';
 import { AptosTokenBridge } from '@wormhole-foundation/sdk-aptos-tokenbridge';
 import { wormhole } from '@wormhole-foundation/sdk';
 import aptos from '@wormhole-foundation/sdk/aptos';
-import { queryExternalIdInjective } from './injective';
+import sui from '@wormhole-foundation/sdk/sui';
+import { queryExternalIdInjective } from './injective.js';
 import { getTokenCoinType } from '@wormhole-foundation/sdk-sui-tokenbridge';
 
 export const getNativeAddress = async (
@@ -76,10 +76,16 @@ export const getNativeAddress = async (
         );
       }
     } else if (tokenChain === chainToChainId('Sui')) {
-      const provider = new SuiGrpcClient({
-        network: 'Mainnet',
-        baseUrl: process.env.SUI_GRPC_URL ?? 'https://rpc.mainnet.sui.io:443',
+      // Obtain the Sui gRPC client from the SDK so it matches the `@mysten/sui`
+      // version `getTokenCoinType` expects (v2). Constructing it directly from
+      // this package's `@mysten/sui` (v1) yields an incompatible client whose
+      // missing methods make the call silently return null.
+      const wh = await wormhole('Mainnet', [sui], {
+        chains: {
+          Sui: { rpc: process.env.SUI_GRPC_URL ?? 'https://rpc.mainnet.sui.io:443' },
+        },
       });
+      const provider = await wh.getChain('Sui').getRpc();
       return await getTokenCoinType(
         provider,
         contracts.tokenBridge('Mainnet', 'Sui'),

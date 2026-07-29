@@ -14,7 +14,7 @@ import {
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { chainIdToName } from '@wormhole-foundation/wormhole-monitor-common';
 import { Firestore } from 'firebase-admin/firestore';
-import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas';
+import { MissingVaasByChain, commonGetMissingVaas } from './getMissingVaas.js';
 
 interface EnqueuedVAAResponse {
   sequence: string;

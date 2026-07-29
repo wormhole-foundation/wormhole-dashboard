@@ -1,6 +1,6 @@
 import winston, { createLogger, format, Logger, LoggerOptions, transports } from 'winston';
-import { toArray } from './array';
-import { getEnvironment } from './environment';
+import { toArray } from './array.js';
+import { getEnvironment } from './environment.js';
 import LokiTransport from 'winston-loki';
 import { assertEnvironmentVariable } from '@wormhole-foundation/wormhole-monitor-common';
 

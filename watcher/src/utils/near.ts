@@ -1,19 +1,19 @@
 import axios from 'axios';
 import { connect } from 'near-api-js';
-import { Provider } from 'near-api-js/lib/providers';
-import { AXIOS_CONFIG_JSON } from '../consts';
+import type { Provider } from 'near-api-js/lib/providers';
+import { AXIOS_CONFIG_JSON } from '../consts.js';
 import {
   EventLog,
   GetTransactionsByAccountIdRequestParams,
   GetTransactionsByAccountIdResponse,
   Transaction,
   WormholePublishEventLog,
-} from '../types/near';
-import { BlockId, BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
+} from '../types/near.js';
+import type { BlockId, BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider.js';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
-import { VaasByBlock } from '../databases/types';
+import { VaasByBlock } from '../databases/types.js';
 import ora from 'ora';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
 
 // The following is obtained by going to: https://explorer.near.org/accounts/contract.wormhole_crypto.near
 // and watching the network tab in the browser to see where the explorer is going.

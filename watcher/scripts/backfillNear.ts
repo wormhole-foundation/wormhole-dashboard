@@ -5,18 +5,18 @@ import {
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN,
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { BlockResult, Provider } from 'near-api-js/lib/providers/provider';
+import type { BlockResult, Provider } from 'near-api-js/lib/providers/provider.js';
 import ora from 'ora';
-import { initDb, makeBlockKey } from '../src/databases/utils';
+import { initDb, makeBlockKey } from '../src/databases/utils.js';
 import {
   getMessagesFromBlockResults,
   getNearProvider,
   getTimestampByBlock,
   getTransactionsByAccountId,
   NEAR_ARCHIVE_RPC,
-} from '../src/utils/near';
-import { Transaction } from '../src/types/near';
-import { VaasByBlock } from '../src/databases/types';
+} from '../src/utils/near.js';
+import { Transaction } from '../src/types/near.js';
+import { VaasByBlock } from '../src/databases/types.js';
 import { Chain, contracts, Network } from '@wormhole-foundation/sdk-base';
 
 // This script exists because NEAR RPC nodes do not support querying blocks older than 5 epochs

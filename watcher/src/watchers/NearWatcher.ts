@@ -1,11 +1,14 @@
-import { decode } from 'bs58';
-import { Provider, TypedError } from 'near-api-js/lib/providers';
-import { BlockResult } from 'near-api-js/lib/providers/provider';
+import bs58 from 'bs58';
+
+const { decode } = bs58;
+import type { Provider } from 'near-api-js/lib/providers';
+import { TypedError } from 'near-api-js/lib/providers/json-rpc-provider.js';
+import type { BlockResult } from 'near-api-js/lib/providers/provider.js';
 import { z } from 'zod';
-import { RPCS_BY_CHAIN } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { getMessagesFromBlockResults, getNearProvider } from '../utils/near';
-import { Watcher } from './Watcher';
+import { RPCS_BY_CHAIN } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { getMessagesFromBlockResults, getNearProvider } from '../utils/near.js';
+import { Watcher } from './Watcher.js';
 import { Network } from '@wormhole-foundation/sdk-base';
 
 export class NearWatcher extends Watcher {

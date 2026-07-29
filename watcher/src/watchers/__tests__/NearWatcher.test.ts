@@ -1,13 +1,13 @@
 import { describe, expect, jest, test } from '@jest/globals';
-import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
-import { RPCS_BY_CHAIN } from '../../consts';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
+import { RPCS_BY_CHAIN } from '../../consts.js';
 import {
   getMessagesFromBlockResults,
   getNearProvider,
   getTransactionsByAccountId,
   NEAR_ARCHIVE_RPC,
-} from '../../utils/near';
-import { NearArchiveWatcher } from '../NearArchiveWatcher';
+} from '../../utils/near.js';
+import { NearArchiveWatcher } from '../NearArchiveWatcher.js';
 import { contracts } from '@wormhole-foundation/sdk-base';
 
 jest.setTimeout(60000);

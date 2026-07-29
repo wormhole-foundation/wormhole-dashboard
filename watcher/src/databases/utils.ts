@@ -5,11 +5,11 @@ import {
   padUint16,
   padUint64,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { DB_SOURCE } from '../consts';
-import { Database } from './Database';
-import { FirestoreDatabase } from './FirestoreDatabase';
-import { JsonDatabase } from './JsonDatabase';
-import { VaasByBlock } from './types';
+import { DB_SOURCE } from '../consts.js';
+import { Database } from './Database.js';
+import { FirestoreDatabase } from './FirestoreDatabase.js';
+import { JsonDatabase } from './JsonDatabase.js';
+import { VaasByBlock } from './types.js';
 export { makeMessageId, parseMessageId } from '@wormhole-foundation/wormhole-monitor-common';
 
 // TODO: should this be a composite key or should the value become more complex

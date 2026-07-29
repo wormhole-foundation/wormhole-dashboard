@@ -1,6 +1,6 @@
 import { beforeAll, expect, jest, test } from '@jest/globals';
-import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common/dist/consts';
-import { SuiWatcher } from '../SuiWatcher';
+import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
+import { SuiWatcher } from '../SuiWatcher.js';
 
 jest.setTimeout(60000);
 

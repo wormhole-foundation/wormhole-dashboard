@@ -1,11 +1,11 @@
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { AptosClient } from 'aptos';
 import { z } from 'zod';
-import { RPCS_BY_CHAIN } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { makeVaaKey } from '../databases/utils';
-import { AptosEvent } from '../types/aptos';
-import { Watcher } from './Watcher';
+import { RPCS_BY_CHAIN } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { makeVaaKey } from '../databases/utils.js';
+import { AptosEvent } from '../types/aptos.js';
+import { Watcher } from './Watcher.js';
 import { Chain, Network, contracts } from '@wormhole-foundation/sdk-base';
 
 const APTOS_FIELD_NAME = 'event';

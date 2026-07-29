@@ -1,6 +1,6 @@
 import { Mode } from '@wormhole-foundation/wormhole-monitor-common';
-import { getLogger, WormholeLogger } from '../utils/logger';
-import { VaasByBlock } from './types';
+import { getLogger, WormholeLogger } from '../utils/logger.js';
+import { VaasByBlock } from './types.js';
 import { Chain } from '@wormhole-foundation/sdk-base';
 
 export class Database {

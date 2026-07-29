@@ -4,10 +4,10 @@ import {
   sleep,
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { z } from 'zod';
-import { HB_INTERVAL, TIMEOUT } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { getResumeBlockByChain, storeVaasByBlock } from '../databases/utils';
-import { getLogger, WormholeLogger } from '../utils/logger';
+import { HB_INTERVAL, TIMEOUT } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { getResumeBlockByChain, storeVaasByBlock } from '../databases/utils.js';
+import { getLogger, WormholeLogger } from '../utils/logger.js';
 import { parentPort } from 'worker_threads';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
 

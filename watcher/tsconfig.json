@@ -2,10 +2,13 @@
   "extends": "../tsconfig.base.json",
   "references": [{ "path": "../common" }],
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "dist",
     "baseUrl": "./",
-    "paths": {}
+    "paths": {
+      "aptos": ["../node_modules/aptos/dist/index.d.ts", "./node_modules/aptos/dist/index.d.ts"]
+    }
   },
   "include": ["scripts", "src", "src/abi/*.json", "src/idls/*.json"]
 }

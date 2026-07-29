@@ -3,7 +3,7 @@ dotenv.config();
 
 import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
 import { Network } from '@wormhole-foundation/sdk-base';
-import { SVMWatcher } from 'src/watchers/SVMWatcher';
+import { SVMWatcher } from '../src/watchers/SVMWatcher.js';
 
 // Temporary script to test SolanaWatcher for lookup addresses
 (async () => {

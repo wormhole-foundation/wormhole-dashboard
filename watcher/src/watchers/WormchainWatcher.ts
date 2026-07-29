@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { CosmwasmBlockResult, CosmwasmWatcher } from './CosmwasmWatcher';
+import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
+import { CosmwasmBlockResult, CosmwasmWatcher } from './CosmwasmWatcher.js';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
 
 export class WormchainWatcher extends CosmwasmWatcher {

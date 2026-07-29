@@ -10,10 +10,15 @@ import {
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { getSignedVAA } from '../utils/getSignedVAA';
-import { Database } from './Database';
-import { VaasByBlock } from './types';
-import { makeMessageId, makeSignedVAAsRowKey, parseMessageId } from './utils';
+import { createRequire } from 'module';
+import { getSignedVAA } from '../utils/getSignedVAA.js';
+import { Database } from './Database.js';
+import { VaasByBlock } from './types.js';
+import { makeMessageId, makeSignedVAAsRowKey, parseMessageId } from './utils.js';
+
+// ESM has no CJS `require`; recreate one bound to this module so the dynamic
+// service-account JSON path (resolved at runtime) loads with the same semantics.
+const require = createRequire(import.meta.url);
 
 const WATCH_MISSING_TIMEOUT = 2 * 60 * 1000;
 

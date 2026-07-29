@@ -1,8 +1,8 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 import axios from 'axios';
-import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../src/consts';
-import { LOG_MESSAGE_PUBLISHED_TOPIC, wormholeInterface } from '../src/watchers/EVMWatcher';
+import { AXIOS_CONFIG_JSON, RPCS_BY_CHAIN } from '../src/consts.js';
+import { LOG_MESSAGE_PUBLISHED_TOPIC, wormholeInterface } from '../src/watchers/EVMWatcher.js';
 import { Log } from '@ethersproject/abstract-provider';
 import { getNetwork, GUARDIAN_SET } from '@wormhole-foundation/wormhole-monitor-common';
 import {

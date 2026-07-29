@@ -1,5 +1,5 @@
 import { Network, PlatformToChains } from '@wormhole-foundation/sdk-base';
-import { BlockTag, EVMWatcher } from './EVMWatcher';
+import { BlockTag, EVMWatcher } from './EVMWatcher.js';
 
 export class VAAWatcher extends EVMWatcher {
   constructor(

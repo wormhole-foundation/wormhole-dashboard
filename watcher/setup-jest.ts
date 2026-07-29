@@ -1,6 +1,11 @@
+import { jest } from '@jest/globals';
 import dotenv from 'dotenv';
 import { existsSync, readFileSync } from 'fs';
 import crypto from 'crypto';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 dotenv.config();
 process.env.LOG_LEVEL = 'warn';

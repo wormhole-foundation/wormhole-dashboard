@@ -1,5 +1,5 @@
-import { Provider } from 'near-api-js/lib/providers';
-import { CodeResult } from 'near-api-js/lib/providers/provider';
+import type { Provider } from 'near-api-js/lib/providers';
+import type { CodeResult } from 'near-api-js/lib/providers/provider.js';
 
 export async function hashAccount(
   provider: Provider,

@@ -1,14 +1,10 @@
 import { SuiGrpcClient } from '@mysten/sui/grpc';
 import { SuiGraphQLClient } from '@mysten/sui/graphql';
-import { SUI_GRAPHQL_URLS, SUI_GRPC_URLS } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { Watcher } from './Watcher';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
+import { SUI_GRAPHQL_URLS, SUI_GRPC_URLS } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { Watcher } from './Watcher.js';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
 import { Network } from '@wormhole-foundation/sdk-base';
-// no public re-exports available for these proto-generated types
-import { ExecutedTransaction } from '@mysten/sui/dist/cjs/grpc/proto/sui/rpc/v2/executed_transaction';
-import { GetTransactionResult } from '@mysten/sui/dist/cjs/grpc/proto/sui/rpc/v2/ledger_service';
-import { Checkpoint } from '@mysten/sui/dist/cjs/grpc/proto/sui/rpc/v2/checkpoint';
 
 const SUI_EVENT_HANDLE = `0x5306f64e312b581766351c07af79c72fcb1cd25147157fdc2f8ad76de9a3fb6a::publish_message::WormholeMessage`;
 
@@ -43,10 +39,21 @@ type FetchEventsResponse<T = any> = {
   events: EventData<T>[];
   pagination: Pagination;
 };
+// The proto-generated gRPC types aren't publicly exported by @mysten/sui, so
+// derive them from the SuiGrpcClient's own method return types rather than
+// importing its internal dist paths (which its exports map hides).
+type LedgerService = SuiGrpcClient['ledgerService'];
+type Checkpoint = NonNullable<
+  Awaited<ReturnType<LedgerService['getCheckpoint']>>['response']['checkpoint']
+>;
+type GetTransactionResult = Awaited<
+  ReturnType<LedgerService['batchGetTransactions']>
+>['response']['transactions'][number];
 type SuccessfulGetTransactionResult = Extract<
   GetTransactionResult['result'],
   { oneofKind: 'transaction' }
 >;
+type ExecutedTransaction = SuccessfulGetTransactionResult['transaction'];
 
 export class SuiWatcher extends Watcher {
   graphql: SuiGraphQLClient;

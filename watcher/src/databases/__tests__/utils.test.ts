@@ -1,7 +1,7 @@
 import { expect, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
-import { JsonDatabase } from '../JsonDatabase';
-import { getResumeBlockByChain, initDb, makeBlockKey } from '../utils';
+import { JsonDatabase } from '../JsonDatabase.js';
+import { getResumeBlockByChain, initDb, makeBlockKey } from '../utils.js';
 import { chainToChainId } from '@wormhole-foundation/sdk-base';
 
 test('getResumeBlockByChain', async () => {

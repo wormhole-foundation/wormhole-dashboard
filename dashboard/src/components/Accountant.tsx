@@ -32,8 +32,8 @@ import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   GUARDIAN_SET,
   chainIdToName,
+  queryContractSmart,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { queryContractSmart } from '@wormhole-foundation/wormhole-monitor-common/src/queryContractSmart';
 import { Buffer } from 'buffer';
 import numeral from 'numeral';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';

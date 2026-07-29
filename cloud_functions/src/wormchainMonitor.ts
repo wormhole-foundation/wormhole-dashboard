@@ -1,7 +1,5 @@
 import axios from 'axios';
-import { evmosRPCs } from './data/evmosRPCs.json';
-import { osmosisRPCs } from './data/osmosisRPCs.json';
-import { kujiraRPCs } from './data/kujiraRPCs.json';
+import { createRequire } from 'module';
 import {
   assertEnvironmentVariable,
   formatAndSendToSlack,
@@ -9,6 +7,14 @@ import {
   sendToPagerDuty,
   SlackInfo,
 } from '@wormhole-foundation/wormhole-monitor-common';
+
+// Load the static RPC lists via createRequire rather than an ESM JSON import:
+// Node's `import ... with { type: 'json' }` attribute syntax isn't parseable by
+// the repo's prettier@2.8, and this avoids it while still working under ESM.
+const require = createRequire(import.meta.url);
+const { evmosRPCs } = require('./data/evmosRPCs.json');
+const { osmosisRPCs } = require('./data/osmosisRPCs.json');
+const { kujiraRPCs } = require('./data/kujiraRPCs.json');
 
 type ClientRPC = {
   address: string;

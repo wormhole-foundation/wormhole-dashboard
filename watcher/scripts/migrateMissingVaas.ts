@@ -23,6 +23,11 @@ import {
 } from '@wormhole-foundation/wormhole-monitor-common';
 import { cert, initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { createRequire } from 'module';
+
+// ESM has no CJS `require`; recreate one bound to this module for the dynamic
+// service-account JSON path resolved at runtime.
+const require = createRequire(import.meta.url);
 
 type MissDoc = {
   chainId: number;

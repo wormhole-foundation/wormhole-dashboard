@@ -1,6 +1,6 @@
 import { expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
-import { EVMWatcher } from '../EVMWatcher';
+import { EVMWatcher } from '../EVMWatcher.js';
 
 jest.setTimeout(60000);
 

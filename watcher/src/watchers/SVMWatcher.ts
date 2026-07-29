@@ -7,23 +7,25 @@ import {
   VersionedBlockResponse,
   VersionedMessage,
 } from '@solana/web3.js';
-import { decode } from 'bs58';
+import bs58 from 'bs58';
+
+const { decode } = bs58;
 import { z } from 'zod';
-import { RPCS_BY_CHAIN } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
+import { RPCS_BY_CHAIN } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
 import {
   Mode,
   normalizeCompileInstruction,
   universalAddress_stripped,
 } from '@wormhole-foundation/wormhole-monitor-common';
-import { Watcher } from './Watcher';
+import { Watcher } from './Watcher.js';
 import { Network, contracts, encoding } from '@wormhole-foundation/sdk-base';
 import { deserializePostMessage } from '@wormhole-foundation/sdk-solana-core';
-import { getAllKeys } from '../utils/solana';
+import { getAllKeys } from '../utils/solana.js';
 import { UniversalAddress } from '@wormhole-foundation/sdk-definitions';
 import { DeriveType, deserialize, Layout } from 'binary-layout';
-import { SVMChain } from 'src/types/svm';
+import { SVMChain } from '../types/svm.js';
 
 const COMMITMENT: Commitment = 'finalized';
 const GET_SIGNATURES_LIMIT = 1000;

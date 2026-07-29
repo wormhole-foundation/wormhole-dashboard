@@ -1,14 +1,14 @@
-import { AlgorandWatcher } from './AlgorandWatcher';
-import { AptosWatcher } from './AptosWatcher';
-import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher';
-import { Watcher } from './Watcher';
-import { SuiWatcher } from './SuiWatcher';
-import { SeiExplorerWatcher } from './SeiExplorerWatcher';
-import { WormchainWatcher } from './WormchainWatcher';
-import { NearArchiveWatcher } from './NearArchiveWatcher';
+import { AlgorandWatcher } from './AlgorandWatcher.js';
+import { AptosWatcher } from './AptosWatcher.js';
+import { InjectiveExplorerWatcher } from './InjectiveExplorerWatcher.js';
+import { Watcher } from './Watcher.js';
+import { SuiWatcher } from './SuiWatcher.js';
+import { SeiExplorerWatcher } from './SeiExplorerWatcher.js';
+import { WormchainWatcher } from './WormchainWatcher.js';
+import { NearArchiveWatcher } from './NearArchiveWatcher.js';
 import { Chain, Network } from '@wormhole-foundation/sdk-base';
-import { VAAWatcher } from './VAAWatcher';
-import { SVMWatcher } from './SVMWatcher';
+import { VAAWatcher } from './VAAWatcher.js';
+import { SVMWatcher } from './SVMWatcher.js';
 
 export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Watcher {
   if (chainName === 'Solana' || chainName === 'Fogo') {

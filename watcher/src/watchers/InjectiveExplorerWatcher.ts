@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { RPCS_BY_CHAIN } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
-import { EventObjectsTypes, RawLogEvents } from './TerraExplorerWatcher';
-import { Watcher } from './Watcher';
+import { RPCS_BY_CHAIN } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
+import { EventObjectsTypes, RawLogEvents } from './TerraExplorerWatcher.js';
+import { Watcher } from './Watcher.js';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
 
 export class InjectiveExplorerWatcher extends Watcher {

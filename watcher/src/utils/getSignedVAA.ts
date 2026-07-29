@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AXIOS_CONFIG_JSON, GUARDIAN_RPC_HOSTS } from '../consts';
+import { AXIOS_CONFIG_JSON, GUARDIAN_RPC_HOSTS } from '../consts.js';
 import { getNetwork } from '@wormhole-foundation/wormhole-monitor-common';
 import { Network } from '@wormhole-foundation/sdk-base';
 

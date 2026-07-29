@@ -1,21 +1,23 @@
-import { decode } from 'bs58';
-import { Provider } from 'near-api-js/lib/providers';
-import { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider';
+import bs58 from 'bs58';
+
+const { decode } = bs58;
+import type { Provider } from 'near-api-js/lib/providers';
+import type { BlockResult, ExecutionStatus } from 'near-api-js/lib/providers/provider.js';
 import { z } from 'zod';
-import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
+import { VaasByBlock } from '../databases/types.js';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
 import {
   fetchBlockByBlockId,
   getNearProvider,
   getTimestampByBlock,
   isWormholePublishEventLog,
-} from '../utils/near';
-import { Watcher } from './Watcher';
+} from '../utils/near.js';
+import { Watcher } from './Watcher.js';
 import { assertEnvironmentVariable, sleep } from '@wormhole-foundation/wormhole-monitor-common';
 import { Network, contracts } from '@wormhole-foundation/sdk-base';
 import axios from 'axios';
-import { AXIOS_CONFIG_JSON, HB_INTERVAL } from '../consts';
-import { EventLog } from 'src/types/near';
+import { AXIOS_CONFIG_JSON, HB_INTERVAL } from '../consts.js';
+import { EventLog } from '../types/near.js';
 
 export class NearArchiveWatcher extends Watcher {
   provider: Provider | null = null;

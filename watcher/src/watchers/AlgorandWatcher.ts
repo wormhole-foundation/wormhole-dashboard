@@ -1,8 +1,8 @@
 import algosdk from 'algosdk';
-import { Watcher } from './Watcher';
-import { ALGORAND_INFO } from '../consts';
-import { VaasByBlock } from '../databases/types';
-import { makeBlockKey, makeVaaKey } from '../databases/utils';
+import { Watcher } from './Watcher.js';
+import { ALGORAND_INFO } from '../consts.js';
+import { VaasByBlock } from '../databases/types.js';
+import { makeBlockKey, makeVaaKey } from '../databases/utils.js';
 import { Network } from '@wormhole-foundation/sdk-base';
 
 type Message = {

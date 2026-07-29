@@ -1,12 +1,7 @@
-import { Provider as NearProvider } from 'near-api-js/lib/providers';
-import { hashLookup } from './near';
+import type { Provider as NearProvider } from 'near-api-js/lib/providers';
+import { hashLookup } from './near.js';
 
-import {
-  ChainId,
-  UniversalAddress,
-  chainToChainId,
-  toChain,
-} from '@wormhole-foundation/sdk';
+import { ChainId, UniversalAddress, chainToChainId, toChain } from '@wormhole-foundation/sdk';
 
 export const tryHexToNativeStringNear = async (
   provider: NearProvider,

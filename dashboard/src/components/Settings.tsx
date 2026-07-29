@@ -29,6 +29,7 @@ function SettingsContent() {
     updateShowUnknownChains,
     updateShowAllMisses,
     updateShowMonitorDetails,
+    updateShowAllAccountantPendingTransfers,
   } = useSettingsContext();
   const handleThemeChange = useCallback(
     (event: any, newTheme: Theme) => {
@@ -71,6 +72,12 @@ function SettingsContent() {
       updateShowMonitorDetails(event.target.checked);
     },
     [updateShowMonitorDetails]
+  );
+  const handleShowAllAccountantPendingTransfers = useCallback(
+    (event: any) => {
+      updateShowAllAccountantPendingTransfers(event.target.checked);
+    },
+    [updateShowAllAccountantPendingTransfers]
   );
   return (
     <>
@@ -139,6 +146,17 @@ function SettingsContent() {
             <Checkbox checked={!!settings.showMonitorDetails} onChange={handleShowMonitorDetails} />
           }
           label="Show monitor details"
+        />
+      </Box>
+      <Box m={2}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={!!settings.showAllAccountantPendingTransfers}
+              onChange={handleShowAllAccountantPendingTransfers}
+            />
+          }
+          label="Show stale accountant pending transfers"
         />
       </Box>
     </>

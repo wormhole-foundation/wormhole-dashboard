@@ -12,21 +12,26 @@ export type PendingTransferKey = {
   sequence: number;
 };
 
-export type PendingTransfer = {
-  key: PendingTransferKey;
-  data: [
-    {
-      digest: string;
-      tx_hash: string;
-      signatures: string;
-      guardian_set_index: number;
-      emitter_chain: number;
-    }
-  ];
+export type PendingTransferData = {
+  digest: string;
+  tx_hash: string;
+  signatures: string;
+  guardian_set_index: number;
+  emitter_chain: number;
 };
 
+export type PendingTransfer = {
+  key: PendingTransferKey;
+  data: PendingTransferData[];
+};
+
+// A single flattened row of the pending transfers table: one entry from a
+// pending transfer's `data` array combined with its key. The key is not unique
+// across rows since a single key can have multiple pending data entries.
+export type PendingTransferRow = PendingTransferKey & PendingTransferData;
+
 export type AccountantPendingTransfersResult = {
-  pendingTransfers: PendingTransfer[];
+  pendingTransfers: PendingTransferRow[];
   receivedAt: string | null;
 };
 
@@ -61,8 +66,13 @@ const useGetAccountantPendingTransfers = (
             start_after =
               response.pending.length && response.pending[response.pending.length - 1].key;
           } while (response.pending.length === PAGE_LIMIT);
+          // Flatten each pending transfer into one row per data entry so the
+          // table shows a line for every entry rather than just the first.
+          const rows: PendingTransferRow[] = pending.flatMap((pt) =>
+            pt.data.map((d) => ({ ...pt.key, ...d }))
+          );
           if (!cancelled) {
-            setResult({ pendingTransfers: pending, receivedAt: new Date().toISOString() });
+            setResult({ pendingTransfers: rows, receivedAt: new Date().toISOString() });
           }
         } catch (error) {
           if (!cancelled) {

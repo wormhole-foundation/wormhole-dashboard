@@ -32,6 +32,7 @@ function Table<T>({
   paginated = false,
   showRowCount = false,
   showColumnFilters = false,
+  hiddenRowCount = 0,
   conditionalRowStyle,
 }: {
   table: TanTable<T>;
@@ -39,6 +40,7 @@ function Table<T>({
   paginated?: boolean;
   showRowCount?: boolean;
   showColumnFilters?: boolean;
+  hiddenRowCount?: number;
   conditionalRowStyle?: (a: T) => SxProps<Theme> | undefined;
 }) {
   const theme = useTheme();
@@ -133,7 +135,10 @@ function Table<T>({
             <TableRow>
               <TableCell>
                 <Box display="flex" alignItems="center">
-                  <Box>{table.getCoreRowModel().rows.length} Rows</Box>
+                  <Box>
+                    {table.getCoreRowModel().rows.length} Rows
+                    {hiddenRowCount > 0 ? ` (${hiddenRowCount} hidden)` : ''}
+                  </Box>
                   <Box flexGrow={1} />
                   {paginated ? (
                     <>

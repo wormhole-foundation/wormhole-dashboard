@@ -31,6 +31,7 @@ import { isChainId } from '@wormhole-foundation/sdk-base';
 import {
   ACCOUNTANT_CONTRACT_ADDRESS,
   GUARDIAN_SET,
+  GUARDIAN_SET_INDEX,
   chainIdToName,
   queryContractSmart,
 } from '@wormhole-foundation/wormhole-monitor-common';
@@ -42,7 +43,7 @@ import { useSettingsContext } from '../contexts/SettingsContext';
 import { CloudGovernorInfo } from '../hooks/useCloudGovernorInfo';
 import useGetAccountantAccounts, { Account } from '../hooks/useGetAccountantAccounts';
 import useGetAccountantPendingTransfers, {
-  PendingTransfer,
+  PendingTransferRow,
 } from '../hooks/useGetAccountantPendingTransfers';
 import { TokenDataByChainAddress, TokenDataEntry } from '../hooks/useTokenData';
 import { CHAIN_ICON_MAP, WORMCHAIN_URL } from '../utils/consts';
@@ -71,7 +72,7 @@ const NTT_ACCOUNTANT_TOKEN_ADDRESS_OVERRIDE: {
   },
 };
 
-type PendingTransferForAcct = PendingTransfer & { isEnqueuedInGov: boolean };
+type PendingTransferForAcct = PendingTransferRow & { isEnqueuedInGov: boolean };
 type AccountWithTokenData = Account & {
   tokenData: TokenDataEntry;
   tvlTvm: number;
@@ -161,27 +162,30 @@ const guardianSigningColumns = [
 const pendingTransferColumnHelper = createColumnHelper<PendingTransferForAcct>();
 
 const pendingTransferColumns = [
-  pendingTransferColumnHelper.accessor('key.emitter_chain', {
+  pendingTransferColumnHelper.accessor('emitter_chain', {
     header: () => 'Chain',
     cell: (info) => `${chainIdToName(info.getValue())} (${info.getValue()})`,
     sortingFn: `text`,
   }),
-  pendingTransferColumnHelper.accessor('key.emitter_address', {
+  pendingTransferColumnHelper.accessor('emitter_address', {
     header: () => 'Emitter',
   }),
-  pendingTransferColumnHelper.accessor('key.sequence', {
+  pendingTransferColumnHelper.accessor('sequence', {
     header: () => 'Sequence',
   }),
-  pendingTransferColumnHelper.accessor('data.0.tx_hash', {
+  pendingTransferColumnHelper.accessor('tx_hash', {
     header: () => 'Tx',
     cell: (info) => (
       <ExplorerTxHash
-        chainId={info.row.original.key.emitter_chain}
+        chainId={info.row.original.emitter_chain}
         rawTxHash={'0x' + Buffer.from(info.getValue(), 'base64').toString('hex')}
       />
     ),
   }),
-  pendingTransferColumnHelper.accessor('data.0.signatures', {
+  pendingTransferColumnHelper.accessor('guardian_set_index', {
+    header: () => 'Guardian Set',
+  }),
+  pendingTransferColumnHelper.accessor('signatures', {
     header: () => 'Signatures',
     cell: (info) => (
       <Tooltip
@@ -426,7 +430,7 @@ function Accountant({
   isNTT?: boolean;
 }) {
   const {
-    settings: { showUnknownChains },
+    settings: { showUnknownChains, showAllAccountantPendingTransfers },
   } = useSettingsContext();
   const [open, setOpen] = useState(false);
   const handleOpen = useCallback((event: any) => {
@@ -448,20 +452,35 @@ function Accountant({
   const pendingTransfersForAcct: PendingTransferForAcct[] = useMemo(
     () =>
       pendingTransferInfo
-        .filter((pt) => showUnknownChains || isChainId(pt.key.emitter_chain))
+        .filter((pt) => showUnknownChains || isChainId(pt.emitter_chain))
         .map((transfer) => ({
           ...transfer,
           isEnqueuedInGov:
             governorInfoIsDefined &&
             !!governorInfo.enqueuedVAAs.find(
               (vaa) =>
-                vaa.emitterChain === transfer.key.emitter_chain &&
-                vaa.emitterAddress === transfer.key.emitter_address &&
-                vaa.sequence === transfer.key.sequence.toString()
+                vaa.emitterChain === transfer.emitter_chain &&
+                vaa.emitterAddress === transfer.emitter_address &&
+                vaa.sequence === transfer.sequence.toString()
             ),
         })),
     [pendingTransferInfo, governorInfoIsDefined, governorInfo?.enqueuedVAAs, showUnknownChains]
   );
+
+  // Unless the user opts in to showing all, hide stale pending transfers whose
+  // guardian set index is older than the current guardian set. Use >= so a
+  // transfer is only hidden when it's strictly older, in case the constant lags
+  // behind the transfers.
+  const hideStalePendingTransfers = !showAllAccountantPendingTransfers;
+  const visiblePendingTransfers: PendingTransferForAcct[] = useMemo(
+    () =>
+      hideStalePendingTransfers
+        ? pendingTransfersForAcct.filter((pt) => pt.guardian_set_index >= GUARDIAN_SET_INDEX)
+        : pendingTransfersForAcct,
+    [pendingTransfersForAcct, hideStalePendingTransfers]
+  );
+  const hiddenPendingTransferCount =
+    pendingTransfersForAcct.length - visiblePendingTransfers.length;
 
   const guardianSigningStats: GuardianSigningStat[] = useMemo(() => {
     const stats: GuardianSigningStat[] = GUARDIAN_SET.map((g) => ({
@@ -470,7 +489,7 @@ function Accountant({
       outOf: pendingTransferInfo.length,
     }));
     for (const transfer of pendingTransferInfo) {
-      const bitString = getSignatureBits(transfer.data[0].signatures);
+      const bitString = getSignatureBits(transfer.signatures);
       for (let idx = 0; idx < bitString.length; idx++) {
         if (bitString[idx] === '1') {
           stats[bitString.length - 1 - idx].numSigned += 1;
@@ -545,11 +564,11 @@ function Accountant({
   const [pendingTransferSorting, setPendingTransferSorting] = useState<SortingState>([]);
   const pendingTransfer = useReactTable({
     columns: pendingTransferColumns,
-    data: pendingTransfersForAcct,
+    data: visiblePendingTransfers,
     state: {
       sorting: pendingTransferSorting,
     },
-    getRowId: (key) => JSON.stringify(key),
+    getRowId: (row) => JSON.stringify(row),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -594,13 +613,11 @@ function Accountant({
   });
   const pendingByChain = useMemo(
     () =>
-      pendingTransferInfo
-        .filter((pt) => showUnknownChains || isChainId(pt.key.emitter_chain))
-        .reduce((obj, cur) => {
-          obj[cur.key.emitter_chain] = (obj[cur.key.emitter_chain] || 0) + 1;
-          return obj;
-        }, {} as { [chainId: number]: number }),
-    [pendingTransferInfo, showUnknownChains]
+      visiblePendingTransfers.reduce((obj, cur) => {
+        obj[cur.emitter_chain] = (obj[cur.emitter_chain] || 0) + 1;
+        return obj;
+      }, {} as { [chainId: number]: number }),
+    [visiblePendingTransfers]
   );
   return (
     <>
@@ -682,6 +699,7 @@ function Accountant({
               table={pendingTransfer}
               paginated={!!pendingTransferInfo.length}
               showRowCount={!!pendingTransferInfo.length}
+              hiddenRowCount={hiddenPendingTransferCount}
             />
             {pendingTransferInfo.length === 0 ? (
               <Typography variant="body2" sx={{ py: 1, textAlign: 'center' }}>

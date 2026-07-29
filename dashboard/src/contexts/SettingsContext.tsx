@@ -12,6 +12,7 @@ type Settings = {
   showUnknownChains?: boolean;
   showAllMisses?: boolean;
   showMonitorDetails?: boolean;
+  showAllAccountantPendingTransfers?: boolean;
 };
 
 type SettingsContextValue = {
@@ -23,6 +24,7 @@ type SettingsContextValue = {
   updateShowUnknownChains(value: boolean): void;
   updateShowAllMisses(value: boolean): void;
   updateShowMonitorDetails(value: boolean): void;
+  updateShowAllAccountantPendingTransfers(value: boolean): void;
 };
 
 const isTheme = (arg: any): arg is Theme => {
@@ -61,6 +63,7 @@ const SettingsContext = React.createContext<SettingsContextValue>({
   updateShowUnknownChains: (value: boolean) => {},
   updateShowAllMisses: (value: boolean) => {},
   updateShowMonitorDetails: (value: boolean) => {},
+  updateShowAllAccountantPendingTransfers: (value: boolean) => {},
 });
 
 export const SettingsContextProvider = ({ children }: { children: ReactNode }) => {
@@ -86,6 +89,9 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
   const updateShowMonitorDetails = useCallback((value: boolean) => {
     setSettings((settings) => ({ ...settings, showMonitorDetails: value }));
   }, []);
+  const updateShowAllAccountantPendingTransfers = useCallback((value: boolean) => {
+    setSettings((settings) => ({ ...settings, showAllAccountantPendingTransfers: value }));
+  }, []);
   // sync settings to state
   useEffect(() => {
     saveSettings(settings);
@@ -100,6 +106,7 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateShowUnknownChains,
       updateShowAllMisses,
       updateShowMonitorDetails,
+      updateShowAllAccountantPendingTransfers,
     }),
     [
       settings,
@@ -110,6 +117,7 @@ export const SettingsContextProvider = ({ children }: { children: ReactNode }) =
       updateShowUnknownChains,
       updateShowAllMisses,
       updateShowMonitorDetails,
+      updateShowAllAccountantPendingTransfers,
     ]
   );
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

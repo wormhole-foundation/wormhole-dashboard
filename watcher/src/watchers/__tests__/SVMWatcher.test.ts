@@ -1,6 +1,7 @@
 import { expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { SVMWatcher } from '../SVMWatcher.js';
+import { fixtureTest, installSolanaReplay } from './rpcFixture.js';
 
 jest.setTimeout(60000);
 
@@ -62,21 +63,27 @@ test('getMessagesForBlocks - empty block (solana)', async () => {
   expect(messages).toMatchObject({ '170979766/2023-01-05T18:40:25.000Z': [] });
 });
 
-// temporary skip due to SolanaJSONRPCError: failed to get confirmed block: Block 174108865 cleaned up, does not exist on node. First available block: 176892532
-test('getMessagesForBlocks - block with no transactions (solana)', async () => {
-  const watcher = new SVMWatcher('Mainnet', 'Solana');
-  expect(watcher.getMessagesForBlocks(174108861, 174108861)).rejects.toThrowError(
-    'solana: invalid block range'
-  );
+// Exercises the empty-range and pruned-block paths on recent devnet data.
+fixtureTest('svm-no-transactions.json')(
+  'getMessagesForBlocks - block with no transactions (solana)',
+  async () => {
+    const watcher = new SVMWatcher('Testnet', 'Solana', 'vaa', 'https://api.devnet.solana.com');
+    installSolanaReplay(watcher, 'svm-no-transactions.json');
+    // A pruned slot ("cleaned up, does not exist on node") can't resolve a block range.
+    await expect(watcher.getMessagesForBlocks(400000000, 400000000)).rejects.toThrowError(
+      'solana: invalid block range'
+    );
 
-  let { vaasByBlock: messages } = await watcher.getMessagesForBlocks(174108661, 174108861);
-  expect(Object.keys(messages).length).toBe(1);
-  expect(Object.values(messages).flat().length).toBe(0);
+    // Empty ranges still return the last block, with no messages.
+    let { vaasByBlock: messages } = await watcher.getMessagesForBlocks(479824700, 479824900);
+    expect(Object.keys(messages).length).toBe(1);
+    expect(Object.values(messages).flat().length).toBe(0);
 
-  ({ vaasByBlock: messages } = await watcher.getMessagesForBlocks(174108863, 174109061));
-  expect(Object.keys(messages).length).toBe(1);
-  expect(Object.values(messages).flat().length).toBe(0);
-});
+    ({ vaasByBlock: messages } = await watcher.getMessagesForBlocks(479823800, 479824000));
+    expect(Object.keys(messages).length).toBe(1);
+    expect(Object.values(messages).flat().length).toBe(0);
+  }
+);
 
 // skip: blocks 171050470-171050474 have been archived/garbage collected
 test.skip('getMessagesForBlocks - multiple blocks (solana)', async () => {
@@ -132,36 +139,30 @@ test.skip('getMessagesForBlocks - handle failed transactions (solana)', async ()
   ).toBe('4,3,2,1,0');
 });
 
-test('getMessagesForBlocks - shim 1 (solana)', async () => {
-  const watcher = new SVMWatcher(
-    'Testnet',
-    'Solana',
-    'vaa',
-    'https://explorer-api.devnet.solana.com'
-  );
-  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(356345331, 356345332);
+// Recent devnet shim message (older slots get pruned); replays a recorded response.
+fixtureTest('svm-shim-1.json')('getMessagesForBlocks - shim 1 (solana)', async () => {
+  const watcher = new SVMWatcher('Testnet', 'Solana', 'vaa', 'https://api.devnet.solana.com');
+  installSolanaReplay(watcher, 'svm-shim-1.json');
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(479825053, 479825054);
   expect(Object.keys(messages).length).toBe(1);
   expect(Object.values(messages).length).toBe(1);
   expect(messages).toMatchObject({
-    '356345332/2025-01-24T16:42:31.000Z': [
-      '3auPns1kSD2R4GvWfutCQqKTmPfdmSr9yKgUsc3t19bhmVWq6UKtafboCBhrczTehYTbzN5XZh2apLaugg2h8da2:1/83718b7ec89617b7040685e01bdcca03214022980daae91340e0c3f840c005ef/0',
+    '479825054/2026-07-29T21:29:12.000Z': [
+      '5Y68StorUGeUB7ooAbn29RWRk1HkpZTMYnUuRpjeriRRmTfnyxwHbPM7MVU47nX1fWarYyMXU3sbbGi3vG4YtTdw:1/9fa5717916e11542a924a4e9c27262f50b7a7658f089570f46e77c647bf2bb52/2',
     ],
   });
 });
 
-test('getMessagesForBlocks - shim 2 (solana)', async () => {
-  const watcher = new SVMWatcher(
-    'Testnet',
-    'Solana',
-    'vaa',
-    'https://explorer-api.devnet.solana.com'
-  );
-  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(357272507, 357272508);
+// R cecent devnet shim message (older slots get pruned); replays a recorded response.
+fixtureTest('svm-shim-2.json')('getMessagesForBlocks - shim 2 (solana)', async () => {
+  const watcher = new SVMWatcher('Testnet', 'Solana', 'vaa', 'https://api.devnet.solana.com');
+  installSolanaReplay(watcher, 'svm-shim-2.json');
+  const { vaasByBlock: messages } = await watcher.getMessagesForBlocks(479824694, 479824695);
   expect(Object.keys(messages).length).toBe(1);
   expect(Object.values(messages).length).toBe(1);
   expect(messages).toMatchObject({
-    '357272508/2025-01-28T20:11:01.000Z': [
-      'b8fyUcMJgA5P6SS92HMRtxwFpihhAGe9PdcFVbYeVHRAHnr5vyJNbWJHeJ7ko23c8rg2KQ8oPVxdZbDh6V4Jv9t:1/83718b7ec89617b7040685e01bdcca03214022980daae91340e0c3f840c005ef/4',
+    '479824695/2026-07-29T21:27:00.000Z': [
+      '2wr6JMVXfyrXfsDjfYwB1nx3fAW8LAL3mBdR6dtG79XTzEkCXPUigZrDDF8h8BKpLWYjT1r6xzU24iq97xjMTD5d:1/9fa5717916e11542a924a4e9c27262f50b7a7658f089570f46e77c647bf2bb52/1',
     ],
   });
 });

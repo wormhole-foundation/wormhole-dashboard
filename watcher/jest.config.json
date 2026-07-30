@@ -16,5 +16,5 @@
   "testRegex": "(/__tests__/.*|/tests/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
   "setupFilesAfterEnv": ["./setup-jest.ts"],
-  "testPathIgnorePatterns": ["sdk", "/node_modules/", "/dist/"]
+  "testPathIgnorePatterns": ["sdk", "/node_modules/", "/dist/", "rpcFixture.ts"]
 }

@@ -1,7 +1,8 @@
-import { expect, test } from '@jest/globals';
+import { expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { Block, EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 import { contracts } from '@wormhole-foundation/sdk-base';
+import { fixtureTest, withRpcReplay } from './rpcFixture';
 
 const initialAvalancheBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Avalanche
@@ -109,20 +110,27 @@ test('getBlock by number (Celo compatibility)', async () => {
   expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2022-05-12T00:20:20.000Z');
 });
 
-test('getMessagesForBlocks (Celo compatibility)', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Celo', 'finalized', 'vaa');
-  const { vaasByBlock } = await watcher.getMessagesForBlocks(13322450, 13322549);
-  const entries = Object.entries(vaasByBlock);
-  expect(entries.length).toEqual(100);
-  expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(98);
-  expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(2);
-  expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
-  expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z']).toBeDefined();
-  expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z'].length).toEqual(1);
-  expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z'][0]).toEqual(
-    '0xd73c03b0d59ecae473d50b61e8756bc19b54314869e9b11d0fda6f89dbcf3918:14/000000000000000000000000796dff6d74f3e27060b71255fe517bfb23c93eed/5'
-  );
-});
+// Pre-L2-migration Celo blocks (13322450-13322549) are no longer served by
+// current Celo RPCs (forno returns 0 logs), so this replays a recorded archival
+// response to keep the Celo block-format decoding assertions.
+fixtureTest('celo-getMessagesForBlocks-13322450.json')(
+  'getMessagesForBlocks (Celo compatibility)',
+  () =>
+    withRpcReplay('celo-getMessagesForBlocks-13322450.json', async () => {
+      const watcher = new EVMWatcher('Mainnet', 'Celo', 'finalized', 'vaa');
+      const { vaasByBlock } = await watcher.getMessagesForBlocks(13322450, 13322549);
+      const entries = Object.entries(vaasByBlock);
+      expect(entries.length).toEqual(100);
+      expect(entries.filter(([block, vaas]) => vaas.length === 0).length).toEqual(98);
+      expect(entries.filter(([block, vaas]) => vaas.length === 1).length).toEqual(2);
+      expect(entries.filter(([block, vaas]) => vaas.length === 2).length).toEqual(0);
+      expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z']).toBeDefined();
+      expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z'].length).toEqual(1);
+      expect(vaasByBlock['13322492/2022-06-02T17:40:22.000Z'][0]).toEqual(
+        '0xd73c03b0d59ecae473d50b61e8756bc19b54314869e9b11d0fda6f89dbcf3918:14/000000000000000000000000796dff6d74f3e27060b71255fe517bfb23c93eed/5'
+      );
+    })
+);
 
 // Skipped due to unavailability on RPC
 test.skip('getMessagesForBlocks', async () => {

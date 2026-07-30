@@ -5,9 +5,18 @@
     "rootDir": "src",
     "outDir": "dist",
     "skipLibCheck": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    // sdk-solana-ntt's top-level `types` field points at ./dist/cjs/index.d.ts, which
+    // doesn't exist - its real declarations live at ./dist/cjs/ts/index.d.ts (only the
+    // `exports` map points there, which classic `node` resolution can't read). Pin the
+    // specifier at the real .d.ts. Type-only: Node resolves the require() at runtime fine.
+    "paths": {
+      "@wormhole-foundation/sdk-solana-ntt": [
+        "../node_modules/@wormhole-foundation/sdk-solana-ntt/dist/cjs/ts/index.d.ts"
+      ]
+    }
   },
   "include": ["src", "src/data/*.json"]
 }

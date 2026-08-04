@@ -57,6 +57,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Optimism: process.env.OPTIMISM_RPC || 'https://optimism-rpc.publicnode.com',
     Plume: process.env.PLUME_EVM_RPC || 'https://rpc.plume.org',
     Polygon: process.env.POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com',
+    Robinhood: process.env.ROBINHOOD_RPC || 'https://robinhood-rpc.publicnode.com',
     Sei: process.env.SEI_RPC || 'https://sei-rest.publicnode.com',
     Seievm: process.env.SEI_EVM_RPC || 'https://evm-rpc.sei-apis.com',
     Solana: process.env.SOLANA_RPC || 'https://api.mainnet-beta.solana.com',

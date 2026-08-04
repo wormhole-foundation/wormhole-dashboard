@@ -62,6 +62,8 @@ export const explorerBlock = (network: Network, chainId: ChainId, block: string)
       ? `https://www.hyperscan.com/block/${block}`
       : chainId === chainToChainId('Hydration')
       ? `https://hydration.subscan.io/block/${block}`
+      : chainId === chainToChainId('Robinhood')
+      ? `https://robinhoodchain.blockscout.com/block/${block}`
       : chainId === chainToChainId('Mezo')
       ? `https://explorer.mezo.org/block/${block}`
       : chainId === chainToChainId('Plume')
@@ -202,6 +204,8 @@ export const explorerTx = (network: Network, chainId: ChainId, tx: string) =>
       ? `https://www.hyperscan.com/tx/${tx}`
       : chainId === chainToChainId('Hydration')
       ? `https://hydration.subscan.io/tx/${tx}`
+      : chainId === chainToChainId('Robinhood')
+      ? `https://robinhoodchain.blockscout.com/tx/${tx}`
       : chainId === chainToChainId('Mezo')
       ? `https://explorer.mezo.org/tx/${tx}`
       : chainId === chainToChainId('Plume')

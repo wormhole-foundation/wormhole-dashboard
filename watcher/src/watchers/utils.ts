@@ -36,6 +36,7 @@ export function makeFinalizedVaaWatcher(network: Network, chainName: Chain): Wat
     chainName === 'Optimism' ||
     chainName === 'Plume' ||
     chainName === 'Polygon' ||
+    chainName === 'Robinhood' ||
     chainName === 'Seievm' ||
     chainName === 'Sonic' ||
     chainName === 'Unichain' ||

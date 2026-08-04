@@ -93,6 +93,7 @@ const supportedChains: Chain[] =
         'Moca',
         'MegaETH',
         'ZeroGravity',
+        'Robinhood',
         'Hydration',
         'Wormchain',
       ];

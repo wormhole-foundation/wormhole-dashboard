@@ -47,6 +47,7 @@ export const INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN: NetworkChainBlockMap
     Optimism: '69401779',
     Plume: '9146992', // Block of contract creation, https://explorer.plume.org/tx/0x11251febf0fd6b2b247422fe451cda3fad1da42165d32db44a090a262095278b
     Polygon: '20629146',
+    Robinhood: '6320372', // Block of contract creation, https://robinhoodchain.blockscout.com/tx/0x8afe235001910b9a4ff7f82f502942a307db03145354277f9a661aa0df40b002
     Sei: '238594',
     Seievm: '137405273', // https://seiscan.io/tx/0xcd7a2903cf75422a885be54836d30245dc34cc6ff002c5b9f0e08ec75c590962
     Solana: '94396403', // https://explorer.solana.com/tx/2L8rQY94W2d44sycRkhHA1PyXdh5z6ND541ftDDk1dgBcv6RLR9a3zUgTJispPmXjkmqdqd5EDytXcnP5PC2AmEJ

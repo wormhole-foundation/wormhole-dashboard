@@ -2,7 +2,7 @@ import { beforeAll, expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
 import { SuiWatcher } from '../SuiWatcher';
 
-jest.setTimeout(60000);
+jest.setTimeout(120000);
 
 const INITIAL_CHECKPOINT = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Sui ?? 1581000
@@ -12,7 +12,12 @@ const INITIAL_CHECKPOINT = Number(
 // recent range so they remain valid as the chain grows. A small head buffer avoids any
 // finality/indexer-lag edge cases.
 const HEAD_BUFFER = 100;
-const RANGE_WIDTH = 5000; // ~25 minutes of Sui checkpoints; wide enough to virtually guarantee Wormhole activity
+// Wormhole message traffic on Sui mainnet is sparse and bursty: sampling ten consecutive
+// 5000-checkpoint (~25 min) windows found a *majority* came up empty (avg. ~1 message per
+// ~50 min, not "one per 25 min"). 200,000 checkpoints (~16-17 hours at the same rate) keeps
+// the false-negative rate for "no activity found" astronomically low without depending on
+// exact real-time traffic density.
+const RANGE_WIDTH = 200_000;
 
 let watcher: SuiWatcher;
 let latestCheckpoint: number;
@@ -91,7 +96,7 @@ test('VAA keys conform to <digest>:21/<emitter>/<sequence>', async () => {
   const { vaasByBlock } = await watcher.getMessagesForBlocks(recentFrom, recentTo);
 
   const vaaKeys = Object.values(vaasByBlock).flat();
-  // a 5000-checkpoint window on Sui Mainnet (~25 min) should always contain Wormhole activity
+  // a 200,000-checkpoint window on Sui Mainnet (~16-17 hours) should always contain Wormhole activity
   expect(vaaKeys.length).toBeGreaterThan(0);
 
   for (const vaa of vaaKeys) {

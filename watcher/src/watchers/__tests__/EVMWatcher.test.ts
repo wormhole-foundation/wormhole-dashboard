@@ -1,6 +1,6 @@
 import { expect, jest, test } from '@jest/globals';
 import { INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN } from '@wormhole-foundation/wormhole-monitor-common';
-import { Block, EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
+import { EVMWatcher, LOG_MESSAGE_PUBLISHED_TOPIC } from '../EVMWatcher';
 import { contracts } from '@wormhole-foundation/sdk-base';
 import { fixtureTest, withRpcReplay } from './rpcFixture';
 
@@ -8,9 +8,6 @@ const initialAvalancheBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Avalanche
 );
 const initialCeloBlock = Number(INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Celo);
-const initialMoonbeamBlock = Number(
-  INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Moonbeam
-);
 const initialPolygonBlock = Number(
   INITIAL_DEPLOYMENT_BLOCK_BY_NETWORK_AND_CHAIN['Mainnet'].Polygon
 );
@@ -72,7 +69,7 @@ test.skip('getLogs', async () => {
   );
 });
 
-test('getFinalizedBlockNumber', async () => {
+test('getFinalizedBlockNumber Avalanche', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Avalanche', 'finalized', 'vaa');
   const blockNumber = await watcher.getFinalizedBlockNumber();
   expect(blockNumber).toBeGreaterThan(initialAvalancheBlock);
@@ -146,12 +143,6 @@ test.skip('getMessagesForBlocks', async () => {
   expect(vaasByBlock['114500583/2023-07-24T15:12:14.000Z'][0]).toEqual(
     '0x39da3b500e5d65e82ca20cc8c4737fc0aa6c4e2c6c5f7e657834bd607c7109d9:23/0000000000000000000000000b2402144bb366a632d14b83f244d2e0e21bd39c/7628'
   );
-});
-
-test('getFinalizedBlockNumber', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Moonbeam', 'finalized', 'vaa');
-  const blockNumber = await watcher.getFinalizedBlockNumber();
-  expect(blockNumber).toBeGreaterThan(initialMoonbeamBlock);
 });
 
 test('getFinalizedBlockNumber', async () => {

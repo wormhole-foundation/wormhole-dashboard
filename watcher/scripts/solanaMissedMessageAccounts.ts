@@ -5,12 +5,10 @@ import { Connection } from '@solana/web3.js';
 import axios from 'axios';
 import ora from 'ora';
 import { RPCS_BY_CHAIN } from '../src/consts';
-import {
-  isLegacyMessage,
-  normalizeCompileInstruction,
-} from '@wormhole-foundation/wormhole-monitor-common/src/solana';
+import { normalizeCompileInstruction } from '@wormhole-foundation/wormhole-monitor-common/src/solana';
 import { getMissThreshold } from '@wormhole-foundation/wormhole-monitor-common';
 import { contracts } from '@wormhole-foundation/sdk-base';
+import { getAllKeys } from '../src/utils/solana';
 
 // This script finds the message accounts which correspond to solana misses
 
@@ -29,7 +27,7 @@ import { contracts } from '@wormhole-foundation/sdk-base';
     log = ora('Fetching message accounts').start();
     const connection = new Connection(RPCS_BY_CHAIN.Mainnet.Solana!, 'finalized');
     const txs = await connection.getTransactions(solanaTxHashes, {
-      maxSupportedTransactionVersion: 0,
+      maxSupportedTransactionVersion: 1,
     });
     // TODO: share with Solana watcher?
     const accounts = [];
@@ -39,9 +37,7 @@ import { contracts } from '@wormhole-foundation/sdk-base';
         errorCount++;
       } else {
         const message = tx.transaction.message;
-        const accountKeys = isLegacyMessage(message)
-          ? message.accountKeys
-          : message.staticAccountKeys;
+        const accountKeys = await getAllKeys(connection, tx);
         const programIdIndex = accountKeys.findIndex(
           (i) => i.toBase58() === contracts.coreBridge('Mainnet', 'Solana')
         );

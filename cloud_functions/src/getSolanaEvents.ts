@@ -348,7 +348,7 @@ async function getParsedTransactions(
   let toBlock: VersionedBlockResponse | null = null;
   try {
     toBlock = await connection.getBlock(toSlot, {
-      maxSupportedTransactionVersion: 0,
+      maxSupportedTransactionVersion: 1,
     });
   } catch (e) {
     if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
@@ -367,7 +367,7 @@ async function getParsedTransactions(
   let fromBlock: VersionedBlockResponse | null = null;
   try {
     fromBlock = await connection.getBlock(fromSlot, {
-      maxSupportedTransactionVersion: 0,
+      maxSupportedTransactionVersion: 1,
     });
   } catch (e) {
     if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
@@ -396,7 +396,7 @@ async function getParsedTransactions(
     const txs = await connection.getParsedTransactions(
       signatures.map((s) => s.signature),
       {
-        maxSupportedTransactionVersion: 0,
+        maxSupportedTransactionVersion: 1,
       }
     );
     if (txs.length !== signatures.length) {

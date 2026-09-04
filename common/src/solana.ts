@@ -1,8 +1,6 @@
 import {
   CompiledInstruction,
-  Message,
   MessageCompiledInstruction,
-  MessageV0,
   PublicKeyInitData,
   PublicKey,
   VersionedTransactionResponse,
@@ -12,10 +10,6 @@ import { decode } from 'bs58';
 import { encoding } from '@wormhole-foundation/sdk-base';
 import { TokenAmount } from './types';
 import { retry } from './utils';
-
-export const isLegacyMessage = (message: Message | MessageV0): message is Message => {
-  return message.version === 'legacy';
-};
 
 export const normalizeCompileInstruction = (
   instruction: CompiledInstruction | MessageCompiledInstruction

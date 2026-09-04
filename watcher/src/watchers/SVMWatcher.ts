@@ -101,7 +101,7 @@ export class SVMWatcher extends Watcher {
 
     let block: VersionedBlockResponse | null = null;
     try {
-      block = await this.getConnection().getBlock(slot, { maxSupportedTransactionVersion: 0 });
+      block = await this.getConnection().getBlock(slot, { maxSupportedTransactionVersion: 1 });
     } catch (e) {
       if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
         // failed to get confirmed block: slot was skipped or missing in long-term storage
@@ -178,7 +178,7 @@ export class SVMWatcher extends Watcher {
       const results = await this.getConnection().getTransactions(
         signatures.map((s) => s.signature),
         {
-          maxSupportedTransactionVersion: 0,
+          maxSupportedTransactionVersion: 1,
         }
       );
 

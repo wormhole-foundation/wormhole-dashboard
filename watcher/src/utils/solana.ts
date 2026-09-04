@@ -7,7 +7,6 @@ import {
   VersionedMessage,
   VersionedTransactionResponse,
 } from '@solana/web3.js';
-import { isLegacyMessage } from '@wormhole-foundation/wormhole-monitor-common';
 
 export const findNextValidBlock = async (
   connection: Connection,
@@ -21,7 +20,7 @@ export const findNextValidBlock = async (
 
   let block: VersionedBlockResponse | null = null;
   try {
-    block = await connection.getBlock(slot, { maxSupportedTransactionVersion: 0 });
+    block = await connection.getBlock(slot, { maxSupportedTransactionVersion: 1 });
   } catch (e) {
     if (e instanceof SolanaJSONRPCError && (e.code === -32007 || e.code === -32009)) {
       // failed to get confirmed block: slot was skipped or missing in long-term storage
@@ -84,7 +83,7 @@ export async function getAllKeys(
   res: VersionedTransactionResponse
 ): Promise<PublicKey[]> {
   const message: VersionedMessage = res.transaction.message;
-  let accountKeys = isLegacyMessage(message) ? message.accountKeys : message.staticAccountKeys;
+  let accountKeys = message.version === 'legacy' ? message.accountKeys : message.staticAccountKeys;
 
   // If the message contains an address table lookup, we need to resolve the addresses
   // before looking for the programIdIndex

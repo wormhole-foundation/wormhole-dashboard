@@ -30,7 +30,6 @@ test.skip('getMessagesForBlocks', async () => {
     INITIAL_NEAR_BLOCK,
     INITIAL_NEAR_BLOCK
   );
-  console.log('messages', messages);
   expect(Object.keys(messages).length).toEqual(1);
 });
 

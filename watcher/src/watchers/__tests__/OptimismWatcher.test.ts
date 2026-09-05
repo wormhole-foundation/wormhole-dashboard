@@ -11,7 +11,6 @@ const initialOptimismBlock = Number(
 test('getFinalizedBlockNumber', async () => {
   const watcher = new EVMWatcher('Mainnet', 'Optimism', 'finalized', 'vaa');
   const blockNumber = await watcher.getFinalizedBlockNumber();
-  console.log('blockNumber', blockNumber);
   expect(blockNumber).toBeGreaterThan(105235062);
 });
 

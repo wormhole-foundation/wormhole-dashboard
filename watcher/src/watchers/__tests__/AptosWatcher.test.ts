@@ -36,8 +36,11 @@ test('getMessagesForSequenceNumbers', async () => {
     latestSequenceNumber - watcher.maximumBatchSize + 1,
     latestSequenceNumber
   );
-  const messageKeys = Object.keys(vaasByBlock).sort();
-  console.log(messageKeys);
+  const messageKeys = Object.keys(vaasByBlock).sort((a, b) => {
+    const [aBlock, , aSeq] = a.split('/');
+    const [bBlock, , bSeq] = b.split('/');
+    return Number(aBlock) - Number(bBlock) || Number(aSeq) - Number(bSeq);
+  });
   expect(messageKeys.length).toBe(watcher.maximumBatchSize);
   expect(Date.parse(messageKeys.at(-1)!.split('/')[1])).toBeLessThan(Date.now());
   let prevKey = messageKeys[0];

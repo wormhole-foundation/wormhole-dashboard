@@ -32,7 +32,7 @@ export type WorkerData = {
 export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = {
   ['Mainnet']: {
     Algorand: process.env.ALGORAND_RPC || 'https://mainnet-api.algonode.cloud',
-    Aptos: process.env.APTOS_RPC || 'https://api.mainnet.aptoslabs.com',
+    Aptos: process.env.APTOS_RPC || 'https://archive.mainnet.aptoslabs.com/v1',
     Arbitrum: process.env.ARBITRUM_RPC || 'https://arbitrum-one-rpc.publicnode.com',
     Avalanche: process.env.AVALANCHE_RPC || 'https://avalanche-c-chain-rpc.publicnode.com',
     Base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',

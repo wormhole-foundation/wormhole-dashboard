@@ -32,7 +32,6 @@ beforeAll(async () => {
 });
 
 test('getFinalizedBlockNumber returns a checkpoint past the deployment block', () => {
-  console.log('Received blockNumber:', latestCheckpoint);
   expect(latestCheckpoint).toBeGreaterThan(INITIAL_CHECKPOINT);
 });
 

@@ -1,7 +1,10 @@
 import { tryHexToNativeAssetString, tryHexToNativeStringNear } from './array';
 import { getNetworkInfo, Network } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
-import { SuiGrpcClient } from '@mysten/sui/grpc';
+// @mysten/sui v2 only ships ESM type declarations, which this repo's node10
+// moduleResolution cannot see; load via the runtime exports map instead.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { SuiGrpcClient } = require('@mysten/sui/grpc');
 import {
   ChainId,
   chainIdToChain,

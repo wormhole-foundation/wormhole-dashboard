@@ -23,34 +23,43 @@ test('getBlock by tag', async () => {
   expect(new Date(block.timestamp * 1000).toISOString() > '2022-12-21').toBeTruthy();
 });
 
-test('getBlock by number', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Avalanche', 'finalized', 'vaa');
-  const block = await watcher.getBlock(46997506);
-  expect(block.number).toEqual(46997506);
-  expect(block.hash).toEqual('0x2d40ae06ad17d62b8e500cc451bc296e1e20c91140ce3cd6f2504bd3377e602f');
-  expect(block.timestamp).toEqual(1718975498);
-  expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2024-06-21T13:11:38.000Z');
-});
+// Avalanche block 46997506 (June 2024) is pruned on the default publicnode RPC
+// (it returns a null block), so these replay responses recorded from the
+// archival https://api.avax.network/ext/bc/C/rpc.
+fixtureTest('avalanche-getBlock-46997506.json')('getBlock by number', () =>
+  withRpcReplay('avalanche-getBlock-46997506.json', async () => {
+    const watcher = new EVMWatcher('Mainnet', 'Avalanche', 'finalized', 'vaa');
+    const block = await watcher.getBlock(46997506);
+    expect(block.number).toEqual(46997506);
+    expect(block.hash).toEqual(
+      '0x2d40ae06ad17d62b8e500cc451bc296e1e20c91140ce3cd6f2504bd3377e602f'
+    );
+    expect(block.timestamp).toEqual(1718975498);
+    expect(new Date(block.timestamp * 1000).toISOString()).toEqual('2024-06-21T13:11:38.000Z');
+  })
+);
 
-test('getBlocks', async () => {
-  const watcher = new EVMWatcher('Mainnet', 'Avalanche', 'finalized', 'vaa');
-  const maxBatchSize = watcher.maximumBatchSize;
-  const maxSizeMinusOne = maxBatchSize - 1;
-  const avalancheBlock = 46997506;
-  const blocks = await watcher.getBlocks(avalancheBlock, avalancheBlock + maxSizeMinusOne);
-  expect(blocks.length).toEqual(maxBatchSize);
-  expect(blocks[0].number).toEqual(avalancheBlock);
-  expect(blocks[0].hash).toEqual(
-    '0x2d40ae06ad17d62b8e500cc451bc296e1e20c91140ce3cd6f2504bd3377e602f'
-  );
-  expect(blocks[0].timestamp).toEqual(1718975498);
-  expect(new Date(blocks[0].timestamp * 1000).toISOString()).toEqual('2024-06-21T13:11:38.000Z');
-  expect(blocks[maxSizeMinusOne].number).toEqual(avalancheBlock + maxSizeMinusOne);
-  expect(blocks[maxSizeMinusOne].hash).toEqual(
-    '0x6308b1f713b1653d4959c9b43e586f1ff601fe5a453e411129d28b5c9208b2d5'
-  );
-  expect(blocks[maxSizeMinusOne].timestamp).toEqual(1718975702);
-});
+fixtureTest('avalanche-getBlocks-46997506.json')('getBlocks', () =>
+  withRpcReplay('avalanche-getBlocks-46997506.json', async () => {
+    const watcher = new EVMWatcher('Mainnet', 'Avalanche', 'finalized', 'vaa');
+    const maxBatchSize = watcher.maximumBatchSize;
+    const maxSizeMinusOne = maxBatchSize - 1;
+    const avalancheBlock = 46997506;
+    const blocks = await watcher.getBlocks(avalancheBlock, avalancheBlock + maxSizeMinusOne);
+    expect(blocks.length).toEqual(maxBatchSize);
+    expect(blocks[0].number).toEqual(avalancheBlock);
+    expect(blocks[0].hash).toEqual(
+      '0x2d40ae06ad17d62b8e500cc451bc296e1e20c91140ce3cd6f2504bd3377e602f'
+    );
+    expect(blocks[0].timestamp).toEqual(1718975498);
+    expect(new Date(blocks[0].timestamp * 1000).toISOString()).toEqual('2024-06-21T13:11:38.000Z');
+    expect(blocks[maxSizeMinusOne].number).toEqual(avalancheBlock + maxSizeMinusOne);
+    expect(blocks[maxSizeMinusOne].hash).toEqual(
+      '0x6308b1f713b1653d4959c9b43e586f1ff601fe5a453e411129d28b5c9208b2d5'
+    );
+    expect(blocks[maxSizeMinusOne].timestamp).toEqual(1718975702);
+  })
+);
 
 // Skipped due to unavailability on RPC
 test.skip('getLogs', async () => {

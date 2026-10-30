@@ -35,7 +35,7 @@ export const RPCS_BY_CHAIN: { [key in Network]: { [key in Chain]?: string } } = 
     Aptos: process.env.APTOS_RPC || 'https://archive.mainnet.aptoslabs.com/v1',
     Arbitrum: process.env.ARBITRUM_RPC || 'https://arbitrum-one-rpc.publicnode.com',
     Avalanche: process.env.AVALANCHE_RPC || 'https://avalanche-c-chain-rpc.publicnode.com',
-    Base: process.env.BASE_RPC || 'https://developer-access-mainnet.base.org',
+    Base: process.env.BASE_RPC || 'https://mainnet.base.org',
     Berachain: process.env.BERACHAIN_RPC || 'https://rpc.berachain.com',
     Bsc: process.env.BSC_RPC || 'https://bsc-rpc.publicnode.com',
     Celo: process.env.CELO_RPC || 'https://forno.celo.org',

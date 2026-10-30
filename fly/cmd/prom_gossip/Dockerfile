@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 docker.io/golang:1.23.6-bullseye@sha256:13ae4c4b1ee4c1d1983c8dcbbbb7db7aea3972b0853bb1d01b37176567448762
+FROM --platform=linux/amd64 docker.io/golang:1.26.10-bookworm@sha256:23ce71337b726608afb1bc00986e630a05034a87a87ea1fc2cd1ae5cf33387eb
 
 WORKDIR /app
 
